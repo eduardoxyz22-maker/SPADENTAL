@@ -1,0 +1,25 @@
+[
+  {
+    "platform": "instagram",
+    "image_url": "https://www.spadental.example/img/promo-blanqueamiento.jpg",
+    "caption": "Sonrisas mas blancas en SPADENTAL. Agenda tu blanqueamiento esta semana. #odontologia #sonrisa"
+  },
+  {
+    "platform": "instagram",
+    "carousel": [
+      "https://www.spadental.example/img/antes.jpg",
+      "https://www.spadental.example/img/despues.jpg"
+    ],
+    "caption": "Antes y despues de un tratamiento de ortodoncia."
+  },
+  {
+    "platform": "facebook",
+    "image_url": "https://www.spadental.example/img/horario.jpg",
+    "caption": "Esta semana atendemos de lunes a sabado. Reserva tu cita."
+  },
+  {
+    "platform": "facebook",
+    "message": "Conoce nuestros servicios de implantes dentales.",
+    "link": "https://www.spadental.example/implantes"
+  }
+]
