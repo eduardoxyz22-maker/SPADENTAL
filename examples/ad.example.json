@@ -1,0 +1,38 @@
+{
+  "campaign": {
+    "name": "SPADENTAL - Trafico web",
+    "objective": "OUTCOME_TRAFFIC",
+    "status": "PAUSED",
+    "special_ad_categories": []
+  },
+  "adset": {
+    "name": "Conjunto - CDMX 25-55",
+    "optimization_goal": "LINK_CLICKS",
+    "billing_event": "IMPRESSIONS",
+    "daily_budget": 10000,
+    "status": "PAUSED",
+    "targeting": {
+      "geo_locations": { "countries": ["MX"] },
+      "age_min": 25,
+      "age_max": 55,
+      "publisher_platforms": ["facebook", "instagram"]
+    }
+  },
+  "creative": {
+    "name": "Creatividad - Blanqueamiento",
+    "object_story_spec": {
+      "page_id": "TU_FB_PAGE_ID",
+      "link_data": {
+        "message": "Blanqueamiento dental profesional en SPADENTAL. Agenda hoy.",
+        "link": "https://www.spadental.example/blanqueamiento",
+        "name": "Reserva tu cita",
+        "image_hash": "OPCIONAL_hash_de_imagen_subida"
+      }
+    }
+  },
+  "ad": {
+    "name": "Anuncio - Blanqueamiento",
+    "status": "PAUSED"
+  },
+  "_nota": "daily_budget esta en CENTAVOS (10000 = 100.00). Para promocionar un post existente, sustituye 'creative' por { \"name\": \"...\", \"object_story_id\": \"PAGEID_POSTID\" }. Todo se crea en PAUSED; activa con: ads status --id <ID> --status ACTIVE"
+}

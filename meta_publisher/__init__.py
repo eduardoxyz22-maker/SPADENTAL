@@ -12,6 +12,7 @@ from .config import Config, load_config
 from .client import GraphAPIClient
 from .instagram import InstagramPublisher
 from .facebook import FacebookPublisher
+from .ads import AdsManager
 from .exceptions import MetaError, MetaAPIError, ConfigError
 
 __all__ = [
@@ -20,6 +21,7 @@ __all__ = [
     "GraphAPIClient",
     "InstagramPublisher",
     "FacebookPublisher",
+    "AdsManager",
     "MetaError",
     "MetaAPIError",
     "ConfigError",

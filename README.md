@@ -1,9 +1,13 @@
-# SPADENTAL · Publicador automático en Instagram y Facebook
+# SPADENTAL · Publicador y gestor de anuncios de Meta
 
-Herramienta en **Python** para publicar posts de forma automática en
-**Instagram** (imagen, carrusel, Reel) y en una **Página de Facebook**
-(texto, enlace, foto, con opción de **programar**), usando la **Graph API
-de Meta**.
+Herramienta en **Python** para:
+
+1. **Publicar posts** automáticamente en **Instagram** (imagen, carrusel,
+   Reel) y en una **Página de Facebook** (texto, enlace, foto, programado).
+2. **Controlar y subir anuncios** (Marketing API): listar campañas, ver
+   métricas, pausar/activar, cambiar presupuesto y **crear anuncios completos**.
+
+Todo usando la **Graph API / Marketing API de Meta**.
 
 > 🔐 **Seguridad ante todo:** el token de acceso vive únicamente en tu
 > archivo `.env` (que está en `.gitignore`). **Nunca** se escribe en el
@@ -168,6 +172,89 @@ Algunas formas de automatizar:
 
 ---
 
+## 9. Anuncios (Marketing API)
+
+Controla y crea anuncios sobre tu cuenta publicitaria.
+
+### Requisitos adicionales
+
+- Permiso **`ads_management`** en el token (o `ads_read` para solo lectura).
+- Tu app necesita **Acceso Avanzado** a `ads_management` y, normalmente,
+  **verificación del negocio** para gestionar cuentas reales (no de prueba).
+- En `.env`: `META_AD_ACCOUNT_ID` (el `act=` de la URL de Ads Manager) y,
+  opcional, `META_BUSINESS_ID`.
+
+> 💡 Tu cuenta ya viene preconfigurada en `.env.example`:
+> `META_AD_ACCOUNT_ID=1360245352043819` y `META_BUSINESS_ID=1057933761477026`
+> (extraídos de tu URL de Ads Manager; no son secretos).
+
+### Jerarquía de Meta Ads
+
+```
+Campaña (objetivo: tráfico, ventas, mensajes…)
+  └─ Ad set (presupuesto, público, optimización, calendario)
+       └─ Anuncio (creatividad)
+```
+
+### Comandos
+
+```bash
+# Listar (campaign | adset | ad)
+python -m meta_publisher ads list --level campaign
+python -m meta_publisher ads list --level adset
+python -m meta_publisher ads list --level ad
+
+# Métricas (de toda la cuenta o de un objeto concreto)
+python -m meta_publisher ads insights --preset last_7d
+python -m meta_publisher ads insights --id 120249407751900203 --level campaign
+python -m meta_publisher ads insights --since 2026-06-01 --until 2026-06-19
+
+# Pausar / activar
+python -m meta_publisher ads status --id 120249407751920203 --status PAUSED
+python -m meta_publisher ads status --id 120249407751920203 --status ACTIVE
+
+# Cambiar presupuesto de un ad set (en CENTAVOS: 10000 = 100.00)
+python -m meta_publisher ads budget --id 120249407751910203 --daily 10000
+
+# Crear una campaña + ad set + anuncio completos desde un JSON
+python -m meta_publisher ads create --file examples/ad.example.json
+```
+
+> 🛡️ **Por seguridad, todo se crea en estado `PAUSED`** para que no empiece
+> a gastar. Revisa el anuncio en Ads Manager y actívalo cuando quieras con
+> `ads status --id <ID> --status ACTIVE`.
+
+### Subir un anuncio nuevo
+
+Edita [`examples/ad.example.json`](examples/ad.example.json):
+
+- Pon tu `FB_PAGE_ID` real en `creative.object_story_spec.page_id`.
+- Ajusta `objective`, `optimization_goal`, `billing_event`, `targeting` y
+  `daily_budget` (en centavos de tu moneda).
+- Para **promocionar un post que ya existe**, sustituye el bloque
+  `creative` por `{ "name": "...", "object_story_id": "PAGEID_POSTID" }`.
+
+Valores de `objective` habituales: `OUTCOME_TRAFFIC`, `OUTCOME_ENGAGEMENT`,
+`OUTCOME_LEADS`, `OUTCOME_SALES`, `OUTCOME_AWARENESS`.
+
+### Como librería
+
+```python
+from meta_publisher import load_config, GraphAPIClient, AdsManager
+
+cfg = load_config()
+client = GraphAPIClient(cfg.require_token(), api_version=cfg.api_version)
+ads = AdsManager(client, cfg.require_ad_account())
+
+for c in ads.list("campaign"):
+    print(c["id"], c["name"], c.get("effective_status"))
+
+ads.pause("120249407751920203")
+ads.update_budget("120249407751910203", daily_budget=15000)
+```
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -176,10 +263,12 @@ meta_publisher/
   client.py       Cliente HTTP base de la Graph API
   instagram.py    Publicación en Instagram (imagen/carrusel/reel)
   facebook.py     Publicación en Página de Facebook
+  ads.py          Gestión de anuncios (Marketing API)
   tokens.py       Renovar token y descubrir IDs
   cli.py          Línea de comandos
 examples/
   posts.example.json
+  ad.example.json
 .env.example      Plantilla de configuración (sin secretos)
 requirements.txt
 ```

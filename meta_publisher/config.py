@@ -31,6 +31,8 @@ class Config:
     app_secret: str | None = None
     ig_user_id: str | None = None
     fb_page_id: str | None = None
+    ad_account_id: str | None = None
+    business_id: str | None = None
 
     def require_token(self) -> str:
         if not self.access_token:
@@ -62,6 +64,16 @@ class Config:
             )
         return self.app_id, self.app_secret
 
+    def require_ad_account(self) -> str:
+        """Devuelve el ad account normalizado con prefijo 'act_'."""
+        if not self.ad_account_id:
+            raise ConfigError(
+                "Falta META_AD_ACCOUNT_ID (cuenta publicitaria). "
+                "Es el 'act=' de la URL de Ads Manager."
+            )
+        acc = str(self.ad_account_id).strip()
+        return acc if acc.startswith("act_") else f"act_{acc}"
+
 
 def load_config() -> Config:
     """Construye la configuracion a partir del entorno."""
@@ -73,4 +85,6 @@ def load_config() -> Config:
         app_secret=(os.getenv("META_APP_SECRET") or "").strip() or None,
         ig_user_id=(os.getenv("IG_USER_ID") or "").strip() or None,
         fb_page_id=(os.getenv("FB_PAGE_ID") or "").strip() or None,
+        ad_account_id=(os.getenv("META_AD_ACCOUNT_ID") or "").strip() or None,
+        business_id=(os.getenv("META_BUSINESS_ID") or "").strip() or None,
     )

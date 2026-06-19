@@ -9,6 +9,12 @@ Uso:
     python -m meta_publisher facebook --message "..." [--link URL]
     python -m meta_publisher facebook --image-url URL --caption "..."
     python -m meta_publisher post --file examples/posts.example.json
+
+    python -m meta_publisher ads list --level campaign|adset|ad
+    python -m meta_publisher ads insights [--level ...] [--preset last_7d]
+    python -m meta_publisher ads status --id <ID> --status PAUSED|ACTIVE
+    python -m meta_publisher ads budget --id <ADSET_ID> --daily 5000
+    python -m meta_publisher ads create --file examples/ad.example.json
 """
 
 from __future__ import annotations
@@ -18,6 +24,7 @@ import json
 import logging
 import sys
 
+from .ads import AdsManager
 from .client import GraphAPIClient
 from .config import load_config
 from .exceptions import MetaError
@@ -151,6 +158,71 @@ def cmd_post(cfg, args) -> int:
 
 
 # --------------------------------------------------------------------------
+# Subcomandos: anuncios (Marketing API)
+# --------------------------------------------------------------------------
+def _build_ads(cfg) -> AdsManager:
+    client = _build_client(cfg)
+    return AdsManager(client, cfg.require_ad_account())
+
+
+def cmd_ads(cfg, args) -> int:
+    """Despacha los subcomandos de 'ads'."""
+    action = args.ads_command
+    ads = _build_ads(cfg)
+
+    if action == "list":
+        rows = ads.list(args.level, limit=args.limit)
+        if not rows:
+            print(f"Sin {args.level}s en la cuenta.")
+            return 0
+        for r in rows:
+            status = r.get("effective_status", r.get("status", "?"))
+            extra = r.get("objective") or r.get("optimization_goal") or ""
+            print(f"  {r.get('id')}  [{status:<14}] {r.get('name')}  {extra}")
+        return 0
+
+    if action == "insights":
+        rows = ads.insights(obj_id=args.id, level=args.level,
+                            date_preset=args.preset,
+                            since=args.since, until=args.until)
+        if not rows:
+            print("Sin datos de insights para ese periodo.")
+            return 0
+        for r in rows:
+            name = (r.get("ad_name") or r.get("adset_name")
+                    or r.get("campaign_name") or "(cuenta)")
+            print(f"  {name}")
+            print(f"     gasto={r.get('spend','0')}  impresiones={r.get('impressions','0')}"
+                  f"  alcance={r.get('reach','0')}  clics={r.get('clicks','0')}"
+                  f"  CTR={r.get('ctr','-')}  CPC={r.get('cpc','-')}")
+        return 0
+
+    if action == "status":
+        res = ads.set_status(args.id, args.status)
+        print(f"Estado actualizado a {args.status.upper()}: {res}")
+        return 0
+
+    if action == "budget":
+        res = ads.update_budget(args.id, daily_budget=args.daily,
+                                lifetime_budget=args.lifetime)
+        print(f"Presupuesto actualizado: {res}")
+        return 0
+
+    if action == "create":
+        with open(args.file, encoding="utf-8") as fh:
+            spec = json.load(fh)
+        result = ads.create_from_spec(spec)
+        print("Anuncio creado (en PAUSED salvo que el spec indique lo contrario):")
+        for key, value in result.items():
+            print(f"  {key} = {value}")
+        print("\nActiva cuando quieras con:  ads status --id <ID> --status ACTIVE")
+        return 0
+
+    print(f"Subcomando de ads desconocido: {action}", file=sys.stderr)
+    return 2
+
+
+# --------------------------------------------------------------------------
 # Parser
 # --------------------------------------------------------------------------
 def build_parser() -> argparse.ArgumentParser:
@@ -184,6 +256,40 @@ def build_parser() -> argparse.ArgumentParser:
     po = sub.add_parser("post", help="Publica posts definidos en un archivo JSON")
     po.add_argument("--file", required=True, help="Ruta al JSON de posts")
 
+    # -- ads (Marketing API) --------------------------------------------
+    ads = sub.add_parser("ads", help="Gestiona anuncios (listar, insights, crear...)")
+    ads_sub = ads.add_subparsers(dest="ads_command", required=True)
+
+    a_list = ads_sub.add_parser("list", help="Lista campanas / ad sets / anuncios")
+    a_list.add_argument("--level", choices=["campaign", "adset", "ad"],
+                        default="campaign")
+    a_list.add_argument("--limit", type=int, default=50)
+
+    a_ins = ads_sub.add_parser("insights", help="Metricas de la cuenta o un objeto")
+    a_ins.add_argument("--id", help="ID de campana/adset/anuncio (por defecto: cuenta)")
+    a_ins.add_argument("--level", choices=["account", "campaign", "adset", "ad"],
+                       default="campaign")
+    a_ins.add_argument("--preset", default="last_7d",
+                       help="date_preset: today, yesterday, last_7d, last_30d, maximum...")
+    a_ins.add_argument("--since", help="Fecha inicio YYYY-MM-DD")
+    a_ins.add_argument("--until", help="Fecha fin YYYY-MM-DD")
+
+    a_st = ads_sub.add_parser("status", help="Pausa o activa un objeto")
+    a_st.add_argument("--id", required=True)
+    a_st.add_argument("--status", required=True,
+                      choices=["ACTIVE", "PAUSED", "ARCHIVED", "DELETED",
+                               "active", "paused", "archived", "deleted"])
+
+    a_bud = ads_sub.add_parser("budget", help="Cambia el presupuesto de un ad set")
+    a_bud.add_argument("--id", required=True, help="ID del ad set")
+    a_bud.add_argument("--daily", type=int, dest="daily",
+                       help="Presupuesto diario en unidad minima (centavos)")
+    a_bud.add_argument("--lifetime", type=int, dest="lifetime",
+                       help="Presupuesto total en unidad minima (centavos)")
+
+    a_cr = ads_sub.add_parser("create", help="Crea campana+adset+anuncio desde un JSON")
+    a_cr.add_argument("--file", required=True, help="Ruta al spec del anuncio")
+
     return p
 
 
@@ -193,6 +299,7 @@ _COMMANDS = {
     "instagram": cmd_instagram,
     "facebook": cmd_facebook,
     "post": cmd_post,
+    "ads": cmd_ads,
 }
 
 
