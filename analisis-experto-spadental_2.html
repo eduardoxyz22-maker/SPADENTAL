@@ -1,0 +1,173 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis experto · Ezequiel Spadental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--charcoal:#262625;--paper:#F5F4EF;--card:#FFFFFF;--lime:#A8C21E;--lime-deep:#6E8410;--amber:#D89A2B;--red:#B4451F;--ink:#2A2A28;--ink-soft:#6B6A64;--line:#E4E2D9;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:'Archivo',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-deep);margin-bottom:14px}
+h2{font-family:'Archivo';font-weight:800;font-size:clamp(23px,4.2vw,32px);line-height:1.12;color:var(--ink)}
+p.lead{font-size:clamp(16px,2.1vw,18px);color:var(--ink-soft);margin-top:14px;max-width:64ch}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+.hero{background:var(--charcoal);color:#fff;border:none;padding:0}.hero .wrap{padding-top:44px;padding-bottom:52px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:42px}.brand svg{width:38px}
+.brand .name{font-family:'Archivo';font-weight:800;font-size:19px;line-height:1;color:#fff}
+.brand .name span{display:block;font-weight:500;font-size:11px;letter-spacing:.16em;color:var(--lime);text-transform:uppercase;margin-top:3px}
+.hero .eyebrow{color:var(--lime)}
+.hero h1{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(34px,7vw,62px);line-height:1;text-transform:uppercase;color:#fff}
+.hero h1 b{color:var(--red);font-weight:400}
+.hero .sub{font-size:clamp(15px,2.2vw,18px);color:#CFCEC6;margin-top:20px;max-width:58ch}
+.diag{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:0 var(--radius) var(--radius) 0;padding:24px 26px;margin-top:8px}
+.diag p{font-size:16.5px;color:var(--ink);margin-top:10px}.diag p:first-child{margin-top:0}.diag b{color:var(--red)}
+.bignum{background:var(--charcoal);border-radius:var(--radius);padding:30px;text-align:center;margin-top:22px}
+.bignum .n{font-family:'Anton',sans-serif;font-size:clamp(48px,11vw,86px);color:var(--red);line-height:.95}
+.bignum .l{color:#CFCEC6;font-size:16px;margin-top:8px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+.vscol{border-radius:var(--radius);padding:22px;border:1px solid var(--line)}
+.vscol.mal{background:#FBEDE7;border-color:#EBC9BC}.vscol.san{background:#EEF1D8;border-color:#DCE2B0}
+.vscol h3{font-family:'Archivo';font-weight:800;font-size:16px;margin-bottom:16px;text-transform:uppercase;letter-spacing:.04em}.vscol.mal h3{color:var(--red)}.vscol.san h3{color:var(--lime-deep)}
+.fstep{margin-bottom:12px}.fstep .fn{font-family:'Anton',sans-serif;font-size:30px;line-height:1}.vscol.mal .fn{color:var(--red)}.vscol.san .fn{color:var(--lime-deep)}
+.fstep .fl{font-size:13px;color:var(--ink-soft)}.vsarrow{color:var(--ink-soft);font-size:15px;margin:2px 0}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;margin-top:24px;font-size:14.5px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+.tbl th,.tbl td{padding:13px 14px;text-align:right}.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl thead th{background:var(--charcoal);color:#fff;font-weight:700;font-size:12.5px}.tbl thead th.hi{color:var(--lime)}.tbl thead th.bad{color:#F0997B}
+.tbl tbody td{border-top:1px solid var(--line);font-variant-numeric:tabular-nums}.tbl tbody td:first-child{font-weight:700;color:var(--ink)}
+.tbl td.act{color:var(--red);font-weight:800}.tbl td.san{color:var(--lime-deep);font-weight:800}
+.tbl tr.gold td:first-child{color:var(--lime-deep)}.tbl tr.amber td:first-child{color:var(--amber)}.tbl tr.bad td:first-child{color:var(--red)}.tbl tr.bad td{background:#FBEDE7}
+.tbl tr.tot td{border-top:2px solid var(--charcoal);font-weight:800;background:#F1EFE8}
+.tbl caption{caption-side:bottom;text-align:left;font-size:12.5px;color:var(--ink-soft);margin-top:10px}
+.chart-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 16px 14px;margin-top:22px}
+.legend{display:flex;gap:18px;margin-top:8px;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap}.legend span{display:inline-flex;align-items:center;gap:7px}.legend i{width:20px;height:0;border-top:2.5px solid;display:inline-block}
+.foda{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+.fcard{border-radius:var(--radius);padding:22px;border:1px solid var(--line);background:var(--card)}
+.fcard h3{font-family:'Archivo';font-weight:800;font-size:17px;margin-bottom:12px;display:flex;align-items:center;gap:9px}.fcard h3 .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+.fcard ul{list-style:none;display:flex;flex-direction:column;gap:9px}.fcard li{font-size:14px;color:var(--ink-soft);padding-left:16px;position:relative}.fcard li:before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--ink-soft)}
+.fcard.f{border-top:3px solid var(--lime)}.fcard.o{border-top:3px solid #378ADD}.fcard.d{border-top:3px solid var(--amber)}.fcard.a{border-top:3px solid var(--red)}
+.mejora{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-top:14px}
+.mejora .num{font-family:'Anton',sans-serif;font-size:26px;color:var(--lime);min-width:30px;line-height:1}.mejora h3{font-size:16.5px;font-weight:700;margin-bottom:3px}.mejora p{font-size:14.5px;color:var(--ink-soft)}
+.mejora .imp{display:inline-block;margin-top:7px;font-size:12px;font-weight:700;color:var(--lime-deep);background:#EEF1D8;border-radius:6px;padding:3px 9px}
+.note{margin-top:20px;background:#EEF1D8;border:1px solid #DCE2B0;border-radius:var(--radius);padding:18px 20px;font-size:15px;color:#3F4A12}.note b{color:var(--lime-deep)}
+.note.warn{background:#FBEDE7;border-color:#EBC9BC;color:#7A3115}.note.warn b{color:var(--red)}
+.close{background:var(--charcoal);color:#fff;border:none;text-align:center}
+.close h2{color:#fff;font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;font-size:clamp(26px,5vw,46px);line-height:1.05}.close h2 b{color:var(--lime);font-weight:400}.close p{color:#CFCEC6;margin-top:18px;font-size:16px;max-width:54ch;margin-left:auto;margin-right:auto}
+footer{padding:28px 0 44px;text-align:center;color:var(--ink-soft);font-size:13px}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}.reveal.in{opacity:1;transform:none}
+@media(max-width:640px){.foda,.vs{grid-template-columns:1fr}section{padding:44px 0}.tbl{font-size:12px}.tbl th,.tbl td{padding:9px 7px}}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+</style></head><body>
+<header class="hero"><div class="wrap">
+<div class="brand"><svg viewBox="0 0 100 84" aria-hidden="true"><path d="M8 78 L14 30 L34 52 L50 14 L66 52 L86 30 L92 78 Z" fill="#A8C21E"/><rect x="8" y="76" width="84" height="7" rx="3" fill="#fff"/></svg><div class="name">EZEQUIEL SPADENTAL<span>Dra. Mirna Veizaga</span></div></div>
+<div class="eyebrow reveal">Análisis estratégico de marketing dental · Julio 2026</div>
+<h1 class="reveal">El embudo está<br><b>roto</b>. Y cuesta caro.</h1>
+<p class="sub reveal">Ocho meses de inversión analizados con datos reales. La publicidad trae gente; el problema es todo lo que pasa después. Dos fugas críticas que dejan pacientes y plata sobre la mesa cada mes.</p>
+</div></header>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Diagnóstico ejecutivo</div>
+<h2 class="reveal">La hemorragia</h2>
+<div class="diag reveal">
+<p>La publicidad hace su trabajo: en un mes fuerte, <b style="color:var(--lime-deep)">5.000 personas escriben</b> a la clínica. El problema empieza ahí.</p>
+<p>De esas 5.000, <b>solo 220 llegan a agendar una cita</b>. Las otras 4.780 se van. Y de las 220 que agendan, <b>apenas 60 se presentan</b>. El resto no aparece.</p>
+<p>Resultado: de cada 100 personas que te escriben, <b>entra apenas 1 paciente</b>. Un embudo sano convierte 15 veces mejor. No es un problema de publicidad ni de presupuesto: es un problema de cómo se responde y se agenda.</p>
+</div>
+<div class="bignum reveal"><div class="n">4.780</div><div class="l">personas que te escribieron y se fueron sin agendar, en un solo mes</div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Como está vs. como debería</div>
+<h2 class="reveal">El embudo, comparado<br>con uno sano</h2>
+<p class="lead reveal">Por cada 100 personas que escriben. A la izquierda, lo que pasa hoy. A la derecha, lo que hace una clínica bien llevada.</p>
+<div class="vs reveal">
+<div class="vscol mal"><h3>Como está hoy</h3><div class="fstep"><div class="fn">100</div><div class="fl">escriben por WhatsApp</div></div><div class="vsarrow">↓</div><div class="fstep"><div class="fn">4</div><div class="fl">agendan una cita (4,4%)</div></div><div class="vsarrow">↓</div><div class="fstep"><div class="fn">1</div><div class="fl">entra como paciente (1,2%)</div></div></div>
+<div class="vscol san"><h3>Como debería (sano)</h3><div class="fstep"><div class="fn">100</div><div class="fl">escriben por WhatsApp</div></div><div class="vsarrow">↓</div><div class="fstep"><div class="fn">25</div><div class="fl">agendan una cita (25-35%)</div></div><div class="vsarrow">↓</div><div class="fstep"><div class="fn">19</div><div class="fl">entra como paciente (15-19%)</div></div></div>
+</div>
+<table class="tbl reveal">
+<thead><tr><th>Paso del embudo</th><th class="bad">Actual</th><th class="hi">Sano</th><th>Brecha</th></tr></thead>
+<tbody>
+<tr><td>De los que escriben, agendan</td><td class="act">4,4%</td><td class="san">25-35%</td><td>6 a 8 veces peor</td></tr>
+<tr><td>De los que agendan, asisten</td><td class="act">27%</td><td class="san">75-80%</td><td>3 veces peor</td></tr>
+<tr><td>De los que escriben, entran</td><td class="act">1,2%</td><td class="san">15-19%</td><td>15 veces peor</td></tr>
+</tbody>
+<caption>Estándares del rubro dental para captación por WhatsApp con respuesta rápida, guion de cita y recordatorios.</caption>
+</table>
+<div class="note warn reveal">Traducido a plata: se compraron <b>5.000 conversaciones para sacar 60 pacientes</b>. Un embudo sano saca esos mismos 60 de unas <b>320 conversaciones</b>. Se pagó por 15 veces los leads necesarios, y aun así se dejó ir a 4.780 personas interesadas.</div>
+</div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Las dos fugas</div>
+<h2 class="reveal">Dónde exactamente<br>se pierden</h2>
+<div class="foda reveal" style="grid-template-columns:1fr 1fr">
+<div class="fcard a"><h3><span class="dot" style="background:var(--red)"></span>Fuga 1: no se agenda</h3><ul><li>Solo 4,4% de los que escriben agenda: se pierde el 95%</li><li>Síntoma: respuesta lenta, o se responde sin proponer día y hora</li><li>La persona se enfría y no vuelve a escribir</li><li>Es la fuga más grande y la de arreglo más rápido</li></ul></div>
+<div class="fcard d"><h3><span class="dot" style="background:var(--amber)"></span>Fuga 2: no se presenta</h3><ul><li>De 4 que agendan para una hora, aparece 1 (27%)</li><li>Síntoma: sin confirmación ni recordatorio, agenda "blanda"</li><li>Posible sobreagenda (varios para el mismo horario)</li><li>Lo sano con recordatorio es 75-80% de asistencia</li></ul></div>
+</div>
+<div class="note reveal">No sabemos <b>por qué</b> no se presentan (no está medido). Ese es en sí mismo un problema: sin registro, no se puede corregir. El primer paso es empezar a anotar qué pasa con cada cita agendada.</div>
+</div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Los números reales</div>
+<h2 class="reveal">Mes a mes</h2>
+<p class="lead reveal">El embudo aplicado a los leads reales de cada mes. El costo por paciente se dispara cuando el lead sale caro o cuando el volumen cae. Agendan y pacientes son estimados con las tasas del embudo (4,4% y 1 de 4).</p>
+<table class="tbl reveal"><thead><tr><th>Mes</th><th>Leads</th><th>Agendan</th><th>Pacientes</th><th>Gasto</th><th>Costo x pac.</th></tr></thead><tbody><tr class="bad"><td>nov 2025</td><td>339</td><td>15</td><td>4</td><td>Bs 466</td><td>Bs 117</td></tr><tr class="gold"><td>dic 2025</td><td>5.124</td><td>226</td><td>61</td><td>Bs 4.346</td><td>Bs 71</td></tr><tr class="gold"><td>ene 2026</td><td>5.120</td><td>225</td><td>61</td><td>Bs 5.519</td><td>Bs 90</td></tr><tr class="gold"><td>feb 2026</td><td>3.291</td><td>145</td><td>40</td><td>Bs 3.558</td><td>Bs 89</td></tr><tr class="gold"><td>mar 2026</td><td>3.793</td><td>167</td><td>46</td><td>Bs 3.996</td><td>Bs 87</td></tr><tr class="amber"><td>abr 2026</td><td>1.776</td><td>78</td><td>21</td><td>Bs 3.247</td><td>Bs 155</td></tr><tr class="amber"><td>may 2026</td><td>1.773</td><td>78</td><td>21</td><td>Bs 4.188</td><td>Bs 199</td></tr><tr class="bad"><td>jun 2026</td><td>114</td><td>5</td><td>1</td><td>Bs 1.777</td><td>Bs 1.777</td></tr><tr class="bad"><td>jul 2026</td><td>9</td><td>0</td><td>0</td><td>Bs 134</td><td>Bs —</td></tr><tr class="tot"><td>Total</td><td>21.339</td><td>939</td><td>255</td><td>Bs 27.231</td><td>Bs 107</td></tr></tbody>
+<caption>Leads y gasto: datos reales de Meta (a Bs 10/USD). Costo por paciente = gasto ÷ pacientes del mes.</caption></table>
+<table class="tbl reveal"><thead><tr><th>Etapa</th><th>Leads</th><th>Pacientes</th><th>Gasto</th><th>Costo x pac.</th></tr></thead><tbody><tr class="gold"><td>Dorada (dic–mar)</td><td>17.328</td><td>208</td><td>Bs 17.419</td><td>Bs 84</td></tr><tr class="amber"><td>Caída (abr–may)</td><td>3.549</td><td>42</td><td>Bs 7.435</td><td>Bs 177</td></tr><tr class="bad"><td>Perdida (nov,jun,jul)</td><td>462</td><td>5</td><td>Bs 2.377</td><td>Bs 475</td></tr><tr class="tot"><td>Total</td><td>21.339</td><td>255</td><td>Bs 27.231</td><td>Bs 107</td></tr></tbody>
+<caption>Resumen por etapa. En la caída el costo por paciente se duplicó; en la perdida se disparó.</caption></table>
+</div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">La curva</div>
+<h2 class="reveal">De 61 a 0, y a dónde<br>podemos llegar</h2>
+<div class="chart-card reveal"><svg width="100%" viewBox="0 0 790 288" role="img" xmlns="http://www.w3.org/2000/svg"><title>Pacientes por mes real y proyectado sano</title><desc>De 61 al colapso en cero y recuperacion sana hasta el tope de 80.</desc><line x1="60" y1="250" x2="770" y2="250" stroke="#C9C7BD" stroke-width="1"/><line x1="460" y1="45" x2="460" y2="250" stroke="#C9C7BD" stroke-width="1" stroke-dasharray="3 3"/><text x="460" y="40" text-anchor="middle" font-size="10.5" fill="#6B6A64" font-family="Archivo">hoy</text><polyline points="60.0,240.0 110.0,97.5 160.0,97.5 210.0,150.0 260.0,135.0 310.0,197.5 360.0,197.5 410.0,247.5 460.0,250.0" fill="none" stroke="#262625" stroke-width="2.5" stroke-linejoin="round"/><polyline points="460.0,250.0 510.0,175.0 560.0,137.5 610.0,112.5 660.0,87.5 710.0,70.0 760.0,50.0" fill="none" stroke="#A8C21E" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/><circle cx="60.0" cy="240.0" r="3" fill="#262625"/><circle cx="110.0" cy="97.5" r="3" fill="#262625"/><circle cx="160.0" cy="97.5" r="3" fill="#262625"/><circle cx="210.0" cy="150.0" r="3" fill="#262625"/><circle cx="260.0" cy="135.0" r="3" fill="#262625"/><circle cx="310.0" cy="197.5" r="3" fill="#262625"/><circle cx="360.0" cy="197.5" r="3" fill="#262625"/><circle cx="410.0" cy="247.5" r="3" fill="#262625"/><circle cx="460.0" cy="250.0" r="3" fill="#262625"/><circle cx="510.0" cy="175.0" r="3" fill="#A8C21E"/><circle cx="560.0" cy="137.5" r="3" fill="#A8C21E"/><circle cx="610.0" cy="112.5" r="3" fill="#A8C21E"/><circle cx="660.0" cy="87.5" r="3" fill="#A8C21E"/><circle cx="710.0" cy="70.0" r="3" fill="#A8C21E"/><circle cx="760.0" cy="50.0" r="3" fill="#A8C21E"/><text x="110" y="88" text-anchor="middle" font-size="12" fill="#3F4A12" font-family="Archivo" font-weight="700">61</text><text x="460" y="241" text-anchor="middle" font-size="12" fill="#B4451F" font-family="Archivo" font-weight="700">0</text><text x="760" y="41" text-anchor="middle" font-size="12" fill="#3F4A12" font-family="Archivo" font-weight="700">80</text><text x="60" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">nov</text><text x="160" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">ene</text><text x="260" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">mar</text><text x="410" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">jun</text><text x="510" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">ago</text><text x="610" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">oct</text><text x="760" y="268" text-anchor="middle" font-size="11" fill="#6B6A64" font-family="Archivo">ene</text></svg><div class="legend"><span><i style="border-color:#262625"></i>Pacientes reales</span><span><i style="border-color:#A8C21E;border-top-style:dashed"></i>Proyección con embudo sano</span></div></div>
+<p class="lead reveal">La línea negra: la cima de 61, la caída y el desplome a cero. La verde punteada: la recuperación arreglando las fugas, hasta el tope de lo que la clínica puede atender.</p>
+</div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Análisis FODA</div>
+<h2 class="reveal">Dónde estamos parados</h2>
+<div class="foda reveal">
+<div class="fcard f"><h3><span class="dot" style="background:var(--lime)"></span>Fortalezas</h3><ul><li>Demanda comprobada: hasta 61 pacientes en un mes fuerte</li><li>La publicidad atrae bien: CTR 1,14%, clic barato</li><li>Servicios ancla claros: Endodoncia, Placas, Implantes</li><li>Marca con la Dra. Mirna como cara y confianza</li></ul></div>
+<div class="fcard o"><h3><span class="dot" style="background:#378ADD"></span>Oportunidades</h3><ul><li>Subir el agendamiento del 4,4% al 25%: triplicaría pacientes</li><li>Recordatorios para llevar la asistencia al 80%</li><li>Con embudo sano, los mismos pacientes cuestan mucho menos</li><li>Trazar en Kommo para medir y corregir</li><li>Derivar a alto ticket (endodoncia, rehabilitación)</li><li>Reforzar en aguinaldo (julio y diciembre)</li></ul></div>
+<div class="fcard d"><h3><span class="dot" style="background:var(--amber)"></span>Debilidades</h3><ul><li>Solo 4,4% de los que escriben agenda (fuga crítica)</li><li>Solo 27% de los que agendan se presenta (fuga crítica)</li><li>Sin renovación de creativos → fatiga y colapso</li><li>Sin trazabilidad de por qué se pierde cada cita</li><li>Campañas ganadoras abandonadas (Placas, Implantes)</li><li>Gasto corriendo solo durante el colapso</li></ul></div>
+<div class="fcard a"><h3><span class="dot" style="background:var(--red)"></span>Amenazas</h3><ul><li>Saturación de la audiencia local (frecuencia subió a 2,0)</li><li>Políticas de salud de Meta: rechazos que dañan la cuenta</li><li>Competencia de otras clínicas en la zona</li><li>Dependencia de un solo canal (WhatsApp)</li><li>Repetir el ciclo dorado→colapso si no se renueva</li><li>Cada mes sin arreglar el embudo, se pierden pacientes</li></ul></div>
+</div></div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Plan de mejora</div>
+<h2 class="reveal">Cómo debería ser,<br>y cómo llegar</h2>
+<div class="mejora reveal"><div class="num">1</div><div><h3>Atacar la Fuga 1: subir el agendamiento del 4,4%</h3><p>Responder en menos de 15 minutos y proponer siempre día y hora con dos opciones concretas.</p><span class="imp">Subirlo aunque sea al 10% ya duplica los pacientes con el mismo gasto</span></div></div>
+<div class="mejora reveal"><div class="num">2</div><div><h3>Atacar la Fuga 2: subir la asistencia del 27% al 80%</h3><p>Confirmar la cita, recordar el día antes y el mismo día, y no sobreagendar varios para la misma hora.</p><span class="imp">Triplica los que efectivamente llegan al sillón</span></div></div>
+<div class="mejora reveal"><div class="num">3</div><div><h3>Medir por qué se pierde cada cita</h3><p>Registrar en Kommo qué pasa con cada agendado: no contestó, no confirmó, no vino.</p><span class="imp">Convierte el problema en algo accionable</span></div></div>
+<div class="mejora reveal"><div class="num">4</div><div><h3>Renovar creativos cada 3-4 semanas</h3><p>Rotar arte antes de que la audiencia se sature. Si la frecuencia pasa de 2, cambiar.</p><span class="imp">Evita el colapso que borró junio</span></div></div>
+<div class="mejora reveal"><div class="num">5</div><div><h3>Concentrar en servicios ancla</h3><p>Priorizar Endodoncia, Placas e Implantes. Soltar los flojos (Extracciones, Blanqueamiento).</p><span class="imp">Baja el costo por paciente</span></div></div>
+<div class="mejora reveal"><div class="num">6</div><div><h3>Subir el ticket promedio</h3><p>Trabajar la presentación del plan en el sillón para pasar de Bs 200 hacia Bs 300 o más.</p><span class="imp">Mejora el retorno sin subir la inversión</span></div></div>
+</div></section>
+
+<section><div class="wrap">
+<div class="eyebrow reveal">Proyección realista</div>
+<h2 class="reveal">Con el embudo arreglado,<br>el límite deja de ser la plata</h2>
+<p class="lead reveal">Al arreglar las fugas, el costo por paciente baja de Bs 84 (el mejor mes) hacia Bs 50. Con eso, el mismo dinero rinde mucho más. Antes se gastaba <b style="color:var(--red)">Bs 4.355 para 55-60 pacientes</b>; con el embudo sano, esa misma plata alcanza para el tope que la clínica puede atender.</p>
+<table class="tbl reveal">
+<thead><tr><th>Lo que cuesta cada meta</th><th class="bad">Embudo roto (Bs 84 c/u)</th><th class="hi">Embudo sano (Bs 50 c/u)</th></tr></thead>
+<tbody><tr><td>60 pacientes/mes</td><td class="act">Bs 5.040</td><td class="san">Bs 3.000</td></tr><tr><td>80 pacientes/mes</td><td class="act">Bs 6.720</td><td class="san">Bs 4.000</td></tr></tbody>
+<caption>El costo por paciente sano asume leads de mejor calidad (más caros que los masivos, pero que convierten mucho mejor).</caption>
+</table>
+<table class="tbl reveal">
+<thead><tr><th>Período</th><th>Meta pac.</th><th>Costo x pac.</th><th>Inversión</th><th>Fact. Bs200</th><th>Fact. Bs300</th></tr></thead>
+<tbody><tr><td>Mes 1 (ago)</td><td>30</td><td>Bs 80</td><td>Bs 2.400</td><td>Bs 6.000</td><td>Bs 9.000</td></tr><tr><td>Mes 2 (sep)</td><td>45</td><td>Bs 68</td><td>Bs 3.060</td><td>Bs 9.000</td><td>Bs 13.500</td></tr><tr><td>Mes 3 (oct)</td><td>55</td><td>Bs 60</td><td>Bs 3.300</td><td>Bs 11.000</td><td>Bs 16.500</td></tr><tr><td>Mes 4 (nov)</td><td>65</td><td>Bs 55</td><td>Bs 3.575</td><td>Bs 13.000</td><td>Bs 19.500</td></tr><tr><td>Mes 5 (dic)</td><td>72</td><td>Bs 52</td><td>Bs 3.744</td><td>Bs 14.400</td><td>Bs 21.600</td></tr><tr><td>Mes 6 (ene)</td><td>80</td><td>Bs 50</td><td>Bs 4.000</td><td>Bs 16.000</td><td>Bs 24.000</td></tr><tr class="tot"><td>6 meses</td><td>347</td><td>—</td><td>Bs 20.079</td><td>Bs 69.400</td><td>Bs 104.100</td></tr></tbody>
+<caption>Recuperación gradual: a medida que se arreglan las fugas, el costo por paciente baja y se llega al tope de capacidad (80/mes).</caption>
+</table>
+<div class="note reveal">En 6 meses, con Bs 20.079 de inversión total, la proyección es de <b>347 pacientes nuevos</b> y una facturación de Bs 69.400 a Bs 104.100 de primera visita. El punto clave: al llegar a 80 pacientes/mes, <b>el límite ya no es el presupuesto sino la capacidad de atención de la clínica</b>. Ahí conviene subir el ticket, no el gasto.</div>
+</div></section>
+
+<section class="close"><div class="wrap">
+<h2 class="reveal">Mismo dinero de antes,<br>de <b>60</b> a <b>80</b> pacientes.</h2>
+<p class="reveal">Arreglando el embudo, la plata que antes daba 55-60 pacientes rinde hasta el tope que la clínica puede atender. El potencial está probado; solo falta tapar las dos fugas.</p>
+</div></section>
+
+<footer>Ezequiel Spadental · Análisis estratégico · Datos de Meta a Bs 10/USD y embudo de la clínica · Julio 2026</footer>
+<script>
+var els=document.querySelectorAll('.reveal');
+if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1});els.forEach(function(el){io.observe(el)});}else{els.forEach(function(el){el.classList.add('in')});}
+</script></body></html>
