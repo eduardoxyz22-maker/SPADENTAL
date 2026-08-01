@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe Meta Ads · Julio 2026 · Spadental y Cosmetic</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#F4F4F1;color:#262625;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
+
+/* HEADER */
+header{background:#262625;color:#fff;padding:44px 0 36px;margin-bottom:0}
+header .wrap{padding-bottom:0}
+.eyebrow{font-size:11px;letter-spacing:3px;font-weight:700;text-transform:uppercase;color:#A8C21E;margin-bottom:10px}
+h1{font-size:38px;line-height:1.1;letter-spacing:-1px;font-weight:800;margin-bottom:10px}
+.sub{color:#B8B8B0;font-size:16px}
+.hero-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.hk{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:16px 18px}
+.hk .n{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.hk .n.g{color:#BEDC2F}
+.hk .l{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:#9A9A92;margin-top:7px;font-weight:600;line-height:1.4}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:1px solid #E2E0DA;position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+.tabs .wrap{padding-bottom:0;display:flex;gap:2px;overflow-x:auto}
+.tab{padding:16px 20px;font-size:13.5px;font-weight:600;color:#7A7A72;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:.15s}
+.tab:hover{color:#262625;background:#FAFAF7}
+.tab.on{color:#262625;border-bottom-color:#A8C21E}
+
+/* PANELS */
+.panel{display:none;padding-top:34px}
+.panel.on{display:block}
+h2{font-size:25px;font-weight:800;letter-spacing:-.6px;margin-bottom:6px}
+h3{font-size:16px;font-weight:700;margin:26px 0 10px}
+.desc{color:#66665E;font-size:14.5px;margin-bottom:20px;max-width:760px}
+
+.card{background:#fff;border:1px solid #E6E4DE;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.card.tight{padding:18px 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.grid2,.grid3,.hero-kpis{grid-template-columns:1fr}}
+
+/* RECORD CARDS */
+.rec{background:linear-gradient(135deg,#fff 0%,#F7FAF0 100%);border:1.5px solid #C5D96B;border-radius:12px;padding:20px}
+.rec.gold{background:linear-gradient(135deg,#fff 0%,#FDF9EE 100%);border-color:#DFC77A}
+.rec .tag{display:inline-block;font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;background:#A8C21E;color:#262625;padding:3px 9px;border-radius:4px;margin-bottom:12px}
+.rec.gold .tag{background:#C9A227;color:#fff}
+.rec .big{font-size:36px;font-weight:800;letter-spacing:-1.5px;line-height:1;color:#3D6B14}
+.rec.gold .big{color:#8A6A12}
+.rec .where{font-size:13px;font-weight:700;margin-top:9px}
+.rec .why{font-size:12.5px;color:#66665E;margin-top:5px;line-height:1.5}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{background:#262625;color:#fff;text-align:left;padding:10px 12px;font-size:11.5px;font-weight:700;letter-spacing:.3px}
+th.n,td.n{text-align:right}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{background:#3A3A36}
+th.sortable::after{content:' ⇅';opacity:.4;font-size:10px}
+td{padding:10px 12px;border-bottom:1px solid #EFEDE7}
+tbody tr:hover td{background:#FAFAF7}
+.win{color:#3D7A1F;font-weight:700}
+.bad{color:#A83232;font-weight:700}
+.warn{color:#B8791A;font-weight:700}
+.muted{color:#9A9A92}
+
+/* BARS */
+.barrow{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.barlbl{width:150px;font-size:12.5px;font-weight:600;flex-shrink:0;text-align:right}
+.bartrack{flex:1;height:26px;background:#F0EEE8;border-radius:5px;overflow:hidden;position:relative}
+.barfill{height:100%;border-radius:5px;transition:width .8s cubic-bezier(.2,.8,.2,1);width:0}
+.barval{width:95px;font-size:12.5px;font-weight:700;flex-shrink:0}
+
+/* CHART */
+.chart{width:100%;height:280px}
+.legend{display:flex;gap:18px;font-size:12px;color:#66665E;margin-top:10px;justify-content:center;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* NOTE */
+.note{border-left:4px solid #A8C21E;background:#F4F8EA;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0}
+.note.gold{border-left-color:#C9A227;background:#FDF8EC}
+.note.red{border-left-color:#C4453A;background:#FDF2F0}
+.note.blue{border-left-color:#5A7A9A;background:#F1F4F8}
+.note b{display:block;font-size:14px;margin-bottom:4px}
+.note p{font-size:13px;color:#55554E}
+
+/* ACTION */
+.act{display:flex;gap:16px;padding:18px 20px;background:#fff;border:1px solid #E6E4DE;border-left:4px solid #262625;border-radius:0 10px 10px 0;margin-bottom:12px}
+.act .num{font-size:26px;font-weight:800;color:#C8C6BE;line-height:1;flex-shrink:0;width:34px}
+.act .t{font-size:15px;font-weight:700;margin-bottom:4px}
+.act .d{font-size:13px;color:#66665E;line-height:1.55}
+.act .imp{display:inline-block;font-size:10px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:3px;margin-top:8px}
+.imp.hi{background:#E4EFC8;color:#3D6B14}
+.imp.md{background:#FBEFD0;color:#8A6A12}
+
+.toggle{display:inline-flex;background:#EDEBE5;border-radius:8px;padding:3px;margin-bottom:16px}
+.toggle span{padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;border-radius:6px;color:#7A7A72}
+.toggle span.on{background:#fff;color:#262625;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.src{font-size:11.5px;color:#9A9A92;font-style:italic;margin-top:10px}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.4px}
+.pill.spa{background:#E4EFC8;color:#3D6B14}
+.pill.cos{background:#F7EDD2;color:#8A6A12}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Informe de rendimiento · Meta Ads</div>
+    <h1>Julio 2026</h1>
+    <div class="sub">Ezequiel Spadental · desde el 6 de julio &nbsp;|&nbsp; Cosmetic Dental &amp; Face Center · desde el 16 de julio</div>
+    <div class="hero-kpis">
+      <div class="hk"><div class="n g">895</div><div class="l">Conversaciones<br>generadas</div></div>
+      <div class="hk"><div class="n">Bs 5.653</div><div class="l">Inversión<br>total</div></div>
+      <div class="hk"><div class="n g">Bs 2,02</div><div class="l">Mejor costo<br>por conversación</div></div>
+      <div class="hk"><div class="n g">1,92x</div><div class="l">Retorno sobre<br>la inversión</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="wrap">
+    <div class="tab on" data-p="resumen">Resumen</div>
+    <div class="tab" data-p="records">Récords del mes</div>
+    <div class="tab" data-p="spa">Spadental</div>
+    <div class="tab" data-p="cos">Cosmetic</div>
+    <div class="tab" data-p="aud">Audiencia</div>
+    <div class="tab" data-p="pac">Retorno real</div>
+    <div class="tab" data-p="ubic">Dónde se muestran</div>
+    <div class="tab" data-p="agosto">Plan de agosto</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- RESUMEN -->
+<div class="panel on" id="resumen">
+  <h2>Las dos clínicas cerraron julio en su mejor punto</h2>
+  <p class="desc">Ninguna terminó el mes en su promedio: las dos terminaron muy por debajo. Eso significa que agosto no arranca desde el promedio de julio, arranca desde el mejor nivel alcanzado.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Ezequiel Spadental <span class="pill spa">Volumen</span></h3>
+      <table>
+        <tr><td>Primer anuncio publicado</td><td class="n"><b>6 de julio</b></td></tr>
+        <tr><td>Días activos</td><td class="n">26</td></tr>
+        <tr><td>Inversión</td><td class="n">Bs 3.866,30</td></tr>
+        <tr><td>Conversaciones</td><td class="n"><b>700</b></td></tr>
+        <tr><td>Promedio diario</td><td class="n">26,9</td></tr>
+        <tr><td>Costo al arrancar</td><td class="n bad">Bs 10,00</td></tr>
+        <tr><td>Promedio del mes</td><td class="n">Bs 5,52</td></tr>
+        <tr><td>Último día</td><td class="n win">Bs 3,46</td></tr>
+        <tr><td>Mejora en el mes</td><td class="n win">−65%</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Cosmetic Dental <span class="pill cos">Ticket alto</span></h3>
+      <table>
+        <tr><td>Primer anuncio publicado</td><td class="n"><b>16 de julio</b></td></tr>
+        <tr><td>Días activos</td><td class="n">16</td></tr>
+        <tr><td>Inversión</td><td class="n">Bs 1.787,19</td></tr>
+        <tr><td>Conversaciones</td><td class="n"><b>195</b></td></tr>
+        <tr><td>Promedio diario</td><td class="n">12,2</td></tr>
+        <tr><td>Costo al arrancar</td><td class="n bad">Bs 10,69</td></tr>
+        <tr><td>Promedio del mes</td><td class="n">Bs 9,16</td></tr>
+        <tr><td>Último día</td><td class="n win">Bs 5,63</td></tr>
+        <tr><td>Mejora en el mes</td><td class="n win">−38%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="note blue">
+    <b>Las dos cuentas no arrancaron el mismo día</b>
+    <p>Spadental se lanzó el <b>6 de julio</b> y acumuló 26 días de actividad. Cosmetic se lanzó el <b>16 de julio</b>, diez días después, con 16 días de actividad. Esa diferencia explica por qué Cosmetic tiene menos conversaciones acumuladas y por qué su curva de aprendizaje está menos avanzada: en Meta, las cuentas nuevas siempre arrancan caras y bajan a medida que acumulan historial.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Evolución del costo por conversación</h3>
+    <p style="font-size:12.5px;color:#66665E;margin-bottom:8px">Spadental por semana desde el 6 de julio · Cosmetic por tramo desde el 16 de julio</p>
+    <svg class="chart" id="chartMain" viewBox="0 0 900 280" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend">
+      <span><i style="background:#5A9130"></i>Spadental</span>
+      <span><i style="background:#C9A227"></i>Cosmetic</span>
+      <span><i style="background:#C4453A"></i>Punto de cambio</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Por qué bajó el costo</b>
+    <p>No fue por gastar menos ni por suerte. Bajó por tres decisiones concretas: se probó un objetivo de campaña distinto y ganó, se reemplazaron los anuncios de imagen por video, y se apagaron los que no convertían. El detalle está en las pestañas de cada clínica.</p>
+  </div>
+</div>
+
+<!-- RECORDS -->
+<div class="panel" id="records">
+  <h2>Los mejores números del mes</h2>
+  <p class="desc">Cada récord con su origen y la explicación de por qué se dio. Todos los datos provienen del reporte oficial de Meta Ads.</p>
+
+  <div class="grid3">
+    <div class="rec">
+      <div class="tag">Costo más bajo</div>
+      <div class="big">Bs 2,02</div>
+      <div class="where">Blanqueamiento (Ventas) · viernes 31</div>
+      <div class="why">18 conversaciones ese día. Es el anuncio en campaña de Ventas, el objetivo que resultó más barato en la prueba comparativa.</div>
+    </div>
+    <div class="rec">
+      <div class="tag">CPM más bajo</div>
+      <div class="big">Bs 4,37</div>
+      <div class="where">Ubicación Marketplace · Spadental</div>
+      <div class="why">El lugar más barato para mostrar anuncios. Recibió solo el 1,9% del presupuesto porque su CTR es bajo (0,62%).</div>
+    </div>
+    <div class="rec">
+      <div class="tag">CTR más alto</div>
+      <div class="big">4,26%</div>
+      <div class="where">Ubicación Búsqueda · Spadental</div>
+      <div class="why">Gente que activamente busca. Cuatro veces más interés que el promedio, aunque su CPM es el más caro (Bs 70).</div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:14px">
+    <div class="rec gold">
+      <div class="tag">Mejor día en volumen</div>
+      <div class="big">54</div>
+      <div class="where">Spadental · lunes 27 y miércoles 29</div>
+      <div class="why">Conversaciones en un solo día, a Bs 4,33 y Bs 3,85 respectivamente. El récord se alcanzó dos veces.</div>
+    </div>
+    <div class="rec gold">
+      <div class="tag">Mejor día Cosmetic</div>
+      <div class="big">28</div>
+      <div class="where">Cosmetic · miércoles 29</div>
+      <div class="why">Primer día completo con todos los anuncios en video. A Bs 5,37 cada conversación, contra Bs 10,69 de la estructura anterior.</div>
+    </div>
+    <div class="rec gold">
+      <div class="tag">CPM más bajo por conjunto</div>
+      <div class="big">Bs 4,72</div>
+      <div class="where">Campaña Niños video · miércoles 29</div>
+      <div class="why">Video vertical corto. Meta cobra menos por mostrar contenido que retiene la atención.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h3 style="margin-top:0">El anuncio más eficiente del mes</h3>
+    <table>
+      <tr><th>Anuncio</th><th class="n">Conversaciones</th><th class="n">Costo</th><th class="n">CPM</th><th class="n">CTR</th></tr>
+      <tr><td><b>Blanqueamiento · campaña de Ventas</b> <span class="pill spa">Spadental</span></td><td class="n win">181</td><td class="n win">Bs 3,14</td><td class="n win">Bs 10,08</td><td class="n">1,62%</td></tr>
+      <tr><td>Blanqueamiento · campaña de Interacción <span class="pill spa">Spadental</span></td><td class="n">191</td><td class="n">Bs 4,32</td><td class="n">Bs 15,07</td><td class="n">2,08%</td></tr>
+    </table>
+    <div class="note blue" style="margin-bottom:0">
+      <b>La prueba que definió el mes</b>
+      <p>Los dos anuncios usaron <b>el mismo video, el mismo público y la misma zona</b>. Lo único distinto era el objetivo de la campaña. El de Ventas compró las impresiones 33% más baratas y cerró el mes con un costo 27% menor. Esa diferencia, aplicada a toda la cuenta, equivale a unos <b>Bs 950 al mes</b>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SPADENTAL -->
+<div class="panel" id="spa">
+  <h2>Ezequiel Spadental</h2>
+  <p class="desc"><b>Primer anuncio publicado: lunes 6 de julio de 2026.</b> En 26 días de actividad pasó de 8 a 44 conversaciones por día, con el costo cayendo 61% y el CPM 36%.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">Semana a semana</h3>
+    <table>
+      <tr><th>Semana</th><th class="n">Invertido</th><th class="n">Conversaciones</th><th class="n">Por día</th><th class="n">Costo</th><th class="n">CPM</th></tr>
+      <tr><td>Semana 1 · 6-12 jul</td><td class="n">530,11</td><td class="n">53</td><td class="n">7,6</td><td class="n bad">10,00</td><td class="n">18,44</td></tr>
+      <tr><td>Semana 2 · 13-19 jul</td><td class="n">1.306,96</td><td class="n">172</td><td class="n">24,6</td><td class="n warn">7,60</td><td class="n">17,07</td></tr>
+      <tr><td>Semana 3 · 20-26 jul</td><td class="n">1.143,83</td><td class="n">249</td><td class="n">35,6</td><td class="n win">4,59</td><td class="n">15,44</td></tr>
+      <tr><td><b>Semana 4 · 27-31 jul</b></td><td class="n">864,32</td><td class="n"><b>221</b></td><td class="n win">44,2</td><td class="n win">3,91</td><td class="n win">11,75</td></tr>
+    </table>
+    <div class="note">
+      <b>La semana 4 gastó un tercio menos que la semana 2 y trajo 49 conversaciones más</b>
+      <p>El CPM bajó de Bs 18,44 a Bs 11,75. Meta cobra menos cuando la cuenta acumula historial de conversiones: es el efecto de maduración, y por eso las cuentas nuevas siempre arrancan caras.</p>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Los últimos cinco días</h3>
+      <table>
+        <tr><th>Día</th><th class="n">Conv.</th><th class="n">Costo</th></tr>
+        <tr><td>Lunes 27</td><td class="n win">54</td><td class="n">4,33</td></tr>
+        <tr><td>Martes 28</td><td class="n">37</td><td class="n">4,25</td></tr>
+        <tr><td>Miércoles 29</td><td class="n win">50</td><td class="n">3,85</td></tr>
+        <tr><td>Jueves 30</td><td class="n">37</td><td class="n">3,57</td></tr>
+        <tr><td><b>Viernes 31</b></td><td class="n">43</td><td class="n win">3,46</td></tr>
+      </table>
+      <p class="src">El costo bajó cinco días consecutivos. El mes cierra en su punto más bajo.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Los cuatro anuncios activos</h3>
+      <table>
+        <tr><th>Anuncio</th><th class="n">Conv.</th><th class="n">Costo</th></tr>
+        <tr><td><b>Blanqueamiento (Ventas)</b></td><td class="n">181</td><td class="n win">3,14</td></tr>
+        <tr><td>Blanqueamiento</td><td class="n">191</td><td class="n win">4,32</td></tr>
+        <tr><td>Niños (video)</td><td class="n">47</td><td class="n win">4,89</td></tr>
+        <tr><td>Limpieza <span class="pill cos">imagen</span></td><td class="n">187</td><td class="n warn">6,56</td></tr>
+      </table>
+      <p class="src">Limpieza es el único que sigue en imagen y el más caro de los cuatro.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Imagen contra video en toda la cuenta</h3>
+    <p style="font-size:13px;color:#66665E;margin-bottom:14px">Sumando todo lo invertido en cada formato durante los 26 días.</p>
+    <table>
+      <tr><th>Formato</th><th class="n">Invertido</th><th class="n">% del gasto</th><th class="n">Conversaciones</th><th class="n">Costo</th></tr>
+      <tr><td><b>Video</b> · 3 anuncios</td><td class="n">Bs 1.622,35</td><td class="n">42%</td><td class="n win">419</td><td class="n win">Bs 3,87</td></tr>
+      <tr><td><b>Imagen</b> · 3 anuncios</td><td class="n">Bs 2.243,95</td><td class="n bad">58%</td><td class="n">281</td><td class="n bad">Bs 7,98</td></tr>
+    </table>
+    <div class="note red">
+      <b>El video recibió menos presupuesto y trajo 138 conversaciones más</b>
+      <p>Con el 42% del dinero generó el 60% de las conversaciones, a menos de la mitad de costo. <b>El formato imagen concentró Bs 2.244 y rindió Bs 7,98 por conversación, contra Bs 3,87 del video.</b></p>
+      <p style="margin-top:6px">Este resultado es independiente del obtenido en Cosmetic: otra cuenta, otro público, otros servicios, misma conclusión. Dos de los tres anuncios en imagen ya se pausaron durante el mes. <b>El único que sigue activo es Limpieza, que consume Bs 1.226 mensuales y es el anuncio más caro de la cuenta.</b></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Dos decisiones que cambiaron el mes</h3>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:6px">Cambio de objetivo de campaña</h3>
+        <table>
+          <tr><th>Objetivo</th><th class="n">Costo</th></tr>
+          <tr><td>Ventas</td><td class="n win">Bs 3,14</td></tr>
+          <tr><td>Interacción</td><td class="n">Bs 4,32</td></tr>
+        </table>
+      </div>
+      <div>
+        <h3 style="margin-top:6px">Cambio de imagen a video</h3>
+        <table>
+          <tr><th>Anuncio de niños</th><th class="n">Costo</th></tr>
+          <tr><td>En video</td><td class="n win">Bs 4,89</td></tr>
+          <tr><td>En imagen (pausado)</td><td class="n bad">Bs 10,14</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COSMETIC -->
+<div class="panel" id="cos">
+  <h2>Cosmetic Dental &amp; Face Center</h2>
+  <p class="desc"><b>Primer anuncio publicado: jueves 16 de julio de 2026.</b> Doce días sin mejorar, y un cambio de formato el 28 de julio que bajó el costo 38% en cuatro días.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">Antes y después del cambio</h3>
+    <table>
+      <tr><th>Período</th><th class="n">Invertido</th><th class="n">Conversaciones</th><th class="n">Por día</th><th class="n">Costo</th></tr>
+      <tr><td>16-22 jul · estructura original</td><td class="n">626,94</td><td class="n">64</td><td class="n">9,1</td><td class="n">9,80</td></tr>
+      <tr><td>23-27 jul · estructura original</td><td class="n">666,24</td><td class="n">56</td><td class="n bad">11,20</td><td class="n bad">11,90</td></tr>
+      <tr><td><b>28-31 jul · 100% video</b></td><td class="n">493,83</td><td class="n"><b>75</b></td><td class="n win">18,8</td><td class="n win">6,58</td></tr>
+    </table>
+    <div class="note gold">
+      <b>La cuenta venía empeorando, no estancada</b>
+      <p>El costo pasó de Bs 9,80 a Bs 11,90 en los primeros doce días. El 28 de julio se reemplazaron todos los anuncios de imagen por video y en cuatro días el costo bajó 38% y las conversaciones diarias subieron 88%.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Imagen contra video: el mismo servicio</h3>
+    <table>
+      <tr><th>Servicio</th><th class="n">En imagen</th><th class="n">En video</th><th class="n">Diferencia</th></tr>
+      <tr><td><b>Implantes</b></td><td class="n bad">Bs 12,02</td><td class="n win">Bs 4,67</td><td class="n win">−61%</td></tr>
+      <tr><td><b>Carillas y limpieza</b></td><td class="n bad">Bs 10,28</td><td class="n win">Bs 4,85</td><td class="n win">−53%</td></tr>
+    </table>
+    <div class="note blue">
+      <b>La prueba más limpia: corrieron en paralelo</b>
+      <p>Del 24 al 27 de julio los dos formatos corrieron al mismo tiempo, con el mismo público y presupuesto casi idéntico. <b>Imagen: Bs 303,41 y 19 conversaciones. Video: Bs 286,36 y 31 conversaciones.</b> Con menos dinero, el video trajo 12 conversaciones más.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Los anuncios al cierre del mes</h3>
+    <table>
+      <tr><th>Anuncio</th><th class="n">Costo</th><th>Estado</th></tr>
+      <tr><td><b>Implantes (video)</b></td><td class="n win">Bs 4,67</td><td class="win">Escalar</td></tr>
+      <tr><td><b>Limpieza y carillas (video)</b></td><td class="n win">Bs 4,85</td><td class="win">Escalar</td></tr>
+      <tr><td>Tratamiento capilar (video)</td><td class="n win">Bs 5,96</td><td class="win">Mantener</td></tr>
+      <tr><td>Diseño de sonrisa (video)</td><td class="n warn">Bs 11,51</td><td class="warn">Revisar</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- AUDIENCIA -->
+<div class="panel" id="aud">
+  <h2>Quién responde a los anuncios</h2>
+  <p class="desc">Análisis demográfico completo del mes. Los datos de edad y género provienen del desglose oficial de Meta.</p>
+
+  <div class="toggle" id="tgAud">
+    <span class="on" data-a="spa">Spadental</span>
+    <span data-a="cos">Cosmetic</span>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Interés por edad <span id="audTitle" class="muted" style="font-weight:400;font-size:14px"></span></h3>
+    <p style="font-size:13px;color:#66665E;margin-bottom:16px">Porcentaje de personas que tocan el anuncio al verlo (CTR)</p>
+    <div id="ageBars"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Reparto del presupuesto por edad</h3>
+    <table id="ageTable">
+      <tr><th>Edad</th><th class="n">Invertido</th><th class="n">% del gasto</th><th class="n">CTR</th><th class="n">CPM</th><th class="n">Alcance</th></tr>
+    </table>
+  </div>
+
+  <div class="note red">
+    <b>El hallazgo que más margen deja para agosto</b>
+    <p>En las dos clínicas el interés <b>sube con la edad</b>, pero el presupuesto se concentra en los tramos jóvenes. En Spadental, los menores de 35 reciben el <b>52% del gasto</b> y tienen el CTR más bajo. Los mayores de 55, que tocan el anuncio tres veces más, reciben apenas el 11%.</p>
+    <p style="margin-top:6px">Tiene lógica clínica: los tratamientos de mayor valor (implantes, prótesis, rehabilitación) corresponden a pacientes de más edad. Reasignar presupuesto hacia esos tramos es la corrección más directa disponible.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Por género</h3>
+      <table id="genTable">
+        <tr><th>Género</th><th class="n">Invertido</th><th class="n">CTR</th><th class="n">CPM</th></tr>
+      </table>
+      <p class="src" id="genNote"></p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Ubicación geográfica</h3>
+      <table>
+        <tr><th>Departamento</th><th class="n">Impresiones</th><th class="n">% del total</th></tr>
+        <tr><td><b>Santa Cruz</b></td><td class="n">311.364</td><td class="n win">100%</td></tr>
+        <tr><td class="muted">Resto de Bolivia</td><td class="n muted">0</td><td class="n muted">0%</td></tr>
+      </table>
+      <p class="src">La segmentación geográfica funcionó de forma perfecta durante todo el mes: ni una sola impresión fuera del departamento.</p>
+    </div>
+  </div>
+</div>
+
+<!-- COSTO POR PACIENTE -->
+<div class="panel" id="pac">
+  <h2>Cuánto devuelve cada boliviano invertido</h2>
+  <p class="desc">Meta informa conversaciones, no pacientes ni facturación. Cruzando el identificador de anuncio de cada contacto de WhatsApp con la agenda de la clínica y el precio de cada servicio, se obtiene lo único que importa: <b>el retorno económico real de cada anuncio.</b></p>
+
+  <div class="grid3">
+    <div class="rec">
+      <div class="tag">Pacientes agendados</div>
+      <div class="big">33</div>
+      <div class="where">Julio · Ezequiel Spadental</div>
+      <div class="why">De 700 conversaciones. Tasa global de conversión del 4,71%.</div>
+    </div>
+    <div class="rec">
+      <div class="tag">Retorno sobre inversión</div>
+      <div class="big">1,92x</div>
+      <div class="where">Bs 7.440 generados · Bs 3.866 invertidos</div>
+      <div class="why">Cada boliviano invertido devolvió Bs 1,92 solo en la primera visita de cada paciente.</div>
+    </div>
+    <div class="rec gold">
+      <div class="tag">Sin identificar</div>
+      <div class="big">11</div>
+      <div class="where">33% de los pacientes</div>
+      <div class="why">Llegaron sin etiqueta de anuncio. Su atribución no puede verificarse.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h3 style="margin-top:0">Rentabilidad por anuncio</h3>
+    <table>
+      <tr><th>Anuncio</th><th class="n">Invertido</th><th class="n">Pacientes</th><th class="n">Precio servicio</th><th class="n">Ingreso</th><th class="n">Margen</th><th class="n">ROI</th></tr>
+      <tr><td><b>Blanqueamiento</b> · video</td><td class="n">825,04</td><td class="n">7</td><td class="n">Bs 300</td><td class="n">Bs 2.100</td><td class="n win">+1.274,96</td><td class="n win">2,55x</td></tr>
+      <tr><td><b>Blanqueamiento Ventas</b> · video</td><td class="n">567,55</td><td class="n">3</td><td class="n">Bs 300</td><td class="n">Bs 900</td><td class="n win">+332,45</td><td class="n win">1,59x</td></tr>
+      <tr><td><b>Limpieza</b> · imagen</td><td class="n">1.225,90</td><td class="n">8</td><td class="n">Bs 180</td><td class="n">Bs 1.440</td><td class="n warn">+214,10</td><td class="n warn">1,17x</td></tr>
+      <tr><td>Niños video</td><td class="n">229,76</td><td class="n">1</td><td class="n">Bs 130</td><td class="n">Bs 130</td><td class="n bad">−99,76</td><td class="n bad">0,57x</td></tr>
+      <tr><td class="muted">Niños imagen · pausado</td><td class="n muted">730,35</td><td class="n muted">3</td><td class="n muted">Bs 130</td><td class="n muted">Bs 390</td><td class="n bad">−340,35</td><td class="n bad">0,53x</td></tr>
+      <tr style="background:#F4F8EA"><td><b>Total verificado</b></td><td class="n"><b>3.578,60</b></td><td class="n"><b>22</b></td><td class="n">—</td><td class="n"><b>Bs 4.960</b></td><td class="n win"><b>+1.381,40</b></td><td class="n win"><b>1,39x</b></td></tr>
+    </table>
+    <p class="src">El ingreso corresponde únicamente a la primera visita de cada paciente. No incluye tratamientos posteriores ni el valor de vida del paciente.</p>
+  </div>
+
+  <div class="note red">
+    <b>Dos anuncios de niños perdieron plata: Bs 440 en el mes</b>
+    <p>El servicio de niños cuesta <b>Bs 130</b> y cada paciente captado costó <b>Bs 229 a Bs 243</b>. Entre los dos anuncios consumieron Bs 960 y generaron Bs 520 de ingreso.</p>
+    <p style="margin-top:6px">Para ser rentable, el costo por conversación de ese anuncio no puede superar <b>Bs 2,77</b> (Bs 130 × 2,13% de tasa). Hoy paga Bs 4,89. Es el único caso de la cuenta donde el gasto no se recupera.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">El costo máximo que puede pagar cada anuncio</h3>
+    <p style="font-size:13px;color:#66665E;margin-bottom:14px">Precio del servicio × tasa de cita = lo máximo que puede costar una conversación sin perder dinero. Es el límite económico de cada anuncio.</p>
+    <table>
+      <tr><th>Anuncio</th><th class="n">Ticket</th><th class="n">Tasa de cita</th><th class="n">Máximo tolerable</th><th class="n">Paga hoy</th><th class="n">Margen disponible</th></tr>
+      <tr><td><b>Blanqueamiento</b></td><td class="n">Bs 300</td><td class="n">3,66%</td><td class="n win">Bs 10,99</td><td class="n">Bs 4,32</td><td class="n win">+155%</td></tr>
+      <tr><td><b>Blanqueamiento Ventas</b></td><td class="n">Bs 300</td><td class="n">1,66%</td><td class="n win">Bs 4,97</td><td class="n">Bs 3,14</td><td class="n win">+59%</td></tr>
+      <tr><td>Limpieza</td><td class="n">Bs 180</td><td class="n">4,28%</td><td class="n">Bs 7,70</td><td class="n warn">Bs 6,56</td><td class="n warn">+17%</td></tr>
+      <tr><td>Niños video</td><td class="n">Bs 130</td><td class="n">2,13%</td><td class="n">Bs 2,77</td><td class="n bad">Bs 4,89</td><td class="n bad">−43%</td></tr>
+      <tr><td class="muted">Niños imagen</td><td class="n muted">Bs 130</td><td class="n muted">4,17%</td><td class="n muted">Bs 5,42</td><td class="n bad">Bs 10,14</td><td class="n bad">−47%</td></tr>
+    </table>
+    <div class="note">
+      <b>Blanqueamiento tiene 155% de margen sin usar</b>
+      <p>Podría pagar hasta Bs 10,99 por conversación y seguir siendo rentable. Hoy paga Bs 4,32. <b>Es el anuncio con más capacidad de escalar de toda la cuenta</b>: aunque su costo suba al aumentarle presupuesto, tiene un colchón enorme antes de dejar de convenir.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">El ranking cambia tres veces según la métrica</h3>
+    <table>
+      <tr><th>Anuncio</th><th class="n">Por conversación</th><th class="n">Por paciente</th><th class="n">Por retorno</th></tr>
+      <tr><td><b>Blanqueamiento</b></td><td class="n">Bs 4,32 · 2º</td><td class="n win">Bs 117,86 · 1º</td><td class="n win">2,55x · 1º</td></tr>
+      <tr><td>Blanqueamiento Ventas</td><td class="n win">Bs 3,14 · 1º</td><td class="n bad">Bs 189,18 · 3º</td><td class="n">1,59x · 2º</td></tr>
+      <tr><td>Limpieza</td><td class="n bad">Bs 6,56 · 4º</td><td class="n">Bs 153,24 · 2º</td><td class="n warn">1,17x · 3º</td></tr>
+      <tr><td>Niños video</td><td class="n">Bs 4,89 · 3º</td><td class="n">Bs 229,76 · 4º</td><td class="n bad">0,57x · 4º</td></tr>
+    </table>
+    <p class="src">Solo Blanqueamiento se mantiene arriba en las tres. Los demás cambian de posición según qué se mida, y esa es exactamente la razón por la que optimizar por costo por conversación puede llevar a decisiones equivocadas.</p>
+  </div>
+
+  <div class="note blue">
+    <b>Rigor estadístico: qué tan sólida es esta conclusión</b>
+    <p>La diferencia entre la tasa de Limpieza (4,28%) y la de Blanqueamiento Ventas (1,66%) arroja un valor <b>z de 1,48</b>, por debajo del umbral de 1,96 requerido para significancia al 95%. Con entre 1 y 8 pacientes por anuncio, <b>la muestra todavía es chica</b>.</p>
+    <p style="margin-top:6px">La señal es consistente y apunta en una dirección clara, pero necesita el volumen de agosto para confirmarse. Ninguna decisión de este informe se apoya únicamente en esta diferencia.</p>
+  </div>
+
+  <div class="note gold">
+    <b>El 33% ciego: por qué cerrar esa brecha es la prioridad</b>
+    <p>Once pacientes llegaron sin identificador de anuncio, sobre una inversión atribuible de <b>Bs 1.289</b>. Ese vacío puede alterar completamente la lectura:</p>
+    <table style="margin-top:10px;font-size:12.5px">
+      <tr><th>Si esos 11 pertenecieran a...</th><th class="n">Tasa Blanqueamiento</th><th class="n">Tasa Limpieza</th><th class="n">Tasa Ventas</th></tr>
+      <tr><td>Reparto proporcional</td><td class="n">5,48%</td><td class="n">6,09%</td><td class="n">3,47%</td></tr>
+      <tr><td><b>Todos a Blanqueamiento Ventas</b></td><td class="n">3,66%</td><td class="n">4,28%</td><td class="n win">7,73%</td></tr>
+      <tr><td>Solo los verificados (lectura actual)</td><td class="n">3,66%</td><td class="n">4,28%</td><td class="n bad">1,66%</td></tr>
+    </table>
+    <p style="margin-top:10px">En el escenario extremo, el anuncio que hoy figura como el peor pasaría a ser <b>el mejor de la cuenta</b>. Por eso el registro completo del origen de cada paciente es la acción de mayor valor para agosto: sin ella, un tercio de las decisiones se toma a ciegas.</p>
+  </div>
+</div>
+
+<!-- UBICACIONES -->
+<div class="panel" id="ubic">
+  <h2>Dónde se muestran los anuncios</h2>
+  <p class="desc">Meta reparte cada anuncio entre distintos lugares de Facebook, Instagram y WhatsApp. Cada uno tiene un costo y un nivel de respuesta muy distinto.</p>
+
+  <div class="toggle" id="tgUb">
+    <span class="on" data-u="spa">Spadental</span>
+    <span data-u="cos">Cosmetic</span>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Reparto del presupuesto</h3>
+    <div id="ubBars"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Detalle completo por ubicación</h3>
+    <table id="ubTable">
+      <tr><th class="sortable">Ubicación</th><th class="n sortable">Invertido</th><th class="n sortable">% gasto</th><th class="n sortable">Impresiones</th><th class="n sortable">CTR</th><th class="n sortable">CPM</th></tr>
+    </table>
+    <p class="src">Ordenable: hacé clic en cualquier encabezado para reordenar la tabla.</p>
+  </div>
+
+  <div class="note">
+    <b>Dos lecturas opuestas del mismo dato</b>
+    <p><b>El feed concentra la mitad del presupuesto</b> (51% en Spadental, 66% en Cosmetic) con un costo intermedio. Es el lugar con más inventario disponible, por eso Meta lo prioriza.</p>
+    <p style="margin-top:6px"><b>Búsqueda tiene el CTR más alto del mes (4,26%)</b> pero también el CPM más caro (Bs 70,04). Es gente que busca activamente un dentista, mucho más calificada, pero alcanzarla cuesta cinco veces más que el promedio.</p>
+  </div>
+</div>
+
+<!-- AGOSTO -->
+<div class="panel" id="agosto">
+  <h2>Plan de agosto</h2>
+  <p class="desc">Construido sobre el cruce de datos de Meta con los pacientes agendados, no sobre métricas de plataforma aisladas. Cada acción incluye el impacto estimado y el supuesto sobre el que descansa.</p>
+
+  <div class="toggle" id="tgPlan">
+    <span class="on" data-pl="spa">Ezequiel Spadental</span>
+    <span data-pl="cos">Cosmetic Dental</span>
+  </div>
+
+  <div id="planSpa">
+  <div class="card">
+    <h3 style="margin-top:0">Punto de partida verificado</h3>
+    <p style="font-size:13px;color:#66665E;margin-bottom:14px">Comparación sobre la misma base: pacientes con anuncio identificado.</p>
+    <table>
+      <tr><th>Indicador</th><th class="n">Julio real</th><th class="n">Agosto proyectado</th><th class="n">Cambio</th></tr>
+      <tr><td>Inversión</td><td class="n">Bs 3.579</td><td class="n">Bs 3.000</td><td class="n win">−16%</td></tr>
+      <tr><td>Conversaciones</td><td class="n">678</td><td class="n">733</td><td class="n win">+8%</td></tr>
+      <tr><td>Costo por conversación</td><td class="n">Bs 5,28</td><td class="n win">Bs 4,09</td><td class="n win">−23%</td></tr>
+      <tr><td>Pacientes</td><td class="n">22</td><td class="n win">25</td><td class="n win">+13%</td></tr>
+      <tr><td><b>Ingreso generado</b></td><td class="n">Bs 4.960</td><td class="n win">Bs 6.102</td><td class="n win">+23%</td></tr>
+      <tr><td><b>Margen neto</b></td><td class="n">Bs 1.381</td><td class="n win">Bs 3.102</td><td class="n win">+125%</td></tr>
+      <tr><td><b>Retorno (ROI)</b></td><td class="n">1,39x</td><td class="n win">2,03x</td><td class="n win">+46%</td></tr>
+      <tr><td>Costo por paciente</td><td class="n">Bs 162,66</td><td class="n win">Bs 120,80</td><td class="n win">−26%</td></tr>
+    </table>
+    <div class="note">
+      <b>Más margen con menos presupuesto</b>
+      <p>El objetivo no es gastar más: es <b>reducir la inversión un 16% y duplicar el margen neto</b>. Se logra concentrando el presupuesto en los anuncios con mejor retorno y eliminando el que pierde dinero.</p>
+    </div>
+  </div>
+
+  <h3>Reparto propuesto del presupuesto</h3>
+  <div class="card tight">
+    <table>
+      <tr><th>Anuncio</th><th class="n">Asignación</th><th class="n">Presupuesto</th><th class="n">Pacientes</th><th class="n">Ingreso</th><th class="n">Margen</th></tr>
+      <tr><td><b>Blanqueamiento</b> · ROI 2,55x</td><td class="n">45%</td><td class="n">Bs 1.350</td><td class="n">10,6</td><td class="n">Bs 3.174</td><td class="n win">+1.824</td></tr>
+      <tr><td><b>Limpieza en video</b> · ROI 1,93x est.</td><td class="n">35%</td><td class="n">Bs 1.050</td><td class="n">11,2</td><td class="n">Bs 2.022</td><td class="n win">+972</td></tr>
+      <tr><td>Blanqueamiento Ventas · ROI 1,59x</td><td class="n">20%</td><td class="n">Bs 600</td><td class="n">3,0</td><td class="n">Bs 905</td><td class="n win">+305</td></tr>
+      <tr><td class="bad">Niños · ROI 0,57x</td><td class="n bad">0%</td><td class="n bad">retirado</td><td class="n">—</td><td class="n">—</td><td class="n win">+440 ahorrado</td></tr>
+      <tr style="background:#F4F8EA"><td><b>Total</b></td><td class="n">100%</td><td class="n"><b>Bs 3.000</b></td><td class="n"><b>24,8</b></td><td class="n"><b>Bs 6.102</b></td><td class="n win"><b>+3.102</b></td></tr>
+    </table>
+    <p class="src">El modelo aplica una penalización del 5% al 8% sobre el costo por conversación de cada anuncio, porque escalar siempre encarece. Verificado en julio: Blanqueamiento subió 2% al pasar de Bs 40 a 55 diarios; Blanqueamiento Ventas subió 15% al pasar de Bs 30 a 45.</p>
+  </div>
+
+  <h3>Acciones ordenadas por impacto</h3>
+
+  <div class="act">
+    <div class="num">1</div>
+    <div>
+      <div class="t">Cerrar la brecha de atribución</div>
+      <div class="d">Once de los 33 pacientes de julio llegaron sin identificador de anuncio: <b>un tercio de las decisiones se está tomando sobre datos incompletos</b>. La causa habitual es que el contacto escribe desde el perfil o reenvía el enlace, perdiendo la etiqueta. La corrección es operativa: preguntar el origen en el primer mensaje cuando la etiqueta no aparece, y registrarlo junto a la cita.<br><br>
+      <b>Impacto medible:</b> si los 11 sin identificar se distribuyeran proporcionalmente, la tasa real de cada anuncio subiría entre 1,8 y 1,9 puntos. Sin este dato, la reasignación de presupuesto del punto 2 se apoya en el 67% de la evidencia disponible.</div>
+      <span class="imp hi">Impacto alto · Sin costo · Requiere disciplina de registro</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">2</div>
+    <div>
+      <div class="t">Retirar el anuncio de niños</div>
+      <div class="d">Es el único de la cuenta que <b>no recupera lo invertido</b>. El servicio cuesta Bs 130 y cada paciente captado costó entre Bs 229 y Bs 243. En julio, los dos anuncios de niños consumieron Bs 960 y generaron Bs 520: una pérdida directa de <b>Bs 440</b>.<br><br>
+      <b>Umbral económico:</b> para ser viable, el costo por conversación no puede superar Bs 2,77 (Bs 130 × 2,13%). Hoy paga Bs 4,89, un 43% por encima del límite.<br>
+      <b>Alternativas si se quiere mantener:</b> subir el precio del servicio por encima de Bs 250, o verificar si el paciente infantil arrastra tratamientos de la familia. Ese dato hoy no existe.</div>
+      <span class="imp hi">Impacto alto · Recupera Bs 440 mensuales</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">3</div>
+    <div>
+      <div class="t">Escalar Blanqueamiento: tiene 155% de margen sin usar</div>
+      <div class="d">Con un ticket de Bs 300 y una tasa de cita del 3,66%, este anuncio <b>puede pagar hasta Bs 10,99 por conversación</b> y seguir siendo rentable. Hoy paga Bs 4,32. Es el mayor colchón de toda la cuenta y el único anuncio que encabeza los tres rankings: costo por paciente, retorno y consistencia.<br><br>
+      <b>Proyección:</b> asignándole el 45% de un presupuesto de Bs 3.000 aportaría <b>10,6 pacientes y Bs 1.824 de margen neto</b> por sí solo. Aun si su costo por conversación subiera un 50% al escalar, seguiría estando muy por debajo de su límite económico.</div>
+      <span class="imp hi">Impacto alto · Sin costo adicional</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">4</div>
+    <div>
+      <div class="t">Migrar Limpieza a video</div>
+      <div class="d">Limpieza produce más pacientes que ningún otro anuncio (8 en julio) pero su margen es el más ajustado de los rentables: <b>Bs 26,76 por paciente</b> sobre un ticket de Bs 180. La causa es su costo por conversación de Bs 6,56, el más alto de la cuenta por ser el único en formato imagen.<br><br>
+      <b>Proyección:</b> bajando a Bs 4,00 por conversación y manteniendo su tasa de cita, el costo por paciente caería de Bs 153,24 a <b>Bs 93,46</b> y el margen por paciente subiría de Bs 26,76 a <b>Bs 86,54</b>. Su retorno pasaría de 1,17x a <b>1,93x</b>.<br>
+      <b>Es el cambio de mayor impacto económico disponible en la cuenta.</b></div>
+      <span class="imp hi">Impacto alto · Requiere producción de video</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">5</div>
+    <div>
+      <div class="t">Activar campañas de recordación</div>
+      <div class="d">Todo el presupuesto actual se dirige a personas que nunca tuvieron contacto con la clínica, el segmento más caro de alcanzar. Un mes de interacción está acumulado y sin utilizar: quienes vieron los videos, visitaron el perfil o interactuaron con publicaciones.<br><br>
+      <b>Referencia sectorial:</b> una cuenta de otro rubro auditada en este mismo mercado obtiene conversaciones a Bs 1,01 con este tipo de público, contra Bs 1,88 en público frío.<br>
+      <b>Supuesto:</b> requiere volumen mínimo de audiencia. Con 132.290 personas alcanzadas en julio, la base existe.</div>
+      <span class="imp md">Impacto medio · Sin costo adicional</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">6</div>
+    <div>
+      <div class="t">Revisar el mensaje de Blanqueamiento Ventas</div>
+      <div class="d">Es el mejor de la cuenta en costo por conversación (Bs 3,14) y el tercero en retorno (1,59x). Atrae volumen de baja intención: solo el 1,66% agenda. Aun así es rentable gracias al ticket de Bs 300, y conserva un 59% de margen sobre su límite económico.<br><br>
+      <b>No conviene apagarlo</b>, pero sí revisar el mensaje del anuncio y la respuesta inicial en WhatsApp antes de darle más presupuesto. Si su tasa subiera al 3%, su retorno pasaría de 1,59x a 2,87x.<br>
+      <b>Advertencia:</b> esta lectura descansa en 3 pacientes identificados. Si parte de los 11 sin atribuir provinieran de aquí, la conclusión se invertiría.</div>
+      <span class="imp md">Impacto medio · Requiere revisión de mensaje</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Sobre la recomendación de segmentación por edad</h3>
+    <div class="note red" style="margin-top:0">
+      <b>Corrección respecto a versiones anteriores de este informe</b>
+      <p>Una versión previa recomendaba desplazar presupuesto hacia los tramos de mayor edad, apoyándose en que su CTR es más alto. <b>Esa recomendación se retira.</b></p>
+      <p style="margin-top:6px">El CTR mide clics, no citas. No existe información sobre la edad de los 33 pacientes agendados, de modo que no hay evidencia de que los tramos mayores conviertan mejor. Además, el CTR elevado en el segmento 65+ suele estar inflado por clics involuntarios, un patrón conocido en la plataforma. <b>Optimizar por CTR es exactamente el error que este informe documenta en el punto 2.</b></p>
+      <p style="margin-top:6px">La segmentación por edad debería revisarse únicamente cuando se disponga del dato de edad de los pacientes agendados, cruzando la agenda de la clínica con el registro de conversaciones.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Indicadores de control para agosto</h3>
+    <table>
+      <tr><th>Indicador</th><th class="n">Umbral</th><th>Acción si se incumple</th></tr>
+      <tr><td>Costo por conversación semanal</td><td class="n">≤ Bs 4,50</td><td>Revisar mezcla de anuncios</td></tr>
+      <tr><td>Conversaciones diarias</td><td class="n">≥ 22</td><td>El recorte de presupuesto fue excesivo</td></tr>
+      <tr><td><b>Pacientes semanales</b></td><td class="n">≥ 8</td><td>Revisar respuesta y seguimiento en WhatsApp</td></tr>
+      <tr><td>Pacientes sin identificador</td><td class="n">≤ 15%</td><td>Reforzar el registro de origen</td></tr>
+      <tr><td>Frecuencia por anuncio</td><td class="n">≤ 2,0</td><td>Renovar creativo por saturación</td></tr>
+    </table>
+    <p class="src">La revisión semanal de estos cinco indicadores permite corregir a mitad de mes en lugar de descubrir el problema al cierre.</p>
+  </div>
+
+  <div class="note blue">
+    <b>El límite de lo que puede hacer la publicidad</b>
+    <p>Con 733 conversaciones proyectadas, cada punto porcentual de mejora en la tasa de cita equivale a <b>7,3 pacientes adicionales</b>. A un ticket promedio de Bs 246, eso son <b>Bs 1.800 de ingreso extra al mes sin gastar un peso más en pauta</b>.</p>
+    <p style="margin-top:6px">Conseguir esos mismos 7,3 pacientes comprando más conversaciones costaría <b>Bs 880 adicionales de inversión mensual</b>. La velocidad de respuesta y el seguimiento en WhatsApp son, en este punto, la palanca de mayor retorno disponible.</p>
+  </div>
+
+  <div class="note">
+    <b>Lo que este análisis no incluye</b>
+    <p>Todos los ingresos calculados corresponden únicamente a <b>la primera visita de cada paciente</b>. No se contabilizan tratamientos posteriores, derivaciones familiares ni recurrencia. El retorno real de cada anuncio es, con seguridad, superior al que muestra este informe: un paciente que entra por una limpieza de Bs 180 puede tomar después un blanqueamiento, una ortodoncia o un implante.</p>
+    <p style="margin-top:6px">Incorporar el valor de vida del paciente al análisis es el siguiente nivel de precisión, y requiere registrar qué tratamientos toma cada persona después de la primera consulta.</p>
+  </div>
+  </div><!-- fin planSpa -->
+
+  <div id="planCos" style="display:none">
+
+  <div class="note gold">
+    <b>Aviso metodológico: esta clínica todavía no tiene datos de pacientes por anuncio</b>
+    <p>El análisis de Spadental se apoya en 33 pacientes cruzados por identificador de anuncio. <b>Para Cosmetic ese registro aún no existe</b>, de modo que no puede calcularse ni el costo por paciente ni el retorno por anuncio. Todo lo que sigue se apoya en métricas de plataforma y en modelos de punto de equilibrio, no en resultados verificados.</p>
+    <p style="margin-top:6px">Obtener ese dato es la primera acción del mes para esta cuenta.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Situación al cierre de julio</h3>
+    <table>
+      <tr><th>Indicador</th><th class="n">Valor</th><th>Comentario</th></tr>
+      <tr><td>Inversión del mes</td><td class="n">Bs 1.787,19</td><td>16 días activos</td></tr>
+      <tr><td>Conversaciones</td><td class="n">195</td><td>12,2 por día</td></tr>
+      <tr><td>Costo antes del cambio</td><td class="n bad">Bs 10,69</td><td>16 al 27 de julio</td></tr>
+      <tr><td><b>Costo tras migrar a video</b></td><td class="n win">Bs 6,58</td><td>28 al 31 de julio</td></tr>
+      <tr><td>Presupuesto actual</td><td class="n">Bs 120/día</td><td>4 conjuntos de Bs 30</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Los cuatro anuncios activos</h3>
+    <table>
+      <tr><th>Anuncio</th><th class="n">Bs por conversación</th><th>Estado</th></tr>
+      <tr><td><b>Implantes</b> · video</td><td class="n win">Bs 4,67</td><td class="win">Escalar</td></tr>
+      <tr><td><b>Limpieza y carillas</b> · video</td><td class="n win">Bs 4,85</td><td class="win">Escalar</td></tr>
+      <tr><td>Tratamiento capilar · video</td><td class="n win">Bs 5,96</td><td class="win">Mantener</td></tr>
+      <tr><td>Diseño de sonrisa · video</td><td class="n bad">Bs 11,51</td><td class="bad">Revisar o retirar</td></tr>
+    </table>
+    <p class="src">Diseño de sonrisa cuesta el doble que el resto. Corrió cuatro días, dos de ellos compartiendo presupuesto con otro anuncio, por lo que necesita una semana con presupuesto propio antes de decidir.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">El punto de equilibrio de esta clínica</h3>
+    <p style="font-size:13px;color:#66665E;margin-bottom:14px">A diferencia de Spadental, acá la consulta de Bs 100 es solo la puerta de entrada. La rentabilidad depende de qué porcentaje de esas consultas deriva en tratamiento.</p>
+    <table>
+      <tr><th>Costo por conversación</th><th class="n">Tasa de cita estimada</th><th class="n">Costo por paciente</th><th class="n">Ticket mínimo para no perder</th></tr>
+      <tr><td>Bs 6,58 · actual</td><td class="n">4,71%</td><td class="n">Bs 139,70</td><td class="n bad">Bs 139,70</td></tr>
+      <tr><td>Bs 5,50 · optimizado</td><td class="n">4,71%</td><td class="n">Bs 116,77</td><td class="n warn">Bs 116,77</td></tr>
+      <tr><td>Bs 5,00 · meta</td><td class="n">4,71%</td><td class="n win">Bs 106,16</td><td class="n">Bs 106,16</td></tr>
+    </table>
+    <div class="note red">
+      <b>Con la consulta sola, esta cuenta pierde dinero</b>
+      <p>Cada paciente cuesta hoy alrededor de <b>Bs 139,70</b> y la consulta vale <b>Bs 100</b>. Si el paciente no toma ningún tratamiento posterior, la clínica pierde Bs 39,70 por cada uno.</p>
+      <p style="margin-top:6px">La tasa de cita del 4,71% es la de Spadental, usada como referencia por falta de dato propio. Si la real de Cosmetic fuera menor, la pérdida sería mayor.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Qué necesita para ser rentable</h3>
+    <table>
+      <tr><th>Si de cada 100 consultas...</th><th class="n">Ticket promedio</th><th class="n">Retorno</th><th>Resultado</th></tr>
+      <tr><td>5 toman un tratamiento de Bs 1.500</td><td class="n">Bs 175</td><td class="n warn">1,25x</td><td class="warn">Al límite</td></tr>
+      <tr><td><b>10 toman un tratamiento de Bs 1.500</b></td><td class="n">Bs 250</td><td class="n win">1,79x</td><td class="win">Rentable</td></tr>
+      <tr><td>15 toman un tratamiento de Bs 1.500</td><td class="n">Bs 325</td><td class="n win">2,33x</td><td class="win">Muy rentable</td></tr>
+      <tr><td>10 toman un tratamiento de Bs 3.000</td><td class="n">Bs 400</td><td class="n win">2,86x</td><td class="win">Muy rentable</td></tr>
+    </table>
+    <div class="note">
+      <b>Basta con que 1 de cada 20 consultas derive en tratamiento</b>
+      <p>Con una derivación del 5% a tratamientos de Bs 1.500, la cuenta ya cubre costos. Con 10%, el retorno llega a 1,79x. <b>Este es el indicador que la clínica debe empezar a medir</b>: no cuántas consultas llegan, sino cuántas se convierten en tratamiento.</p>
+    </div>
+  </div>
+
+  <h3>Acciones para Cosmetic</h3>
+
+  <div class="act">
+    <div class="num">1</div>
+    <div>
+      <div class="t">Registrar el origen y el desenlace de cada consulta</div>
+      <div class="d">Sin este dato no se puede calcular el retorno de ningún anuncio de esta clínica. Se necesitan dos campos por cada paciente: <b>de qué anuncio llegó</b> (la etiqueta viene con el contacto de WhatsApp) y <b>qué tratamiento tomó después de la consulta</b>.<br><br>
+      Con un mes de ese registro, Cosmetic tendrá el mismo nivel de análisis que hoy tiene Spadental, y las decisiones dejarán de apoyarse en supuestos.</div>
+      <span class="imp hi">Impacto alto · Sin costo · Requiere disciplina de registro</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">2</div>
+    <div>
+      <div class="t">Consolidar la migración a video</div>
+      <div class="d">El cambio del 28 de julio bajó el costo por conversación de <b>Bs 10,69 a Bs 6,58</b> en cuatro días, y subió las conversaciones diarias de 10,0 a 18,8. La estructura ya está completa: los cuatro anuncios corren en video.<br><br>
+      <b>Lo que falta es tiempo.</b> Cuatro días no alcanzan para que Meta termine de optimizar. La proyección conservadora para agosto es sostener Bs 6,58; la optimista, llegar a Bs 5,50 conforme la cuenta madura.</div>
+      <span class="imp hi">Impacto alto · Sin acción requerida</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">3</div>
+    <div>
+      <div class="t">Concentrar presupuesto en Implantes y Limpieza-Carillas</div>
+      <div class="d">Son los dos mejores de la cuenta (Bs 4,67 y Bs 4,85) y además apuntan a los servicios de mayor ticket. Implantes es especialmente relevante: <b>un solo caso cerrado puede cubrir varios meses de pauta</b>.<br><br>
+      <b>Reparto propuesto:</b> Implantes 35%, Limpieza-Carillas 30%, Capilar 25%, Diseño de sonrisa 10% en observación.</div>
+      <span class="imp hi">Impacto alto · Sin costo adicional</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">4</div>
+    <div>
+      <div class="t">Decidir sobre Diseño de sonrisa</div>
+      <div class="d">Cuesta <b>Bs 11,51</b> por conversación, más del doble que el resto. Durante sus primeros días compartió presupuesto con otro anuncio que no convertía, así que nunca corrió en condiciones normales.<br><br>
+      <b>Criterio:</b> darle una semana con presupuesto propio. Si se mantiene por encima de Bs 9, retirarlo y repartir su presupuesto entre Implantes y Limpieza-Carillas.</div>
+      <span class="imp md">Impacto medio · Decisión en 7 días</span>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">5</div>
+    <div>
+      <div class="t">Activar campañas de recordación</div>
+      <div class="d">Igual que en Spadental, todo el presupuesto va a público que nunca tuvo contacto con la clínica. Cosmetic alcanzó <b>18.083 personas</b> en julio, una base menor que la de Spadental pero suficiente para armar públicos de recordación.<br><br>
+      <b>Particularidad de esta clínica:</b> los tratamientos de alto valor rara vez se deciden en el primer contacto. La recordación tiene más sentido acá que en servicios de decisión rápida.</div>
+      <span class="imp md">Impacto medio · Sin costo adicional</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Proyección de agosto</h3>
+    <table>
+      <tr><th>Presupuesto</th><th class="n">Bs por conversación</th><th class="n">Conversaciones</th><th class="n">Pacientes estimados</th></tr>
+      <tr><td>Bs 3.000</td><td class="n">6,58 · conservador</td><td class="n">456</td><td class="n">21</td></tr>
+      <tr><td>Bs 3.000</td><td class="n">5,50 · optimizado</td><td class="n">545</td><td class="n">26</td></tr>
+      <tr><td><b>Bs 3.600 · actual</b></td><td class="n">6,58 · conservador</td><td class="n">547</td><td class="n">26</td></tr>
+      <tr><td><b>Bs 3.600 · actual</b></td><td class="n">5,50 · optimizado</td><td class="n win">655</td><td class="n win">31</td></tr>
+    </table>
+    <p class="src">Los pacientes estimados usan la tasa de cita del 4,71% observada en Spadental, por ausencia de dato propio. La cifra real de Cosmetic podría diferir de forma significativa: el público es distinto, el ticket es mayor y la decisión de compra es más lenta.</p>
+  </div>
+
+  <div class="note blue">
+    <b>La diferencia estructural entre las dos clínicas</b>
+    <p>Spadental compite por <b>volumen</b>: servicios de Bs 130 a 300, decisión rápida, márgenes finos. Cada boliviano de más en el costo por conversación se siente.</p>
+    <p style="margin-top:6px">Cosmetic compite por <b>ticket</b>: la consulta de Bs 100 es un costo de entrada que se recupera en el tratamiento posterior. Acá el costo por conversación importa mucho menos que la tasa de derivación a tratamiento. <b>Un solo implante cerrado justifica un mes entero de inversión.</b></p>
+  </div>
+
+  </div><!-- fin planCos -->
+
+  <p class="src" style="margin-top:24px">Todos los datos de este informe provienen del reporte oficial de Meta Ads, extraídos el 1 de agosto de 2026. Período cubierto: Ezequiel Spadental del 6 al 31 de julio (26 días); Cosmetic Dental &amp; Face Center del 16 al 31 de julio (16 días). Las métricas de conversación corresponden a "Messaging conversations started". Los datos de pacientes agendados provienen del registro de WhatsApp Business de la clínica, cruzados por identificador de anuncio; 11 de los 33 registros carecen de identificador y se contabilizan solo en los totales globales. Las proyecciones asumen continuidad de las condiciones de subasta observadas en julio.</p>
+</div>
+
+</div>
+
+<script>
+const D = {
+  spa: {
+    age: [
+      {e:'18-24', g:622.91, ctr:1.16, cpm:12.33, r:26917},
+      {e:'25-34', g:1388.64, ctr:1.74, cpm:15.67, r:41190},
+      {e:'35-44', g:889.01, ctr:2.22, cpm:18.66, r:21617},
+      {e:'45-54', g:461.20, ctr:2.49, cpm:20.01, r:11516},
+      {e:'55-64', g:273.38, ctr:3.14, cpm:20.28, r:6446},
+      {e:'65+',   g:169.01, ctr:3.27, cpm:21.15, r:3680}
+    ],
+    gen: [
+      {x:'Mujeres', g:1722.66, ctr:2.15, cpm:19.01},
+      {x:'Hombres', g:2057.37, ctr:1.78, cpm:14.74}
+    ],
+    genNote:'Las mujeres tocan el anuncio 21% más que los hombres, pero reciben menos presupuesto.',
+    ub: [
+      {u:'Feed', g:1967.44, i:105190, ctr:2.46, cpm:18.70},
+      {u:'Facebook Reels', g:867.62, i:64771, ctr:1.71, cpm:13.40},
+      {u:'Búsqueda', g:380.11, i:5427, ctr:4.26, cpm:70.04},
+      {u:'Instagram Reels', g:187.47, i:18877, ctr:0.70, cpm:9.93},
+      {u:'Estados', g:129.86, i:28218, ctr:0.89, cpm:4.60},
+      {u:'Facebook Stories', g:117.64, i:6989, ctr:1.45, cpm:16.83},
+      {u:'Instagram Stories', g:90.59, i:5236, ctr:1.47, cpm:17.30},
+      {u:'Marketplace', g:73.47, i:16825, ctr:0.62, cpm:4.37},
+      {u:'Video in-stream', g:51.68, i:3495, ctr:1.86, cpm:14.79}
+    ]
+  },
+  cos: {
+    age: [
+      {e:'18-24', g:67.30, ctr:1.22, cpm:19.57, r:1867},
+      {e:'25-34', g:511.34, ctr:2.04, cpm:23.06, r:10343},
+      {e:'35-44', g:421.01, ctr:2.17, cpm:30.91, r:6619},
+      {e:'45-54', g:306.80, ctr:2.80, cpm:39.59, r:3918},
+      {e:'55-64', g:267.51, ctr:2.98, cpm:46.93, r:2782},
+      {e:'65+',   g:213.42, ctr:3.97, cpm:47.08, r:2066}
+    ],
+    gen: [
+      {x:'Mujeres', g:906.73, ctr:2.66, cpm:32.63},
+      {x:'Hombres', g:866.74, ctr:2.08, cpm:29.71}
+    ],
+    genNote:'Las mujeres responden 28% más. El presupuesto está repartido casi en partes iguales.',
+    ub: [
+      {u:'Feed', g:1177.46, i:37381, ctr:2.71, cpm:31.50},
+      {u:'Facebook Reels', g:280.52, i:8866, ctr:2.12, cpm:31.64},
+      {u:'Facebook Stories', g:100.42, i:1666, ctr:2.34, cpm:60.28},
+      {u:'Instagram Stories', g:83.47, i:2690, ctr:1.71, cpm:31.03},
+      {u:'Instagram Reels', g:62.74, i:2632, ctr:0.84, cpm:23.84},
+      {u:'Búsqueda', g:48.56, i:997, ctr:1.50, cpm:48.71},
+      {u:'Marketplace', g:17.36, i:1861, ctr:0.59, cpm:9.33},
+      {u:'Video in-stream', g:16.83, i:1119, ctr:2.06, cpm:15.04}
+    ]
+  }
+};
+
+const fmt = n => n.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0 = n => n.toLocaleString('es-BO',{maximumFractionDigits:0});
+
+// TABS
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById(t.dataset.p).classList.add('on');
+    window.scrollTo({top:0,behavior:'smooth'});
+    if(t.dataset.p==='aud') setTimeout(()=>renderAge(curAud),60);
+    if(t.dataset.p==='ubic') setTimeout(()=>renderUb(curUb),60);
+  };
+});
+
+// CHART PRINCIPAL
+function chartMain(){
+  const svg=document.getElementById('chartMain');
+  const W=900,H=280,pad={t:24,r:26,b:48,l:52};
+  const spaD=[{x:'Sem 1',v:10.00},{x:'Sem 2',v:7.60},{x:'Sem 3',v:4.59},{x:'Sem 4',v:3.91}];
+  const cosD=[{x:'16-22',v:9.80},{x:'23-27',v:11.90},{x:'28-31',v:6.58}];
+  const maxV=13;
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const X=(i,n)=>pad.l+cw*(i/(n-1));
+  const Y=v=>pad.t+ch*(1-v/maxV);
+  let s='';
+  // grid
+  for(let v=0;v<=12;v+=3){
+    s+=`<line x1="${pad.l}" y1="${Y(v)}" x2="${W-pad.r}" y2="${Y(v)}" stroke="#EBE9E3" stroke-width="1"/>`;
+    s+=`<text x="${pad.l-9}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#9A9A92">${v}</text>`;
+  }
+  // spa line
+  let p1=spaD.map((d,i)=>`${X(i,4)},${Y(d.v)}`).join(' ');
+  s+=`<polyline points="${p1}" fill="none" stroke="#5A9130" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  spaD.forEach((d,i)=>{
+    s+=`<circle cx="${X(i,4)}" cy="${Y(d.v)}" r="5.5" fill="#fff" stroke="#5A9130" stroke-width="3"/>`;
+    s+=`<text x="${X(i,4)}" y="${Y(d.v)-14}" text-anchor="middle" font-size="12" font-weight="700" fill="#3D6B14">${fmt(d.v)}</text>`;
+    s+=`<text x="${X(i,4)}" y="${H-24}" text-anchor="middle" font-size="11.5" fill="#7A7A72">${d.x}</text>`;
+  });
+  // cos line (offset a la derecha)
+  const cx=i=>pad.l+cw*0.28+cw*0.72*(i/(cosD.length-1));
+  let p2=cosD.map((d,i)=>`${cx(i)},${Y(d.v)}`).join(' ');
+  s+=`<polyline points="${p2}" fill="none" stroke="#C9A227" stroke-width="3" stroke-dasharray="0" stroke-linecap="round" stroke-linejoin="round"/>`;
+  cosD.forEach((d,i)=>{
+    const col=i===2?'#C4453A':'#C9A227';
+    s+=`<circle cx="${cx(i)}" cy="${Y(d.v)}" r="5.5" fill="#fff" stroke="${col}" stroke-width="3"/>`;
+    s+=`<text x="${cx(i)}" y="${Y(d.v)+22}" text-anchor="middle" font-size="12" font-weight="700" fill="#8A6A12">${fmt(d.v)}</text>`;
+  });
+  // marca cambio
+  s+=`<line x1="${cx(1)+((cx(2)-cx(1))/2)}" y1="${pad.t}" x2="${cx(1)+((cx(2)-cx(1))/2)}" y2="${pad.t+ch}" stroke="#C4453A" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+  s+=`<text x="${cx(1)+((cx(2)-cx(1))/2)}" y="${pad.t-8}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#C4453A">28 jul · cambio a video</text>`;
+  s+=`<text x="${pad.l-9}" y="${pad.t-8}" text-anchor="end" font-size="10.5" fill="#9A9A92">Bs</text>`;
+  svg.innerHTML=s;
+}
+chartMain();
+
+// AUDIENCIA
+let curAud='spa';
+function renderAge(k){
+  const d=D[k].age, tot=d.reduce((a,b)=>a+b.g,0);
+  const maxC=Math.max(...d.map(x=>x.ctr));
+  document.getElementById('audTitle').textContent = k==='spa'?'· Ezequiel Spadental':'· Cosmetic Dental';
+  let h='';
+  d.forEach(x=>{
+    const w=(x.ctr/maxC*100).toFixed(1);
+    const col=x.ctr>=2.8?'#5A9130':(x.ctr>=2.0?'#A8C21E':'#D8D4C6');
+    h+=`<div class="barrow"><div class="barlbl">${x.e} años</div>
+    <div class="bartrack"><div class="barfill" style="background:${col};width:0" data-w="${w}"></div></div>
+    <div class="barval">${x.ctr.toFixed(2)}%</div></div>`;
+  });
+  document.getElementById('ageBars').innerHTML=h;
+  setTimeout(()=>document.querySelectorAll('#ageBars .barfill').forEach(b=>b.style.width=b.dataset.w+'%'),40);
+
+  let t='<tr><th>Edad</th><th class="n">Invertido</th><th class="n">% del gasto</th><th class="n">CTR</th><th class="n">CPM</th><th class="n">Alcance</th></tr>';
+  d.forEach(x=>{
+    const pc=(x.g/tot*100).toFixed(0);
+    const cls=x.ctr>=2.8?'win':(x.ctr<1.5?'bad':'');
+    t+=`<tr><td><b>${x.e}</b></td><td class="n">Bs ${fmt(x.g)}</td><td class="n">${pc}%</td><td class="n ${cls}">${x.ctr.toFixed(2)}%</td><td class="n">Bs ${fmt(x.cpm)}</td><td class="n muted">${fmt0(x.r)}</td></tr>`;
+  });
+  document.getElementById('ageTable').innerHTML=t;
+
+  let g='<tr><th>Género</th><th class="n">Invertido</th><th class="n">CTR</th><th class="n">CPM</th></tr>';
+  D[k].gen.forEach(x=>{
+    g+=`<tr><td><b>${x.x}</b></td><td class="n">Bs ${fmt(x.g)}</td><td class="n ${x.ctr>2.1?'win':''}">${x.ctr.toFixed(2)}%</td><td class="n">Bs ${fmt(x.cpm)}</td></tr>`;
+  });
+  document.getElementById('genTable').innerHTML=g;
+  document.getElementById('genNote').textContent=D[k].genNote;
+}
+document.querySelectorAll('#tgAud span').forEach(s=>{
+  s.onclick=()=>{
+    document.querySelectorAll('#tgAud span').forEach(x=>x.classList.remove('on'));
+    s.classList.add('on'); curAud=s.dataset.a; renderAge(curAud);
+  };
+});
+renderAge('spa');
+
+// TOGGLE PLAN DE AGOSTO
+document.querySelectorAll('#tgPlan span').forEach(s=>{
+  s.onclick=()=>{
+    document.querySelectorAll('#tgPlan span').forEach(x=>x.classList.remove('on'));
+    s.classList.add('on');
+    const spa = s.dataset.pl==='spa';
+    document.getElementById('planSpa').style.display = spa?'block':'none';
+    document.getElementById('planCos').style.display = spa?'none':'block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+});
+
+// UBICACIONES
+let curUb='spa', sortCol=1, sortDir=-1;
+function renderUb(k){
+  const d=D[k].ub, tot=d.reduce((a,b)=>a+b.g,0);
+  let h='';
+  d.forEach(x=>{
+    const pc=x.g/tot*100;
+    const col=pc>40?'#C4453A':(pc>15?'#D89A2A':'#A8C21E');
+    h+=`<div class="barrow"><div class="barlbl">${x.u}</div>
+    <div class="bartrack"><div class="barfill" style="background:${col};width:0" data-w="${pc.toFixed(1)}"></div></div>
+    <div class="barval">${pc.toFixed(1)}%</div></div>`;
+  });
+  document.getElementById('ubBars').innerHTML=h;
+  setTimeout(()=>document.querySelectorAll('#ubBars .barfill').forEach(b=>b.style.width=b.dataset.w+'%'),40);
+  drawUbTable(k);
+}
+function drawUbTable(k){
+  const d=[...D[k].ub], tot=D[k].ub.reduce((a,b)=>a+b.g,0);
+  const keys=['u','g','g','i','ctr','cpm'];
+  d.sort((a,b)=>{
+    const kk=keys[sortCol];
+    if(kk==='u') return sortDir*(a.u>b.u?1:-1);
+    return sortDir*(a[kk]-b[kk]);
+  });
+  let t='<tr><th class="sortable">Ubicación</th><th class="n sortable">Invertido</th><th class="n sortable">% gasto</th><th class="n sortable">Impresiones</th><th class="n sortable">CTR</th><th class="n sortable">CPM</th></tr>';
+  d.forEach(x=>{
+    const pc=(x.g/tot*100).toFixed(1);
+    const ctrCls=x.ctr>=2.4?'win':(x.ctr<1?'bad':'');
+    const cpmCls=x.cpm<=10?'win':(x.cpm>=48?'bad':'');
+    t+=`<tr><td><b>${x.u}</b></td><td class="n">Bs ${fmt(x.g)}</td><td class="n">${pc}%</td><td class="n muted">${fmt0(x.i)}</td><td class="n ${ctrCls}">${x.ctr.toFixed(2)}%</td><td class="n ${cpmCls}">Bs ${fmt(x.cpm)}</td></tr>`;
+  });
+  document.getElementById('ubTable').innerHTML=t;
+  document.querySelectorAll('#ubTable th.sortable').forEach((th,i)=>{
+    th.onclick=()=>{ if(sortCol===i) sortDir*=-1; else {sortCol=i; sortDir=-1;} drawUbTable(curUb); };
+  });
+}
+document.querySelectorAll('#tgUb span').forEach(s=>{
+  s.onclick=()=>{
+    document.querySelectorAll('#tgUb span').forEach(x=>x.classList.remove('on'));
+    s.classList.add('on'); curUb=s.dataset.u; renderUb(curUb);
+  };
+});
+renderUb('spa');
+</script>
+</body>
+</html>
