@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spadental · Dónde está el negocio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#262625;--lime:#A8C21E;--limeDeep:#7E9310;--limeSoft:#EDF3CC;
+ --paper:#F6F6F1;--panel:#FFFFFF;--gray:#8C8C85;--line:#E2E2DA;--clay:#C0522F;--gold:#B08D3A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Archivo','Helvetica Neue',Arial,sans-serif;
+ font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+h1,h2,.anton{font-family:'Anton','Arial Narrow',Impact,sans-serif;font-weight:400;
+ text-transform:uppercase;letter-spacing:.01em;line-height:.95}
+.mast{background:var(--ink);color:#fff;padding:52px 0 44px}
+.mast h1{font-size:clamp(40px,7vw,80px)}
+.mast h1 em{font-style:normal;color:var(--lime)}
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--lime);font-weight:600;margin-bottom:18px}
+.thesis{max-width:680px;margin-top:22px;font-size:17px;color:#D8D8D2}
+.thesis b{color:#fff;font-weight:600}
+.mastrow{display:flex;flex-wrap:wrap;gap:36px;margin-top:34px;border-top:1px solid #46463F;padding-top:22px}
+.mastrow div span{display:block;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#8E8E85}
+.mastrow div strong{font-family:'Anton',sans-serif;font-weight:400;font-size:30px;color:#fff}
+section{padding:52px 0 8px}
+.shead{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+.shead .num{font-family:'Anton',sans-serif;font-size:13px;color:var(--limeDeep);letter-spacing:.14em}
+h2{font-size:clamp(24px,3.2vw,34px)}
+.sub{color:var(--gray);max-width:680px;margin:10px 0 26px;font-size:14.5px}
+.panel{background:var(--panel);border:1px solid var(--line);padding:24px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--gray);margin-top:14px}
+.legend i{width:11px;height:11px;display:inline-block;margin-right:7px;vertical-align:-1px}
+.mscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+.mscroll table{min-width:640px}
+th{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--gray);
+ font-weight:600;padding:0 8px 10px;text-align:right}
+th.l{text-align:left;padding-left:0}
+td{border-top:1px solid var(--line);padding:10px 8px;font-size:14px;text-align:right;white-space:nowrap}
+td.l{text-align:left;font-weight:600;padding-left:0}
+tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.rol{display:inline-block;font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+ padding:3px 8px;font-weight:700;border-radius:2px}
+.r-ancla{background:#F0E4C4;color:#6E5717}
+.r-motor{background:var(--limeSoft);color:var(--limeDeep)}
+.r-sillon{background:#EDEDE6;color:#5C5C55}
+.r-marg{background:#F6E4DE;color:#8C3C22}
+.bar{height:8px;background:var(--limeSoft);position:relative;min-width:2px}
+.bar b{position:absolute;inset:0 auto 0 0;background:var(--lime)}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;
+ background:var(--line);border:1px solid var(--line);margin-top:26px}
+.note{background:var(--panel);padding:18px 20px}
+.note h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--limeDeep);margin-bottom:8px;font-weight:700}
+.note p{font-size:13.5px;color:#4A4A45}
+.callout{background:var(--ink);color:#fff;padding:24px 26px;margin-top:26px;font-size:16px;line-height:1.55}
+.callout b{color:var(--lime)}
+.plan{border-top:3px solid var(--ink)}
+.move{display:grid;grid-template-columns:44px 1fr 230px;gap:22px;padding:26px 0;
+ border-bottom:1px solid var(--line);align-items:start}
+.move .idx{font-family:'Anton',sans-serif;font-size:26px;color:var(--lime)}
+.move h3{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;font-size:21px;margin-bottom:8px}
+.move p{color:#4A4A45;font-size:14.5px;max-width:580px}
+.move .why{font-size:12.5px;color:var(--gray);border-left:2px solid var(--lime);padding-left:14px}
+.fugabox{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.fugabox>div{background:var(--panel);padding:26px 24px}
+.fugabox .k{font-family:'Anton',sans-serif;font-size:56px;line-height:.95}
+.fugabox .k.mal{color:var(--clay)}
+.fugabox .lab{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-bottom:10px}
+.fugabox p{font-size:13.5px;color:#4A4A45;margin-top:10px}
+@media(max-width:820px){.fugabox{grid-template-columns:1fr}}
+footer{background:var(--ink);color:#8E8E85;font-size:12.5px;padding:34px 0;margin-top:60px}
+footer b{color:#D8D8D2;font-weight:600}
+@media(max-width:820px){.move{grid-template-columns:32px 1fr}.move .why{grid-column:2;margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="mast"><div class="wrap">
+  <div class="eyebrow">Ezequiel Spadental · Enero a julio 2026</div>
+  <h1>Dónde está<br>el <em>negocio</em></h1>
+  <p class="thesis" id="thesis"></p>
+  <div class="mastrow" id="mastrow"></div>
+</div></div>
+
+<div class="wrap">
+
+<section>
+  <div class="shead"><span class="num">01</span><h2>La curva del año</h2></div>
+  <p class="sub">Barras: facturación de caja por mes. Línea clara: pacientes distintos. Línea oscura: ticket promedio por atención.</p>
+  <div class="panel"><div id="curva"></div>
+    <div class="legend">
+      <span><i style="background:var(--lime)"></i>Facturación (Bs)</span>
+      <span><i style="background:var(--ink)"></i>Pacientes distintos</span>
+      <span><i style="background:var(--clay)"></i>Ticket promedio (Bs)</span>
+    </div>
+  </div>
+  <div class="notes" id="notasCurva"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="num">02</span><h2>El mapa de procedimientos</h2></div>
+  <p class="sub">Cada burbuja es una categoría. A la derecha, las que más se hacen. Arriba, las que más dejan por vez. El tamaño es cuánto aportan al ingreso del año.</p>
+  <div class="panel"><div id="mapa"></div>
+    <div class="legend">
+      <span><i style="background:#D9BE72"></i>Ancla: pocas veces, mucha plata</span>
+      <span><i style="background:var(--lime)"></i>Motor: se repiten y dejan bien</span>
+      <span><i style="background:#B6B6AE"></i>Llenan sillón: mucho volumen, poco ingreso</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><span class="num">03</span><h2>Cada procedimiento, con su papel</h2></div>
+  <p class="sub">Ordenado por lo que aporta al ingreso del año. La columna Rol dice para qué sirve cada uno.</p>
+  <div class="panel"><div id="tabla"></div></div>
+  <div class="callout" id="callout"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="num">04</span><h2>Los que se quedaron en la puerta</h2></div>
+  <p class="sub">De cada consulta que entra, la pregunta es una sola: ¿pagó algo más después? Esto cuenta los que no.</p>
+  <div class="fugabox" id="fugabox"></div>
+  <div class="panel" style="margin-top:24px"><div id="tablaFuga"></div></div>
+  <div class="notes" id="notasFuga"></div>
+</section>
+
+<section>
+  <div class="shead"><span class="num">05</span><h2>Quién produce, mes a mes</h2></div>
+  <p class="sub">Facturación registrada en los cuadernos de cada profesional.</p>
+  <div class="panel"><div id="profes"></div></div>
+</section>
+
+<section>
+  <div class="shead"><span class="num">06</span><h2>Dónde enfocarse</h2></div>
+  <p class="sub">Cuatro movimientos que salen de los números de arriba, no de opiniones.</p>
+  <div class="plan" id="plan"></div>
+</section>
+
+</div>
+
+<footer><div class="wrap">
+  Facturación y pacientes salen de la planilla <b>CUENTAS</b>. El detalle por procedimiento y por profesional sale de los
+  <b>1.331 procedimientos manuscritos</b> transcritos de las cuatro libretas de enero y febrero y del cuaderno consolidado de marzo a julio.
+  Los cuadernos explican el 72% de la caja del período, así que el mix de procedimientos es una muestra grande pero no el total.
+  <b>Todo es ingreso bruto.</b> La clínica no registra costos, y en prótesis una parte importante se va al laboratorio:
+  hay trabajos donde el neto es cero. Sin costos por servicio, "rentable" acá significa lo que más factura por vez, no lo que más margen deja.
+</div></footer>
+
+<script>
+const D = {"cats": [{"cat": "Restauración", "n": 221, "bs": 62360, "tkt": 282, "share": 0.1834150014412019, "pac": 170, "bsm": [14015, 7875, 4870, 7760, 9560, 11250, 7030], "nm": [62, 39, 16, 23, 26, 28, 27], "pacientes": 169}, {"cat": "Endodoncia", "n": 143, "bs": 61650, "tkt": 431, "share": 0.18132672929522287, "pac": 86, "bsm": [14220, 8680, 9940, 10410, 7550, 5130, 5720], "nm": [41, 19, 10, 23, 16, 14, 20], "pacientes": 86}, {"cat": "Prótesis y placas", "n": 61, "bs": 33125, "tkt": 543, "share": 0.09742818990923369, "pac": 45, "bsm": [8905, 9820, 7310, 2590, 1370, 1730, 1400], "nm": [23, 15, 9, 6, 2, 2, 4], "pacientes": 44}, {"cat": "Blanqueamiento", "n": 131, "bs": 28514, "tkt": 218, "share": 0.08386618587386836, "pac": 95, "bsm": [7823, 5905, 4330, 2002, 3678, 1800, 2976], "nm": [40, 28, 17, 8, 15, 10, 13], "pacientes": 94}, {"cat": "Implante", "n": 2, "bs": 26700, "tkt": 13350, "share": 0.07853079760231063, "pac": 2, "bsm": [0, 0, 23000, 0, 3700, 0, 0], "nm": [0, 0, 1, 0, 1, 0, 0], "pacientes": 2}, {"cat": "Corona, carilla y perno", "n": 54, "bs": 25730, "tkt": 476, "share": 0.0756778060789308, "pac": 40, "bsm": [3950, 5680, 2970, 4320, 2000, 5680, 1130], "nm": [11, 9, 8, 7, 6, 7, 6], "pacientes": 40}, {"cat": "Cirugía y extracción", "n": 69, "bs": 25430, "tkt": 369, "share": 0.07479543756654529, "pac": 61, "bsm": [6560, 3350, 3680, 3750, 4750, 2050, 1290], "nm": [21, 11, 11, 7, 9, 6, 4], "pacientes": 61}, {"cat": "Limpieza", "n": 119, "bs": 24830, "tkt": 209, "share": 0.07303070054177427, "pac": 118, "bsm": [7700, 3680, 2540, 4200, 1800, 1300, 3610], "nm": [37, 18, 12, 17, 9, 6, 20], "pacientes": 117}, {"cat": "Consulta", "n": 374, "bs": 13751, "tkt": 37, "share": 0.04044483137937728, "pac": 373, "bsm": [3750, 1950, 1380, 1940, 3350, 431, 950], "nm": [125, 65, 46, 47, 45, 15, 31], "pacientes": 373}, {"cat": "Ortodoncia", "n": 28, "bs": 12224, "tkt": 437, "share": 0.03595357565133502, "pac": 18, "bsm": [2220, 1100, 3250, 2750, 1727, 500, 677], "nm": [4, 3, 9, 3, 5, 2, 2], "pacientes": 17}, {"cat": "Otros", "n": 23, "bs": 10180, "tkt": 443, "share": 0.029941704853615064, "pac": 23, "bsm": [4740, 1740, 150, 810, 2200, 540, 0], "nm": [9, 6, 1, 2, 3, 2, 0], "pacientes": 23}, {"cat": "Promo de entrada", "n": 30, "bs": 7810, "tkt": 260, "share": 0.022970993605769513, "pac": 30, "bsm": [0, 940, 760, 0, 1960, 840, 3310], "nm": [0, 2, 2, 0, 7, 3, 16], "pacientes": 30}, {"cat": "Radiografía", "n": 76, "bs": 7690, "tkt": 101, "share": 0.022618046200815308, "pac": 74, "bsm": [1470, 1230, 1110, 1570, 1600, 210, 500], "nm": [15, 12, 11, 16, 15, 2, 5], "pacientes": 74}], "mm": [{"mes": "2026-01", "bs": 81120, "atenc": 307, "pac": 227, "tkt": 264, "proc": 388, "cua": 75353}, {"mes": "2026-02", "bs": 62445, "atenc": 187, "pac": 143, "tkt": 334, "proc": 227, "cua": 51950}, {"mes": "2026-03", "bs": 90850, "atenc": 163, "pac": 128, "tkt": 557, "proc": 153, "cua": 65290}, {"mes": "2026-04", "bs": 81460, "atenc": 156, "pac": 123, "tkt": 522, "proc": 159, "cua": 42102}, {"mes": "2026-05", "bs": 59297, "atenc": 171, "pac": 141, "tkt": 347, "proc": 159, "cua": 45244}, {"mes": "2026-06", "bs": 54797, "atenc": 123, "pac": 96, "tkt": 446, "proc": 97, "cua": 31461}, {"mes": "2026-07", "bs": 41527, "atenc": 161, "pac": 125, "tkt": 258, "proc": 148, "cua": 28593}], "prof": [{"prof": "Dra. Ximena", "bsm": [19043, 19805, 40965, 11590, 17980, 14501, 10001], "tot": 133885}, {"prof": "Dra. Kathe", "bsm": [29270, 17630, 18435, 18850, 16107, 9442, 7517], "tot": 117252}, {"prof": "Dra. Shirley", "bsm": [19965, 10170, 2365, 6302, 3550, 5128, 4830], "tot": 52310}, {"prof": "Dra. Brenda", "bsm": [7075, 4345, 3525, 4560, 6848, 1960, 5035], "tot": 33348}, {"prof": "Dra. Yanaina", "bsm": [0, 0, 0, 800, 760, 430, 1210], "tot": 3200}], "meses": ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07"], "tot": 339994, "nproc": 1331, "fuga": [{"prof": "Dra. Ximena", "cons": 133, "fuga": 25, "fm": [8, 1, 3, 3, 4, 2, 4], "consm": [44, 21, 16, 16, 16, 7, 13]}, {"prof": "Dra. Kathe", "cons": 100, "fuga": 16, "fm": [5, 3, 1, 3, 4, 0, 0], "consm": [32, 22, 16, 9, 13, 2, 6]}, {"prof": "Dra. Brenda", "cons": 89, "fuga": 18, "fm": [7, 4, 1, 5, 0, 1, 0], "consm": [28, 16, 11, 16, 9, 4, 5]}, {"prof": "Dra. Shirley", "cons": 48, "fuga": 9, "fm": [2, 2, 0, 1, 1, 0, 3], "consm": [21, 6, 3, 4, 6, 2, 6]}, {"prof": "Dra. Yanaina", "cons": 4, "fuga": 0, "fm": [0, 0, 0, 0, 0, 0, 0], "consm": [0, 0, 0, 2, 1, 0, 1]}], "fugaTot": 68, "consTot": 374};
+const M=['Ene','Feb','Mar','Abr','May','Jun','Jul'];
+const bs=n=>Math.round(n).toLocaleString('es-BO');
+const mm=D.mm, cats=D.cats;
+const totBs=D.mm.reduce((a,b)=>a+b.bs,0);
+const totPac=D.mm.reduce((a,b)=>a+b.pac,0);
+
+document.getElementById('thesis').innerHTML =
+ `La clínica facturó <b>Bs ${bs(totBs)}</b> en siete meses, pero la curva va para abajo: de Bs ${bs(mm[0].bs)} en enero a <b>Bs ${bs(mm[6].bs)} en julio</b>.
+  No es porque venga menos gente. Es porque <b>cambió lo que la gente viene a hacerse</b>.`;
+
+document.getElementById('mastrow').innerHTML=[
+ ['Facturado Ene–Jul','Bs '+bs(totBs)],
+ ['Atenciones', bs(mm.reduce((a,b)=>a+b.atenc,0))],
+ ['Procedimientos anotados', bs(D.nproc)],
+ ['Ticket promedio','Bs '+bs(totBs/mm.reduce((a,b)=>a+b.atenc,0))]
+].map(([l,v])=>`<div><span>${l}</span><strong>${v}</strong></div>`).join('');
+
+/* ---- curva ---- */
+(function(){
+ const W=860,H=320,L=58,R=58,T=20,B=38;
+ const maxB=Math.max(...mm.map(d=>d.bs))*1.12;
+ const maxP=Math.max(...mm.map(d=>d.pac))*1.35;
+ const maxT=Math.max(...mm.map(d=>d.tkt))*1.5;
+ const bw=(W-L-R)/7, iw=bw*0.5;
+ const y=v=>T+(H-T-B)*(1-v/maxB), yp=v=>T+(H-T-B)*(1-v/maxP), yt=v=>T+(H-T-B)*(1-v/maxT);
+ let g='';
+ for(let i=0;i<=4;i++){const v=maxB*i/4;g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E2E2DA"/>
+  <text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#8C8C85">${Math.round(v/1000)}k</text>`;}
+ mm.forEach((d,i)=>{const x=L+bw*i+(bw-iw)/2;
+  g+=`<rect x="${x}" y="${y(d.bs)}" width="${iw}" height="${y(0)-y(d.bs)}" fill="#A8C21E"><title>${M[i]}: Bs ${bs(d.bs)}</title></rect>
+  <text x="${x+iw/2}" y="${y(d.bs)-7}" text-anchor="middle" font-size="11" font-weight="700" fill="#7E9310">${bs(d.bs)}</text>
+  <text x="${x+iw/2}" y="${H-14}" text-anchor="middle" font-size="12.5" font-weight="600" fill="#4A4A45">${M[i]}</text>`;});
+ const pp=mm.map((d,i)=>[L+bw*i+bw/2,yp(d.pac)]), tt=mm.map((d,i)=>[L+bw*i+bw/2,yt(d.tkt)]);
+ g+=`<polyline fill="none" stroke="#262625" stroke-width="2.4" points="${pp.map(p=>p.join(',')).join(' ')}"/>`;
+ g+=`<polyline fill="none" stroke="#C0522F" stroke-width="2.4" stroke-dasharray="5 3" points="${tt.map(p=>p.join(',')).join(' ')}"/>`;
+ pp.forEach((p,i)=>g+=`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="#262625" stroke-width="2.4"><title>${mm[i].pac} pacientes</title></circle>
+  <text x="${p[0]}" y="${p[1]-11}" text-anchor="middle" font-size="11" font-weight="700">${mm[i].pac}</text>`);
+ tt.forEach((p,i)=>g+=`<circle cx="${p[0]}" cy="${p[1]}" r="3.6" fill="#fff" stroke="#C0522F" stroke-width="2.2"><title>Ticket Bs ${mm[i].tkt}</title></circle>
+  <text x="${p[0]}" y="${p[1]+17}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#C0522F">${mm[i].tkt}</text>`);
+ document.getElementById('curva').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Curva de facturación, pacientes y ticket">${g}</svg>`;
+})();
+
+document.getElementById('notasCurva').innerHTML=[
+ ['Los pacientes caen 45%',`De ${mm[0].pac} pacientes distintos en enero a ${mm[6].pac} en julio. Enero fue el pico y desde ahí nunca se recuperó.`],
+ ['El ticket se derrumbó en julio',`Marzo llegó a Bs ${mm[2].tkt} por atención. Julio cerró en Bs ${mm[6].tkt}, menos de la mitad. Es el peor ticket del año.`],
+ ['Julio atendió mucho y cobró poco',`161 atenciones, casi las mismas que mayo, y Bs ${bs(mm[6].bs)} de facturación, la más baja del año. El sillón estuvo lleno de trabajo barato.`]
+].map(([t,p])=>`<div class="note"><h4>${t}</h4><p>${p}</p></div>`).join('');
+
+/* ---- mapa de burbujas ---- */
+(function(){
+ const W=860,H=430,L=64,R=30,T=26,B=52;
+ const cs=cats.filter(c=>c.cat!=='Otros');
+ const maxN=Math.max(...cs.map(c=>c.n))*1.1;
+ const maxT=1000;
+ const x=v=>L+(W-L-R)*Math.min(v,maxN)/maxN;
+ const y=v=>T+(H-T-B)*(1-Math.min(v,maxT)/maxT);
+ const medN=90, medT=300;
+ let g=`<rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="#FCFCFA"/>`;
+ g+=`<line x1="${x(medN)}" x2="${x(medN)}" y1="${T}" y2="${H-B}" stroke="#D9D9D2" stroke-dasharray="4 4"/>`;
+ g+=`<line x1="${L}" x2="${W-R}" y1="${y(medT)}" y2="${y(medT)}" stroke="#D9D9D2" stroke-dasharray="4 4"/>`;
+ [[L+14,T+22,'ANCLA','start'],[W-R-14,T+22,'MOTOR','end'],
+  [L+14,H-B-12,'MARGINAL','start'],[W-R-14,H-B-12,'LLENAN SILLÓN','end']]
+  .forEach(([px,py,t,an])=>g+=`<text x="${px}" y="${py}" text-anchor="${an}" font-size="11" letter-spacing="2" fill="#B8B8B0" font-weight="700">${t}</text>`);
+ for(let i=0;i<=4;i++){const v=maxT*i/4;
+  g+=`<text x="${L-10}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#8C8C85">${v}</text>`;}
+ g+=`<text x="${L-10}" y="${y(maxT)-10}" text-anchor="end" font-size="10" fill="#8C8C85">Bs</text>`;
+ [0,50,100,150,200].forEach(v=>g+=`<text x="${x(v)}" y="${H-B+18}" text-anchor="middle" font-size="11" fill="#8C8C85">${v}</text>`);
+ g+=`<text x="${(L+W-R)/2}" y="${H-10}" text-anchor="middle" font-size="11.5" fill="#8C8C85">Veces que se hizo en el año</text>`;
+ const maxS=Math.max(...cs.map(c=>c.bs));
+ cs.forEach(c=>{
+  const r=10+26*Math.sqrt(c.bs/maxS);
+  const off=Math.min(c.tkt,maxT);
+  const col=(c.tkt>=medT&&c.n<medN)?'#D9BE72':(c.tkt>=medT?'#A8C21E':'#B6B6AE');
+  g+=`<circle cx="${x(c.n)}" cy="${y(off)}" r="${r}" fill="${col}" fill-opacity=".72" stroke="${col}" stroke-width="1.5">
+   <title>${c.cat}: ${c.n} veces, Bs ${bs(c.tkt)} por vez, Bs ${bs(c.bs)} en el año</title></circle>
+   <text x="${x(c.n)}" y="${y(off)-r-6}" text-anchor="middle" font-size="11.5" font-weight="700">${c.cat}</text>`;
+ });
+ g+=`<text x="${x(2)}" y="${y(1000)+18}" text-anchor="middle" font-size="10" fill="#6E5717">ticket real Bs 13.350</text>`;
+ document.getElementById('mapa').innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa de procedimientos por volumen y ticket">${g}</svg>`;
+})();
+
+/* ---- tabla ---- */
+(function(){
+ const rol=c=>{
+  if(c.cat==='Consulta') return ['Puerta de entrada','r-sillon'];
+  if(c.tkt>=300&&c.n<90) return ['Ancla','r-ancla'];
+  if(c.tkt>=250) return ['Motor','r-motor'];
+  if(c.n>=90) return ['Llena sillón','r-sillon'];
+  return ['Marginal','r-marg'];
+ };
+ const maxS=Math.max(...cats.map(c=>c.bs));
+ const rows=cats.map(c=>{const [t,k]=rol(c);
+  return `<tr><td class="l">${c.cat}</td>
+   <td><span class="rol ${k}">${t}</span></td>
+   <td>${c.n}</td><td>${bs(c.tkt)}</td><td>${bs(c.bs)}</td>
+   <td style="width:22%"><div class="bar"><b style="width:${c.bs/maxS*100}%"></b></div></td>
+   <td>${(c.share*100).toFixed(1)}%</td></tr>`;}).join('');
+ const tn=cats.reduce((a,c)=>a+c.n,0), tb=cats.reduce((a,c)=>a+c.bs,0);
+ document.getElementById('tabla').innerHTML=
+  `<div class="mscroll"><table><thead><tr><th class="l">Procedimiento</th><th style="text-align:left">Rol</th>
+   <th>Veces</th><th>Bs por vez</th><th>Bs en el año</th><th></th><th>% ingreso</th></tr></thead>
+   <tbody>${rows}<tr class="tot"><td class="l">TOTAL</td><td></td><td>${tn}</td>
+   <td>${bs(tb/tn)}</td><td>${bs(tb)}</td><td></td><td>100%</td></tr></tbody></table></div>`;
+ const cons=cats.find(c=>c.cat==='Consulta'), imp=cats.find(c=>c.cat==='Implante');
+ const rest=cats.find(c=>c.cat==='Restauración'), endo=cats.find(c=>c.cat==='Endodoncia');
+ document.getElementById('callout').innerHTML=
+  `Consulta se hizo <b>${cons.n} veces</b>, más que cualquier otra cosa, y aportó el <b>${(cons.share*100).toFixed(1)}%</b> del ingreso.
+   Implante se hizo <b>${imp.n} veces</b> y aportó el <b>${(imp.share*100).toFixed(1)}%</b>.
+   El negocio real está en el medio: restauración y endodoncia juntas son el
+   <b>${((rest.share+endo.share)*100).toFixed(0)}%</b> del ingreso del año.`;
+})();
+
+/* ---- la fuga ---- */
+(function(){
+ const F=D.fuga, tot=D.consTot, fu=D.fugaTot;
+ document.getElementById('fugabox').innerHTML=`
+  <div><div class="lab">Consultas atendidas Ene–Jul</div><div class="k">${tot}</div>
+   <p>Pacientes distintos que entraron por la puerta en siete meses.</p></div>
+  <div><div class="lab">Sí siguieron tratándose</div><div class="k" style="color:var(--limeDeep)">${tot-fu}</div>
+   <p>El ${Math.round((tot-fu)/tot*100)}% pagó algún tratamiento después, con la misma doctora o con otra.</p></div>
+  <div><div class="lab">No pasaron de la consulta</div><div class="k mal">${fu}</div>
+   <p>El ${Math.round(fu/tot*100)}%. Pagaron sus Bs 30 y no volvieron a pagar nada más.</p></div>`;
+ const maxF=Math.max(...F.flatMap(f=>f.fm));
+ const rows=F.map(f=>{
+  const c=f.fm.map((v,i)=>`<td style="text-align:center;background:${v?`rgba(192,82,47,${(0.15+0.85*v/maxF).toFixed(2)})`:'#F4F4F0'};
+   color:${v>maxF*0.6?'#fff':'inherit'};font-weight:${v>maxF*0.6?700:400}">${v||'—'}</td>`).join('');
+  return `<tr><td class="l">${f.prof}</td><td>${f.cons}</td>${c}<td style="font-weight:700">${f.fuga}</td>
+   <td style="font-weight:700;color:var(--clay)">${Math.round(f.fuga/f.cons*100)}%</td></tr>`;}).join('');
+ document.getElementById('tablaFuga').innerHTML=
+  `<div class="mscroll"><table><thead><tr><th class="l">Doctora</th><th>Consultas</th>
+   ${M.map(m=>`<th style="text-align:center">${m}</th>`).join('')}<th>No siguieron</th><th>%</th></tr></thead>
+   <tbody>${rows}<tr class="tot"><td class="l">TOTAL</td><td>${tot}</td>
+   ${M.map((m,i)=>`<td style="text-align:center">${F.reduce((a,f)=>a+f.fm[i],0)}</td>`).join('')}
+   <td>${fu}</td><td>${Math.round(fu/tot*100)}%</td></tr></tbody></table></div>
+   <p style="font-size:12px;color:var(--gray);margin-top:14px">Las celdas de color muestran en qué mes se perdió cada paciente.
+   Un paciente se cuenta como perdido sólo si no aparece con ningún tratamiento ni en el cuaderno de ninguna doctora ni en la planilla CUENTAS.</p>`;
+ document.getElementById('notasFuga').innerHTML=[
+  ['Está pareja entre todas',`Ximena 19%, Brenda 20%, Shirley 19%, Kathe 16%. Ninguna convierte peor que las otras. No es un tema de una persona, es del proceso.`],
+  ['Enero fue el peor mes',`De los ${fu} pacientes perdidos del año, ${F.reduce((a,f)=>a+f.fm[0],0)} se perdieron en enero. Es cuando más consultas entraron y cuando menos se cerraron.`],
+  ['Cuánto vale',`Esos ${fu} pacientes dejaron Bs 30 cada uno. Al ticket promedio de un tratamiento serían cerca de Bs 25.000 en siete meses.`]
+ ].map(([t,p])=>`<div class="note"><h4>${t}</h4><p>${p}</p></div>`).join('');
+})();
+
+/* ---- profesionales ---- */
+(function(){
+ const P=D.prof, maxV=Math.max(...P.flatMap(p=>p.bsm));
+ const rows=P.map(p=>{
+  const c=p.bsm.map((v,i)=>{
+   const a=v?(0.18+0.82*v/maxV):0;
+   return `<td style="text-align:center;background:${v?`rgba(168,194,30,${a.toFixed(2)})`:'#F4F4F0'};font-weight:${v>maxV*0.5?700:400}">
+    ${v?bs(v):'—'}</td>`;}).join('');
+  return `<tr><td class="l">${p.prof}</td>${c}<td style="font-weight:700">${bs(p.tot)}</td></tr>`;}).join('');
+ document.getElementById('profes').innerHTML=
+  `<div class="mscroll"><table><thead><tr><th class="l">Profesional</th>
+   ${M.map(m=>`<th style="text-align:center">${m}</th>`).join('')}<th>Total</th></tr></thead>
+   <tbody>${rows}</tbody></table></div>
+   <p style="font-size:12px;color:var(--gray);margin-top:14px">Cuanto más fuerte el verde, más facturó ese mes.
+   La Dra. Yanaina aparece recién en abril. Los cuadernos cubren el 72% de la caja, así que estos números son producción registrada, no facturación total.</p>`;
+})();
+
+/* ---- plan ---- */
+(function(){
+ const cons=cats.find(c=>c.cat==='Consulta'), endo=cats.find(c=>c.cat==='Endodoncia');
+ const prot=cats.find(c=>c.cat==='Prótesis y placas'), cor=cats.find(c=>c.cat==='Corona, carilla y perno');
+ const rest=cats.find(c=>c.cat==='Restauración'), blq=cats.find(c=>c.cat==='Blanqueamiento');
+ const moves=[
+  ['Cerrar la consulta antes de que el paciente se vaya',
+   `Entraron ${D.consTot} consultas en siete meses y ${D.fugaTot} no pasaron de ahí. Es el 18%, parejo en las cuatro doctoras, así que no es un tema de una persona: falta un paso del proceso. El paciente sale sin presupuesto escrito y sin fecha, y no vuelve.`,
+   `Recuperar la mitad de esos ${D.fugaTot} pacientes son cerca de Bs 12.000, sin gastar un peso más en publicidad.`],
+  ['Proteger endodoncia, que es el motor',
+   `Endodoncia hizo Bs ${bs(endo.bs)} en el año con ${endo.n} casos y ticket de Bs ${endo.tkt}. Es la única categoría que combina volumen alto y ticket alto: se repite todos los meses y no depende de un caso suelto. Es lo más estable que tiene la clínica.`,
+   `Restauración y endodoncia juntas son el ${((rest.share+endo.share)*100).toFixed(0)}% del ingreso con el ${(((rest.n+endo.n)/cats.reduce((a,c)=>a+c.n,0))*100).toFixed(0)}% de los procedimientos.`],
+  ['Recuperar el trabajo ancla',
+   `Prótesis, coronas, implantes y ortodoncia son solo ${prot.n+cor.n+cats.find(c=>c.cat==='Implante').n+cats.find(c=>c.cat==='Ortodoncia').n} procedimientos del año pero aportan el ${((prot.share+cor.share+cats.find(c=>c.cat==='Implante').share+cats.find(c=>c.cat==='Ortodoncia').share)*100).toFixed(0)}% del ingreso. En julio prácticamente desaparecieron. Ahí está la diferencia entre un mes de Bs 90.000 y uno de Bs 41.000.`,
+   `Cuidado: en prótesis una parte grande se va al laboratorio. Hay trabajos con neto cero. Antes de empujarlo hay que saber cuánto queda.`],
+  ['Medir el costo de laboratorio antes de decidir',
+   `Los cuadernos muestran descuentos a Don Roger y al protesista en casi todos los meses, a veces por el total del trabajo. Sin ese dato por servicio, este dashboard te dice qué factura más, no qué deja más. Es la única pieza que falta para cerrar el análisis.`,
+   `Blanqueamiento hizo Bs ${bs(blq.bs)} con ticket de Bs ${blq.tkt} y casi sin costo de laboratorio. Puede ser más rentable que una corona aunque facture menos.`]
+ ];
+ document.getElementById('plan').innerHTML=moves.map(([t,p,w],i)=>
+  `<div class="move"><div class="idx">${i+1}</div><div><h3>${t}</h3><p>${p}</p></div>
+   <div class="why">${w}</div></div>`).join('');
+})();
+</script>
+</body></html>
