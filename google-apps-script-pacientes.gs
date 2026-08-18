@@ -12,6 +12,13 @@
 
 var HOJA = 'Atenciones';
 
+/* Opcional: el ID de la planilla (lo que va entre /d/ y /edit en su URL).
+   Se puede dejar vacío: el script usa la planilla en la que está pegado y,
+   si es un proyecto suelto, crea una llamada "Spadental · Pacientes" la
+   primera vez y se acuerda de ella. Para ver cuál está usando, ejecutá la
+   función probar() desde el editor. */
+var SHEET_ID = '';
+
 var COLS = [
   'ID', 'Fecha y hora', 'Fecha', 'Hora', 'N° del día', 'Profesional', 'Paciente',
   'Celular', 'CI', 'Edad', 'Tipo', 'Canal', 'Detalle canal', 'Servicios',
@@ -20,8 +27,25 @@ var COLS = [
 ];
 
 /* ------------------------------------------------------------------ hoja */
+/**
+ * Devuelve la planilla a usar, sirva el script pegado dentro de una hoja
+ * (Extensiones → Apps Script) o como proyecto suelto (script.google.com).
+ */
+function getSpreadsheet() {
+  var props = PropertiesService.getScriptProperties();
+  var id = SHEET_ID || props.getProperty('SHEET_ID');
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch (e) { /* la borraron: seguimos */ }
+  }
+  var ss = SpreadsheetApp.getActiveSpreadsheet();   // script pegado en una hoja
+  if (ss) return ss;
+  ss = SpreadsheetApp.create('Spadental · Pacientes');   // proyecto suelto
+  props.setProperty('SHEET_ID', ss.getId());
+  return ss;
+}
+
 function getSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet();
   var sh = ss.getSheetByName(HOJA);
   if (!sh) {
     sh = ss.insertSheet(HOJA);
@@ -176,6 +200,25 @@ function doPost(e) {
   }
 }
 
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'info') return json(doInfo());
   return json(doList());
+}
+
+function doInfo() {
+  var ss = getSpreadsheet();
+  return { ok: true, planilla: ss.getName(), url: ss.getUrl(), filas: Math.max(0, getSheet().getLastRow() - 1) };
+}
+
+/**
+ * Ejecutá esta función una vez desde el editor (botón ▶ Ejecutar) para
+ * autorizar los permisos y ver en qué planilla está guardando.
+ * El enlace aparece abajo, en "Registro de ejecución".
+ */
+function probar() {
+  var info = doInfo();
+  Logger.log('Planilla: ' + info.planilla);
+  Logger.log('Abrila acá: ' + info.url);
+  Logger.log('Atenciones guardadas: ' + info.filas);
+  return info;
 }

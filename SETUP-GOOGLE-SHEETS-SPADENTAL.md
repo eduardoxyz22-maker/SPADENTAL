@@ -15,6 +15,12 @@ Tiempo estimado: 10 minutos, una sola vez.
 3. No hace falta crear pestañas ni encabezados: el script arma la hoja
    `Atenciones` con sus 25 columnas la primera vez que se guarda algo.
 
+> **Se puede saltear este paso.** Si preferís crear el proyecto suelto desde
+> [script.google.com](https://script.google.com), el script **crea él mismo**
+> una planilla llamada *Spadental · Pacientes* en tu Drive la primera vez que
+> se guarda algo, y se acuerda de ella. Para ver cuál está usando, ejecutá la
+> función `probar()` desde el editor: el enlace sale en *Registro de ejecución*.
+
 ## 2. Pegar el script
 
 1. En esa hoja: menú **Extensiones → Apps Script**.
@@ -85,6 +91,8 @@ Guardá y subí el archivo. Al abrirlo vas a ver el aviso verde
 | No aparece nada al actualizar | Se publicó con *"Ejecutar como: Usuario que accede"* → volvé al paso 3 |
 | Se guarda pero no lo ven los demás | Cada uno abrió una copia distinta del archivo; todos tienen que abrir la **misma** URL publicada |
 | Cambiaste el script y no se nota | Hay que **Implementar → Administrar implementaciones → editar ✏️ → Nueva versión** |
+| `Cannot read properties of null (reading 'getSheetByName')` | Versión vieja del script en un proyecto suelto. Pegá el `.gs` actual y **redeployá como Nueva versión** |
+| `Se requiere autorización` / `PERMISSION_DENIED` | Ejecutá `probar()` una vez desde el editor y aceptá los permisos |
 
 ## Nota de seguridad
 
