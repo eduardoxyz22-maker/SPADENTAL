@@ -1,0 +1,1389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Spadental · Control de pacientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#262625; --lime:#A8C21E; --lime-dk:#8DA518; --paper:#F6F6F1; --panel:#FFFFFF;
+  --gray:#8C8C85; --line:#E2E2DA; --clay:#C0522F; --ok:#2E7D5B; --warn:#C98A0E; --info:#2F6FA8;
+  --r:14px; --sh:0 1px 2px rgba(38,38,37,.06),0 4px 14px rgba(38,38,37,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Archivo','Helvetica Neue',Arial,sans-serif;background:var(--paper);color:var(--ink);
+     -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45}
+.wrap{max-width:1120px;margin:0 auto;padding:0 14px 90px}
+
+header{background:var(--ink);color:#fff;padding:16px 0 0}
+.hd{max-width:1120px;margin:0 auto;padding:0 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.4px}
+.logo span{color:var(--lime)}
+.hd .sub{font-size:12.5px;color:#B9B9B0;margin-left:auto;text-align:right}
+nav{max-width:1120px;margin:0 auto;padding:12px 14px 0;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav button{flex:0 0 auto;background:transparent;border:0;color:#B9B9B0;font:inherit;font-weight:600;font-size:14px;
+  padding:9px 14px;border-radius:9px 9px 0 0;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--paper);color:var(--ink)}
+nav button:not(.on):hover{color:#fff}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-top:14px}
+.card h2{margin:0 0 4px;font-size:16px;letter-spacing:-.2px}
+.card h2 .n{display:inline-block;background:var(--lime);color:var(--ink);border-radius:6px;font-size:12px;
+  padding:1px 7px;margin-right:7px;vertical-align:2px}
+.hint{color:var(--gray);font-size:12.5px;margin:0 0 12px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr}}
+label{display:block;font-size:12.5px;font-weight:600;color:#55554F;margin:0 0 5px}
+label .req{color:var(--clay)}
+input,select,textarea{width:100%;font:inherit;font-size:15px;color:var(--ink);background:#fff;
+  border:1px solid var(--line);border-radius:10px;padding:10px 11px;outline:0}
+input:focus,select:focus,textarea:focus{border-color:var(--lime);box-shadow:0 0 0 3px rgba(168,194,30,.22)}
+input.bad,select.bad{border-color:var(--clay);box-shadow:0 0 0 3px rgba(192,82,47,.14)}
+textarea{min-height:70px;resize:vertical}
+select{appearance:none;padding-right:32px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--gray) 50%),linear-gradient(135deg,var(--gray) 50%,transparent 50%);
+  background-position:calc(100% - 17px) calc(50% + 1px),calc(100% - 12px) calc(50% + 1px);
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-weight:700;font-size:15px;
+  border:0;border-radius:11px;padding:12px 18px;cursor:pointer;background:var(--lime);color:var(--ink)}
+.btn:hover{background:var(--lime-dk)}
+.btn.sec{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn.sec:hover{background:var(--paper)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.dark:hover{background:#3d3d3b}
+.btn.danger{background:var(--clay);color:#fff}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row-btn{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;
+  background:var(--paper);border:1px solid var(--line);color:#55554F;white-space:nowrap}
+.pill.ok{background:#E9F4EE;border-color:#BFE0CD;color:var(--ok)}
+.pill.warn{background:#FDF3DC;border-color:#F0DCA8;color:var(--warn)}
+.pill.bad{background:#F9E9E4;border-color:#EFCBBD;color:var(--clay)}
+.pill.info{background:#E7F0F8;border-color:#C3D8EA;color:var(--info)}
+.pill.lime{background:#F2F6DC;border-color:#DCE7A6;color:#5E6E10}
+
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{margin:0}
+.seg input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.seg span{display:inline-block;border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:8px 14px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none}
+.seg input:checked + span{background:var(--ink);color:#fff;border-color:var(--ink)}
+.seg.lime input:checked + span{background:var(--lime);color:var(--ink);border-color:var(--lime-dk)}
+.seg.bad input:checked + span{background:var(--clay);color:#fff;border-color:var(--clay)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;box-shadow:var(--sh)}
+.kpi .k{font-size:11.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:24px;font-weight:800;letter-spacing:-.8px;margin-top:3px}
+.kpi .d{font-size:12px;color:var(--gray);margin-top:1px}
+.kpi.acc{background:var(--ink);color:#fff}
+.kpi.acc .k{color:#B9B9B0}.kpi.acc .d{color:#B9B9B0}
+.kpi.acc .v{color:var(--lime)}
+
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);
+   font-weight:700;padding:8px 9px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--panel)}
+td{padding:9px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#FBFBF7}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.st-atendido{box-shadow:inset 3px 0 0 var(--ok)}
+.st-agendado{box-shadow:inset 3px 0 0 var(--info)}
+.st-reagendar{box-shadow:inset 3px 0 0 var(--warn)}
+.st-noasistio{box-shadow:inset 3px 0 0 var(--clay)}
+.empty{text-align:center;color:var(--gray);padding:26px 10px;font-size:14px}
+
+.bars{display:grid;gap:9px;margin-top:6px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 82px;gap:10px;align-items:center;font-size:13px}
+@media(max-width:560px){.bar-row{grid-template-columns:100px 1fr 70px;font-size:12.5px}}
+.bar-track{background:var(--paper);border:1px solid var(--line);border-radius:999px;height:16px;overflow:hidden}
+.bar-fill{height:100%;background:var(--lime);border-radius:999px}
+.bar-fill.b2{background:var(--ink)}
+.bar-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+.srv{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:11px;margin-bottom:9px}
+.srv-top{display:grid;grid-template-columns:1fr 40px;gap:8px;align-items:start}
+.srv-bot{display:grid;grid-template-columns:1fr 88px 100px;gap:8px;margin-top:8px}
+@media(max-width:560px){.srv-bot{grid-template-columns:1fr 70px 86px}}
+.srv .del{background:#fff;border:1px solid var(--line);border-radius:9px;height:42px;width:100%;cursor:pointer;
+  color:var(--clay);font-size:16px;font-weight:700;line-height:1}
+.tot-box{display:flex;justify-content:space-between;align-items:baseline;background:var(--ink);color:#fff;
+  border-radius:12px;padding:12px 15px;margin-top:4px}
+.tot-box b{font-size:22px;color:var(--lime);letter-spacing:-.5px}
+
+.rem{border:1px solid var(--line);border-left:4px solid var(--gray);background:#fff;border-radius:12px;
+  padding:12px 13px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.rem.due{border-left-color:var(--clay);background:#FDF7F5}
+.rem.today{border-left-color:var(--lime);background:#FAFCEF}
+.rem.soon{border-left-color:var(--info)}
+.rem.money{border-left-color:var(--warn)}
+.rem .who{font-weight:700;font-size:15px}
+.rem .meta{font-size:12.5px;color:var(--gray);margin-top:2px}
+.rem .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:560px){.rem{grid-template-columns:1fr}.rem .acts{justify-content:flex-start}}
+
+.ov{position:fixed;inset:0;background:rgba(38,38,37,.55);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.ov.on{display:flex}
+@media(min-width:640px){.ov{align-items:center;padding:20px}}
+.modal{background:#fff;width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px}
+@media(min-width:640px){.modal{border-radius:18px}}
+.modal h3{margin:0 0 2px;font-size:18px}
+.modal .mrow{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.modal .mrow b{text-align:right}
+.modal .mk{color:var(--gray);font-size:12.5px;font-weight:600;white-space:nowrap}
+.wa{background:#F6F6F1;border:1px solid var(--line);border-radius:11px;padding:11px;font-size:13px;
+  white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;max-height:230px;overflow:auto}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,26px);background:var(--ink);color:#fff;
+  padding:12px 18px;border-radius:11px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;
+  transition:.22s;z-index:90;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#toast.err{background:var(--clay)}
+.banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
+.banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
+.banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+.lock{max-width:380px;margin:34px auto;text-align:center}
+.mini{font-size:12.5px;color:var(--gray)}
+.view{display:none}.view.on{display:block}
+@media print{header,nav,.row-btn,#toast{display:none}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="logo">SPA<span>DENTAL</span></div>
+    <div class="sub">Control de visitas, atención y cobros<br><span id="hd-hoy"></span></div>
+  </div>
+  <nav>
+    <button data-v="atencion" class="on">＋ Nueva atención</button>
+    <button data-v="agenda">🔔 Recordatorios <span class="pill bad" id="nav-rem" style="display:none">0</span></button>
+    <button data-v="lista">📋 Atenciones</button>
+    <button data-v="panel">📊 Panel</button>
+    <button data-v="pacientes">👤 Pacientes</button>
+    <button data-v="config">⚙️ Ajustes</button>
+  </nav>
+</header>
+
+<div class="wrap">
+<div id="conn-banner"></div>
+
+<!-- ============== VISTA: NUEVA ATENCIÓN ============== -->
+<section class="view on" id="v-atencion">
+
+  <div class="card">
+    <h2><span class="n">1</span>Visita</h2>
+    <p class="hint">Fecha y hora de la atención. El N° del día se asigna solo.</p>
+    <div class="grid g4">
+      <div><label>Fecha <span class="req">*</span></label><input type="date" id="f-fecha"></div>
+      <div><label>Hora</label><input type="time" id="f-hora"></div>
+      <div><label>Profesional <span class="req">*</span></label>
+        <input list="dl-prof" id="f-prof" placeholder="Dra. Mirna" autocomplete="off">
+        <datalist id="dl-prof"></datalist></div>
+      <div><label>N° del día</label><input id="f-nro" readonly placeholder="—" style="background:var(--paper)"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>Paciente</h2>
+    <p class="hint">Si el paciente ya vino antes, escribí el nombre y se autocompletan sus datos.</p>
+    <div class="grid g2">
+      <div><label>Nombre y apellido <span class="req">*</span></label>
+        <input list="dl-pac" id="f-paciente" placeholder="Ej. María Fernández" autocomplete="off">
+        <datalist id="dl-pac"></datalist></div>
+      <div><label>Celular <span class="req">*</span></label><input id="f-cel" inputmode="tel" placeholder="7XXXXXXX"></div>
+    </div>
+    <div class="grid g3" style="margin-top:12px">
+      <div><label>CI / Documento</label><input id="f-ci" placeholder="Opcional"></div>
+      <div><label>Edad</label><input id="f-edad" inputmode="numeric" placeholder="Opcional"></div>
+      <div><label>Tipo de paciente</label>
+        <div class="seg" id="seg-tipo">
+          <label><input type="radio" name="tipo" value="Nuevo" checked><span>Nuevo</span></label>
+          <label><input type="radio" name="tipo" value="Recurrente"><span>Recurrente</span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>¿Por dónde nos encontró?</h2>
+    <p class="hint">Este dato es el que después dice en qué canal conviene invertir. Marcalo siempre.</p>
+    <div class="seg lime" id="seg-canal"></div>
+    <div style="margin-top:12px"><label id="lbl-canal-det">Detalle del canal</label>
+      <input id="f-canal-det" placeholder="Ej. campaña de blanqueamiento / lo trajo Ana Pérez"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span>Servicios realizados</h2>
+    <p class="hint">El precio sale de la lista pero <b>lo podés cambiar</b>: manda siempre lo que anotan ustedes.</p>
+    <div id="srv-list"></div>
+    <button type="button" class="btn sec sm" id="btn-add-srv">＋ Agregar servicio</button>
+    <div class="tot-box"><span>Total del tratamiento</span><b id="f-total-view">Bs 0</b></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span>Cobro</h2>
+    <p class="hint">Cuánto dejó a cuenta hoy. El saldo se calcula solo (podés corregirlo).</p>
+    <div class="grid g4">
+      <div><label>Total Bs</label><input id="f-total" inputmode="decimal" placeholder="0"></div>
+      <div><label>A cuenta hoy Bs</label><input id="f-acuenta" inputmode="decimal" placeholder="0"></div>
+      <div><label>Saldo Bs</label><input id="f-saldo" inputmode="decimal" placeholder="0"></div>
+      <div><label>Método de pago</label>
+        <select id="f-metodo">
+          <option value="">—</option><option>Efectivo</option><option>QR</option>
+          <option>Tarjeta</option><option>Transferencia</option><option>Mixto</option>
+        </select></div>
+    </div>
+    <div id="pago-tag" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span>Estado y próximo contacto</h2>
+    <p class="hint">Si marcás una próxima fecha, el paciente aparece solo en <b>Recordatorios</b>.</p>
+    <label>Estado de la visita</label>
+    <div class="seg" id="seg-estado">
+      <label><input type="radio" name="estado" value="Atendido" checked><span>✅ Atendido</span></label>
+      <label><input type="radio" name="estado" value="Agendado"><span>📅 Agendado</span></label>
+      <label><input type="radio" name="estado" value="Reagendar"><span>🔁 Reagendar</span></label>
+      <label><input type="radio" name="estado" value="No asistió"><span>✖ No asistió</span></label>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div><label>Próxima cita / contacto</label><input type="date" id="f-prox"></div>
+      <div><label>Hora</label><input type="time" id="f-prox-hora"></div>
+      <div><label>Motivo del próximo contacto</label>
+        <input list="dl-motivo" id="f-prox-motivo" placeholder="Ej. control de ortodoncia">
+        <datalist id="dl-motivo">
+          <option>Control</option><option>Continuar tratamiento</option><option>Cambio de ligas</option>
+          <option>Cobrar saldo</option><option>Segunda sesión</option><option>Confirmar asistencia</option>
+          <option>Reagendar</option><option>Retiro de puntos</option>
+        </datalist></div>
+    </div>
+    <div style="margin-top:12px"><label>Observaciones</label>
+      <textarea id="f-obs" placeholder="Notas clínicas, alergias, acuerdos de pago…"></textarea></div>
+    <div class="row-btn">
+      <button class="btn" id="btn-save">Guardar atención</button>
+      <button class="btn sec" id="btn-clear">Limpiar</button>
+      <button class="btn sec" id="btn-cancel-edit" style="display:none">Cancelar edición</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============== VISTA: RECORDATORIOS ============== -->
+<section class="view" id="v-agenda">
+  <div class="card">
+    <h2>Para contactar</h2>
+    <p class="hint">Citas vencidas, de hoy y próximas, más saldos por cobrar y pacientes que no vuelven.</p>
+    <div class="seg lime" id="seg-rem" style="margin-bottom:6px">
+      <label><input type="radio" name="remf" value="citas" checked><span>📅 Citas</span></label>
+      <label><input type="radio" name="remf" value="saldos"><span>💰 Saldos</span></label>
+      <label><input type="radio" name="remf" value="dormidos"><span>😴 Sin volver</span></label>
+      <label><input type="radio" name="remf" value="todos"><span>Todos</span></label>
+    </div>
+    <div class="kpis" style="margin:14px 0"><div class="kpi" id="k-venc"></div><div class="kpi" id="k-hoy"></div>
+      <div class="kpi" id="k-sem"></div><div class="kpi" id="k-saldos"></div></div>
+    <div id="rem-list"></div>
+  </div>
+</section>
+
+<!-- ============== VISTA: ATENCIONES ============== -->
+<section class="view" id="v-lista">
+  <div class="card">
+    <h2>Atenciones registradas</h2>
+    <div class="grid g4" style="margin-top:10px">
+      <div><label>Ver</label>
+        <select id="l-rango"><option value="dia">Un día</option><option value="mes" selected>Un mes</option>
+        <option value="todo">Todo</option></select></div>
+      <div id="wrap-l-dia" style="display:none"><label>Día</label><input type="date" id="l-dia"></div>
+      <div id="wrap-l-mes"><label>Mes</label><input type="month" id="l-mes"></div>
+      <div><label>Buscar</label><input id="l-q" placeholder="Paciente, servicio, canal…"></div>
+    </div>
+    <div class="kpis" style="margin:14px 0">
+      <div class="kpi acc" id="k-l-pac"></div><div class="kpi" id="k-l-cobr"></div>
+      <div class="kpi" id="k-l-saldo"></div><div class="kpi" id="k-l-tkt"></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>N°</th><th>Fecha</th><th>Paciente</th><th>Canal</th><th>Servicios</th>
+        <th class="num">Total</th><th class="num">A cuenta</th><th class="num">Saldo</th><th>Estado</th><th>Próx.</th></tr></thead>
+      <tbody id="l-body"></tbody></table></div>
+    <div class="row-btn">
+      <button class="btn dark sm" id="btn-xls">⬇ Descargar Excel</button>
+      <button class="btn sec sm" id="btn-sync">🔄 Actualizar</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============== VISTA: PANEL ============== -->
+<section class="view" id="v-panel">
+  <div class="card">
+    <h2>Panel de control</h2>
+    <div class="grid g3" style="margin-top:10px">
+      <div><label>Periodo</label>
+        <select id="p-rango"><option value="mes" selected>Un mes</option><option value="anio">Un año</option>
+        <option value="todo">Todo</option></select></div>
+      <div id="wrap-p-mes"><label>Mes</label><input type="month" id="p-mes"></div>
+      <div id="wrap-p-anio" style="display:none"><label>Año</label><input id="p-anio" inputmode="numeric"></div>
+    </div>
+  </div>
+  <div class="kpis" style="margin-top:14px" id="p-kpis"></div>
+  <div class="card"><h2>¿De dónde llegan los pacientes?</h2>
+    <p class="hint">Pacientes distintos por canal en el periodo, y lo que facturó cada canal.</p>
+    <div id="p-canal"></div></div>
+  <div class="card"><h2>Servicios más hechos</h2>
+    <p class="hint">Cantidad de veces y Bs facturados por servicio.</p>
+    <div id="p-serv"></div></div>
+  <div class="grid g2">
+    <div class="card"><h2>Por profesional</h2><div id="p-prof"></div></div>
+    <div class="card"><h2>Atenciones por día de la semana</h2><div id="p-dow"></div></div>
+  </div>
+  <div class="card"><h2>Evolución mensual</h2><div id="p-mensual"></div></div>
+</section>
+
+<!-- ============== VISTA: PACIENTES ============== -->
+<section class="view" id="v-pacientes">
+  <div class="card">
+    <h2>Pacientes</h2>
+    <p class="hint">Un paciente = un nombre. Tocá una fila para ver su historial completo.</p>
+    <div class="grid g2" style="margin-top:10px">
+      <div><label>Buscar</label><input id="pc-q" placeholder="Nombre o celular"></div>
+      <div><label>Ordenar por</label>
+        <select id="pc-ord"><option value="ult">Última visita</option><option value="saldo">Saldo pendiente</option>
+        <option value="gasto">Total facturado</option><option value="visitas">N° de visitas</option>
+        <option value="nombre">Nombre</option></select></div>
+    </div>
+    <div class="tw" style="margin-top:12px"><table>
+      <thead><tr><th>Paciente</th><th>Celular</th><th>Canal</th><th class="num">Visitas</th>
+        <th class="num">Facturado</th><th class="num">Saldo</th><th>Última</th><th>Próxima</th></tr></thead>
+      <tbody id="pc-body"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============== VISTA: AJUSTES ============== -->
+<section class="view" id="v-config">
+  <div class="card">
+    <h2>Profesionales</h2>
+    <p class="hint">Aparecen como sugerencia al cargar una atención. Uno por línea.</p>
+    <textarea id="c-prof" style="min-height:110px"></textarea>
+    <div class="row-btn"><button class="btn sm" id="btn-save-prof">Guardar profesionales</button></div>
+  </div>
+  <div class="card">
+    <h2>Canales de captación</h2>
+    <p class="hint">Uno por línea. Cambiar esto no borra los datos ya cargados.</p>
+    <textarea id="c-canal" style="min-height:130px"></textarea>
+    <div class="row-btn"><button class="btn sm" id="btn-save-canal">Guardar canales</button></div>
+  </div>
+  <div class="card">
+    <h2>Lista de precios</h2>
+    <p class="hint">Precios sugeridos que se autocompletan. Siempre se pueden pisar al cargar la atención.</p>
+    <div class="tw"><table style="min-width:520px"><thead><tr><th>Categoría</th><th>Servicio</th>
+      <th class="num" style="width:130px">Precio Bs</th></tr></thead><tbody id="c-precios"></tbody></table></div>
+    <div class="row-btn"><button class="btn sm" id="btn-save-precios">Guardar precios</button>
+      <button class="btn sec sm" id="btn-reset-precios">Restaurar lista original</button></div>
+  </div>
+  <div class="card">
+    <h2>Recordatorios</h2>
+    <div class="grid g2">
+      <div><label>Avisar citas con esta anticipación (días)</label><input id="c-dias-prox" inputmode="numeric"></div>
+      <div><label>Marcar "sin volver" después de (días)</label><input id="c-dias-dorm" inputmode="numeric"></div>
+    </div>
+    <div class="row-btn"><button class="btn sm" id="btn-save-rem">Guardar</button></div>
+  </div>
+  <div class="card">
+    <h2>Datos y respaldo</h2>
+    <p class="hint" id="c-modo"></p>
+    <div class="row-btn">
+      <button class="btn dark sm" id="btn-xls2">⬇ Excel de todo</button>
+      <button class="btn sec sm" id="btn-json">⬇ Respaldo JSON</button>
+      <button class="btn sec sm" id="btn-import">⬆ Restaurar JSON</button>
+      <input type="file" id="file-json" accept="application/json,.json" class="sr" style="display:none">
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="ov" id="ov"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+<script>
+/* =====================================================================
+   SPADENTAL · Control de visitas, atención, canal y cobros
+   Página independiente. Funciona sin internet (localStorage) y, si se
+   configura SHEETS_URL, sincroniza con una hoja de Google compartida.
+   ===================================================================== */
+
+/* Pegá acá la URL /exec del Web App de Google Apps Script para trabajar
+   en equipo (ver SETUP-GOOGLE-SHEETS-SPADENTAL.md). Vacío = modo local. */
+var SHEETS_URL = '';
+
+var K_DATA='SP_ATENCIONES_V1', K_CFG='SP_CFG_V1', K_PEND='SP_PENDING_V1';
+var CONNECTED = /^https:\/\/script\.google\.com\/.+\/exec$/.test(SHEETS_URL);
+
+/* ---------- lista de precios base (docx PRECIOS DE TRATAMIENTOS) ---------- */
+var PRECIOS_BASE = [
+ ['General','Consulta / Valoración',0],
+ ['Odontológico','Limpieza dental',230],
+ ['Odontológico','Blanqueamiento láser',170],
+ ['Odontológico','Restauración de carie',190],
+ ['Odontológico','Cirugía',500],
+ ['Odontológico','Ortodoncia · cuota inicial',1400],
+ ['Odontológico','Ortodoncia · mensualidad',0],
+ ['Odontológico','Extracción simple',230],
+ ['Odontológico','Endodoncia uni',650],
+ ['Odontológico','Endodoncia multi superior',900],
+ ['Odontológico','Endodoncia multi inferior',850],
+ ['Odontológico','Re endodoncia uni',750],
+ ['Odontológico','Re endodoncia multi',950],
+ ['Odontológico','Cementación',130],
+ ['Odontológico','Perno',210],
+ ['Odontológico','Incrustación',800],
+ ['Odontológico','Radiografía',80],
+ ['Odontológico','Retiro de brackets + limpieza',350],
+ ['Odontológico','Cambio de ligas',80],
+ ['Odontológico','Recorte de encía',650],
+ ['Carillas','Carilla directa (c/u)',450],
+ ['Carillas','Carilla inyectada (c/u)',900],
+ ['Carillas','Carilla de resina (c/u)',800],
+ ['Carillas','Lente de contacto porcelana (c/u)',1600],
+ ['Coronas','Corona biolón (c/u)',650],
+ ['Coronas','Corona de resina (c/u)',800],
+ ['Coronas','Corona metal porcelana (c/u)',1200],
+ ['Coronas','Corona de porcelana (c/u)',1600],
+ ['Coronas','Corona de zirconio (c/u)',1800],
+ ['Placas','Placa acrílica',850],
+ ['Placas','Placa cromo cobalto',1600],
+ ['Placas','Placa flexible',1700],
+ ['Placas','Placa cromo flexible',2000],
+ ['Placas','Placa de relajación',500],
+ ['Placas','Placa de contención',500],
+ ['Placas','Placa de contención en laboratorio',700],
+ ['Placas','Reparación de placa',150],
+ ['Estético','Bichectomía',1500],
+ ['Estético','Plasma capilar · 1 sesión',250],
+ ['Estético','Plasma capilar · 4 sesiones',750],
+ ['Estético','Plasma facial · 1 sesión',250],
+ ['Estético','Botox',1400],
+ ['Estético','10 hilos de colágeno',1050],
+ ['Estético','Hilos tensores (c/u)',350],
+ ['Estético','Radiesse',3000],
+ ['Estético','Rinomodelación con ácido hialurónico',1400],
+ ['Estético','Liposucción de papada',1750],
+ ['Otro','Otro (escribir)',0]
+];
+var CANALES_BASE = ['Facebook','Instagram','TikTok','WhatsApp','Google / Maps','Referido','Pasó por el local','Paciente antiguo','Volante / flyer','Otro'];
+var PROF_BASE = ['Dra. Mirna'];
+var ESTADOS = ['Atendido','Agendado','Reagendar','No asistió'];
+
+/* ---------- helpers ---------- */
+function $(s){return document.querySelector(s)}
+function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+/* escapa un texto para meterlo dentro de un onclick="fn('...')" del HTML */
+function jss(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")
+  .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function num(v){var n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0}
+function bs(n){return 'Bs '+Math.round(num(n)).toLocaleString('es-BO')}
+function n0(n){return Math.round(num(n)).toLocaleString('es-BO')}
+function uid(){return 'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function hoyISO(){var d=new Date();return iso(d)}
+function iso(d){var m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+dd}
+function parseISO(s){var p=String(s||'').split('-');return new Date(+p[0],(+p[1]||1)-1,+p[2]||1)}
+function diasEntre(a,b){return Math.round((parseISO(b)-parseISO(a))/86400000)}
+function addDias(s,n){var d=parseISO(s);d.setDate(d.getDate()+n);return iso(d)}
+function fmtF(s){if(!s)return '—';var p=String(s).split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function fmtFcorta(s){if(!s)return '—';var p=String(s).split('-');return p[2]+'/'+p[1]}
+var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var DOW=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+function mesLabel(ym){var p=String(ym||'').split('-');return (MESES[(+p[1]||1)-1]||'')+' '+p[0]}
+function toast(m,err){var t=$('#toast');t.textContent=m;t.className='on'+(err?' err':'');
+  clearTimeout(toast._t);toast._t=setTimeout(function(){t.className=''},2600)}
+function telWa(c){var d=String(c||'').replace(/\D/g,'');if(!d)return '';
+  if(d.length===8)d='591'+d; if(d.length===9&&d[0]==='0')d='591'+d.slice(1); return d}
+
+/* ---------- estado ---------- */
+var DATA=[], CFG=null, EDIT_ID=null, SRV=[];
+
+function cfgDefault(){return {prof:PROF_BASE.slice(),canales:CANALES_BASE.slice(),
+  precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}}),
+  diasProx:3,diasDorm:120}}
+function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
+    var d=cfgDefault();for(var k in d){if(c[k]==null)c[k]=d[k]} return c}}catch(e){}
+  return cfgDefault()}
+function saveCfg(){try{localStorage.setItem(K_CFG,JSON.stringify(CFG))}catch(e){}}
+function loadLocal(){try{var a=JSON.parse(localStorage.getItem(K_DATA));return Array.isArray(a)?a:[]}catch(e){return []}}
+function saveLocal(){try{localStorage.setItem(K_DATA,JSON.stringify(DATA))}catch(e){toast('No se pudo guardar en este dispositivo',1)}}
+
+/* ---------- backend opcional (Google Sheets) ---------- */
+function api(action,payload){
+  return fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:action,pedido:payload,registro:payload})})
+    .then(function(r){return r.json()})
+}
+function pend(){try{var a=JSON.parse(localStorage.getItem(K_PEND));return Array.isArray(a)?a:[]}catch(e){return []}}
+function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){}}
+function queue(action,rec){var q=pend();q.push({action:action,rec:rec});setPend(q)}
+function flushQueue(){
+  if(!CONNECTED)return Promise.resolve();
+  var q=pend(); if(!q.length)return Promise.resolve();
+  setPend([]);
+  return q.reduce(function(p,item){return p.then(function(){return api(item.action,item.rec).catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
+}
+function pullServer(){
+  if(!CONNECTED)return Promise.resolve(false);
+  return api('list').then(function(r){
+    if(r&&r.ok&&Array.isArray(r.registros||r.pedidos)){
+      DATA=(r.registros||r.pedidos).map(normalize); saveLocal(); return true}
+    return false}).catch(function(){return false})
+}
+function normalize(r){
+  r=r||{};
+  if(typeof r.servicios==='string'){try{r.servicios=JSON.parse(r.servicios)}catch(e){r.servicios=[]}}
+  if(!Array.isArray(r.servicios))r.servicios=[];
+  r.total=num(r.total);r.acuenta=num(r.acuenta);r.saldo=num(r.saldo);
+  r.contactado=!!r.contactado&&r.contactado!=='FALSE'&&r.contactado!=='NO';
+  if(!r.id)r.id=uid();
+  return r}
+
+/* ---------- navegación ---------- */
+function show(v){
+  $$('nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});
+  $$('.view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+v)});
+  window.scrollTo(0,0);
+  if(v==='agenda')renderRem(); if(v==='lista')renderLista(); if(v==='panel')renderPanel();
+  if(v==='pacientes')renderPacientes(); if(v==='config')renderConfig();
+}
+
+/* ============================ FORMULARIO ============================ */
+function srvRowHtml(i,s){
+  var opts='<option value=""></option>';
+  var cats={}; CFG.precios.forEach(function(p){(cats[p.cat]=cats[p.cat]||[]).push(p)});
+  Object.keys(cats).forEach(function(c){
+    opts+='<optgroup label="'+esc(c)+'">';
+    cats[c].forEach(function(p){
+      opts+='<option value="'+esc(p.nom)+'"'+(s.nom===p.nom?' selected':'')+'>'+esc(p.nom)+'</option>'});
+    opts+='</optgroup>'});
+  return '<div class="srv" data-i="'+i+'">'+
+    '<div class="srv-top"><div><label>Servicio</label>'+
+      '<select class="s-nom">'+opts+'</select></div>'+
+      '<div><label>&nbsp;</label><button type="button" class="del s-del" title="Quitar">✕</button></div></div>'+
+    '<div class="srv-bot">'+
+      '<div><label>Detalle / pieza</label><input class="s-det" value="'+esc(s.det||'')+'" placeholder="Ej. pieza 26"></div>'+
+      '<div><label>Cant.</label><input class="s-cant" inputmode="numeric" value="'+esc(s.cant||1)+'"></div>'+
+      '<div><label>Precio c/u</label><input class="s-precio" inputmode="decimal" value="'+esc(s.precio==null?'':s.precio)+'"></div>'+
+    '</div></div>'}
+
+function renderSrv(){
+  if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}];
+  $('#srv-list').innerHTML=SRV.map(function(s,i){return srvRowHtml(i,s)}).join('');
+  recalcTotal()}
+
+function readSrv(){
+  SRV=$$('#srv-list .srv').map(function(el){
+    return {nom:el.querySelector('.s-nom').value,det:el.querySelector('.s-det').value,
+      cant:num(el.querySelector('.s-cant').value)||1,precio:num(el.querySelector('.s-precio').value)}})}
+
+function totalSrv(){return SRV.reduce(function(a,s){return a+num(s.precio)*(num(s.cant)||1)},0)}
+
+function recalcTotal(){
+  var t=totalSrv();
+  $('#f-total-view').textContent=bs(t);
+  if(!$('#f-total').dataset.touched)$('#f-total').value=t?t:'';
+  recalcSaldo()}
+
+function recalcSaldo(){
+  var t=num($('#f-total').value),a=num($('#f-acuenta').value);
+  if(!$('#f-saldo').dataset.touched)$('#f-saldo').value=Math.max(0,t-a)||(t-a<0?(t-a):'');
+  var s=num($('#f-saldo').value),tag=$('#pago-tag');
+  if(t<=0){tag.innerHTML=''}
+  else if(s<=0){tag.innerHTML='<span class="pill ok">✅ Pagado completo</span>'}
+  else if(a>0){tag.innerHTML='<span class="pill warn">⏳ Pago parcial · debe '+bs(s)+'</span>'}
+  else{tag.innerHTML='<span class="pill bad">⚠ Sin pago · debe '+bs(s)+'</span>'}}
+
+function renderCanales(){
+  $('#seg-canal').innerHTML=CFG.canales.map(function(c,i){
+    return '<label><input type="radio" name="canal" value="'+esc(c)+'"'+(i===0?'':'')+'><span>'+esc(c)+'</span></label>'}).join('')}
+
+function nroDelDia(fecha,exceptId){
+  return DATA.filter(function(r){return r.fecha===fecha&&r.id!==exceptId}).length+1}
+
+function refreshNro(){
+  var f=$('#f-fecha').value;
+  $('#f-nro').value=f?('#'+nroDelDia(f,EDIT_ID)):''}
+
+function fillDatalists(){
+  var pac={},prof={};
+  DATA.forEach(function(r){if(r.paciente)pac[r.paciente]=1;if(r.profesional)prof[r.profesional]=1});
+  CFG.prof.forEach(function(p){prof[p]=1});
+  $('#dl-pac').innerHTML=Object.keys(pac).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('');
+  $('#dl-prof').innerHTML=Object.keys(prof).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('')}
+
+function autoPaciente(){
+  var n=$('#f-paciente').value.trim().toLowerCase(); if(!n)return;
+  var prev=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n})
+               .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
+  if(!prev)return;
+  if(!$('#f-cel').value)$('#f-cel').value=prev.celular||'';
+  if(!$('#f-ci').value)$('#f-ci').value=prev.ci||'';
+  if(!$('#f-edad').value)$('#f-edad').value=prev.edad||'';
+  var r=$$('#seg-tipo input').filter(function(i){return i.value==='Recurrente'})[0]; if(r)r.checked=true;
+  var c=$$('#seg-canal input').filter(function(i){return i.value===prev.canal})[0]; if(c&&!getRadio('canal'))c.checked=true;
+  var nv=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n}).length;
+  var deuda=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n})
+                .reduce(function(a,r){return a+num(r.saldo)},0);
+  toast('Paciente conocido · '+nv+' visita'+(nv===1?'':'s')+' · última '+fmtF(prev.fecha)+
+        (deuda>0?' · debe '+bs(deuda):''))}
+
+function getRadio(name){var el=$$('input[name="'+name+'"]').filter(function(i){return i.checked})[0];return el?el.value:''}
+function setRadio(name,val){$$('input[name="'+name+'"]').forEach(function(i){i.checked=(i.value===val)})}
+
+function clearForm(keepFecha){
+  EDIT_ID=null;
+  if(!keepFecha)$('#f-fecha').value=hoyISO();
+  var d=new Date(); $('#f-hora').value=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+  ['f-paciente','f-cel','f-ci','f-edad','f-canal-det','f-obs','f-total','f-acuenta','f-saldo','f-prox','f-prox-hora','f-prox-motivo']
+    .forEach(function(id){var e=$('#'+id);e.value='';delete e.dataset.touched;e.classList.remove('bad')});
+  $('#f-metodo').value='';
+  setRadio('tipo','Nuevo'); setRadio('estado','Atendido');
+  $$('#seg-canal input').forEach(function(i){i.checked=false});
+  SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv();
+  $('#btn-save').textContent='Guardar atención';
+  $('#btn-cancel-edit').style.display='none';
+  refreshNro(); recalcSaldo()}
+
+function loadForm(r){
+  EDIT_ID=r.id;
+  $('#f-fecha').value=r.fecha||hoyISO(); $('#f-hora').value=r.hora||'';
+  $('#f-prof').value=r.profesional||''; $('#f-paciente').value=r.paciente||'';
+  $('#f-cel').value=r.celular||''; $('#f-ci').value=r.ci||''; $('#f-edad').value=r.edad||'';
+  setRadio('tipo',r.tipo||'Nuevo'); setRadio('estado',r.estado||'Atendido');
+  $$('#seg-canal input').forEach(function(i){i.checked=(i.value===r.canal)});
+  $('#f-canal-det').value=r.canalDetalle||'';
+  SRV=(r.servicios&&r.servicios.length)?r.servicios.slice():[{nom:'',det:'',cant:1,precio:''}];
+  renderSrv();
+  $('#f-total').value=r.total||''; $('#f-total').dataset.touched='1';
+  $('#f-acuenta').value=r.acuenta||''; $('#f-saldo').value=r.saldo||''; $('#f-saldo').dataset.touched='1';
+  $('#f-metodo').value=r.metodo||'';
+  $('#f-prox').value=r.prox||''; $('#f-prox-hora').value=r.proxHora||''; $('#f-prox-motivo').value=r.proxMotivo||'';
+  $('#f-obs').value=r.obs||'';
+  $('#f-nro').value=r.nroDia?('#'+r.nroDia):'';
+  $('#btn-save').textContent='Guardar cambios';
+  $('#btn-cancel-edit').style.display='';
+  recalcSaldo(); closeModal(); show('atencion')}
+
+function validar(){
+  var bad=[],req=[['f-fecha','fecha'],['f-prof','profesional'],['f-paciente','paciente'],['f-cel','celular']];
+  req.forEach(function(p){var e=$('#'+p[0]);var ok=!!e.value.trim();e.classList.toggle('bad',!ok);if(!ok)bad.push(p[1])});
+  if(!getRadio('canal')){bad.push('canal');$('#seg-canal').style.outline='2px solid var(--clay)';
+    setTimeout(function(){$('#seg-canal').style.outline=''},2200)}
+  readSrv();
+  if(!SRV.filter(function(s){return s.nom}).length){bad.push('servicio');
+    $('#srv-list').style.outline='2px solid var(--clay)';setTimeout(function(){$('#srv-list').style.outline=''},2200)}
+  return bad}
+
+function submitAtencion(){
+  var bad=validar();
+  if(bad.length){toast('Falta: '+bad.join(', '),1);return}
+  readSrv();
+  var prev=EDIT_ID?DATA.filter(function(r){return r.id===EDIT_ID})[0]:null;
+  var fecha=$('#f-fecha').value;
+  var rec={
+    id:EDIT_ID||uid(),
+    ts:(prev&&prev.ts)||new Date().toISOString(),
+    fecha:fecha, hora:$('#f-hora').value,
+    nroDia:(prev&&prev.fecha===fecha&&prev.nroDia)?prev.nroDia:nroDelDia(fecha,EDIT_ID),
+    profesional:$('#f-prof').value.trim(),
+    paciente:$('#f-paciente').value.trim(),
+    celular:$('#f-cel').value.trim(), ci:$('#f-ci').value.trim(), edad:$('#f-edad').value.trim(),
+    tipo:getRadio('tipo'), canal:getRadio('canal'), canalDetalle:$('#f-canal-det').value.trim(),
+    servicios:SRV.filter(function(s){return s.nom}),
+    total:num($('#f-total').value), acuenta:num($('#f-acuenta').value), saldo:num($('#f-saldo').value),
+    metodo:$('#f-metodo').value, estado:getRadio('estado'),
+    prox:$('#f-prox').value, proxHora:$('#f-prox-hora').value, proxMotivo:$('#f-prox-motivo').value.trim(),
+    obs:$('#f-obs').value.trim(),
+    contactado:(prev&&prev.prox===$('#f-prox').value)?!!prev.contactado:false,
+    contactadoTs:(prev&&prev.prox===$('#f-prox').value)?(prev.contactadoTs||''):''
+  };
+  if(EDIT_ID){DATA=DATA.map(function(r){return r.id===EDIT_ID?rec:r})}else{DATA.push(rec)}
+  saveLocal();
+  if(CONNECTED){api('save',rec).catch(function(){queue('save',rec)})}else{queue('save',rec)}
+  var era=EDIT_ID; clearForm(true); fillDatalists(); updateNavRem();
+  toast(era?'Atención actualizada':'Atención guardada ✅');
+  if(!era)showWhatsappModal(rec)}
+
+function borrar(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!confirm('¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?'))return;
+  DATA=DATA.filter(function(x){return x.id!==id}); saveLocal();
+  if(CONNECTED){api('delete',{id:id}).catch(function(){queue('delete',{id:id})})}
+  closeModal(); toast('Atención borrada'); refreshAll()}
+
+/* ============================ RECORDATORIOS ============================ */
+function citasPend(){
+  var hoy=hoyISO();
+  return DATA.filter(function(r){return r.prox&&!r.contactado})
+    .map(function(r){return {r:r,dias:diasEntre(hoy,r.prox)}})
+    .sort(function(a,b){return a.dias-b.dias})}
+
+function saldosPend(){
+  var by={};
+  DATA.forEach(function(r){
+    if(num(r.saldo)<=0)return;
+    var k=(r.paciente||'—').trim();
+    if(!by[k])by[k]={paciente:k,celular:r.celular,saldo:0,n:0,ult:'',ids:[]};
+    by[k].saldo+=num(r.saldo); by[k].n++; by[k].ids.push(r.id);
+    if(r.celular)by[k].celular=r.celular;
+    if((r.fecha||'')>by[k].ult)by[k].ult=r.fecha||''});
+  return Object.keys(by).map(function(k){return by[k]}).sort(function(a,b){return b.saldo-a.saldo})}
+
+function dormidos(){
+  var hoy=hoyISO(),lim=CFG.diasDorm,by={};
+  DATA.forEach(function(r){
+    var k=(r.paciente||'—').trim();
+    if(!by[k])by[k]={paciente:k,celular:r.celular,ult:'',n:0,prox:'',canal:r.canal};
+    by[k].n++; if(r.celular)by[k].celular=r.celular;
+    if((r.fecha||'')>by[k].ult)by[k].ult=r.fecha||'';
+    if(r.prox&&r.prox>=hoy&&r.prox>by[k].prox)by[k].prox=r.prox});
+  return Object.keys(by).map(function(k){return by[k]})
+    .filter(function(p){return !p.prox&&p.ult&&diasEntre(p.ult,hoy)>=lim})
+    .sort(function(a,b){return (a.ult||'').localeCompare(b.ult||'')})}
+
+function totalPendientes(){
+  var hoy=hoyISO();
+  return citasPend().filter(function(c){return c.dias<=CFG.diasProx}).length}
+
+function updateNavRem(){
+  var n=totalPendientes(),el=$('#nav-rem');
+  el.style.display=n?'':'none'; el.textContent=n}
+
+function waLink(cel,txt){var d=telWa(cel);
+  return 'https://wa.me/'+(d||'')+'?text='+encodeURIComponent(txt)}
+
+function txtCita(r){
+  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n';
+  var d=diasEntre(hoyISO(),r.prox);
+  if(d<0)t+='Teníamos su cita para el '+fmtF(r.prox)+' y no llegamos a confirmarla. ¿La reagendamos?';
+  else if(d===0)t+='Le recordamos su cita de *hoy*'+(r.proxHora?' a las '+r.proxHora:'')+'.';
+  else t+='Le recordamos su cita del *'+fmtF(r.prox)+'*'+(r.proxHora?' a las '+r.proxHora:'')+'.';
+  if(r.proxMotivo)t+='\nMotivo: '+r.proxMotivo+'.';
+  if(num(r.saldo)>0)t+='\nSaldo pendiente: '+bs(r.saldo)+'.';
+  t+='\n\n¿Nos confirma por favor? 🦷';
+  return t}
+function txtSaldo(p){
+  return 'Hola '+(p.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n'+
+    'Le recordamos que queda un saldo pendiente de *'+bs(p.saldo)+'* de su tratamiento.\n'+
+    '¿Coordinamos el pago o le agendamos su próxima sesión? 🦷'}
+function txtDormido(p){
+  return 'Hola '+(p.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n'+
+    'Vimos que su última visita fue el '+fmtF(p.ult)+'. ¿Le agendamos un control o una limpieza? 🦷\n'+
+    'Tenemos horarios disponibles esta semana.'}
+
+function remCard(cls,who,meta,acts){
+  return '<div class="rem '+cls+'"><div><div class="who">'+esc(who)+'</div>'+
+    '<div class="meta">'+meta+'</div></div><div class="acts">'+acts+'</div></div>'}
+
+function renderRem(){
+  var hoy=hoyISO(), f=getRadio('remf')||'citas', cit=citasPend(), sal=saldosPend(), dor=dormidos();
+  var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
+      sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
+  var totSaldo=sal.reduce(function(a,p){return a+p.saldo},0);
+  $('#k-venc').innerHTML='<div class="k">Citas vencidas</div><div class="v">'+venc.length+'</div><div class="d">sin confirmar</div>';
+  $('#k-hoy').innerHTML='<div class="k">Citas de hoy</div><div class="v">'+hy.length+'</div><div class="d">'+fmtF(hoy)+'</div>';
+  $('#k-sem').innerHTML='<div class="k">Próximos 7 días</div><div class="v">'+sem.length+'</div><div class="d">agendadas</div>';
+  $('#k-saldos').innerHTML='<div class="k">Saldos por cobrar</div><div class="v" style="font-size:20px">'+bs(totSaldo)+'</div><div class="d">'+sal.length+' pacientes</div>';
+
+  var h='';
+  if(f==='citas'||f==='todos'){
+    var grupos=[['due','⚠ Vencidas / sin confirmar',venc],['today','🟢 Hoy',hy],
+                ['soon','📅 Próximas ('+CFG.diasProx+' días)',cit.filter(function(c){return c.dias>0&&c.dias<=CFG.diasProx})],
+                ['','🗓 Más adelante',cit.filter(function(c){return c.dias>CFG.diasProx})]];
+    grupos.forEach(function(g){
+      if(!g[2].length)return;
+      h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">'+g[1]+' · '+g[2].length+'</h3>';
+      g[2].forEach(function(c){
+        var r=c.r, cuando=c.dias<0?('venció hace '+Math.abs(c.dias)+' día'+(Math.abs(c.dias)===1?'':'s')):
+          c.dias===0?'hoy':('en '+c.dias+' día'+(c.dias===1?'':'s'));
+        var meta='📅 '+fmtF(r.prox)+(r.proxHora?' · '+r.proxHora:'')+' · <b>'+cuando+'</b>'+
+          (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
+          (num(r.saldo)>0?' · <span class="pill warn">saldo '+bs(r.saldo)+'</span>':'')+
+          '<br>📱 '+esc(r.celular||'sin celular')+' · última visita '+fmtF(r.fecha);
+        var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r))+'">WhatsApp</a>'+
+          '<button class="btn sec sm" onclick="marcarContactado(\''+r.id+'\')">✓ Contactado</button>'+
+          '<button class="btn sec sm" onclick="reagendar(\''+r.id+'\')">🔁 Reagendar</button>'+
+          '<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver</button>';
+        h+=remCard(g[0],r.paciente,meta,acts)})})}
+
+  if(f==='saldos'||f==='todos'){
+    h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">💰 Saldos por cobrar · '+sal.length+'</h3>';
+    if(!sal.length)h+='<div class="empty">No hay saldos pendientes 🎉</div>';
+    sal.forEach(function(p){
+      var meta='Debe <b>'+bs(p.saldo)+'</b> en '+p.n+' tratamiento'+(p.n===1?'':'s')+
+        '<br>📱 '+esc(p.celular||'sin celular')+' · última visita '+fmtF(p.ult);
+      var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(p.celular,txtSaldo(p))+'">WhatsApp</a>'+
+        '<button class="btn sec sm" onclick="verPaciente(\''+jss(p.paciente)+'\')">Ver historial</button>';
+      h+=remCard('money',p.paciente,meta,acts)})}
+
+  if(f==='dormidos'||f==='todos'){
+    h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">😴 Sin volver hace '+CFG.diasDorm+'+ días · '+dor.length+'</h3>';
+    if(!dor.length)h+='<div class="empty">Ningún paciente dormido.</div>';
+    dor.slice(0,60).forEach(function(p){
+      var meta='Última visita '+fmtF(p.ult)+' · hace <b>'+diasEntre(p.ult,hoy)+' días</b> · '+p.n+' visita'+(p.n===1?'':'s')+
+        '<br>📱 '+esc(p.celular||'sin celular')+(p.canal?' · llegó por '+esc(p.canal):'');
+      var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(p.celular,txtDormido(p))+'">WhatsApp</a>'+
+        '<button class="btn sec sm" onclick="verPaciente(\''+jss(p.paciente)+'\')">Ver historial</button>';
+      h+=remCard('',p.paciente,meta,acts)})}
+
+  $('#rem-list').innerHTML=h||'<div class="empty">Nada pendiente por ahora ✨</div>';
+  updateNavRem()}
+
+function persist(rec){
+  saveLocal();
+  if(CONNECTED){api('save',rec).catch(function(){queue('save',rec)})}else{queue('save',rec)}}
+
+function marcarContactado(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  r.contactado=true; r.contactadoTs=new Date().toISOString(); persist(r);
+  toast('Marcado como contactado ✓'); renderRem()}
+
+function reagendar(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  openModal('<h3>Reagendar a '+esc(r.paciente)+'</h3>'+
+    '<p class="mini">Cita actual: '+fmtF(r.prox)+(r.proxHora?' · '+r.proxHora:'')+'</p>'+
+    '<div class="grid g2" style="margin-top:12px">'+
+    '<div><label>Nueva fecha</label><input type="date" id="rg-f" value="'+esc(r.prox||hoyISO())+'"></div>'+
+    '<div><label>Hora</label><input type="time" id="rg-h" value="'+esc(r.proxHora||'')+'"></div></div>'+
+    '<div style="margin-top:12px"><label>Motivo</label><input id="rg-m" value="'+esc(r.proxMotivo||'')+'"></div>'+
+    '<div class="row-btn"><button class="btn" onclick="guardarReagenda(\''+id+'\')">Guardar nueva cita</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function guardarReagenda(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  r.prox=$('#rg-f').value; r.proxHora=$('#rg-h').value; r.proxMotivo=$('#rg-m').value.trim();
+  r.contactado=false; r.contactadoTs=''; persist(r);
+  closeModal(); toast('Cita reagendada para '+fmtF(r.prox)); renderRem()}
+</script>
+<script>
+/* ============================ LISTA DE ATENCIONES ============================ */
+function srvText(r){
+  return (r.servicios||[]).map(function(s){
+    return s.nom+(s.det?' ('+s.det+')':'')+((num(s.cant)||1)>1?' ×'+s.cant:'')}).join(' · ')}
+
+function filtrarLista(){
+  var rango=$('#l-rango').value, q=$('#l-q').value.trim().toLowerCase();
+  var out=DATA.slice();
+  if(rango==='dia'){var d=$('#l-dia').value; out=out.filter(function(r){return r.fecha===d})}
+  else if(rango==='mes'){var m=$('#l-mes').value; out=out.filter(function(r){return (r.fecha||'').slice(0,7)===m})}
+  if(q)out=out.filter(function(r){
+    return ((r.paciente||'')+' '+(r.canal||'')+' '+(r.profesional||'')+' '+(r.celular||'')+' '+
+            srvText(r)+' '+(r.obs||'')+' '+(r.estado||'')).toLowerCase().indexOf(q)>=0});
+  return out.sort(function(a,b){
+    var c=(b.fecha||'').localeCompare(a.fecha||''); return c||((b.hora||'').localeCompare(a.hora||''))})}
+
+function estadoPill(e){
+  var m={'Atendido':'ok','Agendado':'info','Reagendar':'warn','No asistió':'bad'};
+  return '<span class="pill '+(m[e]||'')+'">'+esc(e||'—')+'</span>'}
+function estadoCls(e){
+  return {'Atendido':'st-atendido','Agendado':'st-agendado','Reagendar':'st-reagendar','No asistió':'st-noasistio'}[e]||''}
+
+function renderLista(){
+  var rows=filtrarLista();
+  var pacs={}; rows.forEach(function(r){if(r.paciente)pacs[r.paciente.trim().toLowerCase()]=1});
+  var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0),
+      saldo=rows.reduce(function(a,r){return a+num(r.saldo)},0),
+      tot=rows.reduce(function(a,r){return a+num(r.total)},0),
+      nAt=rows.filter(function(r){return r.estado==='Atendido'}).length;
+  $('#k-l-pac').innerHTML='<div class="k">Atenciones</div><div class="v">'+rows.length+'</div><div class="d">'+Object.keys(pacs).length+' pacientes · '+nAt+' atendidos</div>';
+  $('#k-l-cobr').innerHTML='<div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">de '+bs(tot)+' facturado</div>';
+  $('#k-l-saldo').innerHTML='<div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(saldo)+'</div><div class="d">saldo pendiente</div>';
+  $('#k-l-tkt').innerHTML='<div class="k">Ticket promedio</div><div class="v" style="font-size:21px">'+bs(rows.length?tot/rows.length:0)+'</div><div class="d">por atención</div>';
+
+  $('#l-body').innerHTML=rows.length?rows.map(function(r){
+    return '<tr class="'+estadoCls(r.estado)+'" onclick="verFicha(\''+r.id+'\')">'+
+      '<td>'+(r.nroDia?'#'+r.nroDia:'—')+'</td>'+
+      '<td>'+fmtFcorta(r.fecha)+'<div class="mini">'+esc(r.hora||'')+'</div></td>'+
+      '<td><b>'+esc(r.paciente||'—')+'</b><div class="mini">'+esc(r.celular||'')+(r.tipo==='Nuevo'?' · <span class="pill lime">nuevo</span>':'')+'</div></td>'+
+      '<td>'+esc(r.canal||'—')+'</td>'+
+      '<td style="max-width:230px">'+esc(srvText(r)||'—')+'</td>'+
+      '<td class="num">'+n0(r.total)+'</td>'+
+      '<td class="num">'+n0(r.acuenta)+'</td>'+
+      '<td class="num"'+(num(r.saldo)>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(r.saldo)+'</td>'+
+      '<td>'+estadoPill(r.estado)+'</td>'+
+      '<td>'+(r.prox?fmtFcorta(r.prox)+(r.contactado?' <span class="pill ok">ok</span>':''):'—')+'</td></tr>'
+  }).join(''):'<tr><td colspan="10" class="empty">No hay atenciones en este filtro.</td></tr>'}
+
+/* ============================ PANEL ============================ */
+function periodoRows(){
+  var r=$('#p-rango').value, out=DATA.slice();
+  if(r==='mes'){var m=$('#p-mes').value; out=out.filter(function(x){return (x.fecha||'').slice(0,7)===m})}
+  else if(r==='anio'){var a=$('#p-anio').value; out=out.filter(function(x){return (x.fecha||'').slice(0,4)===a})}
+  return out}
+
+function barras(items,total,color){
+  if(!items.length)return '<div class="empty">Sin datos en este periodo.</div>';
+  var max=Math.max.apply(null,items.map(function(i){return i.v}))||1;
+  return '<div class="bars">'+items.map(function(i){
+    return '<div class="bar-row"><div title="'+esc(i.k)+'" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.k)+'</div>'+
+      '<div class="bar-track"><div class="bar-fill'+(color?' '+color:'')+'" style="width:'+(i.v/max*100).toFixed(1)+'%"></div></div>'+
+      '<div class="bar-val">'+i.lbl+'</div></div>'}).join('')+'</div>'}
+
+function renderPanel(){
+  var rows=periodoRows(), hoy=hoyISO();
+  var pacs={},nuevos={},canal={},serv={},prof={},dow={},mens={};
+  var tot=0,cobr=0,sal=0;
+  rows.forEach(function(r){
+    var k=(r.paciente||'').trim().toLowerCase();
+    if(k)pacs[k]=1;
+    if(r.tipo==='Nuevo'&&k)nuevos[k]=1;
+    tot+=num(r.total); cobr+=num(r.acuenta); sal+=num(r.saldo);
+    var c=r.canal||'Sin dato';
+    if(!canal[c])canal[c]={pac:{},n:0,bs:0};
+    if(k)canal[c].pac[k]=1; canal[c].n++; canal[c].bs+=num(r.total);
+    (r.servicios||[]).forEach(function(s){
+      if(!s.nom)return; var q=num(s.cant)||1;
+      if(!serv[s.nom])serv[s.nom]={n:0,bs:0};
+      serv[s.nom].n+=q; serv[s.nom].bs+=num(s.precio)*q});
+    var p=r.profesional||'Sin asignar';
+    if(!prof[p])prof[p]={n:0,bs:0}; prof[p].n++; prof[p].bs+=num(r.total);
+    if(r.fecha){var d=DOW[parseISO(r.fecha).getDay()]; dow[d]=(dow[d]||0)+1;
+      var ym=r.fecha.slice(0,7); if(!mens[ym])mens[ym]={n:0,bs:0,pac:{}};
+      mens[ym].n++; mens[ym].bs+=num(r.total); if(k)mens[ym].pac[k]=1}});
+
+  var nPac=Object.keys(pacs).length, nNue=Object.keys(nuevos).length;
+  var noAsist=rows.filter(function(r){return r.estado==='No asistió'}).length;
+  $('#p-kpis').innerHTML=
+    '<div class="kpi acc"><div class="k">Pacientes atendidos</div><div class="v">'+nPac+'</div><div class="d">'+rows.length+' atenciones</div></div>'+
+    '<div class="kpi"><div class="k">Pacientes nuevos</div><div class="v">'+nNue+'</div><div class="d">'+(nPac?Math.round(nNue/nPac*100):0)+'% del total</div></div>'+
+    '<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:21px">'+bs(tot)+'</div><div class="d">ticket '+bs(rows.length?tot/rows.length:0)+'</div></div>'+
+    '<div class="kpi"><div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">'+(tot?Math.round(cobr/tot*100):0)+'% de lo facturado</div></div>'+
+    '<div class="kpi"><div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(sal)+'</div><div class="d">saldo del periodo</div></div>'+
+    '<div class="kpi"><div class="k">No asistieron</div><div class="v">'+noAsist+'</div><div class="d">'+(rows.length?Math.round(noAsist/rows.length*100):0)+'% de las citas</div></div>';
+
+  var cArr=Object.keys(canal).map(function(k){return {k:k,pac:Object.keys(canal[k].pac).length,n:canal[k].n,bs:canal[k].bs}})
+    .sort(function(a,b){return b.pac-a.pac||b.bs-a.bs});
+  $('#p-canal').innerHTML=barras(cArr.map(function(c){
+    return {k:c.k,v:c.pac,lbl:c.pac+' pac.'}}))+
+    (cArr.length?'<div class="tw" style="margin-top:14px"><table style="min-width:460px"><thead><tr><th>Canal</th>'+
+      '<th class="num">Pacientes</th><th class="num">Atenciones</th><th class="num">Facturado</th><th class="num">Bs / paciente</th></tr></thead><tbody>'+
+      cArr.map(function(c){return '<tr style="cursor:default"><td><b>'+esc(c.k)+'</b></td><td class="num">'+c.pac+'</td>'+
+        '<td class="num">'+c.n+'</td><td class="num">'+n0(c.bs)+'</td><td class="num">'+n0(c.pac?c.bs/c.pac:0)+'</td></tr>'}).join('')+
+      '</tbody></table></div>':'');
+
+  var sArr=Object.keys(serv).map(function(k){return {k:k,n:serv[k].n,bs:serv[k].bs}})
+    .sort(function(a,b){return b.bs-a.bs}).slice(0,15);
+  $('#p-serv').innerHTML=barras(sArr.map(function(s){return {k:s.k,v:s.bs,lbl:bs(s.bs)}}))+
+    (sArr.length?'<div class="tw" style="margin-top:14px"><table style="min-width:420px"><thead><tr><th>Servicio</th>'+
+      '<th class="num">Veces</th><th class="num">Bs</th></tr></thead><tbody>'+
+      sArr.map(function(s){return '<tr style="cursor:default"><td>'+esc(s.k)+'</td><td class="num">'+n0(s.n)+'</td><td class="num">'+n0(s.bs)+'</td></tr>'}).join('')+
+      '</tbody></table></div>':'');
+
+  var pArr=Object.keys(prof).map(function(k){return {k:k,v:prof[k].bs,lbl:bs(prof[k].bs),n:prof[k].n}})
+    .sort(function(a,b){return b.v-a.v});
+  $('#p-prof').innerHTML=barras(pArr,0,'b2')+(pArr.length?'<p class="mini" style="margin-top:8px">'+
+    pArr.map(function(p){return esc(p.k)+': '+p.n+' atenciones'}).join(' · ')+'</p>':'');
+
+  var dArr=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
+    .filter(function(d){return dow[d]}).map(function(d){return {k:d,v:dow[d],lbl:dow[d]+''}});
+  $('#p-dow').innerHTML=barras(dArr);
+
+  var mArr=Object.keys(mens).sort().map(function(k){
+    return {k:mesLabel(k),v:mens[k].bs,lbl:bs(mens[k].bs),n:mens[k].n,pac:Object.keys(mens[k].pac).length}});
+  $('#p-mensual').innerHTML=barras(mArr,0,'b2')+(mArr.length>1?'<div class="tw" style="margin-top:14px"><table style="min-width:420px">'+
+    '<thead><tr><th>Mes</th><th class="num">Pacientes</th><th class="num">Atenciones</th><th class="num">Facturado</th></tr></thead><tbody>'+
+    mArr.map(function(m){return '<tr style="cursor:default"><td>'+esc(m.k)+'</td><td class="num">'+m.pac+'</td><td class="num">'+m.n+'</td><td class="num">'+n0(m.v)+'</td></tr>'}).join('')+
+    '</tbody></table></div>':'')}
+
+/* ============================ PACIENTES ============================ */
+function agrupaPacientes(){
+  var by={},hoy=hoyISO();
+  DATA.forEach(function(r){
+    var k=(r.paciente||'—').trim(); if(!k)return;
+    if(!by[k])by[k]={paciente:k,celular:'',canal:'',visitas:0,gasto:0,cobrado:0,saldo:0,ult:'',prim:'',prox:''};
+    var p=by[k]; p.visitas++; p.gasto+=num(r.total); p.cobrado+=num(r.acuenta); p.saldo+=num(r.saldo);
+    if(r.celular)p.celular=r.celular;
+    if(!p.prim||(r.fecha||'')<p.prim)p.prim=r.fecha||'';
+    if((r.fecha||'')>=p.ult){p.ult=r.fecha||''}
+    if(!p.canal&&r.canal)p.canal=r.canal;
+    if(r.prox&&r.prox>=hoy&&(!p.prox||r.prox<p.prox))p.prox=r.prox});
+  return Object.keys(by).map(function(k){return by[k]})}
+
+function renderPacientes(){
+  var q=$('#pc-q').value.trim().toLowerCase(), ord=$('#pc-ord').value;
+  var arr=agrupaPacientes().filter(function(p){
+    return !q||((p.paciente+' '+p.celular).toLowerCase().indexOf(q)>=0)});
+  var cmp={ult:function(a,b){return (b.ult||'').localeCompare(a.ult||'')},
+    saldo:function(a,b){return b.saldo-a.saldo}, gasto:function(a,b){return b.gasto-a.gasto},
+    visitas:function(a,b){return b.visitas-a.visitas}, nombre:function(a,b){return a.paciente.localeCompare(b.paciente)}};
+  arr.sort(cmp[ord]||cmp.ult);
+  $('#pc-body').innerHTML=arr.length?arr.map(function(p){
+    return '<tr onclick="verPaciente(\''+jss(p.paciente)+'\')">'+
+      '<td><b>'+esc(p.paciente)+'</b></td><td>'+esc(p.celular||'—')+'</td><td>'+esc(p.canal||'—')+'</td>'+
+      '<td class="num">'+p.visitas+'</td><td class="num">'+n0(p.gasto)+'</td>'+
+      '<td class="num"'+(p.saldo>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(p.saldo)+'</td>'+
+      '<td>'+fmtFcorta(p.ult)+'</td><td>'+(p.prox?fmtFcorta(p.prox):'—')+'</td></tr>'
+  }).join(''):'<tr><td colspan="8" class="empty">Sin pacientes todavía.</td></tr>'}
+
+/* ============================ MODALES ============================ */
+function openModal(html){$('#modal').innerHTML=html;$('#ov').classList.add('on')}
+function closeModal(){$('#ov').classList.remove('on')}
+
+function mrow(k,v){return '<div class="mrow"><span class="mk">'+k+'</span><b>'+v+'</b></div>'}
+
+function verFicha(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  var srv=(r.servicios||[]).map(function(s){
+    return '<div class="mrow"><span>'+esc(s.nom)+(s.det?' <span class="mini">('+esc(s.det)+')</span>':'')+
+      ((num(s.cant)||1)>1?' <span class="pill">×'+s.cant+'</span>':'')+'</span><b>'+bs(num(s.precio)*(num(s.cant)||1))+'</b></div>'}).join('');
+  openModal('<h3>'+esc(r.paciente||'—')+'</h3>'+
+    '<p class="mini">'+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+(r.nroDia?' · N° del día #'+r.nroDia:'')+' · '+esc(r.profesional||'')+'</p>'+
+    '<div style="margin:10px 0">'+estadoPill(r.estado)+' <span class="pill lime">'+esc(r.canal||'sin canal')+'</span>'+
+      (r.tipo==='Nuevo'?' <span class="pill info">paciente nuevo</span>':'')+'</div>'+
+    mrow('Celular',esc(r.celular||'—'))+
+    (r.ci?mrow('CI',esc(r.ci)):'')+(r.edad?mrow('Edad',esc(r.edad)):'')+
+    (r.canalDetalle?mrow('Detalle del canal',esc(r.canalDetalle)):'')+
+    '<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Servicios</h4>'+
+    (srv||'<div class="mini">Sin servicios cargados</div>')+
+    '<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Cobro</h4>'+
+    mrow('Total',bs(r.total))+mrow('A cuenta',bs(r.acuenta))+
+    mrow('Saldo','<span style="color:'+(num(r.saldo)>0?'var(--clay)':'var(--ok)')+'">'+bs(r.saldo)+'</span>')+
+    (r.metodo?mrow('Método',esc(r.metodo)):'')+
+    (r.prox?'<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Próximo contacto</h4>'+
+      mrow('Fecha',fmtF(r.prox)+(r.proxHora?' · '+r.proxHora:''))+
+      (r.proxMotivo?mrow('Motivo',esc(r.proxMotivo)):'')+
+      mrow('Estado',r.contactado?'<span class="pill ok">ya contactado</span>':'<span class="pill warn">pendiente</span>'):'')+
+    (r.obs?'<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Observaciones</h4><p style="font-size:14px;margin:0">'+esc(r.obs)+'</p>':'')+
+    '<div class="row-btn">'+
+      (r.celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r.prox?r:{paciente:r.paciente,prox:hoyISO(),saldo:r.saldo}))+'">WhatsApp</a>':'')+
+      '<button class="btn sec sm" onclick="editarId(\''+r.id+'\')">✏️ Editar</button>'+
+      (num(r.saldo)>0?'<button class="btn sec sm" onclick="cobrarSaldo(\''+r.id+'\')">💰 Registrar pago</button>':'')+
+      '<button class="btn sec sm" onclick="verPaciente(\''+jss(r.paciente)+'\')">👤 Historial</button>'+
+      '<button class="btn danger sm" onclick="borrar(\''+r.id+'\')">Borrar</button>'+
+      '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
+
+function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(r)loadForm(r)}
+
+function cobrarSaldo(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  openModal('<h3>Registrar pago</h3><p class="mini">'+esc(r.paciente)+' · saldo actual '+bs(r.saldo)+'</p>'+
+    '<div class="grid g2" style="margin-top:12px">'+
+    '<div><label>Monto que paga ahora</label><input id="cp-m" inputmode="decimal" value="'+num(r.saldo)+'"></div>'+
+    '<div><label>Método</label><select id="cp-met"><option value="">—</option><option>Efectivo</option>'+
+    '<option>QR</option><option>Tarjeta</option><option>Transferencia</option></select></div></div>'+
+    '<div class="row-btn"><button class="btn" onclick="guardarPago(\''+id+'\')">Guardar pago</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function guardarPago(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  var m=num($('#cp-m').value);
+  if(m<=0){toast('Poné un monto',1);return}
+  r.acuenta=num(r.acuenta)+m; r.saldo=Math.max(0,num(r.total)-num(r.acuenta));
+  if($('#cp-met').value)r.metodo=$('#cp-met').value;
+  r.obs=(r.obs?r.obs+'\n':'')+'Pago de '+bs(m)+' el '+fmtF(hoyISO());
+  persist(r); closeModal(); toast('Pago registrado · saldo '+bs(r.saldo)); refreshAll()}
+
+function verPaciente(nombre){
+  var k=String(nombre||'').trim().toLowerCase();
+  var rs=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
+  if(!rs.length){toast('Sin historial',1);return}
+  var tot=rs.reduce(function(a,r){return a+num(r.total)},0),
+      cob=rs.reduce(function(a,r){return a+num(r.acuenta)},0),
+      sal=rs.reduce(function(a,r){return a+num(r.saldo)},0);
+  var p0=rs[rs.length-1];
+  openModal('<h3>'+esc(rs[0].paciente)+'</h3>'+
+    '<p class="mini">📱 '+esc(rs[0].celular||'—')+' · llegó por <b>'+esc(p0.canal||'—')+'</b>'+
+    (p0.canalDetalle?' ('+esc(p0.canalDetalle)+')':'')+' · paciente desde '+fmtF(p0.fecha)+'</p>'+
+    '<div class="kpis" style="margin:12px 0">'+
+      '<div class="kpi"><div class="k">Visitas</div><div class="v">'+rs.length+'</div></div>'+
+      '<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:19px">'+bs(tot)+'</div></div>'+
+      '<div class="kpi"><div class="k">Saldo</div><div class="v" style="font-size:19px;color:'+(sal>0?'var(--clay)':'var(--ok)')+'">'+bs(sal)+'</div></div>'+
+    '</div>'+
+    '<div class="tw" style="margin:0"><table style="min-width:0"><thead><tr><th>Fecha</th><th>Servicios</th>'+
+    '<th class="num">Total</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody>'+
+    rs.map(function(r){return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
+      '<td style="max-width:190px">'+esc(srvText(r)||'—')+'</td><td class="num">'+n0(r.total)+'</td>'+
+      '<td class="num">'+n0(r.saldo)+'</td><td>'+estadoPill(r.estado)+'</td></tr>'}).join('')+
+    '</tbody></table></div>'+
+    '<div class="row-btn">'+
+      (rs[0].celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(rs[0].celular,txtDormido({paciente:rs[0].paciente,ult:rs[0].fecha}))+'">WhatsApp</a>':'')+
+      '<button class="btn sec sm" onclick="nuevaParaPaciente(\''+jss(rs[0].paciente)+'\')">＋ Nueva atención</button>'+
+      '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
+
+function nuevaParaPaciente(nombre){
+  closeModal(); clearForm();
+  var rs=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===String(nombre).trim().toLowerCase()})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
+  $('#f-paciente').value=nombre;
+  if(rs){$('#f-cel').value=rs.celular||'';$('#f-ci').value=rs.ci||'';$('#f-edad').value=rs.edad||'';
+    $('#f-prof').value=rs.profesional||'';
+    $$('#seg-canal input').forEach(function(i){i.checked=(i.value===rs.canal)});
+    $('#f-canal-det').value=rs.canalDetalle||''}
+  setRadio('tipo','Recurrente'); show('atencion'); refreshNro()}
+
+function showWhatsappModal(r){
+  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Gracias por su visita a *Spadental*.\n\n';
+  t+='📅 '+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+'\n';
+  if((r.servicios||[]).length)t+='🦷 '+srvText(r)+'\n';
+  if(num(r.total)>0){t+='💵 Total: '+bs(r.total)+'\n';
+    if(num(r.acuenta)>0)t+='✅ A cuenta: '+bs(r.acuenta)+'\n';
+    if(num(r.saldo)>0)t+='⏳ Saldo: '+bs(r.saldo)+'\n'}
+  if(r.prox)t+='\n📌 Próxima cita: *'+fmtF(r.prox)+'*'+(r.proxHora?' a las '+r.proxHora:'')+(r.proxMotivo?' ('+r.proxMotivo+')':'')+'\n';
+  t+='\nCualquier consulta estamos a la orden 🦷';
+  openModal('<h3>Atención guardada ✅</h3><p class="mini">Podés enviarle el resumen al paciente.</p>'+
+    '<div class="wa" id="wa-txt">'+esc(t)+'</div>'+
+    '<div class="row-btn">'+
+    (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,t)+'">Abrir WhatsApp</a>':'')+
+    '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
+    '<button class="btn sec" onclick="closeModal()">Listo</button></div>')}
+
+function copiarWa(){
+  var t=$('#wa-txt').textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('Texto copiado')})}
+  else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');toast('Texto copiado')}catch(e){toast('No se pudo copiar',1)}
+    document.body.removeChild(a)}}
+
+/* ============================ AJUSTES ============================ */
+function renderConfig(){
+  $('#c-prof').value=CFG.prof.join('\n');
+  $('#c-canal').value=CFG.canales.join('\n');
+  $('#c-dias-prox').value=CFG.diasProx;
+  $('#c-dias-dorm').value=CFG.diasDorm;
+  $('#c-precios').innerHTML=CFG.precios.map(function(p,i){
+    return '<tr style="cursor:default"><td>'+esc(p.cat)+'</td><td>'+esc(p.nom)+'</td>'+
+      '<td class="num"><input class="cp" data-i="'+i+'" inputmode="decimal" value="'+num(p.precio)+'" style="text-align:right;padding:6px 8px"></td></tr>'}).join('');
+  $('#c-modo').textContent=CONNECTED
+    ? 'Modo conectado: los datos se guardan en la hoja de Google compartida y se ven desde cualquier celular.'
+    : 'Modo local: los datos viven solo en este navegador. Descargá el respaldo seguido, o conectá la hoja de Google (ver SETUP-GOOGLE-SHEETS-SPADENTAL.md).'}
+
+/* ============================ EXCEL (.xlsx sin librerías) ============================ */
+var CRC=(function(){var t=[],c,n,k;for(n=0;n<256;n++){c=n;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(b){var c=0xFFFFFFFF;for(var i=0;i<b.length;i++)c=CRC[(c^b[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function u8(s){return new TextEncoder().encode(s)}
+function makeZip(files){
+  var parts=[],cd=[],off=0;
+  function w32(a,v){a.push(v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255)}
+  function w16(a,v){a.push(v&255,(v>>>8)&255)}
+  files.forEach(function(f){
+    var data=u8(f.content),name=u8(f.name),crc=crc32(data),h=[];
+    w32(h,0x04034b50);w16(h,20);w16(h,0);w16(h,0);w16(h,0);w16(h,0);
+    w32(h,crc);w32(h,data.length);w32(h,data.length);w16(h,name.length);w16(h,0);
+    parts.push(new Uint8Array(h),name,data);
+    var c=[];w32(c,0x02014b50);w16(c,20);w16(c,20);w16(c,0);w16(c,0);w16(c,0);w16(c,0);
+    w32(c,crc);w32(c,data.length);w32(c,data.length);w16(c,name.length);
+    w16(c,0);w16(c,0);w16(c,0);w16(c,0);w32(c,0);w32(c,off);
+    cd.push(new Uint8Array(c),name);
+    off+=30+name.length+data.length});
+  var cdSize=cd.reduce(function(a,x){return a+x.length},0),e=[];
+  w32(e,0x06054b50);w16(e,0);w16(e,0);w16(e,files.length);w16(e,files.length);
+  w32(e,cdSize);w32(e,off);w16(e,0);
+  var all=parts.concat(cd,[new Uint8Array(e)]);
+  var len=all.reduce(function(a,x){return a+x.length},0),out=new Uint8Array(len),p=0;
+  all.forEach(function(x){out.set(x,p);p+=x.length});
+  return new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+
+function xesc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})
+  .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'')}
+function cellRef(c,r){var s='';c++;while(c>0){var m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=(c-m-1)/26}return s+r}
+function sheetXml(rows,widths){
+  var body=rows.map(function(row,ri){
+    return '<row r="'+(ri+1)+'">'+row.map(function(cell,ci){
+      var ref=cellRef(ci,ri+1),st=ri===0?' s="1"':(typeof cell==='number'?' s="2"':'');
+      if(typeof cell==='number')return '<c r="'+ref+'"'+st+'><v>'+cell+'</v></c>';
+      return '<c r="'+ref+'"'+st+' t="inlineStr"><is><t xml:space="preserve">'+xesc(cell)+'</t></is></c>'}).join('')+'</row>'}).join('');
+  var cols=widths?'<cols>'+widths.map(function(w,i){return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'}).join('')+'</cols>':'';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+cols+
+    '<sheetData>'+body+'</sheetData></worksheet>'}
+
+function buildXlsx(sheets){
+  var files=[
+    {name:'[Content_Types].xml',content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+      sheets.map(function(s,i){return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'}).join('')+
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+      sheets.map(function(s,i){return '<sheet name="'+xesc(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'}).join('')+
+      '</sheets></workbook>'},
+    {name:'xl/_rels/workbook.xml.rels',content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      sheets.map(function(s,i){return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'}).join('')+
+      '<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/styles.xml',content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>'+
+      '<font><b/><sz val="11"/><color rgb="FF262625"/><name val="Calibri"/></font></fonts>'+
+      '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'+
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFA8C21E"/><bgColor indexed="64"/></patternFill></fill></fills>'+
+      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'+
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+      '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+
+      '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'+
+      '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs></styleSheet>'}
+  ];
+  sheets.forEach(function(s,i){files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',content:sheetXml(s.rows,s.widths)})});
+  return makeZip(files)}
+
+function descargar(blob,nombre){
+  var u=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=u;a.download=nombre;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(u);a.remove()},400)}
+
+function exportXlsx(rows,nombre){
+  if(!rows.length){toast('No hay datos para exportar',1);return}
+  var head=['Fecha','Hora','N° día','Paciente','Celular','CI','Edad','Tipo','Canal','Detalle canal',
+    'Profesional','Servicios','Total Bs','A cuenta Bs','Saldo Bs','Método','Estado','Próxima cita',
+    'Hora próx.','Motivo próx.','Contactado','Observaciones'];
+  var body=rows.slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')}).map(function(r){
+    return [r.fecha||'',r.hora||'',r.nroDia||'',r.paciente||'',r.celular||'',r.ci||'',r.edad||'',
+      r.tipo||'',r.canal||'',r.canalDetalle||'',r.profesional||'',srvText(r),
+      num(r.total),num(r.acuenta),num(r.saldo),r.metodo||'',r.estado||'',r.prox||'',r.proxHora||'',
+      r.proxMotivo||'',r.contactado?'SÍ':'NO',r.obs||'']});
+  var canal={},serv={};
+  rows.forEach(function(r){
+    var c=r.canal||'Sin dato'; if(!canal[c])canal[c]={pac:{},n:0,bs:0};
+    if(r.paciente)canal[c].pac[r.paciente.trim().toLowerCase()]=1; canal[c].n++; canal[c].bs+=num(r.total);
+    (r.servicios||[]).forEach(function(s){if(!s.nom)return;var q=num(s.cant)||1;
+      if(!serv[s.nom])serv[s.nom]={n:0,bs:0}; serv[s.nom].n+=q; serv[s.nom].bs+=num(s.precio)*q})});
+  var rc=[['Canal','Pacientes','Atenciones','Facturado Bs']].concat(
+    Object.keys(canal).sort(function(a,b){return canal[b].bs-canal[a].bs}).map(function(k){
+      return [k,Object.keys(canal[k].pac).length,canal[k].n,canal[k].bs]}));
+  var rs=[['Servicio','Veces','Facturado Bs']].concat(
+    Object.keys(serv).sort(function(a,b){return serv[b].bs-serv[a].bs}).map(function(k){
+      return [k,serv[k].n,serv[k].bs]}));
+  var blob=buildXlsx([
+    {name:'Atenciones',rows:[head].concat(body),widths:[11,7,7,24,13,12,6,11,15,22,16,42,11,11,11,13,12,12,9,22,11,40]},
+    {name:'Por canal',rows:rc,widths:[22,12,12,15]},
+    {name:'Por servicio',rows:rs,widths:[38,10,15]}]);
+  descargar(blob,nombre);
+  toast('Excel descargado ✅')}
+
+/* ============================ INIT ============================ */
+function refreshAll(){
+  fillDatalists(); updateNavRem();
+  var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
+  if(v&&v.v)show(v.v)}
+
+function initFechas(){
+  var h=hoyISO(),ym=h.slice(0,7);
+  $('#l-dia').value=h; $('#l-mes').value=ym; $('#p-mes').value=ym; $('#p-anio').value=h.slice(0,4);
+  var d=new Date();
+  $('#hd-hoy').textContent=DOW[d.getDay()]+' '+fmtF(h)}
+
+function bind(){
+  $$('nav button').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+  $('#ov').onclick=function(e){if(e.target===$('#ov'))closeModal()};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+
+  $('#f-fecha').onchange=refreshNro;
+  $('#f-paciente').onchange=autoPaciente;
+  $('#btn-add-srv').onclick=function(){readSrv();SRV.push({nom:'',det:'',cant:1,precio:''});renderSrv()};
+  $('#srv-list').addEventListener('click',function(e){
+    if(e.target.classList.contains('s-del')){
+      readSrv(); var i=+e.target.closest('.srv').dataset.i;
+      SRV.splice(i,1); if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv()}});
+  $('#srv-list').addEventListener('change',function(e){
+    var box=e.target.closest('.srv'); if(!box)return;
+    if(e.target.classList.contains('s-nom')){
+      var p=CFG.precios.filter(function(x){return x.nom===e.target.value})[0];
+      var pi=box.querySelector('.s-precio');
+      if(p&&(!pi.value||!pi.dataset.touched))pi.value=p.precio||''}
+    readSrv(); recalcTotal()});
+  $('#srv-list').addEventListener('input',function(e){
+    if(e.target.classList.contains('s-precio'))e.target.dataset.touched='1';
+    readSrv(); recalcTotal()});
+
+  $('#f-total').oninput=function(){this.dataset.touched='1';recalcSaldo()};
+  $('#f-acuenta').oninput=function(){delete $('#f-saldo').dataset.touched;recalcSaldo()};
+  $('#f-saldo').oninput=function(){this.dataset.touched='1';recalcSaldo()};
+
+  $('#btn-save').onclick=submitAtencion;
+  $('#btn-clear').onclick=function(){clearForm();toast('Formulario limpio')};
+  $('#btn-cancel-edit').onclick=function(){clearForm();toast('Edición cancelada')};
+
+  $$('#seg-rem input').forEach(function(i){i.onchange=renderRem});
+
+  $('#l-rango').onchange=function(){
+    $('#wrap-l-dia').style.display=this.value==='dia'?'':'none';
+    $('#wrap-l-mes').style.display=this.value==='mes'?'':'none'; renderLista()};
+  ['#l-dia','#l-mes'].forEach(function(s){$(s).onchange=renderLista});
+  $('#l-q').oninput=renderLista;
+  $('#btn-xls').onclick=function(){exportXlsx(filtrarLista(),'Spadental_atenciones_'+hoyISO()+'.xlsx')};
+  $('#btn-xls2').onclick=function(){exportXlsx(DATA,'Spadental_atenciones_completo_'+hoyISO()+'.xlsx')};
+  $('#btn-sync').onclick=function(){
+    if(!CONNECTED){toast('Modo local: no hay servidor configurado',1);return}
+    toast('Actualizando…');
+    flushQueue().then(pullServer).then(function(){refreshAll();toast('Datos actualizados ✅')})};
+
+  $('#p-rango').onchange=function(){
+    $('#wrap-p-mes').style.display=this.value==='mes'?'':'none';
+    $('#wrap-p-anio').style.display=this.value==='anio'?'':'none'; renderPanel()};
+  ['#p-mes','#p-anio'].forEach(function(s){$(s).oninput=renderPanel});
+
+  $('#pc-q').oninput=renderPacientes; $('#pc-ord').onchange=renderPacientes;
+
+  $('#btn-save-prof').onclick=function(){
+    CFG.prof=$('#c-prof').value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+    saveCfg(); fillDatalists(); toast('Profesionales guardados')};
+  $('#btn-save-canal').onclick=function(){
+    var l=$('#c-canal').value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+    if(!l.length){toast('Dejá al menos un canal',1);return}
+    CFG.canales=l; saveCfg(); renderCanales(); toast('Canales guardados')};
+  $('#btn-save-precios').onclick=function(){
+    $$('#c-precios .cp').forEach(function(i){CFG.precios[+i.dataset.i].precio=num(i.value)});
+    saveCfg(); renderSrv(); toast('Precios guardados')};
+  $('#btn-reset-precios').onclick=function(){
+    if(!confirm('¿Volver a la lista de precios original?'))return;
+    CFG.precios=PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}});
+    saveCfg(); renderConfig(); renderSrv(); toast('Lista restaurada')};
+  $('#btn-save-rem').onclick=function(){
+    CFG.diasProx=Math.max(0,num($('#c-dias-prox').value)||3);
+    CFG.diasDorm=Math.max(1,num($('#c-dias-dorm').value)||120);
+    saveCfg(); updateNavRem(); toast('Recordatorios actualizados')};
+
+  $('#btn-json').onclick=function(){
+    descargar(new Blob([JSON.stringify({data:DATA,cfg:CFG},null,1)],{type:'application/json'}),
+      'Spadental_respaldo_'+hoyISO()+'.json'); toast('Respaldo descargado')};
+  $('#btn-import').onclick=function(){$('#file-json').click()};
+  $('#file-json').onchange=function(e){
+    var f=e.target.files[0]; if(!f)return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        var j=JSON.parse(rd.result), arr=Array.isArray(j)?j:j.data;
+        if(!Array.isArray(arr))throw 0;
+        if(!confirm('Se van a agregar '+arr.length+' registros a los que ya hay. ¿Seguir?'))return;
+        var ids={}; DATA.forEach(function(r){ids[r.id]=1});
+        arr.map(normalize).forEach(function(r){if(!ids[r.id])DATA.push(r)});
+        if(j.cfg&&j.cfg.precios){CFG=j.cfg;saveCfg()}
+        saveLocal(); refreshAll(); toast('Respaldo restaurado ✅')
+      }catch(err){toast('Archivo inválido',1)}
+      e.target.value=''};
+    rd.readAsText(f)}}
+
+function banner(){
+  $('#conn-banner').innerHTML=CONNECTED
+    ? '<div class="banner conn">🟢 Conectado a la hoja de Google · lo que cargues se ve en todos los dispositivos</div>'
+    : '<div class="banner local">📴 Modo local · los datos quedan solo en este navegador. Descargá el respaldo seguido desde <b>Ajustes</b>.</div>'}
+
+(function init(){
+  CFG=loadCfg(); DATA=loadLocal().map(normalize);
+  initFechas(); banner(); renderCanales(); bind(); clearForm(); fillDatalists(); updateNavRem();
+  if(CONNECTED){flushQueue().then(pullServer).then(function(ok){if(ok)refreshAll()})}
+})();
+</script>
+</body>
+</html>

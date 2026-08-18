@@ -280,3 +280,24 @@ requirements.txt
 - **`Media ... is not ready`** (Reel) → el vídeo aún se procesa; la herramienta espera, pero vídeos grandes tardan más.
 - **La imagen no aparece** → la URL debe ser **pública** y accesible desde internet (no `localhost`).
 ```
+
+---
+
+# Otras herramientas de este repo
+
+## 🦷 Panel de pacientes (`pacientes.html`)
+
+Panel de control de visitas y atención del consultorio de la Dra. Mirna:
+registro de cada visita, **canal por el que llegó el paciente**, servicios con
+precio editable, **a cuenta / saldo**, y **recordatorios para reagendar o
+contactar**. Página única, se abre con doble clic, funciona sin internet y
+opcionalmente sincroniza con una hoja de Google.
+
+Documentación: **[PACIENTES.md](PACIENTES.md)** ·
+conexión opcional a Google Sheets: **[SETUP-GOOGLE-SHEETS-SPADENTAL.md](SETUP-GOOGLE-SHEETS-SPADENTAL.md)**
+
+## 📊 Dashboards
+
+- `Spadental_dashboard_clinico_2026_v2.html` — dónde está el negocio
+- `analisis-experto-spadental_2.html` — análisis experto
+- `informe-julio-2026.html` — informe de Meta Ads
