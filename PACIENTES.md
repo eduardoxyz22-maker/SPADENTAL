@@ -20,7 +20,8 @@ de la página puede saltearla. Por eso el enlace no se comparte fuera del equipo
 ### ＋ Nueva atención
 El formulario del día a día, en 6 pasos:
 
-1. **Visita** — fecha, hora, profesional. El **N° del día** se asigna solo y
+1. **Visita** — fecha, hora, profesional y **¿cómo llegó hoy?**
+   (🚶 vino sin cita / 📅 tenía cita). El **N° del día** se asigna solo y
    reinicia cada mañana.
 2. **Paciente** — nombre, celular, CI, edad. Si el paciente ya vino antes,
    al escribir el nombre **se autocompletan sus datos**, se marca como
@@ -39,20 +40,39 @@ El formulario del día a día, en 6 pasos:
    nunca. Con *Mixto* se reparte el monto entre varias formas y el sistema
    avisa si el desglose no suma. Muestra al toque si quedó *pagado completo*,
    *pago parcial* o *sin pago*.
-6. **Estado y próximo contacto** — Atendido / Agendado / Reagendar / No asistió,
+6. **Estado y próximo contacto** — Atendido / No asistió / Canceló / Reprogramó,
    más la **próxima cita** con hora y motivo. Todo lo que tenga próxima fecha
    entra automáticamente en Recordatorios.
 
 Al guardar aparece un **resumen listo para mandar por WhatsApp** al paciente
 (botón *Abrir WhatsApp* o *Copiar texto*).
 
+### 📅 Agendar cita
+El formulario corto para cuando piden hora por WhatsApp, por teléfono o en el
+mostrador. Fecha, hora, paciente, celular, profesional, motivo — y el dato
+clave: **¿por dónde agendó?** (📱 WhatsApp · ☎️ Llamada · 📷 Instagram ·
+👍 Facebook · 🏥 En el consultorio · Otro).
+
+Queda como una **cita agendada**, sin servicios ni cobro todavía, y ofrece el
+mensaje de confirmación listo para mandar.
+
+> Ojo con la diferencia: **canal** es cómo nos conoció (una vez en la vida);
+> **agendó por** es por dónde pidió *esta* cita. Alguien que nos conoció por
+> Facebook puede agendar por WhatsApp.
+
+Cuando una atención deja una **próxima cita**, esa cita **se crea sola** en la
+agenda, así también se mide si el paciente vino al control.
+
 ### 🔔 Recordatorios
 La pestaña que dice **a quién llamar hoy**. El número rojo en la pestaña avisa
 cuántos hay pendientes. Cuatro listas:
 
 - **📅 Citas** — vencidas / de hoy / próximas / más adelante, cada una con su
-  mensaje de WhatsApp ya escrito, botón **✓ Contactado** (la saca de la lista)
-  y **🔁 Reagendar** (cambia la fecha y la vuelve a poner pendiente).
+  mensaje de WhatsApp ya escrito y **cuatro botones para cerrarla**:
+  **✅ Vino** (abre la atención para cargar lo que se hizo), **✖ No vino**,
+  **🚫 Canceló** y **🔁 Reprogramar** (deja la vieja marcada y crea la nueva).
+  Una cita sale de la lista solo cuando se resuelve — mandarle WhatsApp no la
+  cierra, solo la marca como avisada.
 - **💰 Saldos** — pacientes que deben plata, agrupados y ordenados por monto,
   con el mensaje de cobro listo.
 - **😴 Sin volver** — pacientes que no vienen hace mucho y no tienen próxima
@@ -69,6 +89,11 @@ El tablero de control del periodo elegido. Arriba, seis KPIs siempre visibles
 (pacientes · nuevos · facturado · cobrado · por cobrar · no asistieron) y abajo
 cinco secciones:
 
+- **📅 Agenda** — citas agendadas, **tasa de asistencia**, no asistieron,
+  cancelaron, reprogramaron y cuántos vinieron sin cita. Más:
+  **por dónde agendan y quiénes cumplen** (WhatsApp vs. llamada vs. mostrador,
+  con el % de asistencia de cada uno), qué días falla más la agenda, y el
+  listado de los pacientes que más faltan.
 - **👤 Pacientes** — nuevos vs. los que ya eran del consultorio, **reconsultas**,
   cuántos salieron **solo con la consulta**, visitas por paciente y gasto por
   paciente. Más: nuevos vs. recurrentes mes a mes, **conversión de consulta a

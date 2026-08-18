@@ -26,7 +26,8 @@ var COLS = [
   'Celular', 'CI', 'Edad', 'Tipo', 'Canal', 'Detalle canal', 'Servicios',
   'Total Bs', 'A cuenta Bs', 'Saldo Bs', 'Método', 'Estado', 'Próxima cita',
   'Hora próxima', 'Motivo próximo', 'Contactado', 'Observaciones', '_servicios_json',
-  'Efectivo', 'QR', 'Tarjeta', 'Transferencia', '_pagos_json'
+  'Efectivo', 'QR', 'Tarjeta', 'Transferencia', '_pagos_json',
+  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el'
 ];
 
 /* ------------------------------------------------------------------ hoja */
@@ -91,7 +92,8 @@ function filaDeRegistro(r) {
     r.metodo || '', r.estado || '', r.prox || '', r.proxHora || '', r.proxMotivo || '',
     r.contactado ? 'SÍ' : 'NO', r.obs || '', JSON.stringify(r.servicios || []),
     montoDe(r, 'Efectivo'), montoDe(r, 'QR'), montoDe(r, 'Tarjeta'), montoDe(r, 'Transferencia'),
-    JSON.stringify(r.pagos || [])
+    JSON.stringify(r.pagos || []),
+    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || ''
   ];
 }
 
@@ -118,7 +120,8 @@ function registroDeFila(f) {
     total: Number(f[14]) || 0, acuenta: Number(f[15]) || 0, saldo: Number(f[16]) || 0,
     metodo: f[17], estado: f[18], prox: formatoFecha(f[19]), proxHora: f[20],
     proxMotivo: f[21], contactado: String(f[22]).toUpperCase() === 'SÍ' || String(f[22]).toUpperCase() === 'SI',
-    obs: f[23], pagos: pagos
+    obs: f[23], pagos: pagos,
+    origen: f[30] || '', agendaPor: f[31] || '', citaDe: f[32] || '', resueltaTs: f[33] || ''
   };
 }
 
