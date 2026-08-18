@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex,nofollow">
+<title>La firma de Mirna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,700;0,6..96,900;1,6..96,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   PÁGINA — negra, para que las maquetas se lean como piezas expuestas
+   ===================================================================== */
+:root{
+  --bg:#0D0E0B; --panel:#16180F; --ink:#F4F5EE; --soft:#9A9E8C;
+  --line:#2A2D22; --lime:#B6C932; --lime-lt:#CFE05E;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:'Archivo',system-ui,sans-serif;font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+a{color:var(--lime-lt)}
+
+.intro{padding:70px 0 34px}
+.eyebrow{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--lime);font-weight:700;margin:0 0 16px}
+h1{font-family:'Bodoni Moda',serif;font-weight:400;font-size:clamp(40px,8vw,86px);
+  line-height:.94;margin:0 0 20px;letter-spacing:-.015em;text-wrap:balance}
+h1 em{font-style:italic;color:var(--lime)}
+.lede{font-size:18.5px;max-width:60ch;color:#C2C6B4;margin:0 0 26px}
+.lede b{color:#fff;font-weight:600}
+.back{font-size:13.5px;color:var(--soft)}
+
+h3.sec{font-family:'Archivo',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--soft);margin:52px 0 20px;
+  padding-bottom:11px;border-bottom:1px solid var(--line)}
+
+.opt{margin:0 0 76px}
+.opt-head{display:grid;grid-template-columns:58px 1fr;gap:18px;align-items:start;margin:0 0 20px}
+.opt-num{font-family:'Bodoni Moda',serif;font-size:46px;line-height:.86;color:var(--line);font-weight:700}
+.opt-head h2{font-family:'Bodoni Moda',serif;font-weight:400;font-size:32px;margin:0 0 8px;
+  letter-spacing:-.01em;color:#fff}
+.opt-head .mirna{display:inline-block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:700;color:#0D0E0B;background:var(--lime);border-radius:3px;padding:2px 8px;margin-left:10px;
+  vertical-align:6px}
+.opt-head p{margin:0;color:#B7BBA9;max-width:62ch}
+.opt-pal{display:flex;gap:6px;margin:15px 0 0}
+.opt-pal i{width:32px;height:32px;border-radius:3px;display:block;border:1px solid rgba(255,255,255,.14)}
+
+.frame{border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.mini-scroll{display:none;font-size:12px;color:var(--soft);margin:0 0 8px}
+@media(max-width:760px){
+  .mini-scroll{display:block}
+  .frame{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .frame > .mk{min-width:680px}
+}
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:16px}
+@media(max-width:640px){.verdict{grid-template-columns:1fr}}
+.verdict div{background:var(--panel);border:1px solid var(--line);border-radius:4px;
+  padding:14px 16px;font-size:14.5px;color:#C2C6B4}
+.verdict b{display:block;font-size:11px;letter-spacing:.13em;text-transform:uppercase;margin-bottom:7px}
+.verdict .g b{color:var(--lime)}
+.verdict .p b{color:#E08A5F}
+
+.cierre{border:1px solid var(--line);border-radius:4px;padding:34px 32px;margin:16px 0 70px;background:var(--panel)}
+.cierre h2{font-family:'Bodoni Moda',serif;font-weight:400;font-size:29px;margin:0 0 14px;color:#fff}
+.cierre p{margin:0 0 14px;max-width:62ch;color:#C2C6B4}
+.cierre .lime{color:var(--lime)}
+footer{padding:0 0 70px;color:var(--soft);font-size:13.5px;max-width:64ch}
+
+/* =====================================================================
+   MAQUETAS
+   ===================================================================== */
+.mk{font-size:13px;line-height:1.4}
+.mk .mark{width:26px;height:26px;flex:0 0 26px}
+.mk .kv{font-variant-numeric:tabular-nums}
+
+/* ---------- 05 · AUTORA ---------- */
+.o5{background:#FBFAF7;color:#14140F}
+.o5 .top{padding:22px 26px 0;display:flex;align-items:flex-start;gap:14px}
+.o5 .mark{color:#14140F;width:30px;height:30px;flex:0 0 30px;margin-top:4px}
+.o5 .mast{flex:1}
+.o5 .kicker{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:#8A8B7C;font-weight:700}
+.o5 .name{font-family:'Bodoni Moda',serif;font-weight:400;font-size:44px;line-height:.9;
+  letter-spacing:-.02em;margin:5px 0 0}
+.o5 .name em{font-style:italic}
+.o5 .meta{margin-left:auto;text-align:right;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:#8A8B7C;line-height:1.7;padding-top:6px}
+.o5 .rule{height:1px;background:#14140F;margin:16px 26px 0}
+.o5 .nav{display:flex;gap:22px;padding:11px 26px;border-bottom:1px solid #DEDCD2}
+.o5 .tab{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:#8A8B7C;
+  font-weight:600;white-space:nowrap}
+.o5 .tab.on{color:#14140F;text-decoration:underline;text-underline-offset:5px;
+  text-decoration-thickness:2px;text-decoration-color:#B6C932}
+.o5 .body{display:grid;grid-template-columns:1.15fr 1fr;gap:0}
+@media(max-width:760px){.o5 .body{grid-template-columns:1fr}}
+.o5 .left{padding:24px 26px 26px;border-right:1px solid #DEDCD2}
+.o5 .fig{margin-bottom:22px}
+.o5 .fig .n{font-family:'Bodoni Moda',serif;font-weight:400;font-size:62px;line-height:.82;
+  letter-spacing:-.03em}
+.o5 .fig .n sup{font-size:20px;vertical-align:super;color:#B6C932}
+.o5 .fig .l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8A8B7C;
+  margin-top:8px;font-weight:600}
+.o5 .row2{display:flex;gap:34px}
+.o5 .row2 .fig .n{font-size:34px}
+.o5 .right{padding:24px 26px 26px}
+.o5 .rh{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8A8B7C;
+  font-weight:600;margin:0 0 14px}
+.o5 .cita{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid #EAE8DE}
+.o5 .cita .h{font-family:'Bodoni Moda',serif;font-size:17px;flex:0 0 46px}
+.o5 .cita .n{font-weight:600;font-size:13.5px}
+.o5 .cita .m{font-size:10.5px;color:#8A8B7C;margin-top:2px}
+.o5 .acts{margin-left:auto;display:flex;gap:6px;align-self:center}
+.o5 .btn{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  padding:6px 11px;background:#14140F;color:#FBFAF7}
+.o5 .btn.g{background:transparent;border:1px solid #CFCDC1;color:#5C5D51}
+
+/* ---------- 06 · BISTURÍ ---------- */
+.o6{background:#fff;color:#0E0F0C}
+.o6 .hdr{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:2px solid #0E0F0C}
+.o6 .mark{color:#0E0F0C}
+.o6 .logo{font-weight:900;font-size:14px;letter-spacing:-.02em}
+.o6 .logo span{color:#7E8F17}
+.o6 .who{margin-left:auto;display:flex;align-items:center;gap:9px;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5A5C50;letter-spacing:-.01em}
+.o6 .ini{width:24px;height:24px;background:#B6C932;color:#0E0F0C;display:grid;place-items:center;
+  font-weight:900;font-size:10px;letter-spacing:-.03em}
+.o6 .nav{display:flex;border-bottom:1px solid #DDDED6}
+.o6 .tab{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase;color:#5A5C50;padding:9px 13px;border-right:1px solid #DDDED6;white-space:nowrap}
+.o6 .tab.on{background:#0E0F0C;color:#fff}
+.o6 .grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.o6 .cell{padding:16px 18px;border-right:1px solid #DDDED6;border-bottom:1px solid #DDDED6}
+.o6 .cell:nth-child(3){border-right:0}
+.o6 .cl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:#8A8C7E}
+.o6 .cv{font-size:32px;font-weight:900;letter-spacing:-.04em;margin-top:6px;
+  font-variant-numeric:tabular-nums}
+.o6 .cs{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8A8C7E;margin-top:3px}
+.o6 .cell.acc{background:#B6C932}
+.o6 .cell.acc .cl,.o6 .cell.acc .cs{color:#3F480A}
+.o6 .list{padding:0}
+.o6 .lh{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:#8A8C7E;padding:12px 18px 8px}
+.o6 .cita{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;
+  padding:11px 18px;border-top:1px solid #EDEEE8}
+.o6 .cita .h{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600}
+.o6 .cita .n{font-weight:700;font-size:13px}
+.o6 .cita .m{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8A8C7E;margin-top:1px}
+.o6 .acts{display:flex;gap:5px}
+.o6 .btn{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;
+  text-transform:uppercase;padding:6px 10px;background:#0E0F0C;color:#fff;font-weight:500}
+.o6 .btn.g{background:#fff;border:1px solid #C9CAC2;color:#5A5C50}
+
+/* ---------- 07 · VITRINA ---------- */
+.o7{background:#0A0F0A;color:#EAF0E2;position:relative;overflow:hidden}
+.o7::before{content:'';position:absolute;top:-120px;left:22%;width:420px;height:280px;
+  background:radial-gradient(ellipse at center,rgba(182,201,50,.22),transparent 68%);
+  filter:blur(18px);pointer-events:none}
+.o7 .hdr{position:relative;display:flex;align-items:center;gap:13px;padding:16px 22px;
+  border-bottom:1px solid rgba(255,255,255,.07)}
+.o7 .mark{color:#CFE05E}
+.o7 .logo{font-weight:800;font-size:15px;letter-spacing:-.02em;color:#fff}
+.o7 .logo span{color:#CFE05E}
+.o7 .who{margin-left:auto;display:flex;align-items:center;gap:10px}
+.o7 .who .t{text-align:right;line-height:1.25}
+.o7 .who .t b{display:block;font-size:12px;color:#fff;font-weight:600}
+.o7 .who .t i{font-style:normal;font-size:10px;color:#8F9A82}
+.o7 .ring{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(145deg,#1C2618,#0F1410);border:1.5px solid #CFE05E;
+  box-shadow:0 0 0 3px rgba(207,224,94,.12);font-weight:800;font-size:12px;color:#CFE05E}
+.o7 .nav{position:relative;display:flex;gap:4px;padding:11px 20px 0}
+.o7 .tab{font-size:11.5px;font-weight:600;color:#8F9A82;padding:7px 12px;border-radius:9px 9px 0 0}
+.o7 .tab.on{background:rgba(255,255,255,.055);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
+.o7 .body{position:relative;padding:18px 20px 22px;background:rgba(255,255,255,.03);
+  border-top:1px solid rgba(255,255,255,.07)}
+.o7 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:14px}
+.o7 .kpi{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 15px;
+  backdrop-filter:blur(6px)}
+.o7 .kl{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:#8F9A82;font-weight:700}
+.o7 .kvv{font-size:29px;font-weight:800;letter-spacing:-.03em;margin-top:5px;color:#fff;
+  font-variant-numeric:tabular-nums}
+.o7 .ks{font-size:10.5px;color:#8F9A82;margin-top:2px}
+.o7 .kpi.acc{background:linear-gradient(160deg,rgba(207,224,94,.2),rgba(207,224,94,.05));
+  border-color:rgba(207,224,94,.34)}
+.o7 .kpi.acc .kvv{color:#DCEB77}
+.o7 .card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:15px 16px}
+.o7 .card h4{margin:0 0 3px;font-size:13.5px;color:#fff}
+.o7 .card .hint{margin:0 0 13px;font-size:11px;color:#8F9A82}
+.o7 .cita{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:11px;padding:10px 13px;margin-bottom:7px}
+.o7 .cita .h{color:#CFE05E;font-weight:700;font-variant-numeric:tabular-nums}
+.o7 .cita .n{font-weight:600;color:#fff}
+.o7 .cita .m{font-size:10.5px;color:#8F9A82}
+.o7 .acts{display:flex;gap:6px}
+.o7 .btn{font-size:10.5px;font-weight:700;padding:6px 11px;border-radius:8px;
+  background:#CFE05E;color:#141A10}
+.o7 .btn.g{background:rgba(255,255,255,.07);color:#C4CDB6;border:1px solid rgba(255,255,255,.09)}
+
+/* ---------- 08 · SONRISA ---------- */
+.o8{background:#F4F6EC;color:#1B2013}
+.o8 .arc{background:#B6C932;padding:20px 24px 34px;position:relative;
+  border-radius:0 0 42% 42%/0 0 34px 34px}
+.o8 .arc-row{display:flex;align-items:center;gap:13px}
+.o8 .mark{color:#1B2013}
+.o8 .logo{font-weight:900;font-size:19px;letter-spacing:-.03em;color:#1B2013;line-height:1}
+.o8 .logo small{display:block;font-family:'Bodoni Moda',serif;font-style:italic;font-weight:400;
+  font-size:12px;letter-spacing:0;margin-top:3px;color:#3E4A15}
+.o8 .who{margin-left:auto;display:flex;align-items:center;gap:9px}
+.o8 .ini{width:38px;height:38px;border-radius:50%;background:#1B2013;color:#B6C932;
+  display:grid;place-items:center;font-weight:900;font-size:13px;letter-spacing:-.03em}
+.o8 .who .t{text-align:right;font-size:10.5px;color:#3E4A15;line-height:1.3}
+.o8 .who .t b{display:block;font-size:12px;color:#1B2013}
+.o8 .nav{display:flex;gap:6px;padding:14px 20px 0;flex-wrap:wrap}
+.o8 .tab{font-size:11.5px;font-weight:700;color:#6E7A57;padding:7px 14px;border-radius:999px;
+  background:#E8EDD9;white-space:nowrap}
+.o8 .tab.on{background:#1B2013;color:#DDE9A6}
+.o8 .body{padding:14px 20px 22px}
+.o8 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:13px}
+.o8 .kpi{background:#fff;border-radius:22px;padding:15px 17px}
+.o8 .kl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#8E9A78;font-weight:700}
+.o8 .kvv{font-size:30px;font-weight:900;letter-spacing:-.04em;margin-top:5px;
+  font-variant-numeric:tabular-nums}
+.o8 .ks{font-size:10.5px;color:#8E9A78;margin-top:2px}
+.o8 .kpi.acc{background:#1B2013;color:#fff}
+.o8 .kpi.acc .kl,.o8 .kpi.acc .ks{color:#A9B78C}
+.o8 .kpi.acc .kvv{color:#DDE9A6}
+.o8 .card{background:#fff;border-radius:22px;padding:17px 18px}
+.o8 .card h4{margin:0 0 3px;font-size:14px;font-weight:800;letter-spacing:-.02em}
+.o8 .card .hint{margin:0 0 13px;font-size:11px;color:#8E9A78}
+.o8 .cita{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:#F6F8EE;border-radius:16px;padding:11px 14px;margin-bottom:7px}
+.o8 .cita .h{font-weight:800;color:#6C7D1E;font-variant-numeric:tabular-nums}
+.o8 .cita .n{font-weight:700}
+.o8 .cita .m{font-size:10.5px;color:#8E9A78}
+.o8 .acts{display:flex;gap:6px}
+.o8 .btn{font-size:10.5px;font-weight:800;padding:7px 13px;border-radius:999px;
+  background:#1B2013;color:#DDE9A6}
+.o8 .btn.g{background:#E8EDD9;color:#5F6B48}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="corona" viewBox="0 0 120 92">
+    <path fill="currentColor" d="M60 4c-9.5 0-15.5 7.2-15.5 17.4 0 8.4 3.1 14.4 5.2 21.6l6.3 22.4 4-20.6 4 20.6 6.3-22.4c2.1-7.2 5.2-13.2 5.2-21.6C75.5 11.2 69.5 4 60 4z"/>
+    <path fill="currentColor" d="M21 19c-9.4 2.2-13.4 10.6-10.9 19.6 2.2 7.9 7.2 12.4 11.6 18.2l14.9 19.4-4.6-22.5 16.7 14.4c-6.4-8.2-11.6-14.6-14.9-23-4.4-11.3-4.3-28.4-12.8-26.1z"/>
+    <path fill="currentColor" d="M99 19c9.4 2.2 13.4 10.6 10.9 19.6-2.2 7.9-7.2 12.4-11.6 18.2L83.4 76.2l4.6-22.5-16.7 14.4c6.4-8.2 11.6-14.6 14.9-23C90.6 33.8 90.5 16.7 99 19z"/>
+    <path fill="currentColor" d="M36 74.5c15.4-5.2 32.6-5.2 48 0l-2.2 8.4c-14.3-4.6-29.3-4.6-43.6 0z"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+
+  <section class="intro">
+    <p class="eyebrow">Segunda ronda · más filo</p>
+    <h1>La firma<br>de <em>Mirna</em></h1>
+    <p class="lede">Las cuatro primeras jugaban seguro. Estas cuatro toman una decisión fuerte
+      y la sostienen — y en todas <b>la Dra. Mirna deja de ser una línea del logo</b> para
+      convertirse en parte de la pantalla. Cada una resuelve eso de una manera distinta.</p>
+    <p class="back"><a href="opciones-diseno.html">← Ver la primera ronda</a></p>
+  </section>
+
+  <h3 class="sec">Cuatro direcciones · misma pantalla, mismo día</h3>
+
+  <!-- ============ 05 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">05</div>
+      <div>
+        <h2>Autora<span class="mirna">Mirna es el título</span></h2>
+        <p>El panel abre como la portada de una revista: su nombre en Bodoni gigante,
+          una línea fina, y los números del día tratados como cifras editoriales. No hay
+          tarjetas — hay composición. La herramienta se vuelve una publicación firmada por ella.</p>
+        <div class="opt-pal">
+          <i style="background:#FBFAF7"></i><i style="background:#14140F"></i>
+          <i style="background:#B6C932"></i><i style="background:#DEDCD2"></i>
+          <i style="background:#8A8B7C"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o5">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="mast">
+          <div class="kicker">Spadental · Clínica Dental</div>
+          <div class="name">Dra. Mirna <em>Veizaga</em></div>
+        </div>
+        <div class="meta">Martes<br>18 · 08 · 26</div>
+      </div>
+      <div class="rule"></div>
+      <div class="nav">
+        <div class="tab">Atención</div><div class="tab on">Agenda</div><div class="tab">Recordatorios</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div><div class="tab">Pacientes</div>
+      </div>
+      <div class="body">
+        <div class="left">
+          <div class="fig"><div class="n">8<sup>hoy</sup></div><div class="l">Citas del día · 2 sin marcar</div></div>
+          <div class="row2">
+            <div class="fig"><div class="n">71</div><div class="l">Pacientes<br>del mes</div></div>
+            <div class="fig"><div class="n">26.915</div><div class="l">Facturado<br>ticket Bs 324</div></div>
+          </div>
+        </div>
+        <div class="right">
+          <p class="rh">Agenda del día</p>
+          <div class="cita"><div class="h">09:00</div>
+            <div><div class="n">Ana Pérez</div><div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+          <div class="cita"><div class="h">10:30</div>
+            <div><div class="n">Luis Gómez</div><div class="m">Control · agendó por llamada</div></div>
+            <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Nadie más tiene esto. Es un panel con autor, y ese autor es ella. Los números grandes en Bodoni se ven caros sin gastar un peso.</div>
+      <div class="p"><b>Qué resigna</b>Es la que peor escala: cuando el día tenga 14 citas, la composición editorial se rompe. Habría que resolver la versión "día cargado".</div>
+    </div>
+  </section>
+
+  <!-- ============ 06 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">06</div>
+      <div>
+        <h2>Bisturí<span class="mirna">Mirna en la barra</span></h2>
+        <p>Precisión suiza: cero esquinas redondeadas, todo alineado a una retícula, los datos
+          en monoespaciada como en un instrumento. El verde aparece una sola vez, inundando la
+          celda que importa. Moderno por rigor, no por efectos.</p>
+        <div class="opt-pal">
+          <i style="background:#FFFFFF"></i><i style="background:#0E0F0C"></i>
+          <i style="background:#B6C932"></i><i style="background:#DDDED6"></i>
+          <i style="background:#5A5C50"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o6">
+      <div class="hdr">
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="logo">SPA<span>DENTAL</span></div>
+        <div class="who"><span class="ini">MV</span>DRA. MIRNA VEIZAGA / 18.08.26</div>
+      </div>
+      <div class="nav">
+        <div class="tab">Atención</div><div class="tab on">Agenda</div><div class="tab">Recordatorios</div>
+        <div class="tab">Atenciones</div><div class="tab">Panel</div><div class="tab">Caja</div>
+        <div class="tab">Pacientes</div>
+      </div>
+      <div class="grid">
+        <div class="cell acc"><div class="cl">Citas / hoy</div><div class="cv">08</div><div class="cs">02 sin marcar</div></div>
+        <div class="cell"><div class="cl">Pacientes / mes</div><div class="cv">71</div><div class="cs">29 nuevos</div></div>
+        <div class="cell"><div class="cl">Facturado / mes</div><div class="cv">26.915</div><div class="cs">ticket 324</div></div>
+      </div>
+      <div class="list">
+        <div class="lh">Agenda del día — marcar desenlace</div>
+        <div class="cita"><div class="h">09:00</div>
+          <div><div class="n">Ana Pérez</div><div class="m">limpieza / whatsapp</div></div>
+          <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+        <div class="cita"><div class="h">10:30</div>
+          <div><div class="n">Luis Gómez</div><div class="m">control / llamada</div></div>
+          <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Se ve profesional en serio, no decorado. La retícula aguanta cualquier cantidad de datos sin despeinarse, y la monoespaciada hace que los importes se lean en columna perfecta.</div>
+      <div class="p"><b>Qué resigna</b>Es fría. Nadie va a decir "qué linda". Y de spa no tiene absolutamente nada: parece un instrumento de laboratorio.</div>
+    </div>
+  </section>
+
+  <!-- ============ 07 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">07</div>
+      <div>
+        <h2>Vitrina<span class="mirna">Mirna presente</span></h2>
+        <p>Oscuro con luz propia: el verde funciona como fuente de iluminación detrás del
+          contenido, las tarjetas tienen densidad de vidrio y su avatar vive arriba a la derecha
+          con un anillo encendido. Es el lenguaje de las apps que se ven caras hoy.</p>
+        <div class="opt-pal">
+          <i style="background:#0A0F0A"></i><i style="background:#141B14"></i>
+          <i style="background:#CFE05E"></i><i style="background:#8F9A82"></i>
+          <i style="background:#FFFFFF"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o7">
+      <div class="hdr">
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="logo">SPA<span>DENTAL</span></div>
+        <div class="who"><div class="t"><b>Dra. Mirna Veizaga</b><i>Turno mañana · 8 citas</i></div>
+          <span class="ring">MV</span></div>
+      </div>
+      <div class="nav">
+        <div class="tab">Atención</div><div class="tab on">Agenda</div><div class="tab">Recordatorios</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div><div class="tab">Pacientes</div>
+      </div>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi acc"><div class="kl">Citas de hoy</div><div class="kvv">8</div><div class="ks">2 sin marcar</div></div>
+          <div class="kpi"><div class="kl">Pacientes del mes</div><div class="kvv">71</div><div class="ks">29 nuevos</div></div>
+          <div class="kpi"><div class="kl">Facturado</div><div class="kvv">26.915</div><div class="ks">ticket Bs 324</div></div>
+        </div>
+        <div class="card">
+          <h4>Agenda del día</h4>
+          <p class="hint">Al terminar cada paciente, marcá qué pasó.</p>
+          <div class="cita"><div><span class="h">09:00</span> &nbsp;<span class="n">Ana Pérez</span>
+            <div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+          <div class="cita"><div><span class="h">10:30</span> &nbsp;<span class="n">Luis Gómez</span>
+            <div class="m">Control · agendó por llamada</div></div>
+            <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Es la más "2026". Se ve premium, moderna, y en el celular de noche es un placer. El verde brilla de verdad sobre negro.</div>
+      <div class="p"><b>Qué resigna</b>Ocho horas de pantalla oscura en un consultorio con luz fuerte cansa, y el papel impreso desde acá sale horrible. Necesitaría sí o sí una versión clara también.</div>
+    </div>
+  </section>
+
+  <!-- ============ 08 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">08</div>
+      <div>
+        <h2>Sonrisa<span class="mirna">Mirna anfitriona</span></h2>
+        <p>El verde deja de ser un detalle y pasa a ser el protagonista: inunda el encabezado,
+          que además <b>termina en una curva</b> — la sonrisa. Todo lo demás son formas
+          redondas y generosas. Ella recibe desde ahí, como en la puerta del consultorio.</p>
+        <div class="opt-pal">
+          <i style="background:#B6C932"></i><i style="background:#1B2013"></i>
+          <i style="background:#F4F6EC"></i><i style="background:#E8EDD9"></i>
+          <i style="background:#DDE9A6"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o8">
+      <div class="arc">
+        <div class="arc-row">
+          <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+          <div class="logo">SPADENTAL<small>Dra. Mirna Veizaga</small></div>
+          <div class="who"><div class="t">Martes 18/08<b>8 citas hoy</b></div><span class="ini">MV</span></div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="tab">Atención</div><div class="tab on">Agenda</div><div class="tab">Recordatorios</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div><div class="tab">Pacientes</div>
+      </div>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi acc"><div class="kl">Citas de hoy</div><div class="kvv">8</div><div class="ks">2 sin marcar</div></div>
+          <div class="kpi"><div class="kl">Pacientes del mes</div><div class="kvv">71</div><div class="ks">29 nuevos</div></div>
+          <div class="kpi"><div class="kl">Facturado</div><div class="kvv">26.915</div><div class="ks">ticket Bs 324</div></div>
+        </div>
+        <div class="card">
+          <h4>Agenda del día</h4>
+          <p class="hint">Al terminar cada paciente, marcá qué pasó.</p>
+          <div class="cita"><div><span class="h">09:00</span> &nbsp;<span class="n">Ana Pérez</span>
+            <div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+          <div class="cita"><div><span class="h">10:30</span> &nbsp;<span class="n">Luis Gómez</span>
+            <div class="m">Control · agendó por llamada</div></div>
+            <div class="acts"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Alegre sin ser infantil, y usa el verde de la marca a lo grande en vez de esconderlo. La curva del encabezado es un detalle que nadie más va a tener.</div>
+      <div class="p"><b>Qué resigna</b>Tanto verde saturado arriba compite con los datos. Y si mañana la clínica quiere verse más seria o más médica, esta es la que peor envejece.</div>
+    </div>
+  </section>
+
+  <section class="cierre">
+    <h2>Cómo las leería</h2>
+    <p>Si el objetivo es <span class="lime">que resalte Mirna</span>, la <span class="lime">05 · Autora</span>
+      es la única que la pone de verdad en el centro: su nombre <em>es</em> la interfaz. Es la más
+      audaz de las ocho y la que nadie va a poder copiar.</p>
+    <p>Si el objetivo es <span class="lime">que se vea moderna y dure</span>, la
+      <span class="lime">06 · Bisturí</span>: no depende de una moda, aguanta datos y se ve
+      profesional en serio.</p>
+    <p>La <span class="lime">07</span> es la que más impresiona en una demo y la que más cansa
+      en el uso diario. La <span class="lime">08</span> es la más simpática y la más riesgosa a
+      dos años.</p>
+    <p><b style="color:#fff">Una mezcla que funcionaría:</b> el encabezado de la
+      <span class="lime">05</span> — su nombre en grande, la línea fina — sobre el cuerpo
+      ordenado de la <span class="lime">06</span>. Ella arriba, los datos abajo, sin decoración
+      en el medio.</p>
+  </section>
+
+  <footer>
+    Las ocho opciones usan el mismo contenido real: la agenda del 18 de agosto, con los
+    números del mes que ya están cargados. El monograma <b>MV</b> es un marcador de posición:
+    si hay una foto de la Dra. Mirna, va ahí y cambia bastante el resultado en la 07 y la 08.
+  </footer>
+
+</div>
+</body>
+</html>
