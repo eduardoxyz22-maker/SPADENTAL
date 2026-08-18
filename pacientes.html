@@ -57,6 +57,11 @@ nav button:focus-visible{outline:2px solid var(--lime-dk);outline-offset:-2px;bo
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:1fr 1fr 1fr}
 .g4{grid-template-columns:repeat(4,1fr)}
+/* Ficha del paciente: en pantalla ancha los cinco datos van en una fila;
+   al achicarse se reacomodan solos sin quedar campos ridículamente largos. */
+.ficha{grid-template-columns:minmax(230px,1.6fr) minmax(150px,1fr) minmax(140px,1fr) 90px minmax(190px,auto)}
+@media(max-width:1100px){.ficha{grid-template-columns:minmax(220px,1.4fr) minmax(150px,1fr) minmax(140px,1fr)}}
+@media(max-width:760px){.ficha{grid-template-columns:1fr}}
 @media(max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr}}
 label{display:block;font-size:12.5px;font-weight:600;color:#55554F;margin:0 0 5px}
 label .req{color:var(--clay)}
@@ -121,7 +126,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .st-reagendar{box-shadow:inset 3px 0 0 var(--warn)}
 .st-noasistio{box-shadow:inset 3px 0 0 var(--clay)}
 .empty{text-align:center;color:var(--gray);padding:26px 10px;font-size:14px}
-.banner{max-width:110ch}
+
 
 .bars{display:grid;gap:9px;margin-top:6px}
 .bar-row{display:grid;grid-template-columns:130px 1fr 82px;gap:10px;align-items:center;font-size:13px}
@@ -203,8 +208,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 /* Los datos ganan con el ancho; los formularios no: un campo de "nombre y
    apellido" de 700px es peor que uno de 350. Por eso solo las vistas de
    carga tienen tope. */
-#v-atencion,#v-config{max-width:1180px}
-#v-cita .card:last-of-type{max-width:1180px}
+#v-atencion,#v-config{max-width:1500px;margin-inline:auto}
+#v-cita .card:last-of-type{max-width:1500px;margin-inline:auto}
 
 .view{display:none}.view.on{display:block}
 @media print{header,nav,.row-btn,#toast{display:none}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
@@ -305,16 +310,14 @@ body.locked{overflow:hidden}
   <div class="card">
     <h2><span class="n">2</span>Paciente</h2>
     <p class="hint">Si el paciente ya vino antes, escribí el nombre y se autocompletan sus datos.</p>
-    <div class="grid g2">
-      <div><label>Nombre y apellido <span class="req">*</span></label>
+    <div class="grid ficha">
+      <div class="c-nombre"><label>Nombre y apellido <span class="req">*</span></label>
         <input list="dl-pac" id="f-paciente" placeholder="Ej. María Fernández" autocomplete="off">
         <datalist id="dl-pac"></datalist></div>
       <div><label>Celular <span class="req">*</span></label><input id="f-cel" inputmode="tel" placeholder="7XXXXXXX"></div>
-    </div>
-    <div class="grid g3" style="margin-top:12px">
       <div><label>CI / Documento</label><input id="f-ci" placeholder="Opcional"></div>
       <div><label>Edad</label><input id="f-edad" inputmode="numeric" placeholder="Opcional"></div>
-      <div><label>Tipo de paciente</label>
+      <div class="c-tipo"><label>Tipo de paciente</label>
         <div class="seg" id="seg-tipo">
           <label><input type="radio" name="tipo" value="Nuevo" checked><span>Nuevo</span></label>
           <label><input type="radio" name="tipo" value="Recurrente"><span>Recurrente</span></label>
