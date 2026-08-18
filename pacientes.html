@@ -1848,13 +1848,20 @@ function renderPanel(){
   DATA.forEach(function(r){
     var k=(r.paciente||'').trim().toLowerCase(); if(!k||!r.fecha)return;
     if(!primeraGlobal[k]||r.fecha<primeraGlobal[k])primeraGlobal[k]=r.fecha});
+  /* Nuevo o recurrente: manda lo que anotó recepción en la atención (campo
+     `tipo`). Solo si no está anotado se deduce comparando con la primera
+     visita registrada — deducirlo siempre daría de más, porque los cuadernos
+     viejos están incompletos y medio consultorio parecería "nuevo". */
   var nuevos={},vuelven={};
   Object.keys(pacs).forEach(function(k){
-    var enPeriodo=rows.some(function(r){return (r.paciente||'').trim().toLowerCase()===k});
-    if(!enPeriodo)return;
-    var primeraEnPeriodo=rows.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k})
-      .map(function(r){return r.fecha}).sort()[0];
-    if(primeraGlobal[k]===primeraEnPeriodo)nuevos[k]=1; else vuelven[k]=1});
+    var suyas=rows.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k})
+      .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')});
+    if(!suyas.length)return;
+    var primera=suyas[0];
+    var esNuevo = primera.tipo
+      ? (primera.tipo==='Nuevo')
+      : (primeraGlobal[k]===primera.fecha);
+    if(esNuevo)nuevos[k]=1; else vuelven[k]=1});
   rows.forEach(function(r){
     var k=(r.paciente||'').trim().toLowerCase(); if(!k||!r.fecha)return;
     var ym=r.fecha.slice(0,7); if(!mens[ym])return;
