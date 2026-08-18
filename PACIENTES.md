@@ -138,8 +138,9 @@ La pestaña contable. Filtrable por día, mes, año o todo:
   Mira toda la historia, no solo el periodo elegido.
 - **Sin forma de pago anotada** — las atenciones que rompen la conciliación,
   clicables para completarlas.
-- Botón **⬇ Excel de caja** con 5 hojas: movimientos, por forma de pago, arqueo
-  diario, antigüedad de deuda y saldos pendientes.
+- Botón **⬇ Excel de caja**: un informe con portada (resumen, cobrado por forma
+  de pago, cuentas por cobrar por antigüedad y lo que falta completar) y tres
+  hojas de detalle — movimientos, arqueo diario y saldos pendientes.
 
 ### 👤 Pacientes
 Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
