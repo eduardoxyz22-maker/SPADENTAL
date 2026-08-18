@@ -1719,6 +1719,11 @@ function esAtencion(r){
   return r.estado!=='Agendada'&&r.estado!=='Canceló'&&r.estado!=='Reprogramó'}
 function soloAtenciones(a){return a.filter(esAtencion)}
 
+/* Las atenciones importadas de los cuadernos no tienen forma de pago y nunca
+   la van a tener: el cuaderno no la anotaba. No sirve pedir que se completen,
+   así que se cuentan aparte de las que sí se pueden arreglar. */
+function esImportada(r){return /^Importado del /.test(r.obs||'')}
+
 function renderLista(){
   var rows=filtrarLista();
   var pacs={}; rows.forEach(function(r){if(r.paciente)pacs[r.paciente.trim().toLowerCase()]=1});
@@ -2132,6 +2137,9 @@ function renderCaja(){
       porMetodo[p.metodo]=(porMetodo[p.metodo]||0)+num(p.monto);
       porDia[r.fecha].m[p.metodo]=(porDia[r.fecha].m[p.metodo]||0)+num(p.monto)});
     if(num(r.acuenta)>0&&Math.abs(suma-num(r.acuenta))>0.01)sinMetodo.push({r:r,identificado:suma})});
+  var faltaCargar=sinMetodo.filter(function(x){return !esImportada(x.r)});
+  var delHistorico=sinMetodo.filter(function(x){return esImportada(x.r)});
+  var bsHistorico=delHistorico.reduce(function(a,x){return a+num(x.r.acuenta)-x.identificado},0);
 
   var identificado=METODOS.reduce(function(a,m){return a+porMetodo[m]},0);
   var sinIdent=cobr-identificado;
@@ -2142,7 +2150,10 @@ function renderCaja(){
     '<div class="kpi"><div class="k">Por cobrar</div><div class="v" style="font-size:21px;color:'+(sal>0?'var(--clay)':'var(--ok)')+'">'+bs(sal)+'</div><div class="d">saldo del periodo</div></div>'+
     '<div class="kpi"><div class="k">💵 Efectivo</div><div class="v" style="font-size:21px">'+bs(porMetodo['Efectivo'])+'</div><div class="d">'+(cobr?Math.round(porMetodo['Efectivo']/cobr*100):0)+'% de lo cobrado</div></div>'+
     '<div class="kpi"><div class="k">📱 QR + 🏦 Transf.</div><div class="v" style="font-size:21px">'+bs(porMetodo['QR']+porMetodo['Transferencia'])+'</div><div class="d">debe estar en el banco</div></div>'+
-    '<div class="kpi"><div class="k">Sin identificar</div><div class="v" style="font-size:21px;color:'+(Math.abs(sinIdent)>0.01?'var(--clay)':'var(--ok)')+'">'+bs(sinIdent)+'</div><div class="d">'+(Math.abs(sinIdent)<0.01?'todo conciliado ✅':sinMetodo.length+' atenciones sin forma de pago')+'</div></div>';
+    '<div class="kpi"><div class="k">Sin identificar</div><div class="v" style="font-size:21px;color:'+((faltaCargar.length)?'var(--clay)':(Math.abs(sinIdent)>0.01?'var(--gray)':'var(--ok)'))+'">'+bs(sinIdent)+'</div><div class="d">'+
+      (faltaCargar.length
+        ? '<b style="color:var(--clay)">'+faltaCargar.length+' por completar</b>'+(delHistorico.length?' · '+delHistorico.length+' del cuaderno':'')
+        : (delHistorico.length? delHistorico.length+' del cuaderno (no se pueden recuperar)' : 'todo conciliado ✅'))+'</div></div>';
 
   var maxM=Math.max.apply(null,METODOS.map(function(m){return porMetodo[m]}).concat([1]));
   $('#cj-metodos').innerHTML=barras(METODOS.filter(function(m){return porMetodo[m]>0})
@@ -2185,14 +2196,21 @@ function renderCaja(){
       '<p class="mini" style="margin-top:10px">Esto mira <b>toda</b> la historia, no solo el periodo elegido: una deuda vieja sigue siendo deuda. El detalle con el WhatsApp está en <b>🔔 Recordatorios → 💰 Saldos</b>.</p>'
     : '<div class="empty">No hay saldos pendientes 🎉</div>');
 
-  $('#cj-sinmetodo').innerHTML=(sinMetodo.length
+  $('#cj-sinmetodo').innerHTML=(faltaCargar.length
     ? tabla([{t:'Fecha'},{t:'Paciente'},{t:'Cobrado',num:1},{t:'Identificado',num:1},{t:'Sin explicar',num:1}],
-        sinMetodo.slice(0,50).map(function(x){
+        faltaCargar.slice(0,50).map(function(x){
           return ['<a href="#" onclick="verFicha(\''+x.r.id+'\');return false">'+fmtFcorta(x.r.fecha)+'</a>',
             esc(x.r.paciente||'—'),n0(x.r.acuenta),n0(x.identificado),
             '<span style="color:var(--clay)">'+n0(num(x.r.acuenta)-x.identificado)+'</span>']}),480)+
-      '<p class="mini" style="margin-top:10px">Casi todas son atenciones viejas importadas de los cuadernos, donde no se anotaba la forma de pago. Tocá la fecha para abrir la ficha y completarla.</p>'
-    : '<div class="empty">Todas las atenciones con cobro tienen su forma de pago ✅</div>');
+      '<p class="mini" style="margin-top:10px">Tocá la fecha para abrir la ficha y completar cómo pagó.</p>'
+    : '<div class="empty">Todas las atenciones cargadas en el panel tienen su forma de pago ✅</div>')+
+    (delHistorico.length
+      ? '<p class="mini" style="margin-top:14px;padding:10px 12px;background:var(--paper);border-radius:10px">'+
+        '📓 Aparte hay <b>'+n0(delHistorico.length)+' atenciones</b> importadas de los cuadernos '+
+        '(<b>'+bs(bsHistorico)+'</b>) que nunca van a tener forma de pago: el cuaderno no la anotaba. '+
+        'No hace falta hacer nada con ellas — no se pueden recuperar. La conciliación de verdad '+
+        'arranca con lo que se carga desde el panel.</p>'
+      : '');
 
   $('#cj-body').innerHTML=rows.length?rows.slice().reverse().map(function(r){
     var m=metodoText(r);
