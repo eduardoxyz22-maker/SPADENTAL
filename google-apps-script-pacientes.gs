@@ -5,9 +5,11 @@
  * nueva, y publicalo como aplicación web (ver SETUP-GOOGLE-SHEETS-SPADENTAL.md).
  *
  * Acciones que entiende:
- *   {action:'list'}                 → {ok:true, registros:[...]}
- *   {action:'save',  registro:{…}}  → {ok:true, registro:{…}}   (crea o actualiza por id)
- *   {action:'delete',registro:{id}} → {ok:true}
+ *   {action:'list'}                  → {ok:true, registros:[...]}
+ *   {action:'save',  registro:{…}}   → {ok:true, registro:{…}}   (crea o actualiza por id)
+ *   {action:'delete',registro:{id}}  → {ok:true}
+ *   {action:'bulk',  registros:[…]}  → {ok:true, agregados, actualizados, total}
+ *   {action:'info'}                  → {ok:true, planilla, url, filas}
  */
 
 var HOJA = 'Atenciones';
@@ -165,6 +167,44 @@ function doSave(r) {
   return { ok: true, registro: r };
 }
 
+/**
+ * Carga muchas atenciones de una sola vez (se usó para subir el histórico
+ * de los cuadernos de enero a julio). Escribe todo con un solo setValues,
+ * así que entran cientos de filas en una llamada.
+ * Los que ya existen por id se actualizan; los nuevos se agregan.
+ */
+function doBulk(lista) {
+  if (!lista || !lista.length) return { ok: true, agregados: 0, actualizados: 0 };
+  var sh = getSheet();
+  var n = sh.getLastRow();
+
+  var filaPorId = {};
+  if (n >= 2) {
+    var ids = sh.getRange(2, 1, n - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) {
+      if (ids[i][0]) filaPorId[ids[i][0]] = i + 2;
+    }
+  }
+
+  var nuevas = [], actualizados = 0;
+  for (var k = 0; k < lista.length; k++) {
+    var r = lista[k];
+    if (!r || !r.id) continue;
+    var fila = filaDeRegistro(r);
+    if (filaPorId[r.id]) {
+      sh.getRange(filaPorId[r.id], 1, 1, COLS.length).setValues([fila]);
+      actualizados++;
+    } else {
+      nuevas.push(fila);
+    }
+  }
+  if (nuevas.length) {
+    sh.getRange(sh.getLastRow() + 1, 1, nuevas.length, COLS.length).setValues(nuevas);
+  }
+  return { ok: true, agregados: nuevas.length, actualizados: actualizados,
+           total: Math.max(0, sh.getLastRow() - 1) };
+}
+
 function doDelete(r) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
   var sh = getSheet();
@@ -192,6 +232,8 @@ function doPost(e) {
     if (body.action === 'list') return json(doList());
     if (body.action === 'save') return json(doSave(reg));
     if (body.action === 'delete') return json(doDelete(reg));
+    if (body.action === 'bulk') return json(doBulk(body.registros || []));
+    if (body.action === 'info') return json(doInfo());
     return json({ ok: false, error: 'accion_desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });
