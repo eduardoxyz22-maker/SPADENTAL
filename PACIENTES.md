@@ -139,6 +139,22 @@ Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
 
 ---
 
+## Qué se comparte entre los equipos
+
+Con la hoja de Google conectada, **todo se comparte**: atenciones, citas,
+cobros, saldos, y también los **ajustes** (lista de precios, canales,
+profesionales, días de aviso y la clave de entrada). Se cambian en un equipo
+y los demás los toman solos. Si dos equipos editan lo mismo, gana el último
+que guardó.
+
+La pantalla **se refresca sola** cada 3 minutos y cada vez que se vuelve a la
+pestaña — pero nunca mientras se está escribiendo una atención o con un cuadro
+abierto, para no pisar lo que se está cargando. El botón **🔄 Actualizar** de
+la pestaña Atenciones fuerza el refresco en el momento.
+
+Si se corta internet, todo se guarda igual en el equipo y se manda solo cuando
+vuelve la conexión.
+
 ## Dónde se guardan los datos
 
 Por defecto, **en el navegador donde se carga** (no viaja a ningún servidor).

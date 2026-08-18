@@ -10,6 +10,10 @@
  *   {action:'delete',registro:{id}}  → {ok:true}
  *   {action:'bulk',  registros:[…]}  → {ok:true, agregados, actualizados, total}
  *   {action:'info'}                  → {ok:true, planilla, url, filas}
+ *   {action:'cfg',    cfg:{…}}        → {ok:true}   (guarda los ajustes compartidos)
+ *
+ * El list devuelve además `cfg` con los ajustes (precios, canales,
+ * profesionales, clave), para que todos los equipos usen los mismos.
  */
 
 var HOJA = 'Atenciones';
@@ -134,18 +138,39 @@ function formatoFecha(v) {
   return String(v);
 }
 
+/* ------------------------------------------------- ajustes compartidos */
+/* Se guardan en las propiedades del script, no en una hoja: son un solo
+   objeto y así no ensucian la planilla que mira el consultorio. */
+var K_CFG = 'CFG_SPADENTAL';
+
+function doGuardarCfg(cfg) {
+  if (!cfg || !cfg.precios || !cfg.canales) return { ok: false, error: 'cfg_invalida' };
+  var props = PropertiesService.getScriptProperties();
+  var texto = JSON.stringify(cfg);
+  if (texto.length > 450000) return { ok: false, error: 'cfg_muy_grande' };
+  props.setProperty(K_CFG, texto);
+  return { ok: true, ts: cfg.ts || '' };
+}
+
+function leerCfg() {
+  try {
+    var t = PropertiesService.getScriptProperties().getProperty(K_CFG);
+    return t ? JSON.parse(t) : null;
+  } catch (e) { return null; }
+}
+
 /* ---------------------------------------------------------------- acciones */
 function doList() {
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [] };
+  if (n < 2) return { ok: true, registros: [], cfg: leerCfg() };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out };
+  return { ok: true, registros: out, cfg: leerCfg() };
 }
 
 function doSave(r) {
@@ -252,6 +277,7 @@ function doPost(e) {
     if (body.action === 'delete') return json(doDelete(reg));
     if (body.action === 'bulk') return json(doBulk(body.registros || []));
     if (body.action === 'info') return json(doInfo());
+    if (body.action === 'cfg') return json(doGuardarCfg(body.cfg));
     return json({ ok: false, error: 'accion_desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });

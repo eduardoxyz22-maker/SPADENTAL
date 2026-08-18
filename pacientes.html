@@ -609,7 +609,8 @@ body.locked{overflow:hidden}
   </div>
   <div class="card">
     <h2>Lista de precios</h2>
-    <p class="hint">Precios sugeridos que se autocompletan. Siempre se pueden pisar al cargar la atención.</p>
+    <p class="hint">Precios sugeridos que se autocompletan. Siempre se pueden pisar al cargar la atención.
+      <b id="cfg-compartida"></b></p>
     <div class="tw"><table style="min-width:520px"><thead><tr><th>Categoría</th><th>Servicio</th>
       <th class="num" style="width:130px">Precio Bs</th></tr></thead><tbody id="c-precios"></tbody></table></div>
     <div class="row-btn"><button class="btn sm" id="btn-save-precios">Guardar precios</button>
@@ -625,9 +626,9 @@ body.locked{overflow:hidden}
   </div>
   <div class="card">
     <h2>Clave de entrada</h2>
-    <p class="hint">Es la clave que pide al abrir la página. Frena al curioso, pero
-      <b>no es seguridad de verdad</b>: quien sepa mirar el código puede saltearla.
-      No compartas el link fuera del consultorio.</p>
+    <p class="hint">Es la clave que pide al abrir la página, y vale para todos los equipos.
+      Frena al curioso, pero <b>no es seguridad de verdad</b>: quien sepa mirar el código
+      puede saltearla. No compartas el link fuera del consultorio.</p>
     <div class="grid g3">
       <div><label>Clave actual</label><input type="password" id="c-pass-old" autocomplete="off"></div>
       <div><label>Clave nueva</label><input type="password" id="c-pass-new" autocomplete="off"></div>
@@ -725,7 +726,9 @@ function sha256(msg){
     H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0}
   return H.map(function(x){return ('00000000'+(x>>>0).toString(16)).slice(-8)}).join('')}
 
-function passHash(){try{return localStorage.getItem(K_PASS)||DEFAULT_HASH}catch(e){return DEFAULT_HASH}}
+function passHash(){
+  if(CFG&&CFG.passHash)return CFG.passHash;
+  try{return localStorage.getItem(K_PASS)||DEFAULT_HASH}catch(e){return DEFAULT_HASH}}
 function yaDesbloqueado(){
   try{
     if(sessionStorage.getItem(K_UNLOCK)===passHash())return true;
@@ -869,14 +872,36 @@ function migrarCfg(c){
   if(antes!==3)saveCfgObj(c);
   return c}
 function saveCfgObj(c){try{localStorage.setItem(K_CFG,JSON.stringify(c))}catch(e){}}
-function saveCfg(){try{localStorage.setItem(K_CFG,JSON.stringify(CFG))}catch(e){}}
+
+/* La configuración (precios, canales, profesionales, clave) también viaja al
+   servidor, si no cada equipo termina con precios distintos sin enterarse.
+   Gana la última que se guardó: cada cambio lleva su marca de tiempo. */
+function saveCfg(guardarEnServidor){
+  CFG.ts=new Date().toISOString();
+  saveCfgObj(CFG);
+  if(guardarEnServidor!==false&&CONNECTED){
+    api('cfg',null,CFG).catch(function(){queue('cfg',CFG)})}}
+
+function aplicarCfgServidor(remota){
+  if(!remota||!remota.precios||!remota.canales)return false;
+  // solo se pisa lo local si lo del servidor es más nuevo
+  if(CFG.ts&&remota.ts&&remota.ts<=CFG.ts)return false;
+  var claveVieja=CFG.passHash;
+  CFG=migrarCfg(remota);
+  var d=cfgDefault(); for(var k in d){if(CFG[k]==null)CFG[k]=d[k]}
+  saveCfgObj(CFG);
+  if(CFG.passHash&&CFG.passHash!==claveVieja){
+    try{localStorage.setItem(K_PASS,CFG.passHash)}catch(e){}}
+  renderCanales(); renderAgendaPor();
+  if($('#v-config').classList.contains('on'))renderConfig();
+  return true}
 function loadLocal(){try{var a=JSON.parse(localStorage.getItem(K_DATA));return Array.isArray(a)?a:[]}catch(e){return []}}
 function saveLocal(){try{localStorage.setItem(K_DATA,JSON.stringify(DATA))}catch(e){toast('No se pudo guardar en este dispositivo',1)}}
 
 /* ---------- backend opcional (Google Sheets) ---------- */
-function api(action,payload){
+function api(action,payload,cfg){
   return fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify({action:action,pedido:payload,registro:payload})})
+    body:JSON.stringify({action:action,pedido:payload,registro:payload,cfg:cfg})})
     .then(function(r){return r.json()})
 }
 function pend(){try{var a=JSON.parse(localStorage.getItem(K_PEND));return Array.isArray(a)?a:[]}catch(e){return []}}
@@ -886,15 +911,56 @@ function flushQueue(){
   if(!CONNECTED)return Promise.resolve();
   var q=pend(); if(!q.length)return Promise.resolve();
   setPend([]);
-  return q.reduce(function(p,item){return p.then(function(){return api(item.action,item.rec).catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
+  return q.reduce(function(p,item){return p.then(function(){
+    var llamada=item.action==='cfg'?api('cfg',null,item.rec):api(item.action,item.rec);
+    return llamada.catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
 }
 function pullServer(){
   if(!CONNECTED)return Promise.resolve(false);
   return api('list').then(function(r){
     if(r&&r.ok&&Array.isArray(r.registros||r.pedidos)){
-      DATA=(r.registros||r.pedidos).map(normalize); saveLocal(); return true}
+      DATA=(r.registros||r.pedidos).map(normalize); saveLocal();
+      if(r.cfg)aplicarCfgServidor(r.cfg);
+      return true}
     return false}).catch(function(){return false})
 }
+
+/* ---------------------------------------------------------------------
+   REFRESCO AUTOMÁTICO
+   Sin esto, la recepción y la doctora ven fotos distintas: los datos se
+   guardan bien, pero cada pantalla se queda con lo que trajo al abrir.
+   Se refresca cada 3 minutos, y siempre que se vuelve a la pestaña.
+   Nunca mientras se está escribiendo algo, para no pisar el formulario.
+   --------------------------------------------------------------------- */
+var REFRESCO_MS=180000, ultimoPull=0, refrescando=false;
+
+function hayAlgoAMedioCargar(){
+  if($('#ov').classList.contains('on'))return true;          // modal abierto
+  if(EDIT_ID)return true;                                     // editando
+  if($('#f-paciente').value.trim()||$('#q-paciente').value.trim())return true;
+  var a=document.activeElement;
+  return !!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))}
+
+function refrescarSiCorresponde(forzar){
+  if(!CONNECTED||refrescando)return Promise.resolve(false);
+  var ahora=+new Date();
+  if(!forzar&&ahora-ultimoPull<60000)return Promise.resolve(false);   // no más de 1 por minuto
+  if(!forzar&&hayAlgoAMedioCargar())return Promise.resolve(false);
+  refrescando=true;
+  return flushQueue().then(pullServer).then(function(ok){
+    ultimoPull=+new Date(); refrescando=false;
+    if(ok){fillDatalists(); updateNavRem();
+      var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
+      // no se repinta el formulario de carga: podrían estar escribiendo
+      if(v&&v.v&&v.v!=='atencion'&&v.v!=='cita')show(v.v)}
+    return ok}).catch(function(){refrescando=false;return false})}
+
+function initRefresco(){
+  if(!CONNECTED)return;
+  setInterval(function(){refrescarSiCorresponde(false)},REFRESCO_MS);
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)refrescarSiCorresponde(false)});
+  window.addEventListener('online',function(){refrescarSiCorresponde(false)})}
 function normalize(r){
   r=r||{};
   if(typeof r.servicios==='string'){try{r.servicios=JSON.parse(r.servicios)}catch(e){r.servicios=[]}}
@@ -2191,6 +2257,9 @@ function renderConfig(){
   $('#c-precios').innerHTML=CFG.precios.map(function(p,i){
     return '<tr style="cursor:default"><td>'+esc(p.cat)+'</td><td>'+esc(p.nom)+'</td>'+
       '<td class="num"><input class="cp" data-i="'+i+'" inputmode="decimal" value="'+num(p.precio)+'" style="text-align:right;padding:6px 8px"></td></tr>'}).join('');
+  $('#cfg-compartida').innerHTML=CONNECTED
+    ? '<span style="color:var(--ok)">Estos ajustes se comparten con todos los equipos.</span>'
+    : '<span style="color:var(--clay)">Modo local: estos ajustes valen solo en este equipo.</span>';
   $('#c-modo').textContent=CONNECTED
     ? 'Modo conectado: los datos se guardan en la hoja de Google compartida y se ven desde cualquier celular.'
     : 'Modo local: los datos viven solo en este navegador. Descargá el respaldo seguido, o conectá la hoja de Google (ver SETUP-GOOGLE-SHEETS-SPADENTAL.md).'}
@@ -2424,7 +2493,7 @@ function bind(){
   $('#btn-sync').onclick=function(){
     if(!CONNECTED){toast('Modo local: no hay servidor configurado',1);return}
     toast('Actualizando…');
-    flushQueue().then(pullServer).then(function(){refreshAll();toast('Datos actualizados ✅')})};
+    refrescarSiCorresponde(true).then(function(){refreshAll();toast('Datos actualizados ✅')})};
 
   $('#p-rango').onchange=function(){
     $('#wrap-p-mes').style.display=this.value==='mes'?'':'none';
@@ -2463,6 +2532,7 @@ function bind(){
     if(sha256(vieja)!==passHash()){toast('La clave actual no coincide',1);return}
     if(n1.length<6){toast('La clave nueva necesita al menos 6 caracteres',1);return}
     if(n1!==n2){toast('Las dos claves nuevas no coinciden',1);return}
+    CFG.passHash=sha256(n1); saveCfg();
     try{localStorage.setItem(K_PASS,sha256(n1));
       sessionStorage.setItem(K_UNLOCK,sha256(n1));
       localStorage.setItem(K_UNLOCK,sha256(n1))}catch(e){}
@@ -2505,7 +2575,9 @@ function banner(){
   initGate();
   initFechas(); banner(); renderCanales(); renderAgendaPor(); bind();
   clearForm(); clearCita(); fillDatalists(); updateNavRem();
-  if(CONNECTED){flushQueue().then(pullServer).then(function(ok){if(ok)refreshAll()})}
+  if(CONNECTED){
+    flushQueue().then(pullServer).then(function(ok){ultimoPull=+new Date(); if(ok)refreshAll()});
+    initRefresco()}
 })();
 </script>
 </body>
