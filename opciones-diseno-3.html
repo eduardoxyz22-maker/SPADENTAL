@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex,nofollow">
+<title>El formato con cuatro pieles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   PÁGINA
+   ===================================================================== */
+:root{
+  --pg-bg:#FBFBF9; --pg-card:#FFFFFF; --pg-ink:#1C1E1A; --pg-soft:#6E7268;
+  --pg-line:#E4E5DE; --pg-lime:#B6C932; --pg-lime-dk:#7E8F17;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--pg-bg);color:var(--pg-ink);
+  font-family:'Archivo',system-ui,sans-serif;font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+a{color:var(--pg-lime-dk)}
+
+.intro{padding:60px 0 30px}
+.eyebrow{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--pg-lime-dk);font-weight:700;margin:0 0 14px}
+h1{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(36px,6.4vw,60px);
+  line-height:1;margin:0 0 16px;letter-spacing:-.01em;text-wrap:balance}
+.lede{font-size:18px;max-width:62ch;color:#3A3D36;margin:0 0 22px}
+.lede b{color:var(--pg-ink)}
+.back{font-size:13.5px;color:var(--pg-soft);margin:0}
+
+/* ---------- controles ---------- */
+.ctrl{position:sticky;top:0;z-index:20;background:rgba(251,251,249,.94);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--pg-line);padding:14px 0;margin-bottom:22px}
+.ctrl-in{max-width:1120px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;
+  gap:16px;align-items:center}
+.ctrl-lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:700;color:var(--pg-soft)}
+.skins{display:flex;gap:7px;flex-wrap:wrap}
+.skin{display:flex;align-items:center;gap:8px;border:1.5px solid var(--pg-line);background:#fff;
+  border-radius:999px;padding:6px 14px 6px 7px;font-size:13.5px;font-weight:600;cursor:pointer;
+  font-family:inherit;color:var(--pg-ink);transition:border-color .15s,box-shadow .15s}
+.skin:hover{border-color:#C8CBBE}
+.skin[aria-pressed="true"]{border-color:var(--pg-ink);box-shadow:0 0 0 3px rgba(28,30,26,.08)}
+.skin .dots{display:flex}
+.skin .dots i{width:15px;height:15px;border-radius:50%;display:block;
+  border:1.5px solid #fff;margin-left:-6px}
+.skin .dots i:first-child{margin-left:0}
+.skin:focus-visible{outline:2px solid var(--pg-lime-dk);outline-offset:2px}
+.toggle{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;cursor:pointer;
+  margin-left:auto}
+.toggle input{width:17px;height:17px;accent-color:var(--pg-lime-dk);cursor:pointer}
+/* en el celular los botones tienen que poder tocarse con el dedo */
+@media(max-width:760px){
+  .skin{padding:10px 16px 10px 9px;font-size:14px}
+  .toggle{margin-left:0;padding:6px 0}
+}
+
+/* =====================================================================
+   LA MAQUETA — un solo diseño, la piel cambia por variables
+   ===================================================================== */
+.frame{border:1px solid var(--pg-line);border-radius:14px;overflow:hidden;
+  box-shadow:0 1px 2px rgba(28,30,26,.05),0 22px 46px -26px rgba(28,30,26,.3);
+  margin-bottom:16px}
+.mini-scroll{display:none;font-size:12px;color:var(--pg-soft);margin:0 0 8px}
+@media(max-width:800px){
+  .mini-scroll{display:block}
+  .frame{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .frame > .app{min-width:760px}
+}
+
+.app{
+  /* piel por defecto: Clínica */
+  --bg:#FAFBF6; --surface:#FFFFFF; --ink:#20241C; --soft:#727865; --line:#E8EADF;
+  --accent:#B6C932; --accent-dk:#65760F; --hdr-bg:#FFFFFF; --hdr-ink:#20241C;
+  --hdr-soft:#8A8F80; --hdr-mark:#8CA118; --nav-bg:#FFFFFF; --nav-ink:#7C8173;
+  --nav-on-bg:transparent; --nav-on-ink:#20241C; --tab-radius:0px;
+  --btn-bg:#B6C932; --btn-ink:#1E2410; --btn2-bg:#FFFFFF; --btn2-ink:#5F6553;
+  --btn2-bd:#E0E3D6; --radius:14px; --num-font:'Archivo',sans-serif; --num-weight:800;
+  --num-track:-.035em; --lbl-font:'Archivo',sans-serif; --lbl-track:.16em;
+  --lbl-transform:uppercase; --hero-bd:transparent; --btn-radius:8px;
+  background-color:var(--bg);color:var(--ink);font-size:13px;line-height:1.45}
+
+.app[data-skin="corona"]{
+  --bg:#F2F2EC; --surface:#FFFFFF; --ink:#2E2F30; --soft:#70726A; --line:#DDDED6;
+  --accent:#B6C932; --accent-dk:#7E8F17; --hdr-bg:#57585A; --hdr-ink:#FFFFFF;
+  --hdr-soft:#C6C7C2; --hdr-mark:#FFFFFF; --nav-bg:#4A4B4D; --nav-ink:#C6C7C2;
+  --nav-on-bg:#F2F2EC; --nav-on-ink:#2E2F30; --tab-radius:0px;
+  --btn-bg:#B6C932; --btn-ink:#2E2F30; --btn2-bg:#E7E8E0; --btn2-ink:#57585A;
+  --btn2-bd:#E7E8E0; --radius:4px; --num-font:'Anton',sans-serif; --num-weight:400;
+  --num-track:-.005em; --lbl-font:'Barlow Condensed',sans-serif; --lbl-track:.08em;
+  --hero-bd:#B6C932; --btn-radius:3px}
+
+.app[data-skin="spa"]{
+  --bg:#F6F2E9; --surface:#FDFBF6; --ink:#3F4436; --soft:#786F55; --line:#E8E0CD;
+  --accent:#7C8B5A; --accent-dk:#7C8B5A; --hdr-bg:#EFE9DA; --hdr-ink:#3F4436;
+  --hdr-soft:#8C8266; --hdr-mark:#7C8B5A; --nav-bg:#F6F2E9; --nav-ink:#79806B;
+  --nav-on-bg:#3F4436; --nav-on-ink:#F6F2E9; --tab-radius:999px;
+  --btn-bg:#3F4436; --btn-ink:#F6F2E9; --btn2-bg:transparent; --btn2-ink:#79806B;
+  --btn2-bd:#D6CDB6; --radius:20px; --num-font:'Fraunces',serif; --num-weight:600;
+  --num-track:-.01em; --lbl-font:'Fraunces',serif; --lbl-track:.02em;
+  --lbl-transform:none; --hero-bd:transparent; --btn-radius:999px}
+
+.app[data-skin="consola"]{
+  --bg:#EEF0EA; --surface:#FFFFFF; --ink:#1E2419; --soft:#666E5B; --line:#DFE3D8;
+  --accent:#5E7A2E; --accent-dk:#5E7A2E; --hdr-bg:#252B22; --hdr-ink:#FFFFFF;
+  --hdr-soft:#9AA391; --hdr-mark:#C6D96A; --nav-bg:#1E2419; --nav-ink:#9AA391;
+  --nav-on-bg:#C6D96A; --nav-on-ink:#1E2419; --tab-radius:8px;
+  --btn-bg:#1E2419; --btn-ink:#C6D96A; --btn2-bg:#E9ECE4; --btn2-ink:#5C6455;
+  --btn2-bd:#E9ECE4; --radius:12px; --num-font:'Archivo',sans-serif; --num-weight:800;
+  --num-track:-.04em; --lbl-font:'Archivo',sans-serif; --lbl-track:.14em;
+  --hero-bd:transparent; --btn-radius:8px}
+
+/* ---------- cabecera ---------- */
+.app .hdr{background-color:var(--hdr-bg);color:var(--hdr-ink);padding:16px 24px 14px;
+  display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;
+  border-bottom:1px solid var(--line)}
+.app .crown-bg{position:absolute;right:-16px;top:-34px;width:158px;height:158px;
+  color:var(--hdr-ink);opacity:0;pointer-events:none}
+.app[data-skin="corona"] .crown-bg{opacity:.07}
+.app .mark{width:30px;height:30px;flex:0 0 30px;color:var(--hdr-mark);position:relative}
+.app .mast{position:relative;line-height:1.05}
+.app .kicker{font-size:9px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--hdr-soft);font-weight:700}
+.app .name{font-family:var(--num-font);font-weight:var(--num-weight);font-size:26px;
+  letter-spacing:var(--num-track);margin-top:3px;color:var(--hdr-ink)}
+.app[data-skin="spa"] .name{font-style:normal}
+.app .fecha{margin-left:auto;text-align:right;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--hdr-soft);line-height:1.6;position:relative}
+
+/* ---------- pestañas ---------- */
+.app .nav{background-color:var(--nav-bg);display:flex;gap:3px;padding:0 20px;
+  border-bottom:1px solid var(--line);overflow:hidden}
+.app[data-skin="spa"] .nav{padding:11px 20px;border-bottom:0;gap:5px}
+.app .tab{font-size:11px;font-weight:600;color:var(--nav-ink);padding:10px 12px;
+  white-space:nowrap;border-radius:var(--tab-radius);border-bottom:2px solid transparent}
+.app .tab.on{background-color:var(--nav-on-bg);color:var(--nav-on-ink)}
+.app[data-skin="clinica"] .tab.on{border-bottom-color:var(--accent)}
+.app[data-skin="spa"] .tab{padding:6px 13px}
+
+/* ---------- cuerpo: dos columnas ---------- */
+.app .body{display:grid;grid-template-columns:290px 1fr}
+.app .left{padding:22px 24px 26px;border-right:1px solid var(--line)}
+.app .right{padding:22px 24px 26px}
+
+.app .fig{margin-bottom:20px}
+.app .fig:last-child{margin-bottom:0}
+.app .fig .n{font-family:var(--num-font);font-weight:var(--num-weight);font-size:56px;
+  line-height:.86;letter-spacing:var(--num-track);color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.app .fig .n sup{font-size:17px;vertical-align:super;color:var(--accent-dk);
+  font-family:var(--lbl-font);letter-spacing:0;margin-left:3px}
+.app .fig .l{font-family:var(--lbl-font);font-size:9.5px;letter-spacing:var(--lbl-track);
+  text-transform:var(--lbl-transform,uppercase);color:var(--soft);margin-top:8px;font-weight:600}
+.app .hero{border-left:3px solid var(--hero-bd);padding-left:0}
+.app[data-skin="corona"] .hero{padding-left:13px}
+.app .row2{display:flex;gap:28px}
+.app .row2 .fig .n{font-size:31px}
+.app .sep{height:1px;background-color:var(--line);margin:20px 0}
+
+.app .rh{font-family:var(--lbl-font);font-size:9.5px;letter-spacing:var(--lbl-track);
+  text-transform:var(--lbl-transform,uppercase);color:var(--soft);font-weight:600;margin:0 0 14px;
+  display:flex;align-items:center;gap:9px}
+.app .rh .cnt{background-color:var(--accent);color:var(--btn-ink);border-radius:999px;
+  padding:1px 8px;font-size:9.5px;letter-spacing:.04em}
+.app[data-skin="spa"] .rh .cnt{color:#F6F2E9}
+
+.app .cita{display:flex;gap:14px;align-items:center;padding:11px 0;
+  border-bottom:1px solid var(--line)}
+.app .cita:last-child{border-bottom:0}
+.app .cita .h{font-family:var(--num-font);font-weight:var(--num-weight);font-size:15px;
+  flex:0 0 48px;color:var(--accent-dk);font-variant-numeric:tabular-nums;
+  letter-spacing:var(--num-track)}
+.app .cita .who{flex:1;min-width:0}
+.app .cita .n{font-weight:700;font-size:13px;color:var(--ink)}
+.app .cita .m{font-size:10.5px;color:var(--soft);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app .cita .acts{display:flex;gap:6px;flex:0 0 auto}
+.app .btn{font-size:10px;font-weight:700;padding:6px 11px;border-radius:var(--btn-radius);
+  background-color:var(--btn-bg);color:var(--btn-ink);white-space:nowrap;border:1px solid transparent}
+.app .btn.g{background-color:var(--btn2-bg);color:var(--btn2-ink);border-color:var(--btn2-bd)}
+.app .cita.done .h{color:var(--soft)}
+.app .cita.done .n{color:var(--soft);font-weight:600}
+.app .pill{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:999px;
+  background-color:var(--line);color:var(--soft);white-space:nowrap}
+.app .pill.ok{background-color:var(--accent);color:var(--btn-ink)}
+.app[data-skin="spa"] .pill.ok{color:#F6F2E9}
+
+@media(max-width:800px){
+  .app .body{grid-template-columns:266px 1fr}
+}
+
+/* ---------- notas ---------- */
+.nota{background:var(--pg-card);border:1px solid var(--pg-line);border-radius:13px;
+  padding:16px 18px;font-size:14.5px;margin-bottom:12px}
+.nota b{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:7px;color:var(--pg-lime-dk)}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:44px}
+@media(max-width:640px){.duo{grid-template-columns:1fr}}
+
+.cierre{background:var(--pg-ink);color:#F3F4EF;border-radius:18px;padding:32px 30px;margin:0 0 70px}
+.cierre h2{font-family:'Anton',sans-serif;font-weight:400;font-size:26px;margin:0 0 12px;color:#fff}
+.cierre p{margin:0 0 12px;max-width:62ch;color:#C9CCC1}
+.cierre .lime{color:var(--pg-lime)}
+footer{padding:0 0 60px;color:var(--pg-soft);font-size:13.5px;max-width:64ch}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="corona" viewBox="0 0 120 92">
+    <path fill="currentColor" d="M60 4c-9.5 0-15.5 7.2-15.5 17.4 0 8.4 3.1 14.4 5.2 21.6l6.3 22.4 4-20.6 4 20.6 6.3-22.4c2.1-7.2 5.2-13.2 5.2-21.6C75.5 11.2 69.5 4 60 4z"/>
+    <path fill="currentColor" d="M21 19c-9.4 2.2-13.4 10.6-10.9 19.6 2.2 7.9 7.2 12.4 11.6 18.2l14.9 19.4-4.6-22.5 16.7 14.4c-6.4-8.2-11.6-14.6-14.9-23-4.4-11.3-4.3-28.4-12.8-26.1z"/>
+    <path fill="currentColor" d="M99 19c9.4 2.2 13.4 10.6 10.9 19.6-2.2 7.9-7.2 12.4-11.6 18.2L83.4 76.2l4.6-22.5-16.7 14.4c6.4-8.2 11.6-14.6 14.9-23C90.6 33.8 90.5 16.7 99 19z"/>
+    <path fill="currentColor" d="M36 74.5c15.4-5.2 32.6-5.2 48 0l-2.2 8.4c-14.3-4.6-29.3-4.6-43.6 0z"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <section class="intro">
+    <p class="eyebrow">Tercera vuelta · lo que elegiste</p>
+    <h1>El formato que te gustó,<br>con los colores que te gustaban</h1>
+    <p class="lede">Tomé la <b>estructura de la 05</b> —los números del período grandes a la
+      izquierda, la agenda del día a la derecha— y le puse encima las <b>cuatro pieles de la
+      primera tanda</b>. Es un solo diseño: tocá los botones y cambia el color, la tipografía
+      y las formas, sin que se mueva nada de lugar.</p>
+    <p class="back"><a href="opciones-diseno.html">← Primera tanda</a> &nbsp;·&nbsp;
+      <a href="opciones-diseno-2.html">Segunda tanda</a></p>
+  </section>
+</div>
+
+<div class="ctrl">
+  <div class="ctrl-in">
+    <span class="ctrl-lbl">Piel</span>
+    <div class="skins" id="skins">
+      <button class="skin" data-skin="clinica" aria-pressed="true">
+        <span class="dots"><i style="background:#FFFFFF"></i><i style="background:#B6C932"></i><i style="background:#20241C"></i></span>Clínica</button>
+      <button class="skin" data-skin="corona" aria-pressed="false">
+        <span class="dots"><i style="background:#57585A"></i><i style="background:#B6C932"></i><i style="background:#F2F2EC"></i></span>Corona</button>
+      <button class="skin" data-skin="spa" aria-pressed="false">
+        <span class="dots"><i style="background:#EFE9DA"></i><i style="background:#7C8B5A"></i><i style="background:#3F4436"></i></span>Spa</button>
+      <button class="skin" data-skin="consola" aria-pressed="false">
+        <span class="dots"><i style="background:#252B22"></i><i style="background:#C6D96A"></i><i style="background:#EEF0EA"></i></span>Consola</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="lleno"> Ver un día cargado (14 citas)</label>
+  </div>
+</div>
+
+<div class="wrap">
+  <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+  <div class="frame">
+    <div class="app" id="app" data-skin="clinica">
+      <div class="hdr">
+        <svg class="crown-bg" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="mast">
+          <div class="kicker">Spadental · Clínica Dental</div>
+          <div class="name">Dra. Mirna Veizaga</div>
+        </div>
+        <div class="fecha">Martes<br>18 · 08 · 2026</div>
+      </div>
+      <div class="nav">
+        <div class="tab">Nueva atención</div><div class="tab on">Agenda</div>
+        <div class="tab">Recordatorios</div><div class="tab">Atenciones</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div>
+        <div class="tab">Pacientes</div><div class="tab">Ajustes</div>
+      </div>
+      <div class="body">
+        <div class="left">
+          <div class="fig hero">
+            <div class="n" id="n-hoy">8<sup>hoy</sup></div>
+            <div class="l" id="l-hoy">Citas del día · 2 sin marcar</div>
+          </div>
+          <div class="sep"></div>
+          <div class="row2">
+            <div class="fig"><div class="n">71</div><div class="l">Pacientes<br>del mes</div></div>
+            <div class="fig"><div class="n">26.915</div><div class="l">Facturado<br>ticket Bs 324</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="row2">
+            <div class="fig"><div class="n">29</div><div class="l">Nuevos<br>del mes</div></div>
+            <div class="fig"><div class="n">0</div><div class="l">Por cobrar<br>saldo Bs</div></div>
+          </div>
+        </div>
+        <div class="right">
+          <p class="rh">Agenda del día <span class="cnt" id="cnt">2 sin marcar</span></p>
+          <div id="lista"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="duo">
+    <div class="nota"><b>Por qué este formato funciona</b>
+      A la izquierda vive lo que <i>no</i> cambia durante el día — el resumen del mes — y a la
+      derecha lo que sí: la agenda que se va marcando. Mirás una vez a la izquierda y trabajás
+      a la derecha.</div>
+    <div class="nota"><b>Aguanta el día cargado</b>
+      Era la debilidad que le veía a la 05. Con la lista en columna propia, 14 citas entran sin
+      romper nada: el resumen queda fijo y solo se desplaza la agenda.</div>
+  </div>
+
+  <section class="cierre">
+    <h2>Cuál elegiría</h2>
+    <p>Con este formato, la piel <span class="lime">Corona</span> es la que mejor le queda: el
+      gris del encabezado hace de marco y deja que los números en Anton sean lo único que grita.
+      Es la más fiel al manual y la que menos compite con los datos.</p>
+    <p>La <span class="lime">Clínica</span> es la más segura y la más fácil de leer todo el día.
+      La <span class="lime">Spa</span> es la más cálida pero la serif hace más lenta la lectura
+      de tantas cifras. La <span class="lime">Consola</span> se ve bien, aunque el encabezado
+      oscuro pesa más que en la versión con menú lateral.</p>
+    <p><b style="color:#fff">Decime cuál</b> y la aplico a las ocho pantallas del panel real.</p>
+  </section>
+
+  <footer>
+    Es la misma maqueta en los cuatro casos: solo cambian color, tipografía y radios. Los
+    números son los de agosto que ya están cargados.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var app = document.getElementById('app');
+  var skins = document.getElementById('skins');
+  var lleno = document.getElementById('lleno');
+  var lista = document.getElementById('lista');
+  var cnt = document.getElementById('cnt');
+  var nHoy = document.getElementById('n-hoy');
+  var lHoy = document.getElementById('l-hoy');
+
+  var CORTO = [
+    ['09:00','Ana Pérez','Limpieza · agendó por WhatsApp',0],
+    ['10:30','Luis Gómez','Control · agendó por llamada',0],
+    ['11:15','Rosa Vaca','Endodoncia · vino sin cita',1],
+    ['12:00','Carlos Añez','Blanqueamiento · agendó por Instagram',1]
+  ];
+  var LARGO = [
+    ['08:00','Marta Rojas','Limpieza · agendó por WhatsApp',1],
+    ['08:30','Iván Suárez','Restauración · vino sin cita',1],
+    ['09:00','Ana Pérez','Limpieza · agendó por WhatsApp',0],
+    ['09:30','Pedro Chávez','Control de ortodoncia · en el consultorio',1],
+    ['10:00','Lucía Ardaya','Radiografía · agendó por llamada',1],
+    ['10:30','Luis Gómez','Control · agendó por llamada',0],
+    ['11:00','Sofía Vargas','Corona · agendó por WhatsApp',1],
+    ['11:15','Rosa Vaca','Endodoncia · vino sin cita',1],
+    ['11:45','Diego Terceros','Extracción · agendó por Facebook',0],
+    ['12:00','Carlos Añez','Blanqueamiento · agendó por Instagram',1],
+    ['14:30','Elena Cuéllar','Perno · agendó por WhatsApp',0],
+    ['15:00','Braulio Antelo','Consulta + limpieza · promo',0],
+    ['15:30','Karen Almanza','Placa · agendó por llamada',0],
+    ['16:00','Vanesa Flores','Consulta · vino sin cita',0]
+  ];
+
+  function pintar(){
+    var datos = lleno.checked ? LARGO : CORTO;
+    var pend = datos.filter(function(c){ return !c[3]; }).length;
+    lista.innerHTML = datos.map(function(c){
+      var listo = c[3];
+      return '<div class="cita' + (listo ? ' done' : '') + '">' +
+        '<div class="h">' + c[0] + '</div>' +
+        '<div class="who"><div class="n">' + c[1] + '</div><div class="m">' + c[2] + '</div></div>' +
+        '<div class="acts">' + (listo
+          ? '<span class="pill ok">Vino</span>'
+          : '<span class="btn">Vino</span><span class="btn g">No vino</span>') +
+        '</div></div>';
+    }).join('');
+    cnt.textContent = pend + ' sin marcar';
+    nHoy.innerHTML = datos.length + '<sup>hoy</sup>';
+    lHoy.textContent = 'Citas del día · ' + pend + ' sin marcar';
+  }
+
+  skins.addEventListener('click', function(e){
+    var b = e.target.closest('.skin');
+    if (!b) return;
+    app.dataset.skin = b.dataset.skin;
+    [].forEach.call(skins.querySelectorAll('.skin'), function(x){
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+  });
+  lleno.addEventListener('change', pintar);
+  pintar();
+})();
+</script>
+</body>
+</html>
