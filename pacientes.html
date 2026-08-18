@@ -606,7 +606,8 @@ var PRECIOS_BASE = [
  ['Otro','Otro (escribir)',0]
 ];
 var CANALES_BASE = ['Facebook','Instagram','TikTok','WhatsApp','Google / Maps','Referido','Pasó por el local','Paciente antiguo','Volante / flyer','Otro'];
-var PROF_BASE = ['Dra. Mirna'];
+var PROF_BASE = ['Dra. Mirna','Dra. Ximena','Dra. Katherine','Dra. Brenda','Dra. Shirley'];
+var PROF_V1 = ['Dra. Mirna'];   // lista vieja, para poder migrarla sin pisar cambios del usuario
 var ESTADOS = ['Atendido','Agendado','Reagendar','No asistió'];
 
 /* ---------- helpers ---------- */
@@ -639,12 +640,26 @@ function telWa(c){var d=String(c||'').replace(/\D/g,'');if(!d)return '';
 /* ---------- estado ---------- */
 var DATA=[], CFG=null, EDIT_ID=null, SRV=[];
 
-function cfgDefault(){return {prof:PROF_BASE.slice(),canales:CANALES_BASE.slice(),
+function cfgDefault(){return {v:2,prof:PROF_BASE.slice(),canales:CANALES_BASE.slice(),
   precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}}),
   diasProx:3,diasDorm:120}}
 function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
-    var d=cfgDefault();for(var k in d){if(c[k]==null)c[k]=d[k]} return c}}catch(e){}
+    migrarCfg(c);                       // OJO: antes de rellenar defaults, que si no
+    var d=cfgDefault();                 // el propio relleno pondría c.v y la saltearía
+    for(var k in d){if(c[k]==null)c[k]=d[k]}
+    return c}}catch(e){}
   return cfgDefault()}
+
+/* Actualiza configuraciones guardadas de versiones anteriores, sin pisar
+   nada que el consultorio haya editado a mano. */
+function migrarCfg(c){
+  // v2: se sumaron las otras doctoras. Solo se aplica si la lista seguía
+  // siendo la de fábrica anterior (o sea, nadie la tocó).
+  if(!c.v){
+    if(JSON.stringify(c.prof)===JSON.stringify(PROF_V1))c.prof=PROF_BASE.slice();
+    c.v=2; saveCfgObj(c)}
+  return c}
+function saveCfgObj(c){try{localStorage.setItem(K_CFG,JSON.stringify(c))}catch(e){}}
 function saveCfg(){try{localStorage.setItem(K_CFG,JSON.stringify(CFG))}catch(e){}}
 function loadLocal(){try{var a=JSON.parse(localStorage.getItem(K_DATA));return Array.isArray(a)?a:[]}catch(e){return []}}
 function saveLocal(){try{localStorage.setItem(K_DATA,JSON.stringify(DATA))}catch(e){toast('No se pudo guardar en este dispositivo',1)}}

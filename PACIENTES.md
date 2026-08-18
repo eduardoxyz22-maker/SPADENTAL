@@ -76,7 +76,8 @@ Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
 
 ### ⚙️ Ajustes
 - **Clave de entrada** — cambiarla y bloquear la sesión.
-- **Profesionales** y **canales de captación** (editables, uno por línea).
+- **Profesionales** — vienen cargadas las 5 doctoras (Mirna, Ximena, Katherine,
+  Brenda, Shirley) y **canales de captación**, editables, uno por línea.
 - **Lista de precios** completa y editable — se pueden actualizar los precios
   sin tocar el código, y restaurar la lista original cuando haga falta.
 - **Recordatorios**: con cuántos días de anticipación avisar, y a los cuántos
