@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex,nofollow">
+<title>Cuatro caras para Spadental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   PÁGINA CONTENEDORA — deliberadamente callada, para que las
+   opciones sean lo único que grite.
+   ============================================================ */
+:root{
+  --pg-bg:#FBFBF9; --pg-card:#FFFFFF; --pg-ink:#1C1E1A; --pg-soft:#6E7268;
+  --pg-line:#E4E5DE; --pg-lime:#B6C932; --pg-lime-dk:#7E8F17;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--pg-bg);color:var(--pg-ink);
+  font-family:'Archivo',system-ui,sans-serif;font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+.intro{padding:64px 0 40px}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--pg-lime-dk);font-weight:700;margin:0 0 14px}
+h1{font-family:'Anton',sans-serif;font-size:clamp(38px,7vw,68px);line-height:.98;
+  margin:0 0 18px;letter-spacing:-.01em;text-wrap:balance;font-weight:400}
+.lede{font-size:19px;max-width:62ch;color:#3A3D36;margin:0 0 30px}
+.lede b{color:var(--pg-ink)}
+
+.marca{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;
+  background:var(--pg-card);border:1px solid var(--pg-line);border-radius:18px;padding:22px 24px}
+@media(max-width:600px){.marca{grid-template-columns:1fr;gap:16px}}
+.marca .m-mark{width:76px;height:76px;color:var(--pg-lime-dk)}
+.marca h2{font-size:14px;text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px;color:var(--pg-soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:8px;border:1px solid var(--pg-line);
+  border-radius:999px;padding:5px 12px 5px 6px;font-size:13px;font-weight:600;background:#fff}
+.chip i{width:18px;height:18px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.12)}
+
+h3.sec{font-family:'Anton',sans-serif;font-weight:400;font-size:13px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--pg-soft);margin:56px 0 18px;
+  padding-bottom:10px;border-bottom:1px solid var(--pg-line)}
+
+/* ---------- bloque de opción ---------- */
+.opt{margin:0 0 72px}
+.opt-head{display:grid;grid-template-columns:52px 1fr;gap:16px;align-items:start;margin:0 0 18px}
+.opt-num{font-family:'Anton',sans-serif;font-size:40px;line-height:.9;color:var(--pg-line)}
+.opt-head h2{font-family:'Anton',sans-serif;font-weight:400;font-size:30px;margin:0 0 6px;letter-spacing:-.005em}
+.opt-head p{margin:0;color:#3A3D36;max-width:60ch}
+.opt-pal{display:flex;gap:6px;margin:14px 0 0}
+.opt-pal i{width:34px;height:34px;border-radius:9px;display:block;border:1px solid rgba(0,0,0,.1)}
+
+.frame{border:1px solid var(--pg-line);border-radius:16px;overflow:hidden;
+  box-shadow:0 1px 2px rgba(28,30,26,.05),0 18px 40px -22px rgba(28,30,26,.28)}
+/* En celular el mockup no se aplasta: se muestra a su ancho real y se
+   desplaza dentro del marco, como una foto de la pantalla grande. */
+@media(max-width:700px){
+  .frame{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .frame > .mk{min-width:640px}
+  .frame::after{content:''}
+}
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+@media(max-width:640px){.verdict{grid-template-columns:1fr}}
+.verdict div{background:var(--pg-card);border:1px solid var(--pg-line);border-radius:13px;padding:14px 16px;font-size:14.5px}
+.verdict b{display:block;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.verdict .g b{color:var(--pg-lime-dk)}
+.verdict .p b{color:#B4552F}
+
+.cierre{background:var(--pg-ink);color:#F3F4EF;border-radius:20px;padding:34px 32px;margin:20px 0 70px}
+.cierre h2{font-family:'Anton',sans-serif;font-weight:400;font-size:28px;margin:0 0 12px;color:#fff}
+.cierre p{margin:0 0 14px;max-width:62ch;color:#C9CCC1}
+.cierre .lime{color:var(--pg-lime)}
+.cierre ol{margin:14px 0 0;padding-left:20px;color:#C9CCC1}
+.cierre li{margin-bottom:8px}
+.cierre li b{color:#fff}
+
+/* ============================================================
+   MOCKUPS — cada opción vive en su propio namespace para que
+   los estilos no se pisen entre sí.
+   ============================================================ */
+.mini-scroll{display:none;font-size:12px;color:var(--pg-soft);margin:0 0 8px}
+@media(max-width:700px){.mini-scroll{display:block}}
+.mk{font-size:13px;line-height:1.4}
+.mk .nav{display:flex;gap:2px;overflow:hidden}
+.mk .tab{white-space:nowrap;font-size:11.5px;font-weight:600;padding:8px 11px;border-radius:8px}
+.mk .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mk .k-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+.mk .k-val{font-size:26px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums}
+.mk .k-sub{font-size:10.5px}
+.mk .cita{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mk .cita .h{font-variant-numeric:tabular-nums;font-weight:700}
+.mk .btn{font-size:10.5px;font-weight:700;padding:5px 9px;border-radius:7px;white-space:nowrap}
+.mk .mark{width:26px;height:26px;flex:0 0 26px}
+
+/* ---------- 1 · CLÍNICA ---------- */
+.o1{background:#FAFBF6;padding:0}
+.o1 .hdr{background:#fff;border-bottom:1px solid #E8EADF;padding:14px 20px;
+  display:flex;align-items:center;gap:12px}
+.o1 .logo{font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:#20241C}
+.o1 .logo span{color:#8CA118}
+.o1 .mark{color:#8CA118}
+.o1 .fecha{margin-left:auto;font-size:11px;color:#8A8F80;text-align:right}
+.o1 .nav{padding:0 20px;background:#fff;border-bottom:1px solid #E8EADF;gap:4px}
+.o1 .tab{color:#7C8173;border-radius:0;padding:10px 10px;border-bottom:2px solid transparent}
+.o1 .tab.on{color:#20241C;border-bottom-color:#B6C932}
+.o1 .body{padding:20px}
+.o1 .kpis{margin-bottom:14px}
+.o1 .kpi{background:#fff;border:1px solid #E8EADF;border-radius:14px;padding:13px 14px}
+.o1 .k-lbl{color:#9AA08D}
+.o1 .k-val{color:#20241C;margin-top:5px}
+.o1 .k-sub{color:#9AA08D;margin-top:3px}
+.o1 .kpi.acc{background:#F4F7E4;border-color:#DDE5B4}
+.o1 .kpi.acc .k-val{color:#65760F}
+.o1 .card{background:#fff;border:1px solid #E8EADF;border-radius:14px;padding:15px}
+.o1 .card h4{margin:0 0 3px;font-size:13.5px;color:#20241C}
+.o1 .card .hint{margin:0 0 12px;font-size:11px;color:#9AA08D}
+.o1 .cita{border:1px solid #EFF1E7;border-radius:11px;padding:10px 12px;margin-bottom:7px;background:#FCFDF8}
+.o1 .cita .h{color:#8CA118;font-size:13px}
+.o1 .cita .n{font-weight:600;color:#20241C}
+.o1 .cita .m{font-size:10.5px;color:#9AA08D}
+.o1 .btn{background:#B6C932;color:#1E2410}
+.o1 .btn.g{background:#fff;border:1px solid #E0E3D6;color:#5F6553}
+
+/* ---------- 2 · CORONA ---------- */
+.o2{background:#F2F2EC}
+.o2 .hdr{background:#57585A;padding:18px 20px 15px;position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:12px}
+.o2 .crown-bg{position:absolute;right:-14px;top:-30px;width:150px;height:150px;
+  color:#fff;opacity:.07;pointer-events:none}
+.o2 .mark{color:#fff;position:relative}
+.o2 .logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;
+  letter-spacing:.03em;color:#fff;position:relative;line-height:1}
+.o2 .logo span{color:#B6C932}
+.o2 .logo small{display:block;font-family:'Fraunces',serif;font-style:italic;font-weight:400;
+  font-size:10.5px;color:#B6C932;letter-spacing:0;margin-top:2px}
+.o2 .fecha{margin-left:auto;font-size:10.5px;color:#C6C7C2;text-align:right;position:relative}
+.o2 .nav{background:#4A4B4D;padding:0 14px}
+.o2 .tab{color:#C6C7C2;border-radius:0;padding:9px 11px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13.5px;letter-spacing:.03em;text-transform:uppercase}
+.o2 .tab.on{background:#F2F2EC;color:#2E2F30}
+.o2 .body{padding:18px}
+.o2 .kpis{margin-bottom:14px}
+.o2 .kpi{background:#fff;border-radius:4px;padding:13px 14px;border-left:4px solid #D8D9D2}
+.o2 .kpi.acc{border-left-color:#B6C932}
+.o2 .k-lbl{color:#84867F;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.06em}
+.o2 .k-val{font-family:'Anton',sans-serif;font-weight:400;font-size:31px;color:#2E2F30;margin-top:2px}
+.o2 .kpi.acc .k-val{color:#7E8F17}
+.o2 .k-sub{color:#9C9E96;margin-top:2px}
+.o2 .card{background:#fff;border-radius:4px;padding:15px}
+.o2 .card h4{margin:0 0 3px;font-family:'Barlow Condensed',sans-serif;font-size:17px;
+  text-transform:uppercase;letter-spacing:.04em;color:#2E2F30}
+.o2 .card .hint{margin:0 0 12px;font-size:11px;color:#9C9E96}
+.o2 .cita{border-left:3px solid #B6C932;background:#F7F8F1;padding:9px 12px;margin-bottom:6px}
+.o2 .cita .h{font-family:'Anton',sans-serif;font-weight:400;font-size:15px;color:#57585A}
+.o2 .cita .n{font-weight:700;color:#2E2F30}
+.o2 .cita .m{font-size:10.5px;color:#9C9E96}
+.o2 .btn{background:#B6C932;color:#2E2F30;border-radius:3px}
+.o2 .btn.g{background:#E7E8E0;color:#57585A;border-radius:3px}
+
+/* ---------- 3 · SPA ---------- */
+.o3{background:#F6F2E9}
+.o3 .hdr{background:#EFE9DA;padding:17px 22px;display:flex;align-items:center;gap:13px;
+  border-bottom:1px solid #E2D9C4}
+.o3 .mark{color:#7C8B5A}
+.o3 .logo{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:#3F4436;letter-spacing:-.01em}
+.o3 .logo span{color:#7C8B5A}
+.o3 .logo small{display:block;font-family:'Fraunces',serif;font-style:italic;font-weight:400;
+  font-size:11px;color:#8C8266;margin-top:1px}
+.o3 .fecha{margin-left:auto;font-size:11px;color:#8C8266;text-align:right}
+.o3 .nav{padding:11px 18px;background:#F6F2E9;gap:5px}
+.o3 .tab{color:#79806B;border-radius:999px;padding:6px 12px;font-weight:600}
+.o3 .tab.on{background:#3F4436;color:#F6F2E9}
+.o3 .body{padding:6px 18px 20px}
+.o3 .kpis{margin-bottom:14px}
+.o3 .kpi{background:#FDFBF6;border:1px solid #E8E0CD;border-radius:20px;padding:15px 16px}
+.o3 .k-lbl{color:#A0977C;font-family:'Fraunces',serif;font-style:italic;font-weight:400;
+  font-size:11.5px;letter-spacing:0;text-transform:none}
+.o3 .k-val{font-family:'Fraunces',serif;font-weight:600;font-size:29px;color:#3F4436;margin-top:4px}
+.o3 .kpi.acc{background:#3F4436;border-color:#3F4436}
+.o3 .kpi.acc .k-lbl{color:#B9BFA8}
+.o3 .kpi.acc .k-val{color:#C6D96A}
+.o3 .kpi.acc .k-sub{color:#B9BFA8}
+.o3 .k-sub{color:#A0977C;margin-top:3px}
+.o3 .card{background:#FDFBF6;border:1px solid #E8E0CD;border-radius:20px;padding:17px 18px}
+.o3 .card h4{margin:0 0 3px;font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:#3F4436}
+.o3 .card .hint{margin:0 0 13px;font-size:11px;color:#A0977C}
+.o3 .cita{border-bottom:1px solid #EFE7D6;padding:11px 2px;margin:0}
+.o3 .cita:last-child{border-bottom:0}
+.o3 .cita .h{font-family:'Fraunces',serif;font-weight:600;color:#7C8B5A;font-size:14px}
+.o3 .cita .n{font-weight:600;color:#3F4436}
+.o3 .cita .m{font-size:10.5px;color:#A0977C}
+.o3 .btn{background:#3F4436;color:#F6F2E9;border-radius:999px;padding:6px 12px}
+.o3 .btn.g{background:transparent;border:1px solid #D6CDB6;color:#79806B;border-radius:999px;padding:5px 11px}
+
+/* ---------- 4 · CONSOLA ---------- */
+.o4{background:#EEF0EA;display:grid;grid-template-columns:168px 1fr}
+.o4 .side{background:#252B22;padding:16px 12px;display:flex;flex-direction:column;gap:3px}
+.o4 .s-top{display:flex;align-items:center;gap:9px;padding:0 6px 16px}
+.o4 .mark{color:#C6D96A;width:24px;height:24px;flex:0 0 24px}
+.o4 .logo{font-family:'Archivo',sans-serif;font-weight:800;font-size:14px;color:#fff;letter-spacing:-.02em;line-height:1.1}
+.o4 .logo span{color:#C6D96A}
+.o4 .s-item{font-size:11.5px;font-weight:600;color:#9AA391;padding:7px 10px;border-radius:8px;
+  display:flex;align-items:center;gap:8px}
+.o4 .s-item.on{background:#C6D96A;color:#1E2419}
+.o4 .s-item .dot{width:5px;height:5px;border-radius:50%;background:#C6D96A;margin-left:auto}
+.o4 .s-item.on .dot{background:#1E2419}
+.o4 .main{padding:18px}
+.o4 .top{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.o4 .top h4{margin:0;font-size:17px;font-weight:800;color:#1E2419;letter-spacing:-.02em}
+.o4 .fecha{margin-left:auto;font-size:11px;color:#767E70}
+.o4 .kpis{margin-bottom:14px}
+.o4 .kpi{background:#fff;border-radius:12px;padding:13px 14px;box-shadow:0 1px 2px rgba(30,36,25,.06)}
+.o4 .k-lbl{color:#8B937F}
+.o4 .k-val{color:#1E2419;margin-top:5px}
+.o4 .k-sub{color:#8B937F;margin-top:3px}
+.o4 .kpi.acc{background:linear-gradient(150deg,#2E3628,#1E2419)}
+.o4 .kpi.acc .k-lbl{color:#9AA391}
+.o4 .kpi.acc .k-val{color:#C6D96A}
+.o4 .kpi.acc .k-sub{color:#9AA391}
+.o4 .card{background:#fff;border-radius:12px;padding:15px;box-shadow:0 1px 2px rgba(30,36,25,.06)}
+.o4 .card h4{margin:0 0 3px;font-size:13.5px;color:#1E2419}
+.o4 .card .hint{margin:0 0 12px;font-size:11px;color:#8B937F}
+.o4 .cita{background:#F5F7F1;border-radius:10px;padding:10px 12px;margin-bottom:7px}
+.o4 .cita .h{color:#5E7A2E;font-size:13px}
+.o4 .cita .n{font-weight:700;color:#1E2419}
+.o4 .cita .m{font-size:10.5px;color:#8B937F}
+/* va al final del bloque .o4 a propósito: si la declaro antes, las reglas
+   de abajo le ganan por orden y la barra nunca se oculta */
+@media(max-width:700px){.o4{grid-template-columns:1fr}.o4 .side{display:none}}
+.o4 .btn{background:#1E2419;color:#C6D96A}
+.o4 .btn.g{background:#E9ECE4;color:#5C6455}
+
+footer{padding:0 0 70px;color:var(--pg-soft);font-size:13.5px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="corona" viewBox="0 0 120 92">
+    <path fill="currentColor" d="M60 4c-9.5 0-15.5 7.2-15.5 17.4 0 8.4 3.1 14.4 5.2 21.6l6.3 22.4 4-20.6 4 20.6 6.3-22.4c2.1-7.2 5.2-13.2 5.2-21.6C75.5 11.2 69.5 4 60 4z"/>
+    <path fill="currentColor" d="M21 19c-9.4 2.2-13.4 10.6-10.9 19.6 2.2 7.9 7.2 12.4 11.6 18.2l14.9 19.4-4.6-22.5 16.7 14.4c-6.4-8.2-11.6-14.6-14.9-23-4.4-11.3-4.3-28.4-12.8-26.1z"/>
+    <path fill="currentColor" d="M99 19c9.4 2.2 13.4 10.6 10.9 19.6-2.2 7.9-7.2 12.4-11.6 18.2L83.4 76.2l4.6-22.5-16.7 14.4c6.4-8.2 11.6-14.6 14.9-23C90.6 33.8 90.5 16.7 99 19z"/>
+    <path fill="currentColor" d="M36 74.5c15.4-5.2 32.6-5.2 48 0l-2.2 8.4c-14.3-4.6-29.3-4.6-43.6 0z"/>
+  </symbol>
+</svg>
+
+<div class="wrap">
+
+  <section class="intro">
+    <p class="eyebrow">Panel de pacientes · propuesta visual</p>
+    <h1>Cuatro caras<br>para Spadental</h1>
+    <p class="lede">El panel funciona, pero se ve como una planilla. Antes de tocar nada fui al
+      manual de marca: el símbolo es una <b>corona hecha de dientes</b>, el verde es
+      <b>#B6C932</b> y el fondo institucional es un <b>gris medio</b>, no el casi negro que
+      estoy usando hoy. Sobre esa base armé cuatro caminos distintos.</p>
+
+    <div class="marca">
+      <svg class="m-mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+      <div>
+        <h2>Lo que dice el manual</h2>
+        <div class="chips">
+          <span class="chip"><i style="background:#B6C932"></i>#B6C932 · verde marca</span>
+          <span class="chip"><i style="background:#57585A"></i>#57585A · gris institucional</span>
+          <span class="chip"><i style="background:#FFFFFF"></i>Blanco · símbolo</span>
+          <span class="chip">Astoria Extra Bold · titulares</span>
+          <span class="chip">Itálica serif · la firma de la Dra.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h3 class="sec">Las cuatro opciones · misma pantalla, cuatro tratamientos</h3>
+
+  <!-- ============ 1 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">01</div>
+      <div>
+        <h2>Clínica</h2>
+        <p>Blanco, aire y el verde reservado para lo que importa. La pantalla desaparece y
+          quedan los datos. Es la lectura más literal de “consultorio limpio”.</p>
+        <div class="opt-pal">
+          <i style="background:#FFFFFF"></i><i style="background:#FAFBF6"></i>
+          <i style="background:#E8EADF"></i><i style="background:#B6C932"></i>
+          <i style="background:#65760F"></i><i style="background:#20241C"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o1">
+      <div class="hdr">
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="logo">SPA<span>DENTAL</span></div>
+        <div class="fecha">Martes 18 de agosto</div>
+      </div>
+      <div class="nav">
+        <div class="tab">Nueva atención</div><div class="tab on">Agenda</div>
+        <div class="tab">Recordatorios</div><div class="tab">Atenciones</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div><div class="tab">Pacientes</div>
+      </div>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi acc"><div class="k-lbl">Citas de hoy</div><div class="k-val">8</div><div class="k-sub">2 sin marcar</div></div>
+          <div class="kpi"><div class="k-lbl">Pacientes del mes</div><div class="k-val">71</div><div class="k-sub">29 nuevos</div></div>
+          <div class="kpi"><div class="k-lbl">Facturado</div><div class="k-val">26.915</div><div class="k-sub">ticket Bs 324</div></div>
+        </div>
+        <div class="card">
+          <h4>Agenda del día</h4>
+          <p class="hint">Al terminar cada paciente, marcá qué pasó.</p>
+          <div class="cita"><div><span class="h">09:00</span> &nbsp;<span class="n">Ana Pérez</span>
+            <div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+          <div class="cita"><div><span class="h">10:30</span> &nbsp;<span class="n">Luis Gómez</span>
+            <div class="m">Control · agendó por llamada</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Se lee sin esfuerzo a cualquier hora y con cualquier luz. Envejece bien. Es la más fácil de mantener cuando agreguemos cosas.</div>
+      <div class="p"><b>Qué resigna</b>Es la menos memorable. Si la ponés al lado del panel de otra clínica, cuesta distinguirla. La marca casi no se siente.</div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">02</div>
+      <div>
+        <h2>Corona</h2>
+        <p>El manual de marca aplicado sin diluir: el gris institucional, la corona de agua en
+          el header, tipografía condensada y números grandes. Se siente Spadental antes de leer nada.</p>
+        <div class="opt-pal">
+          <i style="background:#57585A"></i><i style="background:#4A4B4D"></i>
+          <i style="background:#F2F2EC"></i><i style="background:#B6C932"></i>
+          <i style="background:#7E8F17"></i><i style="background:#2E2F30"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o2">
+      <div class="hdr">
+        <svg class="crown-bg" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="logo">SPA<span>DENTAL</span><small>Dra. Mirna Veizaga</small></div>
+        <div class="fecha">MARTES<br>18 · 08 · 2026</div>
+      </div>
+      <div class="nav">
+        <div class="tab">Atención</div><div class="tab on">Agenda</div>
+        <div class="tab">Recordatorios</div><div class="tab">Atenciones</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div><div class="tab">Pacientes</div>
+      </div>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi acc"><div class="k-lbl">CITAS DE HOY</div><div class="k-val">8</div><div class="k-sub">2 sin marcar</div></div>
+          <div class="kpi"><div class="k-lbl">PACIENTES DEL MES</div><div class="k-val">71</div><div class="k-sub">29 nuevos</div></div>
+          <div class="kpi"><div class="k-lbl">FACTURADO</div><div class="k-val">26.915</div><div class="k-sub">ticket Bs 324</div></div>
+        </div>
+        <div class="card">
+          <h4>Agenda del día</h4>
+          <p class="hint">Al terminar cada paciente, marcá qué pasó.</p>
+          <div class="cita"><div><span class="h">09:00</span> &nbsp;<span class="n">Ana Pérez</span>
+            <div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">VINO</span><span class="btn g">NO VINO</span></div></div>
+          <div class="cita"><div><span class="h">10:30</span> &nbsp;<span class="n">Luis Gómez</span>
+            <div class="m">Control · agendó por llamada</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">VINO</span><span class="btn g">NO VINO</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Es inconfundible. La corona y el gris hacen que el panel se sienta parte de la clínica, no una herramienta prestada. Los números en condensada se leen de lejos.</div>
+      <div class="p"><b>Qué resigna</b>El gris institucional es serio, casi corporativo. De “spa” tiene poco: transmite clínica más que bienestar.</div>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">03</div>
+      <div>
+        <h2>Spa</h2>
+        <p>La que toma en serio la primera sílaba del nombre. Arena cálida, verde salvia,
+          curvas amplias y una serif con carácter. Se siente lugar de bienestar, no sala de espera.</p>
+        <div class="opt-pal">
+          <i style="background:#F6F2E9"></i><i style="background:#EFE9DA"></i>
+          <i style="background:#3F4436"></i><i style="background:#7C8B5A"></i>
+          <i style="background:#C6D96A"></i><i style="background:#8C8266"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o3">
+      <div class="hdr">
+        <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+        <div class="logo">Spa<span>dental</span><small>Dra. Mirna Veizaga</small></div>
+        <div class="fecha">Martes 18 de agosto</div>
+      </div>
+      <div class="nav">
+        <div class="tab">Nueva atención</div><div class="tab on">Agenda</div>
+        <div class="tab">Recordatorios</div><div class="tab">Atenciones</div>
+        <div class="tab">Panel</div><div class="tab">Caja</div>
+      </div>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi acc"><div class="k-lbl">Citas de hoy</div><div class="k-val">8</div><div class="k-sub">2 sin marcar</div></div>
+          <div class="kpi"><div class="k-lbl">Pacientes del mes</div><div class="k-val">71</div><div class="k-sub">29 nuevos</div></div>
+          <div class="kpi"><div class="k-lbl">Facturado</div><div class="k-val">26.915</div><div class="k-sub">ticket Bs 324</div></div>
+        </div>
+        <div class="card">
+          <h4>Agenda del día</h4>
+          <p class="hint">Al terminar cada paciente, marcá qué pasó.</p>
+          <div class="cita"><div><span class="h">09:00</span> &nbsp;<span class="n">Ana Pérez</span>
+            <div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+          <div class="cita"><div><span class="h">10:30</span> &nbsp;<span class="n">Luis Gómez</span>
+            <div class="m">Control · agendó por llamada</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Es la única que se siente <i>spa</i>. Cálida, distinta, agradable de tener abierta ocho horas. La que mejor cuenta lo que la clínica quiere ser.</div>
+      <div class="p"><b>Qué resigna</b>Se aleja del manual: el arena y la salvia no están en la marca. Y la serif, con muchos números en pantalla, se lee un poco más lento que una sans.</div>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section class="opt">
+    <div class="opt-head">
+      <div class="opt-num">04</div>
+      <div>
+        <h2>Consola</h2>
+        <p>La única que además cambia la estructura: el menú pasa de arriba a un costado.
+          Con ocho pestañas, arriba ya van apretadas — al costado entran holgadas y con
+          su contador al lado. Look de software actual.</p>
+        <div class="opt-pal">
+          <i style="background:#252B22"></i><i style="background:#1E2419"></i>
+          <i style="background:#EEF0EA"></i><i style="background:#FFFFFF"></i>
+          <i style="background:#C6D96A"></i><i style="background:#5E7A2E"></i>
+        </div>
+      </div>
+    </div>
+    <p class="mini-scroll">Deslizá la maqueta si estás en el celular →</p>
+    <div class="frame"><div class="mk o4">
+      <div class="side">
+        <div class="s-top">
+          <svg class="mark" viewBox="0 0 120 92"><use href="#corona"/></svg>
+          <div class="logo">SPA<span>DENTAL</span></div>
+        </div>
+        <div class="s-item">＋ Nueva atención</div>
+        <div class="s-item on">📅 Agenda <span class="dot"></span></div>
+        <div class="s-item">🔔 Recordatorios <span class="dot"></span></div>
+        <div class="s-item">📋 Atenciones</div>
+        <div class="s-item">📊 Panel</div>
+        <div class="s-item">💰 Caja</div>
+        <div class="s-item">👤 Pacientes</div>
+        <div class="s-item">⚙️ Ajustes</div>
+      </div>
+      <div class="main">
+        <div class="top"><h4>Agenda del día</h4><div class="fecha">Martes 18/08/2026</div></div>
+        <div class="kpis">
+          <div class="kpi acc"><div class="k-lbl">Citas de hoy</div><div class="k-val">8</div><div class="k-sub">2 sin marcar</div></div>
+          <div class="kpi"><div class="k-lbl">Pacientes del mes</div><div class="k-val">71</div><div class="k-sub">29 nuevos</div></div>
+          <div class="kpi"><div class="k-lbl">Facturado</div><div class="k-val">26.915</div><div class="k-sub">ticket Bs 324</div></div>
+        </div>
+        <div class="card">
+          <h4>Sin marcar todavía</h4>
+          <p class="hint">Al terminar cada paciente, marcá qué pasó.</p>
+          <div class="cita cita-row"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div><span class="h">09:00</span> &nbsp;<span class="n">Ana Pérez</span>
+            <div class="m">Limpieza · agendó por WhatsApp</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div></div>
+          <div class="cita"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div><span class="h">10:30</span> &nbsp;<span class="n">Luis Gómez</span>
+            <div class="m">Control · agendó por llamada</div></div>
+            <div style="display:flex;gap:5px"><span class="btn">Vino</span><span class="btn g">No vino</span></div></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="verdict">
+      <div class="g"><b>Qué gana</b>Resuelve un problema real: ocho pestañas arriba ya no entran cómodas. Al costado se ven todas, con el contador de pendientes siempre a la vista.</div>
+      <div class="p"><b>Qué resigna</b>En celular el menú lateral no sirve: habría que hacer una barra abajo. Es la opción con más trabajo, y la que más se parece a cualquier otro software.</div>
+    </div>
+  </section>
+
+  <section class="cierre">
+    <h2>Si me preguntás a mí</h2>
+    <p>Iría por la <span class="lime">02 · Corona</span>, y le robaría dos cosas a las otras:
+      el <b class="lime">aire de la 01</b> en las tarjetas, y el <b class="lime">menú lateral de la 04</b>
+      para pantalla grande, dejando las pestañas arriba en el celular.</p>
+    <p>El motivo: es la única que resuelve el pedido original —que refleje lo que Spadental
+      es— usando la marca que ya existe, sin inventarle colores nuevos a una clínica que ya
+      tiene manual. La 03 es la más linda de mirar, pero le estaría inventando una identidad
+      que después no coincide con sus volantes ni con su Instagram.</p>
+    <ol>
+      <li><b>Elegís una</b> (o mezclás: “la 2 pero con las tarjetas de la 1”).</li>
+      <li><b>La aplico al panel completo</b> — las 8 pantallas, no solo el header.</li>
+      <li><b>Lo revisás en el celular</b> antes de que lo vean las doctoras.</li>
+    </ol>
+  </section>
+
+  <footer>
+    Cada opción está construida con el mismo contenido real —
+    la agenda del 18 de agosto— para que la comparación sea justa.
+    El símbolo de la corona es una versión simplificada del logo, dibujada para pantalla.
+  </footer>
+
+</div>
+</body>
+</html>
