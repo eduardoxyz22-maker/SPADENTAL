@@ -727,8 +727,9 @@ function sha256(msg){
   return H.map(function(x){return ('00000000'+(x>>>0).toString(16)).slice(-8)}).join('')}
 
 function passHash(){
-  if(CFG&&CFG.passHash)return CFG.passHash;
-  try{return localStorage.getItem(K_PASS)||DEFAULT_HASH}catch(e){return DEFAULT_HASH}}
+  if(CFG&&hashValido(CFG.passHash))return CFG.passHash;
+  try{var h=localStorage.getItem(K_PASS); if(hashValido(h))return h}catch(e){}
+  return DEFAULT_HASH}
 function yaDesbloqueado(){
   try{
     if(sessionStorage.getItem(K_UNLOCK)===passHash())return true;
@@ -882,11 +883,23 @@ function saveCfg(guardarEnServidor){
   if(guardarEnServidor!==false&&CONNECTED){
     api('cfg',null,CFG).catch(function(){queue('cfg',CFG)})}}
 
+/* Un hash de clave válido es SHA-256: 64 caracteres hexadecimales. Cualquier
+   otra cosa dejaría a todo el consultorio afuera sin forma de entrar, así que
+   nunca se acepta. */
+function hashValido(h){return typeof h==='string'&&/^[0-9a-f]{64}$/.test(h)}
+
+function cfgSana(c){
+  return !!c&&Array.isArray(c.precios)&&c.precios.length>0
+          &&Array.isArray(c.canales)&&c.canales.length>0
+          &&Array.isArray(c.prof)&&c.prof.length>0}
+
 function aplicarCfgServidor(remota){
-  if(!remota||!remota.precios||!remota.canales)return false;
+  if(!cfgSana(remota))return false;
   // solo se pisa lo local si lo del servidor es más nuevo
   if(CFG.ts&&remota.ts&&remota.ts<=CFG.ts)return false;
   var claveVieja=CFG.passHash;
+  // una clave corrupta no se copia: se conserva la que ya funciona
+  if(remota.passHash&&!hashValido(remota.passHash))remota.passHash=claveVieja||DEFAULT_HASH;
   CFG=migrarCfg(remota);
   var d=cfgDefault(); for(var k in d){if(CFG[k]==null)CFG[k]=d[k]}
   saveCfgObj(CFG);
