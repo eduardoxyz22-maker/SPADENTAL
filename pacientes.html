@@ -136,6 +136,31 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .bar-fill.b2{background:var(--ink)}
 .bar-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 
+/* La barra vive dentro de la celda: se compara de un vistazo sin necesitar
+   un gráfico aparte que repita los mismos números. */
+td.barra{position:relative;isolation:isolate}
+td.barra .bfill{position:absolute;left:2px;top:5px;bottom:5px;z-index:-1;
+  background:var(--lime);opacity:.30;border-radius:3px;min-width:2px}
+td.barra.b2 .bfill{background:var(--ink);opacity:.14}
+td.barra b{position:relative;font-variant-numeric:tabular-nums}
+tbody tr.destaca td{background:#FBFCF5}
+
+/* Matriz servicio × doctora */
+.matriz{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.matriz th{text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--gray);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line);
+  white-space:nowrap;background:var(--panel)}
+.matriz th:first-child{text-align:left}
+.matriz td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right;
+  font-variant-numeric:tabular-nums}
+.matriz td:first-child{text-align:left;font-weight:600}
+.matriz td.z{color:#C9CCC0}
+.matriz tr.tot td{font-weight:800;border-top:2px solid var(--ink);border-bottom:0;
+  background:#F5F6F0}
+.matriz td.hot1{background:#F1F5DC}
+.matriz td.hot2{background:#E4EDBD}
+.matriz td.hot3{background:#D3E294}
+
 .srv{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:11px;margin-bottom:9px}
 .srv-top{display:grid;grid-template-columns:1fr 40px;gap:8px;align-items:start}
 .srv-bot{display:grid;grid-template-columns:1fr 88px 100px;gap:8px;margin-top:8px}
@@ -284,14 +309,16 @@ body.locked{overflow:hidden}
 
   <div class="card">
     <h2><span class="n">1</span>Visita</h2>
-    <p class="hint">Fecha y hora de la atención. El N° del día se asigna solo.</p>
+    <p class="hint">Fecha y hora de la atención. El <b>N° del día</b> se asigna solo y se confirma
+      al guardar: lo decide el servidor, así dos doctoras cargando a la vez nunca repiten número.</p>
     <div class="grid g4">
       <div><label>Fecha <span class="req">*</span></label><input type="date" id="f-fecha"></div>
       <div><label>Hora</label><input type="time" id="f-hora"></div>
       <div><label>Profesional <span class="req">*</span></label>
         <input list="dl-prof" id="f-prof" placeholder="Dra. Mirna" autocomplete="off">
         <datalist id="dl-prof"></datalist></div>
-      <div><label>N° del día</label><input id="f-nro" readonly placeholder="—" style="background:var(--paper)"></div>
+      <div><label>N° del día</label><input id="f-nro" readonly placeholder="—" style="background:var(--paper)"
+        title="Se confirma al guardar: el número final lo asigna el servidor para que dos doctoras no repitan el mismo"></div>
     </div>
     <div style="margin-top:14px">
       <label>¿Cómo llegó hoy? <span class="req">*</span></label>
@@ -595,13 +622,14 @@ body.locked{overflow:hidden}
   <div class="psec" data-sec="servicios" style="display:none">
     <div class="kpis" style="margin-top:14px" id="p-srv-kpis"></div>
     <div class="card"><h2>Servicios por facturación</h2>
-      <p class="hint">Cuánto deja cada tratamiento, cuántas veces se hizo y a cuántos pacientes distintos.</p>
+      <p class="hint">Cuánto deja cada tratamiento, cuántas veces se hizo y a cuántos pacientes
+        distintos. La barra marca el peso de cada uno sobre el que más factura.</p>
       <div id="p-serv"></div></div>
     <div class="card"><h2>Por categoría</h2>
       <p class="hint">Agrupado según la lista de precios del consultorio.</p>
       <div id="p-categoria"></div></div>
     <div class="card"><h2>Qué hizo cada doctora</h2>
-      <p class="hint">Los 6 servicios más fuertes de cada una.</p>
+      <p class="hint">Los 12 servicios que más facturan, cruzados con cada doctora.</p>
       <div id="p-srv-prof"></div></div>
   </div>
 
@@ -614,9 +642,10 @@ body.locked{overflow:hidden}
 
   <!-- --- EQUIPO --- -->
   <div class="psec" data-sec="equipo" style="display:none">
-    <div class="card" style="margin-top:14px"><h2>Producción por profesional</h2><div id="p-prof"></div></div>
-    <div class="card"><h2>Detalle del equipo</h2>
-      <p class="hint">Atenciones, pacientes distintos, ticket promedio y ausentismo de cada una.</p>
+    <div class="card" style="margin-top:14px"><h2>Producción por profesional</h2>
+      <p class="hint">Atenciones, pacientes distintos, ticket promedio y ausentismo de cada una.
+        La barra acompaña lo facturado.</p>
+      <div id="p-prof" style="display:none"></div>
       <div id="p-prof-tabla"></div></div>
   </div>
 
@@ -1061,7 +1090,7 @@ function refrescarSiCorresponde(forzar){
   refrescando=true;
   return flushQueue().then(pullServer).then(function(ok){
     ultimoPull=+new Date(); refrescando=false;
-    if(ok){fillDatalists(); updateNavRem();
+    if(ok){fillDatalists(); updateNavRem(); if(!EDIT_ID)refreshNro();
       var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
       // no se repinta el formulario de carga: podrían estar escribiendo
       if(v&&v.v&&v.v!=='atencion'&&v.v!=='cita')show(v.v)}
@@ -1209,7 +1238,11 @@ function nroDelDia(fecha,exceptId){
 
 function refreshNro(){
   var f=$('#f-fecha').value;
-  $('#f-nro').value=f?('#'+nroDelDia(f,EDIT_ID)):''}
+  if(!f){$('#f-nro').value='';return}
+  if(EDIT_ID){
+    var r=DATA.filter(function(x){return x.id===EDIT_ID})[0];
+    $('#f-nro').value=(r&&r.nroDia)?('#'+r.nroDia):'';return}
+  $('#f-nro').value='#'+nroDelDia(f,null)}
 
 function fillDatalists(){
   var pac={},prof={};
@@ -1341,7 +1374,19 @@ function submitAtencion(){
   };
   if(EDIT_ID){DATA=DATA.map(function(r){return r.id===EDIT_ID?rec:r})}else{DATA.push(rec)}
   saveLocal();
-  if(CONNECTED){api('save',rec).catch(function(){queue('save',rec)})}else{queue('save',rec)}
+  if(CONNECTED){
+    /* El N° del día definitivo lo asigna el servidor, que es el único que ve
+       lo que cargaron las demás doctoras. Acá se muestra uno tentativo y se
+       corrige con el que vuelve, así dos personas no se pisan el número. */
+    api('save',rec).then(function(res){
+      if(res&&res.ok&&res.registro&&res.registro.nroDia&&res.registro.nroDia!==rec.nroDia){
+        var antes=rec.nroDia;
+        rec.nroDia=res.registro.nroDia; saveLocal(); refreshNro();
+        toast('Le tocó el N° '+rec.nroDia+' (el '+antes+' ya estaba tomado)');
+        var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
+        if(v&&v.v&&v.v!=='atencion')show(v.v)}
+    }).catch(function(){queue('save',rec)})
+  } else {queue('save',rec)}
   var cita=crearCitaDesde(rec);
   var era=EDIT_ID; clearForm(true); fillDatalists(); updateNavRem();
   toast(era?'Atención actualizada':'Atención guardada ✅');
@@ -1890,6 +1935,26 @@ function catDe(nom){
   if(n.indexOf('consulta')>=0||n.indexOf('valoraci')>=0)return 'General';
   return 'Odontológico'}
 
+/* Tabla de ranking con la barra proporcional metida en la celda del número.
+   Las celdas de esa columna se pasan como {txt:'13.185', v:13185}. */
+function tablaRank(cols,filas,minw,oscura){
+  if(!filas.length)return '<div class="empty">Sin datos en este periodo.</div>';
+  var iB=-1; cols.forEach(function(c,i){if(c.barra)iB=i});
+  var max=1;
+  if(iB>=0)filas.forEach(function(f){var c=f[iB];
+    max=Math.max(max,num(c&&typeof c==='object'?c.v:c))});
+  return '<div class="tw" style="margin-top:12px"><table style="min-width:'+(minw||460)+'px"><thead><tr>'+
+    cols.map(function(c){return '<th'+(c.num||c.barra?' class="num"':'')+'>'+esc(c.t)+'</th>'}).join('')+
+    '</tr></thead><tbody>'+filas.map(function(f){
+      return '<tr style="cursor:default">'+f.map(function(v,i){
+        if(i===iB){
+          var txt=(v&&typeof v==='object')?v.txt:v, val=num((v&&typeof v==='object')?v.v:v);
+          var pc=Math.max(0,Math.min(100,val/max*100));
+          return '<td class="num barra'+(oscura?' b2':'')+'">'+
+            '<span class="bfill" style="width:'+pc.toFixed(1)+'%"></span><b>'+txt+'</b></td>'}
+        return '<td'+(cols[i].num?' class="num"':'')+'>'+v+'</td>'}).join('')+'</tr>'}).join('')+
+    '</tbody></table></div>'}
+
 function tabla(cols,filas,minw){
   if(!filas.length)return '<div class="empty">Sin datos en este periodo.</div>';
   return '<div class="tw" style="margin-top:14px"><table style="min-width:'+(minw||420)+'px"><thead><tr>'+
@@ -2041,9 +2106,9 @@ function renderPanel(){
       porPac[k].bs+=num(r.total); porPac[k].n++});
     var topPac=Object.keys(porPac).map(function(k){return {k:k,v:porPac[k].bs,n:porPac[k].n}})
       .sort(function(a,b){return b.v-a.v}).slice(0,15);
-    $('#p-toppac').innerHTML=barras(topPac.map(function(p){return {k:p.k,v:p.v,lbl:bs(p.v)}}))+
-      tabla([{t:'Paciente'},{t:'Visitas',num:1},{t:'Facturado',num:1},{t:'Por visita',num:1}],
-        topPac.map(function(p){return [esc(p.k),n0(p.n),n0(p.v),n0(p.v/p.n)]}),460);
+    $('#p-toppac').innerHTML=tablaRank(
+      [{t:'Paciente'},{t:'Visitas',num:1},{t:'Facturado',barra:1},{t:'Por visita',num:1}],
+      topPac.map(function(p){return [esc(p.k),n0(p.n),{txt:n0(p.v),v:p.v},n0(p.v/p.n)]}),470);
   }
 
   /* ================= SECCIÓN AGENDA ================= */
@@ -2085,15 +2150,13 @@ function renderPanel(){
               res:res,pc:res?Math.round(d.vino/res*100):0}})
       .sort(function(a,b){return b.n-a.n});
     $('#p-ag-canal').innerHTML=(agArr.length
-      ? barras(agArr.map(function(a){return {k:(AGENDA_ICONO[a.k]||'')+' '+a.k,v:a.n,
-          lbl:n0(a.n)+' · '+a.pc+'%'}}))+
-        tabla([{t:'Agendó por'},{t:'Citas',num:1},{t:'Vinieron',num:1},{t:'No vinieron',num:1},
+      ? tablaRank([{t:'Agendó por'},{t:'Citas',barra:1},{t:'Vinieron',num:1},{t:'No vinieron',num:1},
                {t:'Cancelaron',num:1},{t:'Reprogr.',num:1},{t:'Pendientes',num:1},{t:'Asistencia',num:1}],
           agArr.map(function(a){
             var col=a.pc>=80?'var(--ok)':a.pc>=60?'var(--warn)':'var(--clay)';
-            return ['<b>'+(AGENDA_ICONO[a.k]||'')+' '+esc(a.k)+'</b>',n0(a.n),n0(a.vino),
+            return ['<b>'+(AGENDA_ICONO[a.k]||'')+' '+esc(a.k)+'</b>',{txt:n0(a.n),v:a.n},n0(a.vino),
               '<span style="color:var(--clay)">'+n0(a.no)+'</span>',n0(a.can),n0(a.rep),n0(a.pend),
-              a.res?('<b style="color:'+col+'">'+a.pc+'%</b>'):'—']}),620)
+              a.res?('<b style="color:'+col+'">'+a.pc+'%</b>'):'—']}),640)
       : '<div class="empty">Todavía no hay citas agendadas en este periodo.<br>'+
         '<span class="mini">Se cargan desde <b>📅 Agendar cita</b>, o se crean solas al poner una próxima cita al cerrar una atención.</span></div>');
 
@@ -2152,26 +2215,48 @@ function renderPanel(){
       '<div class="kpi"><div class="k">Precio promedio</div><div class="v" style="font-size:21px">'+bs(totalSrvN?totalSrvBs/totalSrvN:0)+'</div><div class="d">por procedimiento</div></div>'+
       '<div class="kpi"><div class="k">Servicios por atención</div><div class="v">'+(rows.length?(totalSrvN/rows.length).toFixed(1):'0')+'</div><div class="d">promedio</div></div>';
 
-    $('#p-serv').innerHTML=barras(sArr.slice(0,15).map(function(s){return {k:s.k,v:s.bs,lbl:bs(s.bs)}}))+
-      tabla([{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',num:1},{t:'Precio prom.',num:1}],
-        sArr.slice(0,40).map(function(s){
-          return [esc(s.k),n0(s.n),n0(s.pac),n0(s.bs),n0(s.n?s.bs/s.n:0)]}),520);
+    $('#p-serv').innerHTML=tablaRank(
+      [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},{t:'Precio prom.',num:1}],
+      sArr.slice(0,40).map(function(s){
+        return [esc(s.k),n0(s.n),n0(s.pac),{txt:n0(s.bs),v:s.bs},n0(s.n?s.bs/s.n:0)]}),540);
 
     var cArr2=Object.keys(cat).map(function(k){return {k:k,v:cat[k].bs,n:cat[k].n}})
       .sort(function(a,b){return b.v-a.v});
     var totCat=cArr2.reduce(function(a,c){return a+c.v},0);
-    $('#p-categoria').innerHTML=barras(cArr2.map(function(c){return {k:c.k,v:c.v,lbl:bs(c.v)}}),0,'b2')+
-      tabla([{t:'Categoría'},{t:'Procedimientos',num:1},{t:'Facturado',num:1},{t:'% del total',num:1}],
-        cArr2.map(function(c){return [esc(c.k),n0(c.n),n0(c.v),(totCat?Math.round(c.v/totCat*100):0)+'%']}),420);
+    $('#p-categoria').innerHTML=tablaRank(
+      [{t:'Categoría'},{t:'Procedimientos',num:1},{t:'Facturado',barra:1},{t:'% del total',num:1}],
+      cArr2.map(function(c){return [esc(c.k),n0(c.n),{txt:n0(c.v),v:c.v},
+        (totCat?Math.round(c.v/totCat*100):0)+'%']}),440,1);
 
-    $('#p-srv-prof').innerHTML=Object.keys(srvProf).sort(function(a,b){
-      return (prof[b]?prof[b].bs:0)-(prof[a]?prof[a].bs:0)}).map(function(pk){
-      var lista=Object.keys(srvProf[pk]).map(function(s){
-        return {k:s,v:srvProf[pk][s].bs,n:srvProf[pk][s].n}})
-        .sort(function(a,b){return b.v-a.v}).slice(0,6);
-      return '<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">'+
-        esc(pk)+'</h3>'+barras(lista.map(function(s){return {k:s.k,v:s.v,lbl:bs(s.v)+' · '+n0(s.n)+'×'}}))}).join('')||
-      '<div class="empty">Sin datos en este periodo.</div>';
+    /* Una matriz en vez de seis gráficos de barras apilados: así se compara
+       de una qué hace cada doctora y quién concentra cada servicio. */
+    var docs=Object.keys(srvProf).sort(function(a,b){
+      return (prof[b]?prof[b].bs:0)-(prof[a]?prof[a].bs:0)});
+    var topS=sArr.slice(0,12).map(function(x){return x.k});
+    if(docs.length&&topS.length){
+      var celdas=[],maxCel=1;
+      topS.forEach(function(sv){docs.forEach(function(d){
+        var v=(srvProf[d]&&srvProf[d][sv])?srvProf[d][sv].bs:0; maxCel=Math.max(maxCel,v)})});
+      var h='<div class="tw" style="margin-top:12px"><table class="matriz"><thead><tr><th>Servicio</th>'+
+        docs.map(function(d){return '<th>'+esc(d.replace('Dra. ',''))+'</th>'}).join('')+
+        '<th>Total</th></tr></thead><tbody>';
+      topS.forEach(function(sv){
+        var totF=0;
+        var celdasF=docs.map(function(d){
+          var v=(srvProf[d]&&srvProf[d][sv])?srvProf[d][sv].bs:0; totF+=v;
+          if(!v)return '<td class="z">·</td>';
+          var r=v/maxCel, cls=r>=.66?' hot3':r>=.33?' hot2':r>0?' hot1':'';
+          return '<td class="'+cls.trim()+'">'+n0(v)+'</td>'}).join('');
+        h+='<tr><td>'+esc(sv)+'</td>'+celdasF+'<td><b>'+n0(totF)+'</b></td></tr>'});
+      var granTot=0;
+      h+='<tr class="tot"><td>TOTAL</td>'+docs.map(function(d){
+        var t=0; topS.forEach(function(sv){if(srvProf[d]&&srvProf[d][sv])t+=srvProf[d][sv].bs});
+        granTot+=t; return '<td>'+n0(t)+'</td>'}).join('')+'<td>'+n0(granTot)+'</td></tr>';
+      h+='</tbody></table></div>'+
+        '<p class="mini" style="margin-top:10px">Bolivianos facturados. Cuanto más verde, '+
+        'más peso tiene ese servicio en esa doctora. Un punto quiere decir que no lo hizo.</p>';
+      $('#p-srv-prof').innerHTML=h;
+    } else {$('#p-srv-prof').innerHTML='<div class="empty">Sin datos en este periodo.</div>'}
   }
 
   /* ================= SECCIÓN CANALES ================= */
@@ -2179,9 +2264,10 @@ function renderPanel(){
     var cArr=Object.keys(canal).map(function(k){
       return {k:k,pac:Object.keys(canal[k].pac).length,n:canal[k].n,bs:canal[k].bs}})
       .sort(function(a,b){return b.pac-a.pac||b.bs-a.bs});
-    $('#p-canal').innerHTML=barras(cArr.map(function(c){return {k:c.k,v:c.pac,lbl:c.pac+' pac.'}}))+
-      tabla([{t:'Canal'},{t:'Pacientes',num:1},{t:'Atenciones',num:1},{t:'Facturado',num:1},{t:'Bs / paciente',num:1}],
-        cArr.map(function(c){return ['<b>'+esc(c.k)+'</b>',n0(c.pac),n0(c.n),n0(c.bs),n0(c.pac?c.bs/c.pac:0)]}),460);
+    $('#p-canal').innerHTML=tablaRank(
+      [{t:'Canal'},{t:'Pacientes',barra:1},{t:'Atenciones',num:1},{t:'Facturado',num:1},{t:'Bs / paciente',num:1}],
+      cArr.map(function(c){return ['<b>'+esc(c.k)+'</b>',{txt:n0(c.pac),v:c.pac},
+        n0(c.n),n0(c.bs),n0(c.pac?c.bs/c.pac:0)]}),480);
   }
 
   /* ================= SECCIÓN EQUIPO ================= */
@@ -2190,21 +2276,22 @@ function renderPanel(){
       return {k:k,v:prof[k].bs,lbl:bs(prof[k].bs),n:prof[k].n,
               pac:Object.keys(prof[k].pac).length,falta:prof[k].falta}})
       .sort(function(a,b){return b.v-a.v});
-    $('#p-prof').innerHTML=barras(pArr,0,'b2');
-    $('#p-prof-tabla').innerHTML=tabla(
-      [{t:'Profesional'},{t:'Atenciones',num:1},{t:'Pacientes',num:1},{t:'Facturado',num:1},
+    $('#p-prof').innerHTML='';
+    $('#p-prof-tabla').innerHTML=tablaRank(
+      [{t:'Profesional'},{t:'Atenciones',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},
        {t:'Ticket prom.',num:1},{t:'No asistieron',num:1}],
-      pArr.map(function(p){return ['<b>'+esc(p.k)+'</b>',n0(p.n),n0(p.pac),n0(p.v),
-        n0(p.n?p.v/p.n:0),n0(p.falta)]}),540);
+      pArr.map(function(p){return ['<b>'+esc(p.k)+'</b>',n0(p.n),n0(p.pac),{txt:n0(p.v),v:p.v},
+        n0(p.n?p.v/p.n:0),n0(p.falta)]}),560);
   }
 
   /* ================= SECCIÓN TIEMPO ================= */
   if(sec==='tiempo'){
     var mArr=Object.keys(mens).sort().map(function(k){
       return {k:mesLabel(k),v:mens[k].bs,lbl:bs(mens[k].bs),n:mens[k].n,pac:Object.keys(mens[k].pac).length}});
-    $('#p-mensual').innerHTML=barras(mArr,0,'b2')+
-      tabla([{t:'Mes'},{t:'Pacientes',num:1},{t:'Atenciones',num:1},{t:'Facturado',num:1},{t:'Ticket',num:1}],
-        mArr.map(function(m){return [esc(m.k),n0(m.pac),n0(m.n),n0(m.v),n0(m.n?m.v/m.n:0)]}),460);
+    $('#p-mensual').innerHTML=tablaRank(
+      [{t:'Mes'},{t:'Pacientes',num:1},{t:'Atenciones',num:1},{t:'Facturado',barra:1},{t:'Ticket',num:1}],
+      mArr.map(function(m){return [esc(m.k),n0(m.pac),n0(m.n),{txt:n0(m.v),v:m.v},
+        n0(m.n?m.v/m.n:0)]}),480,1);
 
     var dArr=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
       .filter(function(d){return dow[d]}).map(function(d){return {k:d,v:dow[d],lbl:n0(dow[d])}});
