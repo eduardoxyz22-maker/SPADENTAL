@@ -195,7 +195,7 @@ body.locked{overflow:hidden}
   </div>
   <nav>
     <button data-v="atencion" class="on">＋ Nueva atención</button>
-    <button data-v="cita">📅 Agendar cita</button>
+    <button data-v="cita">📅 Agenda <span class="pill bad" id="nav-cita" style="display:none">0</span></button>
     <button data-v="agenda">🔔 Recordatorios <span class="pill bad" id="nav-rem" style="display:none">0</span></button>
     <button data-v="lista">📋 Atenciones</button>
     <button data-v="panel">📊 Panel</button>
@@ -337,11 +337,41 @@ body.locked{overflow:hidden}
 
 <!-- ============== VISTA: AGENDAR CITA ============== -->
 <section class="view" id="v-cita">
+
+  <!-- ---------- vencidas: lo primero que hay que cerrar ---------- -->
+  <div id="q-vencidas"></div>
+
+  <!-- ---------- el día ---------- -->
   <div class="card">
-    <h2>Agendar una cita</h2>
-    <p class="hint">Para cuando piden hora por WhatsApp, por teléfono o en el mostrador.
-      Después, desde <b>🔔 Recordatorios</b>, se marca si vino o no — así sabemos por dónde
-      agendan y quiénes no concretan.</p>
+    <h2>Agenda del día</h2>
+    <p class="hint">Las citas de la fecha elegida. Al terminar cada paciente, marcá qué pasó:
+      así el panel puede decirte quiénes agendan y no vienen.</p>
+    <div class="grid g3" style="margin-top:10px">
+      <div><label>Día</label><input type="date" id="q-dia"></div>
+      <div><label>&nbsp;</label>
+        <div style="display:flex;gap:6px">
+          <button class="btn sec" id="btn-dia-ayer" style="flex:1;padding:10px 6px">◀</button>
+          <button class="btn sec" id="btn-dia-hoy" style="flex:2;padding:10px 6px">Hoy</button>
+          <button class="btn sec" id="btn-dia-manana" style="flex:1;padding:10px 6px">▶</button>
+        </div></div>
+      <div><label>Profesional</label>
+        <select id="q-filtro-prof"><option value="">Todas</option></select></div>
+    </div>
+    <div id="q-resumen-dia" style="margin-top:14px"></div>
+    <div id="q-lista-dia" style="margin-top:12px"></div>
+  </div>
+
+  <!-- ---------- lo que viene ---------- -->
+  <div class="card">
+    <h2>Lo que viene</h2>
+    <p class="hint">Citas de los próximos días que todavía no se resolvieron.</p>
+    <div id="q-lista"></div>
+  </div>
+
+  <!-- ---------- agendar ---------- -->
+  <div class="card">
+    <h2>➕ Agendar una cita nueva</h2>
+    <p class="hint">Para cuando piden hora por WhatsApp, por teléfono o en el mostrador.</p>
     <div class="grid g4">
       <div><label>Fecha <span class="req">*</span></label><input type="date" id="q-fecha"></div>
       <div><label>Hora</label><input type="time" id="q-hora"></div>
@@ -370,12 +400,6 @@ body.locked{overflow:hidden}
       <button class="btn" id="btn-save-cita">Agendar</button>
       <button class="btn sec" id="btn-clear-cita">Limpiar</button>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>Citas por venir</h2>
-    <p class="hint">Todo lo agendado de hoy en adelante que todavía no se resolvió.</p>
-    <div id="q-lista"></div>
   </div>
 </section>
 
@@ -999,7 +1023,10 @@ function show(v){
   $$('nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});
   $$('.view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+v)});
   window.scrollTo(0,0);
-  if(v==='cita'){renderCitasProximas(); if(!$('#q-fecha').value)$('#q-fecha').value=hoyISO()}
+  if(v==='cita'){
+    if(!$('#q-dia').value)$('#q-dia').value=hoyISO();
+    if(!$('#q-fecha').value)$('#q-fecha').value=hoyISO();
+    renderCitasProximas()}
   if(v==='agenda')renderRem(); if(v==='lista')renderLista(); if(v==='panel')renderPanel();
   if(v==='caja')renderCaja();
   if(v==='pacientes')renderPacientes(); if(v==='config')renderConfig();
@@ -1275,6 +1302,7 @@ function esPacienteConocido(nombre){
 
 function clearCita(){
   $('#q-fecha').value=hoyISO(); $('#q-hora').value='';
+  if(!$('#q-dia').value)$('#q-dia').value=hoyISO();
   ['q-prof','q-motivo','q-paciente','q-cel','q-obs'].forEach(function(id){
     $('#'+id).value=''; $('#'+id).classList.remove('bad')});
   $$('input[name="qagenda"]').forEach(function(i){i.checked=false});
@@ -1342,11 +1370,86 @@ function citasAgendadas(){
     .sort(function(a,b){return (a.fecha+' '+(a.hora||'')).localeCompare(b.fecha+' '+(b.hora||''))})}
 
 function renderCitasProximas(){
-  var hoy=hoyISO();
-  var cs=citasAgendadas().filter(function(r){return r.fecha>=hoy});
-  $('#q-lista').innerHTML=cs.length?cs.map(function(r){
+  var hoy=hoyISO(), dia=$('#q-dia').value||hoy, prof=$('#q-filtro-prof').value;
+  var todas=citasAgendadas();
+  var filtra=function(a){return prof?a.filter(function(r){return r.profesional===prof}):a};
+
+  /* --- vencidas: citas de días pasados que nadie cerró --- */
+  var venc=filtra(todas.filter(function(r){return r.fecha<hoy}));
+  $('#q-vencidas').innerHTML=venc.length
+    ? '<div class="card" style="border-color:var(--clay);border-width:2px">'+
+      '<h2>⚠ Quedaron sin marcar · '+venc.length+'</h2>'+
+      '<p class="hint">Citas de días anteriores que nunca se cerraron. Mientras estén así, '+
+      'no cuentan como asistidas ni como faltas, y la medición queda coja.</p>'+
+      venc.map(function(r){return citaCard(r,diasEntre(hoy,r.fecha))}).join('')+'</div>'
+    : '';
+
+  /* --- el día elegido, incluidas las ya resueltas --- */
+  var delDia=filtra(DATA.filter(function(r){
+    return r.fecha===dia&&r.origen==='Programada'}))
+    .sort(function(a,b){return (a.hora||'99:99').localeCompare(b.hora||'99:99')});
+  var pend=delDia.filter(esCitaPendiente).length;
+  var vino=delDia.filter(function(r){return r.estado==='Atendido'}).length;
+  var falt=delDia.filter(function(r){return r.estado==='No asistió'||r.estado==='Canceló'}).length;
+  var rep2=delDia.filter(function(r){return r.estado==='Reprogramó'}).length;
+
+  $('#q-resumen-dia').innerHTML=delDia.length
+    ? '<div class="kpis">'+
+      '<div class="kpi acc"><div class="k">Citas del día</div><div class="v">'+delDia.length+'</div>'+
+      '<div class="d">'+(pend?pend+' sin marcar':'todas marcadas ✅')+'</div></div>'+
+      '<div class="kpi"><div class="k">Vinieron</div><div class="v" style="color:var(--ok)">'+vino+'</div></div>'+
+      '<div class="kpi"><div class="k">Faltaron</div><div class="v" style="color:'+(falt?'var(--clay)':'inherit')+'">'+falt+'</div></div>'+
+      '<div class="kpi"><div class="k">Reprogramadas</div><div class="v">'+rep2+'</div></div></div>'
+    : '';
+
+  $('#q-lista-dia').innerHTML=delDia.length
+    ? delDia.map(function(r){
+        return esCitaPendiente(r)?citaCard(r,diasEntre(hoy,r.fecha)):citaResueltaCard(r)}).join('')
+    : '<div class="empty">No hay citas para el '+fmtF(dia)+'.'+
+      (prof?'<br><span class="mini">(filtrando por '+esc(prof)+')</span>':'')+'</div>';
+
+  /* --- lo que viene, sin repetir el día elegido --- */
+  var prox=filtra(todas.filter(function(r){return r.fecha>hoy&&r.fecha!==dia}));
+  $('#q-lista').innerHTML=prox.length?prox.map(function(r){
     return citaCard(r,diasEntre(hoy,r.fecha))}).join(''):
-    '<div class="empty">No hay citas agendadas por venir.</div>'}
+    '<div class="empty">No hay más citas agendadas por venir.</div>';
+
+  llenarFiltroProf();
+  updateNavCita()}
+
+/* Una cita ya resuelta: se ve el desenlace y se puede corregir */
+function citaResueltaCard(r){
+  var cls={'Atendido':'today','No asistió':'due','Canceló':'due','Reprogramó':'money'}[r.estado]||'';
+  var meta=(r.hora?'🕐 '+r.hora+' · ':'')+estadoPill(r.estado)+
+    (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
+    (r.estado==='Atendido'&&num(r.total)>0?' · '+bs(r.total):'')+
+    '<br>'+(r.agendaPor?(AGENDA_ICONO[r.agendaPor]||'')+' agendó por '+esc(r.agendaPor)+' · ':'')+
+    '📱 '+esc(r.celular||'sin celular')+(r.profesional?' · '+esc(r.profesional):'');
+  var acts='<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver ficha</button>'+
+    '<button class="btn sec sm" onclick="reabrirCita(\''+r.id+'\')">↩ Corregir</button>';
+  return remCard(cls,r.paciente,meta,acts)}
+
+/* Volver a dejarla pendiente, por si se marcó mal */
+function reabrirCita(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(r.estado==='Atendido'&&num(r.total)>0){
+    toast('Esta ya tiene servicios cargados: editala desde la ficha',1); verFicha(id); return}
+  r.estado='Agendada'; r.resueltaTs='';
+  persist(r); toast('Vuelve a quedar pendiente'); refreshAll()}
+
+function llenarFiltroProf(){
+  var sel=$('#q-filtro-prof'), actual=sel.value;
+  var profs={}; CFG.prof.forEach(function(p){profs[p]=1});
+  DATA.forEach(function(r){if(r.profesional)profs[r.profesional]=1});
+  sel.innerHTML='<option value="">Todas</option>'+Object.keys(profs).sort().map(function(p){
+    return '<option'+(p===actual?' selected':'')+'>'+esc(p)+'</option>'}).join('')}
+
+/* contador de la pestaña: lo de hoy sin marcar + lo vencido */
+function updateNavCita(){
+  var hoy=hoyISO();
+  var n=citasAgendadas().filter(function(r){return r.fecha<=hoy}).length;
+  var el=$('#nav-cita'); if(!el)return;
+  el.style.display=n?'':'none'; el.textContent=n}
 
 function citaCard(r,d){
   var cuando=d<0?('<b>venció hace '+Math.abs(d)+' día'+(Math.abs(d)===1?'':'s')+'</b>'):
@@ -1454,7 +1557,8 @@ function totalPendientes(){
 
 function updateNavRem(){
   var n=totalPendientes(),el=$('#nav-rem');
-  el.style.display=n?'':'none'; el.textContent=n}
+  el.style.display=n?'':'none'; el.textContent=n;
+  updateNavCita()}
 
 function waLink(cel,txt){var d=telWa(cel);
   return 'https://wa.me/'+(d||'')+'?text='+encodeURIComponent(txt)}
@@ -1497,7 +1601,7 @@ function renderRem(){
 
   var h='';
   if(f==='citas'||f==='todos'){
-    var grupos=[['due','⚠ Vencidas · falta marcar si vino',venc],['today','🟢 Hoy',hy],
+    var grupos=[['due','⚠ Vencidas · marcalas en 📅 Agenda',venc],['today','🟢 Hoy',hy],
                 ['soon','📅 Próximas ('+CFG.diasProx+' días)',cit.filter(function(c){return c.dias>0&&c.dias<=CFG.diasProx})],
                 ['','🗓 Más adelante',cit.filter(function(c){return c.dias>CFG.diasProx})]];
     grupos.forEach(function(g){
@@ -2484,6 +2588,14 @@ function bind(){
 
   $$('#seg-origen input').forEach(function(i){i.onchange=function(){
     $('#wrap-agendapor').style.display=(getRadio('origen')==='Programada')?'':'none'}});
+
+  $('#q-dia').onchange=renderCitasProximas;
+  $('#q-filtro-prof').onchange=renderCitasProximas;
+  $('#btn-dia-hoy').onclick=function(){$('#q-dia').value=hoyISO();renderCitasProximas()};
+  $('#btn-dia-ayer').onclick=function(){
+    $('#q-dia').value=addDias($('#q-dia').value||hoyISO(),-1);renderCitasProximas()};
+  $('#btn-dia-manana').onclick=function(){
+    $('#q-dia').value=addDias($('#q-dia').value||hoyISO(),1);renderCitasProximas()};
 
   $('#btn-save-cita').onclick=guardarCita;
   $('#btn-clear-cita').onclick=function(){clearCita();toast('Formulario limpio')};

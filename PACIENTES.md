@@ -47,9 +47,26 @@ El formulario del día a día, en 6 pasos:
 Al guardar aparece un **resumen listo para mandar por WhatsApp** al paciente
 (botón *Abrir WhatsApp* o *Copiar texto*).
 
-### 📅 Agendar cita
-El formulario corto para cuando piden hora por WhatsApp, por teléfono o en el
-mostrador. Fecha, hora, paciente, celular, profesional, motivo — y el dato
+### 📅 Agenda
+**Acá trabajan las doctoras todos los días.** Tiene tres partes, en este orden:
+
+1. **⚠ Quedaron sin marcar** — citas de días anteriores que nadie cerró.
+   Aparecen arriba de todo y en rojo: mientras estén así no cuentan ni como
+   asistidas ni como faltas, y la medición queda coja.
+2. **Agenda del día** — las citas de la fecha elegida, ordenadas por hora, con
+   botones ◀ Hoy ▶ para moverse y un filtro por profesional. Arriba, el resumen:
+   cuántas hay, cuántas faltan marcar, cuántas vinieron y cuántas faltaron.
+   Cada cita pendiente trae los cuatro botones — **✅ Vino** (abre la atención
+   para cargar servicios y cobro), **✖ No vino**, **🚫 Canceló**,
+   **🔁 Reprogramar** — y las ya resueltas muestran el desenlace, con
+   **↩ Corregir** por si se marcó mal.
+3. **Lo que viene** — las citas de los próximos días.
+
+El número rojo de la pestaña cuenta **lo de hoy sin marcar más lo vencido**:
+si está en cero, la agenda está al día.
+
+Abajo del todo, el formulario para agendar una cita nueva, para cuando piden
+hora por WhatsApp, por teléfono o en el mostrador. Fecha, hora, paciente, celular, profesional, motivo — y el dato
 clave: **¿por dónde agendó?** (📱 WhatsApp · ☎️ Llamada · 📷 Instagram ·
 👍 Facebook · 🏥 En el consultorio · Otro).
 
@@ -67,8 +84,9 @@ agenda, así también se mide si el paciente vino al control.
 La pestaña que dice **a quién llamar hoy**. El número rojo en la pestaña avisa
 cuántos hay pendientes. Cuatro listas:
 
-- **📅 Citas** — vencidas / de hoy / próximas / más adelante, cada una con su
-  mensaje de WhatsApp ya escrito y **cuatro botones para cerrarla**:
+- **📅 Citas** — para **avisar antes**: vencidas / de hoy / próximas, cada una
+  con su mensaje de WhatsApp ya escrito. También trae **los cuatro botones para
+  cerrarla**, aunque el lugar natural para marcarlas es **📅 Agenda**:
   **✅ Vino** (abre la atención para cargar lo que se hizo), **✖ No vino**,
   **🚫 Canceló** y **🔁 Reprogramar** (deja la vieja marcada y crea la nueva).
   Una cita sale de la lista solo cuando se resuelve — mandarle WhatsApp no la
