@@ -33,8 +33,12 @@ El formulario del día a día, en 6 pasos:
    ustedes, no la lista. Se pueden cargar varios servicios, con cantidad y
    detalle de pieza.
 5. **Cobro** — Total, **A cuenta hoy** y **Saldo** (se calcula solo y también
-   se puede corregir a mano) + método de pago. Muestra al toque si quedó
-   *pagado completo*, *pago parcial* o *sin pago*.
+   se puede corregir a mano). Si entró plata, aparecen los botones de
+   **forma de pago** (💵 Efectivo · 📱 QR · 💳 Tarjeta · 🏦 Transferencia ·
+   🧾 Mixto) y **es obligatorio marcar una** — sin ese dato la caja no cuadra
+   nunca. Con *Mixto* se reparte el monto entre varias formas y el sistema
+   avisa si el desglose no suma. Muestra al toque si quedó *pagado completo*,
+   *pago parcial* o *sin pago*.
 6. **Estado y próximo contacto** — Atendido / Agendado / Reagendar / No asistió,
    más la **próxima cita** con hora y motivo. Todo lo que tenga próxima fecha
    entra automáticamente en Recordatorios.
@@ -61,14 +65,38 @@ Todas las visitas cargadas, filtrables por día / mes / todo y con buscador
 por cobrar y ticket promedio del filtro. Botón **⬇ Descargar Excel**.
 
 ### 📊 Panel
-El tablero de control del periodo elegido:
+El tablero de control del periodo elegido. Arriba, seis KPIs siempre visibles
+(pacientes · nuevos · facturado · cobrado · por cobrar · no asistieron) y abajo
+cinco secciones:
 
-- Pacientes atendidos · **pacientes nuevos** · facturado · cobrado · por cobrar · no asistieron.
-- **¿De dónde llegan los pacientes?** — pacientes distintos y Bs facturados por
-  canal, con el **Bs por paciente** de cada uno. Esta tabla es la que dice en
-  qué canal conviene poner la plata de publicidad.
-- **Servicios más hechos** — veces y Bs de cada tratamiento.
-- Por profesional · por día de la semana · evolución mensual.
+- **👤 Pacientes** — nuevos vs. los que ya eran del consultorio, **reconsultas**,
+  cuántos salieron **solo con la consulta**, visitas por paciente y gasto por
+  paciente. Más: nuevos vs. recurrentes mes a mes, **conversión de consulta a
+  tratamiento** (de los que entraron solo por consulta, cuántos se trataron),
+  frecuencia de visitas y los 15 pacientes que más dejan.
+- **🦷 Servicios** — servicios distintos, el que más deja, precio promedio y
+  servicios por atención. Ranking por facturación con veces y pacientes
+  distintos, agrupado por categoría, y qué hace cada doctora.
+- **📣 Canales** — pacientes distintos y Bs por canal, con el **Bs por paciente**
+  de cada uno. Esta tabla es la que dice dónde conviene poner la publicidad.
+- **👩‍⚕️ Equipo** — producción por profesional, con atenciones, pacientes,
+  ticket promedio y ausentismo de cada una.
+- **📆 Tiempo** — evolución mensual, día de la semana y los días de más movimiento.
+
+### 💰 Caja
+La pestaña contable. Filtrable por día, mes, año o todo:
+
+- **Cobrado, facturado y por cobrar**, más el **efectivo** (lo que se cuenta en
+  caja) separado del **QR + transferencias** (lo que tiene que estar en el banco).
+- **Cobrado por forma de pago**, con una fila de *sin identificar* que tiene que
+  quedar en cero para que la conciliación cierre.
+- **Arqueo día por día** — cuánto entró cada día y en qué forma de pago.
+- **Cuentas por cobrar por antigüedad** — 0-30, 31-60, 61-90 y más de 90 días.
+  Mira toda la historia, no solo el periodo elegido.
+- **Sin forma de pago anotada** — las atenciones que rompen la conciliación,
+  clicables para completarlas.
+- Botón **⬇ Excel de caja** con 5 hojas: movimientos, por forma de pago, arqueo
+  diario, antigüedad de deuda y saldos pendientes.
 
 ### 👤 Pacientes
 Un registro por persona: visitas, facturado, saldo, canal por el que llegó,

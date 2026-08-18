@@ -25,7 +25,8 @@ var COLS = [
   'ID', 'Fecha y hora', 'Fecha', 'Hora', 'N° del día', 'Profesional', 'Paciente',
   'Celular', 'CI', 'Edad', 'Tipo', 'Canal', 'Detalle canal', 'Servicios',
   'Total Bs', 'A cuenta Bs', 'Saldo Bs', 'Método', 'Estado', 'Próxima cita',
-  'Hora próxima', 'Motivo próximo', 'Contactado', 'Observaciones', '_servicios_json'
+  'Hora próxima', 'Motivo próximo', 'Contactado', 'Observaciones', '_servicios_json',
+  'Efectivo', 'QR', 'Tarjeta', 'Transferencia', '_pagos_json'
 ];
 
 /* ------------------------------------------------------------------ hoja */
@@ -88,13 +89,27 @@ function filaDeRegistro(r) {
     r.tipo || '', r.canal || '', r.canalDetalle || '', srvTexto(r.servicios),
     Number(r.total) || 0, Number(r.acuenta) || 0, Number(r.saldo) || 0,
     r.metodo || '', r.estado || '', r.prox || '', r.proxHora || '', r.proxMotivo || '',
-    r.contactado ? 'SÍ' : 'NO', r.obs || '', JSON.stringify(r.servicios || [])
+    r.contactado ? 'SÍ' : 'NO', r.obs || '', JSON.stringify(r.servicios || []),
+    montoDe(r, 'Efectivo'), montoDe(r, 'QR'), montoDe(r, 'Tarjeta'), montoDe(r, 'Transferencia'),
+    JSON.stringify(r.pagos || [])
   ];
 }
 
+/** Cuánto de esta atención se cobró con tal forma de pago. */
+function montoDe(r, metodo) {
+  var ps = r.pagos && r.pagos.length ? r.pagos : [];
+  if (!ps.length && r.metodo === metodo) return Number(r.acuenta) || 0;
+  var t = 0;
+  for (var i = 0; i < ps.length; i++) {
+    if (ps[i] && ps[i].metodo === metodo) t += Number(ps[i].monto) || 0;
+  }
+  return t;
+}
+
 function registroDeFila(f) {
-  var servicios = [];
+  var servicios = [], pagos = [];
   try { servicios = JSON.parse(f[24] || '[]'); } catch (e) { servicios = []; }
+  try { pagos = JSON.parse(f[29] || '[]'); } catch (e) { pagos = []; }
   return {
     id: f[0], ts: f[1], fecha: formatoFecha(f[2]), hora: f[3], nroDia: f[4],
     profesional: f[5], paciente: f[6], celular: String(f[7] || ''), ci: String(f[8] || ''),
@@ -103,7 +118,7 @@ function registroDeFila(f) {
     total: Number(f[14]) || 0, acuenta: Number(f[15]) || 0, saldo: Number(f[16]) || 0,
     metodo: f[17], estado: f[18], prox: formatoFecha(f[19]), proxHora: f[20],
     proxMotivo: f[21], contactado: String(f[22]).toUpperCase() === 'SÍ' || String(f[22]).toUpperCase() === 'SI',
-    obs: f[23]
+    obs: f[23], pagos: pagos
   };
 }
 
