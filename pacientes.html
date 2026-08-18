@@ -22,11 +22,16 @@
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{font-family:'Archivo','Helvetica Neue',Arial,sans-serif;background:var(--paper);color:var(--ink);
-     -webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45}
-.wrap{max-width:1120px;margin:0 auto;padding:0 14px 90px}
+     -webkit-font-smoothing:antialiased;font-size:clamp(15px,.62vw + 12.6px,16.5px);line-height:1.45}
+/* El panel se estira con la pantalla en vez de quedarse en un ancho fijo.
+   El tope existe solo para no volverse absurdo en un monitor gigante; lo que
+   de verdad no debe estirarse son las líneas de texto, y eso se limita abajo
+   por separado. */
+.wrap{width:100%;max-width:2200px;margin:0 auto;padding:0 clamp(14px,2.2vw,36px) 90px}
 
 header{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
-.hd{max-width:1120px;margin:0 auto;padding:13px 14px 11px;display:flex;align-items:center;gap:12px}
+.hd{width:100%;max-width:2200px;margin:0 auto;padding:13px clamp(14px,2.2vw,36px) 11px;
+  display:flex;align-items:center;gap:12px}
 .hd .mark{width:31px;height:31px;flex:0 0 31px;color:var(--lime-dk)}
 .mast{line-height:1.08;min-width:0}
 .kicker{font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gray);font-weight:700}
@@ -34,8 +39,8 @@ header{background:var(--panel);border-bottom:1px solid var(--line);position:stic
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hd .sub{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);
   margin-left:auto;text-align:right;line-height:1.6;flex:0 0 auto}
-nav{max-width:1120px;margin:0 auto;padding:0 14px;display:flex;gap:2px;
-  overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav{width:100%;max-width:2200px;margin:0 auto;padding:0 clamp(14px,2.2vw,36px);
+  display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 nav button{flex:0 0 auto;background:transparent;border:0;border-bottom:2px solid transparent;
   color:var(--gray);font:inherit;font-weight:600;font-size:13.5px;
   padding:10px 11px;cursor:pointer;white-space:nowrap}
@@ -44,10 +49,10 @@ nav button:not(.on):hover{color:var(--ink)}
 nav button:focus-visible{outline:2px solid var(--lime-dk);outline-offset:-2px;border-radius:4px}
 
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-top:14px}
-.card h2{margin:0 0 4px;font-size:16px;letter-spacing:-.2px}
+.card h2{margin:0 0 4px;font-size:clamp(16px,.5vw + 13.6px,19px);letter-spacing:-.2px}
 .card h2 .n{display:inline-block;background:var(--lime);color:var(--ink);border-radius:6px;font-size:12px;
   padding:1px 7px;margin-right:7px;vertical-align:2px}
-.hint{color:var(--gray);font-size:12.5px;margin:0 0 12px}
+.hint{color:var(--gray);font-size:12.5px;margin:0 0 12px;max-width:88ch}
 .grid{display:grid;gap:12px}
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:1fr 1fr 1fr}
@@ -94,17 +99,17 @@ select{appearance:none;padding-right:32px;
 .seg.lime input:checked + span{background:var(--lime);color:var(--ink);border-color:var(--lime-dk)}
 .seg.bad input:checked + span{background:var(--clay);color:#fff;border-color:var(--clay)}
 
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(clamp(150px,13vw,215px),1fr));gap:12px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;box-shadow:var(--sh)}
 .kpi .k{font-size:11.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px}
-.kpi .v{font-size:24px;font-weight:800;letter-spacing:-.8px;margin-top:3px}
+.kpi .v{font-size:clamp(24px,1.5vw + 8px,34px);font-weight:800;letter-spacing:-.03em;margin-top:3px}
 .kpi .d{font-size:12px;color:var(--gray);margin-top:1px}
 .kpi.acc{background:var(--lime-sf);border-color:var(--lime-bd)}
 .kpi.acc .k{color:#6E7A45}.kpi.acc .d{color:#6E7A45}
 .kpi.acc .v{color:var(--lime-dk)}
 
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+table{width:100%;border-collapse:collapse;font-size:clamp(13.5px,.42vw + 11.6px,15px);min-width:640px}
 th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);
    font-weight:700;padding:8px 9px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--panel)}
 td{padding:9px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -116,6 +121,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .st-reagendar{box-shadow:inset 3px 0 0 var(--warn)}
 .st-noasistio{box-shadow:inset 3px 0 0 var(--clay)}
 .empty{text-align:center;color:var(--gray);padding:26px 10px;font-size:14px}
+.banner{max-width:110ch}
 
 .bars{display:grid;gap:9px;margin-top:6px}
 .bar-row{display:grid;grid-template-columns:130px 1fr 82px;gap:10px;align-items:center;font-size:13px}
@@ -167,10 +173,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
 .lock{max-width:380px;margin:34px auto;text-align:center}
-.mini{font-size:12.5px;color:var(--gray)}
+.mini{font-size:12.5px;color:var(--gray);max-width:92ch}
 /* Formato del día: a la izquierda lo que no cambia durante la jornada
    (el resumen), a la derecha lo que sí (la agenda que se va marcando). */
-.dia{display:grid;grid-template-columns:250px 1fr;gap:0;
+.dia{display:grid;grid-template-columns:clamp(250px,19vw,360px) 1fr;gap:0;
   background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
   box-shadow:var(--sh);margin-top:14px;overflow:hidden}
 @media(max-width:820px){.dia{grid-template-columns:1fr}}
@@ -179,13 +185,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .dia .lista{padding:18px 18px 20px;min-width:0}
 .fig{margin-bottom:18px}
 .fig:last-child{margin-bottom:0}
-.fig .n{font-size:50px;line-height:.86;font-weight:800;letter-spacing:-.035em;
+.fig .n{font-size:clamp(46px,3.2vw + 12px,72px);line-height:.86;font-weight:800;letter-spacing:-.035em;
   color:var(--ink);font-variant-numeric:tabular-nums}
 .fig .n sup{font-size:15px;vertical-align:super;color:var(--lime-dk);
   letter-spacing:0;margin-left:3px;font-weight:700}
 .fig .l{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);
   margin-top:8px;font-weight:700;line-height:1.5}
-.fig.chico .n{font-size:29px}
+.fig.chico .n{font-size:clamp(28px,1.5vw + 12px,40px)}
 .fig-row{display:flex;gap:24px}
 .fig-sep{height:1px;background:var(--line);margin:18px 0}
 .lista-h{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);
@@ -193,6 +199,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .lista-h .cnt{background:var(--lime);color:#1E2410;border-radius:999px;padding:2px 9px;
   font-size:9.5px;letter-spacing:.04em}
 .lista-h .cnt.ok{background:var(--lime-sf);color:var(--lime-dk);border:1px solid var(--lime-bd)}
+
+/* Los datos ganan con el ancho; los formularios no: un campo de "nombre y
+   apellido" de 700px es peor que uno de 350. Por eso solo las vistas de
+   carga tienen tope. */
+#v-atencion,#v-config{max-width:1180px}
+#v-cita .card:last-of-type{max-width:1180px}
 
 .view{display:none}.view.on{display:block}
 @media print{header,nav,.row-btn,#toast{display:none}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
