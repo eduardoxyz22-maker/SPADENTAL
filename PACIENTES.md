@@ -7,6 +7,12 @@ contactar**.
 
 Se abre con doble clic o desde el celular. Funciona sin internet.
 
+**Pide una clave al entrar.** La de fábrica es `spadental2026` y se cambia desde
+*Ajustes → Clave de entrada*. Se recuerda por equipo, así que la pide una sola
+vez por dispositivo (el botón *🔒 Bloquear ahora* la vuelve a pedir).
+Es una traba para el curioso, **no seguridad real**: quien sepa mirar el código
+de la página puede saltearla. Por eso el enlace no se comparte fuera del equipo.
+
 ---
 
 ## Las 6 pestañas
@@ -69,6 +75,7 @@ Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
 última y próxima visita. Al tocar una fila se abre su **historial completo**.
 
 ### ⚙️ Ajustes
+- **Clave de entrada** — cambiarla y bloquear la sesión.
 - **Profesionales** y **canales de captación** (editables, uno por línea).
 - **Lista de precios** completa y editable — se pueden actualizar los precios
   sin tocar el código, y restaurar la lista original cuando haga falta.
@@ -118,10 +125,13 @@ tenerla fuera de buscadores.
 
 ## Verificación
 
-- 92 comprobaciones automáticas sobre el HTML (jsdom): alta, validación,
-  precios editables, cálculo de saldo, recordatorios vencidos/hoy/próximos,
-  reagendar, cobro de saldo, edición sin duplicar, panel por canal, historial,
-  ajustes y export.
+- 109 comprobaciones automáticas sobre el HTML (jsdom): clave de entrada,
+  alta, validación, precios editables, cálculo de saldo, recordatorios
+  vencidos/hoy/próximos, reagendar, cobro de saldo, edición sin duplicar,
+  panel por canal, historial, ajustes y export.
+- SHA-256 propio (necesario porque `crypto.subtle` no existe al abrir el
+  archivo con doble clic) contrastado contra el de Node en 10 casos, incluidos
+  acentos y emojis.
 - 23 comprobaciones sobre el backend de Apps Script con una hoja simulada:
   round-trip completo, N° del día correlativo, edición sin duplicar, borrado.
 - Excel generado validado con `zipfile` + `openpyxl` (3 hojas: Atenciones,
