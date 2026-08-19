@@ -290,8 +290,13 @@ requirements.txt
 Panel de control de visitas y atención del consultorio de la Dra. Mirna:
 registro de cada visita, **canal por el que llegó el paciente**, servicios con
 precio editable, **a cuenta / saldo**, y **recordatorios para reagendar o
-contactar**. Página única, se abre con doble clic, funciona sin internet y
-opcionalmente sincroniza con una hoja de Google.
+contactar**. Cada paciente tiene su **ficha**: fecha de nacimiento, **ficha
+médica** (alergias, medicación y antecedentes, que avisan en rojo antes de
+atender), **consentimiento** y **planes de tratamiento** con sesiones y avance.
+Los recordatorios incluyen los **cumpleaños** de la semana y los **controles
+que ya tocan** (limpieza, ortodoncia), deducidos solos. Página única, se abre
+con doble clic, funciona sin internet y opcionalmente sincroniza con una hoja
+de Google.
 
 Documentación: **[PACIENTES.md](PACIENTES.md)** ·
 conexión opcional a Google Sheets: **[SETUP-GOOGLE-SHEETS-SPADENTAL.md](SETUP-GOOGLE-SHEETS-SPADENTAL.md)**

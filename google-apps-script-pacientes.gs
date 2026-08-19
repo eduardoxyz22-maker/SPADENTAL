@@ -11,12 +11,16 @@
  *   {action:'bulk',  registros:[…]}  → {ok:true, agregados, actualizados, total}
  *   {action:'info'}                  → {ok:true, planilla, url, filas}
  *   {action:'cfg',    cfg:{…}}        → {ok:true}   (guarda los ajustes compartidos)
+ *   {action:'pac',   registro:{…}}   → {ok:true}   (ficha del paciente: nacimiento,
+ *                                                   ficha médica y planes de tratamiento)
  *
  * El list devuelve además `cfg` con los ajustes (precios, canales,
- * profesionales, clave), para que todos los equipos usen los mismos.
+ * profesionales, clave) y `pacientes` con las fichas, para que todos los
+ * equipos vean lo mismo.
  */
 
 var HOJA = 'Atenciones';
+var HOJA_PAC = 'Pacientes';
 
 /* Opcional: el ID de la planilla (lo que va entre /d/ y /edit en su URL).
    Se puede dejar vacío: el script usa la planilla en la que está pegado y,
@@ -31,8 +35,13 @@ var COLS = [
   'Total Bs', 'A cuenta Bs', 'Saldo Bs', 'Método', 'Estado', 'Próxima cita',
   'Hora próxima', 'Motivo próximo', 'Contactado', 'Observaciones', '_servicios_json',
   'Efectivo', 'QR', 'Tarjeta', 'Transferencia', '_pagos_json',
-  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el'
+  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el', 'Plan'
 ];
+
+/* Ficha del paciente: lo que es suyo y no de una visita puntual. Va en su
+   propia hoja porque hay una fila por paciente, no por atención. */
+var COLS_PAC = ['Nombre', 'Nacimiento', 'Alergias', 'Medicación', 'Antecedentes',
+  'Consentimiento', 'Planes', 'Actualizado', '_med_json', '_planes_json'];
 
 /* ------------------------------------------------------------------ hoja */
 /**
@@ -75,6 +84,86 @@ function getSheet() {
   return sh;
 }
 
+/**
+ * La hoja de fichas. Igual que la de atenciones: si el archivo viene de una
+ * versión anterior, se le completan los encabezados que faltan.
+ */
+function getSheetPac() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(HOJA_PAC);
+  if (!sh) {
+    sh = ss.insertSheet(HOJA_PAC);
+  }
+  var anchoActual = Math.max(sh.getLastColumn(), 1);
+  var cab = sh.getRange(1, 1, 1, anchoActual).getValues()[0];
+  if (cab.length < COLS_PAC.length || String(cab[0]).trim() !== COLS_PAC[0]) {
+    sh.getRange(1, 1, 1, COLS_PAC.length).setValues([COLS_PAC]);
+    sh.getRange(1, 1, 1, COLS_PAC.length)
+      .setFontWeight('bold').setBackground('#A8C21E').setFontColor('#262625');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+/* Las dos columnas legibles (Antecedentes, Planes) son para que el
+   consultorio pueda leer la planilla; las que mandan son las _json. */
+function filaDePaciente(p) {
+  var med = p.med || {}, planes = p.planes || [];
+  var ant = (med.antecedentes || []).join(', ');
+  var resumen = planes.map(function (pl) {
+    var ses = pl.sesiones || [], hechas = 0;
+    for (var i = 0; i < ses.length; i++) if (ses[i] && ses[i].hecha) hechas++;
+    return (pl.nombre || 'Plan') + ' (' + hechas + '/' + ses.length + ', ' + (pl.estado || '') + ')';
+  }).join(' | ');
+  return [
+    p.nombre || '', p.nac || '', med.alergias || '', med.medicacion || '', ant,
+    med.consent ? 'SÍ' : 'NO', resumen, p.ts || '',
+    JSON.stringify(med), JSON.stringify(planes)
+  ];
+}
+
+function pacienteDeFila(f) {
+  var med = {}, planes = [];
+  try { med = JSON.parse(f[8] || '{}'); } catch (e) { med = {}; }
+  try { planes = JSON.parse(f[9] || '[]'); } catch (e) { planes = []; }
+  return {
+    nombre: String(f[0] || ''), nac: formatoFecha(f[1]),
+    med: med, planes: planes, ts: f[7] || ''
+  };
+}
+
+function doListPac() {
+  var sh = getSheetPac();
+  var n = sh.getLastRow();
+  if (n < 2) return [];
+  var filas = sh.getRange(2, 1, n - 1, COLS_PAC.length).getValues();
+  var out = [];
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0]) continue;
+    out.push(pacienteDeFila(filas[i]));
+  }
+  return out;
+}
+
+/* Una fila por paciente: se busca por nombre, sin distinguir mayúsculas. */
+function doGuardarPac(p) {
+  if (!p || !p.nombre) return { ok: false, error: 'sin_nombre' };
+  var sh = getSheetPac();
+  var n = sh.getLastRow();
+  var clave = String(p.nombre).trim().toLowerCase();
+  var destino = 0;
+  if (n >= 2) {
+    var nombres = sh.getRange(2, 1, n - 1, 1).getValues();
+    for (var i = 0; i < nombres.length; i++) {
+      if (String(nombres[i][0] || '').trim().toLowerCase() === clave) { destino = i + 2; break; }
+    }
+  }
+  var fila = filaDePaciente(p);
+  if (destino) sh.getRange(destino, 1, 1, COLS_PAC.length).setValues([fila]);
+  else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_PAC.length).setValues([fila]);
+  return { ok: true, paciente: p.nombre };
+}
+
 /* ------------------------------------------------- serialización servicios */
 function srvTexto(servicios) {
   if (!servicios || !servicios.length) return '';
@@ -97,7 +186,7 @@ function filaDeRegistro(r) {
     r.contactado ? 'SÍ' : 'NO', r.obs || '', JSON.stringify(r.servicios || []),
     montoDe(r, 'Efectivo'), montoDe(r, 'QR'), montoDe(r, 'Tarjeta'), montoDe(r, 'Transferencia'),
     JSON.stringify(r.pagos || []),
-    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || ''
+    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || '', r.planId || ''
   ];
 }
 
@@ -125,7 +214,8 @@ function registroDeFila(f) {
     metodo: f[17], estado: f[18], prox: formatoFecha(f[19]), proxHora: f[20],
     proxMotivo: f[21], contactado: String(f[22]).toUpperCase() === 'SÍ' || String(f[22]).toUpperCase() === 'SI',
     obs: f[23], pagos: pagos,
-    origen: f[30] || '', agendaPor: f[31] || '', citaDe: f[32] || '', resueltaTs: f[33] || ''
+    origen: f[30] || '', agendaPor: f[31] || '', citaDe: f[32] || '', resueltaTs: f[33] || '',
+    planId: f[34] || ''
   };
 }
 
@@ -163,14 +253,14 @@ function leerCfg() {
 function doList() {
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [], cfg: leerCfg() };
+  if (n < 2) return { ok: true, registros: [], cfg: leerCfg(), pacientes: doListPac() };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out, cfg: leerCfg() };
+  return { ok: true, registros: out, cfg: leerCfg(), pacientes: doListPac() };
 }
 
 function doSave(r) {
@@ -278,6 +368,7 @@ function doPost(e) {
     if (body.action === 'bulk') return json(doBulk(body.registros || []));
     if (body.action === 'info') return json(doInfo());
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg));
+    if (body.action === 'pac') return json(doGuardarPac(reg));
     return json({ ok: false, error: 'accion_desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });

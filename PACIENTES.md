@@ -23,13 +23,20 @@ El formulario del día a día, en 6 pasos:
 1. **Visita** — fecha, hora, profesional y **¿cómo llegó hoy?**
    (🚶 vino sin cita / 📅 tenía cita). El **N° del día** se asigna solo y
    reinicia cada mañana.
-2. **Paciente** — nombre, celular, CI, edad. Si el paciente ya vino antes,
-   al escribir el nombre **se autocompletan sus datos**, se marca como
+2. **Paciente** — nombre, celular, CI y **fecha de nacimiento** (la edad se
+   calcula sola: la fecha no envejece). Si el paciente ya vino antes, al
+   escribir el nombre **se autocompletan sus datos**, se marca como
    *Recurrente* y avisa cuántas visitas tiene y si debe algo.
+   Si tiene **alergias, medicación o antecedentes** cargados, aparece un
+   **aviso rojo acá mismo**, antes de tocar al paciente. Los dos botones al
+   pie del bloque abren su **ficha médica** y sus **planes de tratamiento**.
 3. **¿Por dónde nos encontró?** — el dato clave: Facebook, Instagram, TikTok,
    WhatsApp, Google/Maps, Referido, Pasó por el local, Volante, Otro. Más un
    campo de detalle libre (*qué campaña*, *quién lo refirió*).
 4. **Servicios realizados** — se eligen de la lista de precios del consultorio.
+   Si el paciente tiene un **plan de tratamiento activo**, aparece un selector
+   para marcar que esta visita es una sesión del plan: al guardar se marca
+   hecha la sesión que seguía y lo cobrado va contra el saldo del plan.
    El precio **se sugiere pero se puede pisar siempre**: manda lo que anotan
    ustedes, no la lista. Se pueden cargar varios servicios, con cantidad y
    detalle de pieza.
@@ -95,7 +102,16 @@ cuántos hay pendientes. Cuatro listas:
   con el mensaje de cobro listo.
 - **😴 Sin volver** — pacientes que no vienen hace mucho y no tienen próxima
   cita agendada: la lista para reactivar.
-- **Todos** — las tres juntas.
+- **🎂 Cumpleaños** — los de los próximos días (7 por defecto), con la edad
+  que cumple y el saludo de WhatsApp ya escrito. Sale de la **fecha de
+  nacimiento** de la ficha: el paciente que no la tenga cargada no aparece.
+- **🪥 Controles que tocan** — los que el panel deduce solo, sin que nadie los
+  agende: **limpieza cada 6 meses** y **control de ortodoncia cada 30 días**,
+  contados desde el último servicio de ese tipo que se hizo el paciente. Los
+  vencidos salen primero y en rojo. **No aparece quien ya tiene una próxima
+  cita agendada** — va a venir igual, no hay nada que recordar. Los plazos y
+  el aviso se cambian en *Ajustes → Recordatorios*.
+- **Todos** — todas juntas.
 
 ### 📋 Atenciones
 Todas las visitas cargadas, filtrables por día / mes / todo y con buscador
@@ -144,7 +160,50 @@ La pestaña contable. Filtrable por día, mes, año o todo:
 
 ### 👤 Pacientes
 Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
-última y próxima visita. Al tocar una fila se abre su **historial completo**.
+última y próxima visita. Al tocar una fila se abre su **ficha completa**.
+
+#### La ficha del paciente
+Todo lo suyo en una sola pantalla, que es lo que la doctora abre antes de
+atender:
+
+- **Datos y cumpleaños** — celular, edad calculada, fecha de nacimiento, por
+  qué canal llegó y desde cuándo es paciente.
+- **Aviso médico en rojo** — alergias, medicación y antecedentes, arriba de
+  todo. Si firmó el consentimiento, también se ve acá.
+- **Visitas, facturado y saldo** de toda su historia.
+- **Próxima cita** agendada (o la próxima fecha que dejó una atención).
+- **Plan de tratamiento** con barra de avance, presupuesto, saldo y cuál es la
+  sesión que sigue.
+- **Cada visita** que hizo, clicable para abrir la atención.
+- Botones para mandarle **WhatsApp**, cargarle una **nueva atención**, o abrir
+  su **ficha médica** y sus **planes**.
+
+#### 🩺 Ficha médica
+Es del paciente, no de la visita: se carga una vez y queda. Fecha de
+nacimiento, **alergias**, **medicación que toma**, **antecedentes** (diabetes,
+hipertensión, cardiopatía, embarazo, anticoagulantes, asma, epilepsia,
+hepatitis, fuma, bruxismo), notas libres y el **consentimiento informado**
+—que queda marcado con la fecha en que se firmó—.
+
+Lo que se carga acá es lo que después aparece **en rojo al abrir la atención**.
+
+#### 🦷 Planes de tratamiento
+El presupuesto que se le pasó al paciente, partido en sesiones:
+
+- **Nombre, fecha y presupuesto total** del plan.
+- **Sesiones**, una por línea. Se van marcando hechas solas a medida que se
+  cargan atenciones enlazadas al plan (o a mano, con *Marcar hecha*).
+  Reescribir la lista **no borra lo ya hecho**.
+- **Barra de avance** con las sesiones cumplidas y el porcentaje.
+- **Lo cobrado no se anota a mano**: sale de las atenciones enlazadas al plan,
+  así el panel nunca dice que está pagado algo que no se cobró. El saldo es el
+  presupuesto menos eso.
+- Un plan se cierra solo cuando se hicieron todas las sesiones y no queda
+  saldo; también se puede dar por terminado o borrar a mano (borrar el plan
+  **no toca las atenciones** ya cargadas).
+
+Un paciente puede tener varios planes; en el formulario solo se ofrecen los
+**activos**.
 
 ### ⚙️ Ajustes
 - **Clave de entrada** — cambiarla y bloquear la sesión.
@@ -152,8 +211,11 @@ Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
   Brenda, Shirley) y **canales de captación**, editables, uno por línea.
 - **Lista de precios** completa y editable — se pueden actualizar los precios
   sin tocar el código, y restaurar la lista original cuando haga falta.
-- **Recordatorios**: con cuántos días de anticipación avisar, y a los cuántos
-  días se considera que un paciente "no vuelve".
+- **Recordatorios**: con cuántos días de anticipación avisar las citas y los
+  **cumpleaños**, y a los cuántos días se considera que un paciente "no vuelve".
+- **Controles automáticos**: si se traen o no, cada cuántos meses toca la
+  **limpieza**, cada cuántos días el **control de ortodoncia**, y con cuánta
+  anticipación avisarlos.
 - **Datos y respaldo**: Excel de todo, respaldo JSON y restaurar JSON.
 
 ---
@@ -161,7 +223,8 @@ Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
 ## Qué se comparte entre los equipos
 
 Con la hoja de Google conectada, **todo se comparte**: atenciones, citas,
-cobros, saldos, y también los **ajustes** (lista de precios, canales,
+cobros, saldos, las **fichas de los pacientes** (nacimiento, ficha médica y
+planes, que van a una hoja aparte llamada *Pacientes*), y también los **ajustes** (lista de precios, canales,
 profesionales, días de aviso y la clave de entrada). Se cambian en un equipo
 y los demás los toman solos. Si dos equipos editan lo mismo, gana el último
 que guardó.
@@ -227,3 +290,17 @@ tenerla fuera de buscadores.
   Por canal, Por servicio).
 - Flujo real en navegador a 375×812 (celular) y 1280×720: sin scroll
   horizontal, todos los campos reciben el toque, sin errores de consola.
+
+De la tanda de cumpleaños, ficha médica, planes y controles:
+
+- 28 comprobaciones de flujo real en Chromium (cargar una atención, edad
+  calculada, cumpleaños de hoy y de la semana, ficha médica que avisa en rojo,
+  plan que consume sesión y descuenta saldo, control vencido, ficha completa,
+  y que todo sobreviva a recargar la página).
+- 21 comprobaciones de borde y de que no se rompió nada de lo anterior: 29 de
+  febrero en año bisiesto y en año normal, la edad el día justo del cumpleaños,
+  guardar dos veces la misma atención sin consumir dos sesiones, reescribir un
+  plan sin borrar lo ya hecho, y las 8 pestañas dibujándose sin errores.
+- 6 comprobaciones de coherencia del plan al borrar una atención: la sesión
+  vuelve a quedar pendiente, el plan se reabre y lo cobrado baja solo.
+- Móvil a 390×844: sin scroll horizontal.
