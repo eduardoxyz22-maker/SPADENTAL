@@ -898,6 +898,7 @@ body.locked{overflow:hidden}
       <button class="btn dark sm" id="btn-xls2">⬇ Excel de todo</button>
       <button class="btn sec sm" id="btn-json">⬇ Respaldo JSON</button>
       <button class="btn sec sm" id="btn-import">⬆ Restaurar JSON</button>
+      <button class="btn sec sm" id="btn-subir">☁ Subir a la nube lo de este equipo</button>
       <input type="file" id="file-json" accept="application/json,.json" class="sr" style="display:none">
     </div>
   </div>
@@ -1141,7 +1142,7 @@ function saveCfg(guardarEnServidor){
   CFG.ts=new Date().toISOString();
   saveCfgObj(CFG);
   if(guardarEnServidor!==false&&CONNECTED){
-    api('cfg',null,CFG).catch(function(){queue('cfg',CFG)})}}
+    enviar('cfg',CFG,CFG)}}
 
 /* Un hash de clave válido es SHA-256: 64 caracteres hexadecimales. Cualquier
    otra cosa dejaría a todo el consultorio afuera sin forma de entrar, así que
@@ -1179,14 +1180,32 @@ function api(action,payload,cfg){
 }
 function pend(){try{var a=JSON.parse(localStorage.getItem(K_PEND));return Array.isArray(a)?a:[]}catch(e){return []}}
 function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){}}
-function queue(action,rec){var q=pend();q.push({action:action,rec:rec});setPend(q)}
+function queue(action,rec){
+  /* no repetir el mismo pendiente dos veces */
+  var q=pend();
+  var igual=q.filter(function(x){
+    return x.action===action && JSON.stringify(x.rec)===JSON.stringify(rec)}).length;
+  if(!igual){q.push({action:action,rec:rec});setPend(q)}}
+
+/* El único camino para mandar algo al servidor.
+   Un {ok:false} es un fracaso igual que un corte de internet: se encola y se
+   reintenta. Antes solo se miraba el .catch, así que una acción que el
+   servidor todavía no conocía se perdía en silencio. */
+function enviar(action,rec,cfg){
+  if(!CONNECTED){queue(action,rec);return Promise.resolve(null)}
+  return api(action,rec,cfg).then(function(r){
+    if(r&&r.ok)return r;
+    queue(action,rec); return null
+  }).catch(function(){queue(action,rec); return null})}
 function flushQueue(){
   if(!CONNECTED)return Promise.resolve();
   var q=pend(); if(!q.length)return Promise.resolve();
   setPend([]);
   return q.reduce(function(p,item){return p.then(function(){
     var llamada=item.action==='cfg'?api('cfg',null,item.rec):api(item.action,item.rec);
-    return llamada.catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
+    return llamada.then(function(r){
+      if(!(r&&r.ok))queue(item.action,item.rec)
+    }).catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
 }
 function pullServer(){
   if(!CONNECTED)return Promise.resolve(false);
@@ -1754,7 +1773,7 @@ function submitAtencion(){
     /* El N° del día definitivo lo asigna el servidor, que es el único que ve
        lo que cargaron las demás doctoras. Acá se muestra uno tentativo y se
        corrige con el que vuelve, así dos personas no se pisan el número. */
-    api('save',rec).then(function(res){
+    enviar('save',rec).then(function(res){
       if(res&&res.ok&&res.registro&&res.registro.nroDia&&res.registro.nroDia!==rec.nroDia){
         var antes=rec.nroDia;
         rec.nroDia=res.registro.nroDia; saveLocal(); refreshNro();
@@ -1773,7 +1792,7 @@ function borrar(id){
   if(!confirm('¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?'))return;
   liberarSesionPlan(r);
   DATA=DATA.filter(function(x){return x.id!==id}); saveLocal();
-  if(CONNECTED){api('delete',{id:id}).catch(function(){queue('delete',{id:id})})}
+  if(CONNECTED){enviar('delete',{id:id})}
   closeModal(); toast('Atención borrada'); refreshAll()}
 
 /* ============================ AGENDAR CITAS ============================
@@ -2134,7 +2153,7 @@ function savePac(p){
   if(pacVacia(p)&&!PAC[k])return;
   p.ts=new Date().toISOString();
   PAC[k]=p; savePacLocal();
-  if(CONNECTED){api('pac',p).catch(function(){queue('pac',p)})}else{queue('pac',p)}}
+  enviar('pac',p)}
 
 /* Datos de contacto, última visita y próxima cita, sacados de las
    atenciones. Se arma una sola vez por pantalla y no por paciente. */
@@ -2589,7 +2608,7 @@ function renderRem(){
 
 function persist(rec){
   saveLocal();
-  if(CONNECTED){api('save',rec).catch(function(){queue('save',rec)})}else{queue('save',rec)}}
+  enviar('save',rec)}
 
 function marcarContactado(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||r.contactado)return;
@@ -3184,7 +3203,7 @@ function saveEgrLocal(){try{localStorage.setItem(K_EGR,JSON.stringify(EGR))}catc
 
 function persistEgr(e){
   saveEgrLocal();
-  if(CONNECTED){api('egreso',e).catch(function(){queue('egreso',e)})}else{queue('egreso',e)}}
+  enviar('egreso',e)}
 
 function guardarEgreso(e){
   e=egrNormalize(e);
@@ -3198,8 +3217,7 @@ function borrarEgreso(id){
   var e=EGR.filter(function(x){return x.id===id})[0]; if(!e)return;
   if(!confirm('¿Borrar el egreso de '+bs(e.monto)+' ('+e.categoria+') del '+fmtF(e.fecha)+'?'))return;
   EGR=EGR.filter(function(x){return x.id!==id}); saveEgrLocal();
-  if(CONNECTED){api('egresoDel',{id:id}).catch(function(){queue('egresoDel',{id:id})})}
-  else{queue('egresoDel',{id:id})}
+  enviar('egresoDel',{id:id});
   toast('Egreso borrado'); renderCaja()}
 
 function catsEgreso(){
@@ -4047,6 +4065,26 @@ function borrarPlan(nombre,id){
   p.planes=p.planes.filter(function(x){return x.id!==id});
   savePac(p); toast('Plan borrado'); abrirPlanes(nombre)}
 
+/* ======================================================================
+   SUBIR A LA NUBE LO DE ESTE EQUIPO
+   Si el servidor estuvo un tiempo sin conocer una acción (porque faltaba
+   redeployar el Apps Script), lo que se cargó en ese rato quedó guardado
+   solo acá. Esto lo empuja todo de una.
+   ====================================================================== */
+function subirLocal(){
+  if(!CONNECTED){toast('Modo local: no hay servidor configurado',1);return}
+  var n=0;
+  Object.keys(PAC).forEach(function(k){
+    if(!pacVacia(PAC[k])){queue('pac',PAC[k]); n++}});
+  EGR.forEach(function(e){queue('egreso',e); n++});
+  DATA.forEach(function(r){queue('save',r); n++});
+  if(!n){toast('No hay nada guardado en este equipo');return}
+  toast('Subiendo '+n+' registros…');
+  flushQueue().then(function(){
+    var faltan=pend().length;
+    toast(faltan? ('Quedaron '+faltan+' sin subir · reintentá') : ('Listo: '+n+' registros en la nube ✅'));
+    refrescarSiCorresponde(true)})}
+
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
   $('#c-prof').value=CFG.prof.join('\n');
@@ -4767,6 +4805,7 @@ function bind(){
     descargar(new Blob([JSON.stringify({data:DATA,cfg:CFG,pacientes:PAC,egresos:EGR},null,1)],{type:'application/json'}),
       'Spadental_respaldo_'+hoyISO()+'.json'); toast('Respaldo descargado')};
   $('#btn-import').onclick=function(){$('#file-json').click()};
+  $('#btn-subir').onclick=subirLocal;
   $('#file-json').onchange=function(e){
     var f=e.target.files[0]; if(!f)return;
     var rd=new FileReader();
