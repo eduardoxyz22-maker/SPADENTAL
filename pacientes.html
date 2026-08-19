@@ -244,6 +244,8 @@ tbody tr.destaca td{background:#FBFCF5}
 .banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+.banner.pend{background:#FBF3E2;border:1px solid #E4CE93;color:#6B4E10}
+.banner.pend .btn{margin-left:8px;vertical-align:baseline}
 /* Aviso de "estás editando". La unica señal que habia era el texto del boton
    de guardar, que esta despues de siete secciones: al escribir arriba no se
    veia, y se podia creer que se estaba cargando una visita nueva cuando en
@@ -1331,7 +1333,7 @@ function queue(action,rec){
   var q=pend();
   var igual=q.filter(function(x){
     return x.action===action && JSON.stringify(x.rec)===JSON.stringify(rec)}).length;
-  if(!igual){q.push({action:action,rec:rec});setPend(q)}}
+  if(!igual){q.push({action:action,rec:rec});setPend(q); if(window.banner)banner()}}
 
 /* El único camino para mandar algo al servidor.
    Un {ok:false} es un fracaso igual que un corte de internet: se encola y se
@@ -1347,6 +1349,8 @@ function flushQueue(){
   if(!CONNECTED)return Promise.resolve();
   var q=pend(); if(!q.length)return Promise.resolve();
   setPend([]);
+  /* al terminar, el banner tiene que reflejar lo que de verdad quedó */
+  setTimeout(function(){if(window.banner)banner()},0);
   return q.reduce(function(p,item){return p.then(function(){
     var llamada=item.action==='cfg'?api('cfg',null,item.rec):api(item.action,item.rec);
     return llamada.then(function(r){
@@ -5579,9 +5583,25 @@ function bind(){
     rd.readAsText(f)}}
 
 function banner(){
-  $('#conn-banner').innerHTML=CONNECTED
-    ? '<div class="banner conn">🟢 Conectado a la hoja de Google · lo que cargues se ve en todos los dispositivos</div>'
-    : '<div class="banner local">📴 Modo local · los datos quedan solo en este navegador. Descargá el respaldo seguido desde <b>Ajustes</b>.</div>'}
+  /* Decir "Conectado" cuando hay cosas esperando en la cola es peor que no
+     decir nada: se cree que ya está en la hoja y no está. */
+  var q=pend().length;
+  $('#conn-banner').innerHTML=!CONNECTED
+    ? '<div class="banner local">📴 Modo local · los datos quedan solo en este navegador. Descargá el respaldo seguido desde <b>Ajustes</b>.</div>'
+    : q
+      ? '<div class="banner pend">⏳ <b>'+q+' registro'+(q===1?'':'s')+' sin subir</b> · están guardados acá y se reintentan solos. '+
+        '<button type="button" class="btn sec sm" onclick="reintentarCola()">Reintentar ahora</button></div>'
+      : '<div class="banner conn">🟢 Conectado a la hoja de Google · lo que cargues se ve en todos los dispositivos</div>'}
+
+function reintentarCola(){
+  if(!CONNECTED){toast('Modo local: no hay servidor configurado',1);return}
+  var antes=pend().length;
+  if(!antes){toast('No hay nada pendiente ✅');return}
+  toast('Reintentando '+antes+' registro'+(antes===1?'':'s')+'…');
+  flushQueue().then(function(){
+    var q=pend().length; banner();
+    if(q)toast('Quedan '+q+' sin subir · revisá la conexión',1);
+    else toast('Listo: ya está todo en la nube ✅')})}
 
 (function init(){
   CFG=loadCfg(); DATA=loadLocal().map(normalize); PAC=loadPacLocal(); EGR=loadEgr();
