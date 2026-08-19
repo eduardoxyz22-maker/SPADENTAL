@@ -38,8 +38,28 @@ var COLS = [
   'Total Bs', 'A cuenta Bs', 'Saldo Bs', 'Método', 'Estado', 'Próxima cita',
   'Hora próxima', 'Motivo próximo', 'Contactado', 'Observaciones', '_servicios_json',
   'Efectivo', 'QR', 'Tarjeta', 'Transferencia', '_pagos_json',
-  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el', 'Plan'
+  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el', 'Plan', '_extra_json'
 ];
+
+/* Todo lo que filaDeRegistro ya escribe en su propia columna. Lo que no esté
+   en esta lista viaja en _extra_json, así agregar un campo al panel no obliga
+   a redeployar el script nunca más. */
+var CLAVES_MAPEADAS = ['id', 'ts', 'fecha', 'hora', 'nroDia', 'profesional',
+  'paciente', 'celular', 'ci', 'edad', 'tipo', 'canal', 'canalDetalle',
+  'servicios', 'total', 'acuenta', 'saldo', 'metodo', 'estado', 'prox',
+  'proxHora', 'proxMotivo', 'contactado', 'obs', 'pagos', 'origen',
+  'agendaPor', 'citaDe', 'resueltaTs', 'planId'];
+
+function extraDeRegistro(r) {
+  var e = {}, vacio = true;
+  for (var k in r) {
+    if (!Object.prototype.hasOwnProperty.call(r, k)) continue;
+    if (CLAVES_MAPEADAS.indexOf(k) >= 0) continue;
+    if (r[k] === undefined || r[k] === null || r[k] === '') continue;
+    e[k] = r[k]; vacio = false;
+  }
+  return vacio ? '' : JSON.stringify(e);
+}
 
 /* Ficha del paciente: lo que es suyo y no de una visita puntual. Va en su
    propia hoja porque hay una fila por paciente, no por atención. */
@@ -263,7 +283,8 @@ function filaDeRegistro(r) {
     r.contactado ? 'SÍ' : 'NO', r.obs || '', JSON.stringify(r.servicios || []),
     montoDe(r, 'Efectivo'), montoDe(r, 'QR'), montoDe(r, 'Tarjeta'), montoDe(r, 'Transferencia'),
     JSON.stringify(r.pagos || []),
-    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || '', r.planId || ''
+    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || '', r.planId || '',
+    extraDeRegistro(r)
   ];
 }
 
@@ -282,7 +303,7 @@ function registroDeFila(f) {
   var servicios = [], pagos = [];
   try { servicios = JSON.parse(f[24] || '[]'); } catch (e) { servicios = []; }
   try { pagos = JSON.parse(f[29] || '[]'); } catch (e) { pagos = []; }
-  return {
+  var base = {
     id: f[0], ts: f[1], fecha: formatoFecha(f[2]), hora: f[3], nroDia: f[4],
     profesional: f[5], paciente: f[6], celular: String(f[7] || ''), ci: String(f[8] || ''),
     edad: String(f[9] || ''), tipo: f[10], canal: f[11], canalDetalle: f[12],
@@ -294,6 +315,15 @@ function registroDeFila(f) {
     origen: f[30] || '', agendaPor: f[31] || '', citaDe: f[32] || '', resueltaTs: f[33] || '',
     planId: f[34] || ''
   };
+  /* lo que llegó en _extra_json vuelve tal cual, sin pisar nada mapeado */
+  var extra = {};
+  try { extra = JSON.parse(f[35] || '{}'); } catch (e) { extra = {}; }
+  for (var k in extra) {
+    if (!Object.prototype.hasOwnProperty.call(extra, k)) continue;
+    if (CLAVES_MAPEADAS.indexOf(k) >= 0) continue;
+    base[k] = extra[k];
+  }
+  return base;
 }
 
 /* Google a veces devuelve las fechas como objeto Date: las volvemos YYYY-MM-DD */

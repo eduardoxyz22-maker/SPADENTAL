@@ -424,7 +424,16 @@ body.locked{overflow:hidden}
   </div>
 
   <div class="card">
-    <h2><span class="n">5</span>Cobro</h2>
+    <h2><span class="n">5</span>¿Le recomendaste algo más?</h2>
+    <p class="hint">Lo que el paciente <b>necesita y hoy no se hizo</b>. Queda en Recordatorios
+      para no perderlo. Si vuelve y se lo hace, se cierra solo.</p>
+    <div id="pre-list"></div>
+    <button type="button" class="btn sec sm" id="btn-add-pre">＋ Agregar recomendación</button>
+    <div id="pre-tot"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span>Cobro</h2>
     <p class="hint">Cuánto dejó a cuenta hoy. El saldo se calcula solo (podés corregirlo).</p>
     <div class="grid g3">
       <div><label>Total Bs</label><input id="f-total" inputmode="decimal" placeholder="0"></div>
@@ -455,7 +464,7 @@ body.locked{overflow:hidden}
   </div>
 
   <div class="card">
-    <h2><span class="n">6</span>Estado y próximo contacto</h2>
+    <h2><span class="n">7</span>Estado y próximo contacto</h2>
     <p class="hint">Si marcás una próxima fecha, el paciente aparece solo en <b>Recordatorios</b>.</p>
     <label>Estado de la visita</label>
     <div class="seg" id="seg-estado">
@@ -568,6 +577,7 @@ body.locked{overflow:hidden}
     <div class="seg lime" id="seg-rem" style="margin-bottom:6px">
       <label><input type="radio" name="remf" value="citas" checked><span>📅 Citas</span></label>
       <label><input type="radio" name="remf" value="saldos"><span>💰 Saldos</span></label>
+      <label><input type="radio" name="remf" value="presu"><span>💬 Recomendados</span></label>
       <label><input type="radio" name="remf" value="dormidos"><span>😴 Sin volver</span></label>
       <label><input type="radio" name="remf" value="cuotas"><span>💳 Cuotas vencidas</span></label>
       <label><input type="radio" name="remf" value="frenados"><span>⏸ Planes frenados</span></label>
@@ -578,7 +588,7 @@ body.locked{overflow:hidden}
     <div class="kpis" style="margin:14px 0"><div class="kpi" id="k-venc"></div><div class="kpi" id="k-hoy"></div>
       <div class="kpi" id="k-sem"></div><div class="kpi" id="k-saldos"></div>
       <div class="kpi" id="k-cumple"></div><div class="kpi" id="k-ctrl"></div>
-      <div class="kpi" id="k-frenado"></div></div>
+      <div class="kpi" id="k-frenado"></div><div class="kpi" id="k-presu"></div></div>
     <div id="rem-list"></div>
   </div>
 </section>
@@ -631,6 +641,7 @@ body.locked{overflow:hidden}
       <label><input type="radio" name="psec" value="pacientes" checked><span>👤 Pacientes</span></label>
       <label><input type="radio" name="psec" value="agenda"><span>📅 Agenda</span></label>
       <label><input type="radio" name="psec" value="servicios"><span>🦷 Servicios</span></label>
+      <label><input type="radio" name="psec" value="presu"><span>💬 Recomendados</span></label>
       <label><input type="radio" name="psec" value="canales"><span>📣 Canales</span></label>
       <label><input type="radio" name="psec" value="equipo"><span>👩‍⚕️ Equipo</span></label>
       <label><input type="radio" name="psec" value="tiempo"><span>📆 Tiempo</span></label>
@@ -692,6 +703,22 @@ body.locked{overflow:hidden}
     <div class="card"><h2>Qué hizo cada doctora</h2>
       <p class="hint">Los 12 servicios que más facturan, cruzados con cada doctora.</p>
       <div id="p-srv-prof"></div></div>
+  </div>
+
+  <!-- --- TRATAMIENTOS RECOMENDADOS --- -->
+  <div class="psec" data-sec="presu" style="display:none">
+    <div class="kpis" style="margin-top:14px" id="p-presu-kpis"></div>
+    <div class="card"><h2>¿Qué se acepta y qué no?</h2>
+      <p class="hint">De cada tratamiento recomendado, cuántos terminaron haciéndose.
+        La barra es el porcentaje que se cierra.</p>
+      <div id="p-presu-serv"></div></div>
+    <div class="card"><h2>Por qué dicen que no</h2>
+      <p class="hint">Lo que se anota al marcar "no quiso". Si manda el precio, hay algo que
+        revisar en la lista o en las formas de pago.</p>
+      <div id="p-presu-motivo"></div></div>
+    <div class="card"><h2>Por profesional</h2>
+      <p class="hint">Cuánto recomienda cada una y cuánto de eso se concreta.</p>
+      <div id="p-presu-prof"></div></div>
   </div>
 
   <!-- --- CANALES --- -->
@@ -1274,6 +1301,9 @@ function normalize(r){
   if(!r.origen)r.origen='';
   if(!r.agendaPor)r.agendaPor='';
   if(!r.planId)r.planId='';
+  if(typeof r.presu==='string'){try{r.presu=JSON.parse(r.presu)}catch(e){r.presu=[]}}
+  if(!Array.isArray(r.presu))r.presu=[];
+  r.presu=r.presu.filter(function(p){return p&&p.nom}).map(preNormalize);
   r.total=num(r.total);r.acuenta=num(r.acuenta);r.saldo=num(r.saldo);
   r.contactado=!!r.contactado&&r.contactado!=='FALSE'&&r.contactado!=='NO';
   if(!r.id)r.id=uid();
@@ -1667,6 +1697,7 @@ function clearForm(keepFecha){
   $('#wrap-agendapor').style.display='none'; $('#cita-link').innerHTML='';
   $$('#seg-canal input').forEach(function(i){i.checked=false});
   SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv();
+  PRE=[preBlanco()]; renderPre();
   refrescarFichaForm('');
   $('#btn-save').textContent='Guardar atención';
   $('#btn-cancel-edit').style.display='none';
@@ -1709,6 +1740,7 @@ function loadForm(r){
   $('#f-prox').value=r.prox||''; $('#f-prox-hora').value=r.proxHora||''; $('#f-prox-motivo').value=r.proxMotivo||'';
   $('#f-obs').value=r.obs||'';
   $('#f-nro').value=r.nroDia?('#'+r.nroDia):'';
+  PRE=(r.presu&&r.presu.length)?r.presu.map(preNormalize):[preBlanco()]; renderPre();
   refrescarFichaForm(r.planId||'');
   $('#btn-save').textContent='Guardar cambios';
   $('#btn-cancel-edit').style.display='';
@@ -1760,6 +1792,7 @@ function submitAtencion(){
     metodo:getRadio('metodo'), pagos:leerPagos(), estado:getRadio('estado'),
     prox:$('#f-prox').value, proxHora:$('#f-prox-hora').value, proxMotivo:$('#f-prox-motivo').value.trim(),
     obs:$('#f-obs').value.trim(),
+    presu:(readPre(),preParaGuardar(prev)),
     contactado:(prev&&prev.prox===$('#f-prox').value)?!!prev.contactado:false,
     contactadoTs:(prev&&prev.prox===$('#f-prox').value)?(prev.contactadoTs||''):''
   };
@@ -1769,6 +1802,8 @@ function submitAtencion(){
   var nac=$('#f-nac').value;
   if(nac){var fi=pacDe(rec.paciente); if(fi.nac!==nac){fi.nac=nac; savePac(fi)}}
   marcarSesionPlan(rec);
+  /* si hoy se hizo algo que estaba recomendado, ese presupuesto se cierra solo */
+  var cerrados=autoCerrarPresu(rec);
   if(CONNECTED){
     /* El N° del día definitivo lo asigna el servidor, que es el único que ve
        lo que cargaron las demás doctoras. Acá se muestra uno tentativo y se
@@ -1785,6 +1820,8 @@ function submitAtencion(){
   var cita=crearCitaDesde(rec);
   var era=EDIT_ID; clearForm(true); fillDatalists(); updateNavRem();
   toast(era?'Atención actualizada':'Atención guardada ✅');
+  if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
+    :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
   showWhatsappModal(rec,cita)}
 
 function borrar(id){
@@ -2603,7 +2640,12 @@ function renderRem(){
         '<button class="btn sec sm" onclick="verPaciente(\''+jss(c.paciente)+'\')">Ver ficha</button>';
       h+=remCard(c.dias<=0?'due':'',c.paciente,meta,acts)})}
 
+  if(f==='presu'||f==='todos')h+=presuRemHtml();
+
   $('#rem-list').innerHTML=h||'<div class="empty">Nada pendiente por ahora ✨</div>';
+  var pp=presuPend();
+  $('#k-presu').innerHTML='<div class="k">Recomendados</div><div class="v">'+pp.length+'</div>'+
+    '<div class="d">'+(pp.length?bs(pp.reduce(function(a,x){return a+num(x.p.monto)},0))+' sin decidir':'todo respondido')+'</div>';
   updateNavRem()}
 
 function persist(rec){
@@ -2822,6 +2864,7 @@ function renderPanel(){
   var rows=periodoRows(), todo=periodoRowsTodo(), hoy=hoyISO();
   var sec=getRadio('psec')||'pacientes';
   $$('.psec').forEach(function(d){d.style.display=(d.dataset.sec===sec)?'':'none'});
+  if(sec==='presu')renderPanelPresu(rows);
 
   /* ---------------- acumuladores ---------------- */
   var pacs={},canal={},serv={},prof={},dow={},mens={},cat={},srvProf={},porDia={};
@@ -4085,6 +4128,247 @@ function subirLocal(){
     toast(faltan? ('Quedaron '+faltan+' sin subir · reintentá') : ('Listo: '+n+' registros en la nube ✅'));
     refrescarSiCorresponde(true)})}
 
+/* =====================================================================
+   PRESUPUESTOS · lo que se recomendó y todavía no se hizo
+   ---------------------------------------------------------------------
+   El panel registraba lo que se hizo, nunca lo que se propuso. Con los
+   datos en la mano: 485 de 932 pacientes (52%) solo pasaron por consulta
+   o limpieza y jamás hicieron un tratamiento. Sin este registro no hay
+   forma de saber a quién le recomendaron algo y se fue sin decidir.
+
+   Vive DENTRO de la atención (r.presu) porque un presupuesto tiene fecha
+   y doctora: es "lo que le dije ese día". Viaja al servidor por
+   _extra_json, así que no hace falta tocar el Apps Script.
+   ===================================================================== */
+var PRE=[];
+
+/* Para comparar "Endodoncia" con "endodoncia " y con "Endodoncía". */
+function claveServ(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,' ').trim()}
+
+function preBlanco(){return {id:uid(),nom:'',monto:'',estado:'',ts:'',motivo:''}}
+
+function preNormalize(p){
+  p=p||{};
+  return {id:p.id||uid(), nom:p.nom||'', monto:num(p.monto),
+    estado:p.estado||'', ts:p.ts||'', motivo:p.motivo||'', auto:!!p.auto}}
+
+/* ---------- el bloque del formulario ---------- */
+function preRowHtml(i,p){
+  var opts='<option value=""></option>', cats={};
+  CFG.precios.forEach(function(x){(cats[x.cat]=cats[x.cat]||[]).push(x)});
+  var enLista=CFG.precios.some(function(x){return x.nom===p.nom});
+  if(p.nom&&!enLista)opts+='<option value="'+esc(p.nom)+'" selected>'+esc(p.nom)+'</option>';
+  Object.keys(cats).forEach(function(c){
+    opts+='<optgroup label="'+esc(c)+'">';
+    cats[c].forEach(function(x){
+      opts+='<option value="'+esc(x.nom)+'"'+(p.nom===x.nom?' selected':'')+'>'+esc(x.nom)+'</option>'});
+    opts+='</optgroup>'});
+  return '<div class="srv pre" data-i="'+i+'">'+
+    '<div class="srv-top"><div><label>Tratamiento que necesita</label>'+
+      '<select class="p-nom">'+opts+'</select></div>'+
+      '<div><label>&nbsp;</label><button type="button" class="del p-del" title="Quitar">✕</button></div></div>'+
+    '<div class="srv-bot">'+
+      '<div><label>Presupuesto Bs</label><input class="p-monto" inputmode="decimal" value="'+esc(p.monto||'')+'" placeholder="0"></div>'+
+      '<div style="grid-column:span 2"><label>Nota (opcional)</label>'+
+        '<input class="p-motivo" value="'+esc(p.motivo||'')+'" placeholder="Ej. lo va a consultar con el esposo"></div>'+
+    '</div></div>'}
+
+function renderPre(){
+  if(!PRE.length)PRE=[preBlanco()];
+  $('#pre-list').innerHTML=PRE.map(function(p,i){return preRowHtml(i,p)}).join('');
+  pintarPreTot()}
+
+function readPre(){
+  var antes=PRE;
+  PRE=$$('#pre-list .pre').map(function(el,i){
+    var prev=antes[i]||{};
+    return {id:prev.id||uid(), nom:el.querySelector('.p-nom').value,
+      monto:num(el.querySelector('.p-monto').value),
+      motivo:el.querySelector('.p-motivo').value,
+      estado:prev.estado||'', ts:prev.ts||'', auto:!!prev.auto}})}
+
+function pintarPreTot(){
+  var t=PRE.reduce(function(a,p){return a+(p.nom?num(p.monto):0)},0);
+  var n=PRE.filter(function(p){return p.nom}).length;
+  $('#pre-tot').innerHTML=n
+    ? '<div class="tot-box"><span>'+n+' tratamiento'+(n===1?'':'s')+' por decidir</span><b>'+bs(t)+'</b></div>'
+    : ''}
+
+/* Lo que se guarda en la atención: solo las líneas con tratamiento. */
+function preParaGuardar(prev){
+  var viejos={};
+  ((prev&&prev.presu)||[]).forEach(function(p){viejos[p.id]=p});
+  return PRE.filter(function(p){return p.nom}).map(function(p){
+    var v=viejos[p.id]||{};
+    return preNormalize({id:p.id, nom:p.nom, monto:p.monto, motivo:p.motivo,
+      /* el estado no se toca desde el formulario: se marca en Recordatorios */
+      estado:v.estado||'', ts:v.ts||new Date().toISOString(), auto:v.auto})})}
+
+/* ---------- consultas ---------- */
+/* Todos los presupuestos, con la atención de la que salieron. */
+function presupuestos(){
+  var out=[];
+  DATA.forEach(function(r){
+    (r.presu||[]).forEach(function(p){
+      out.push({p:preNormalize(p), r:r, paciente:r.paciente, fecha:r.fecha,
+        profesional:r.profesional, celular:r.celular})})});
+  return out}
+
+/* Los que siguen sin respuesta, del más viejo al más nuevo. */
+function presuPend(){
+  var hoy=hoyISO();
+  return presupuestos().filter(function(x){return !x.p.estado})
+    .map(function(x){x.dias=diasEntre(x.fecha,hoy); return x})
+    .sort(function(a,b){return b.dias-a.dias})}
+
+/* Cuando el paciente vuelve y SÍ se hace el tratamiento, el presupuesto se
+   cierra solo. Si dependiera de que alguien se acuerde de marcarlo, la
+   métrica quedaría llena de pendientes falsos. */
+function autoCerrarPresu(rec){
+  if(!rec||!rec.paciente)return 0;
+  var hechos={};
+  (rec.servicios||[]).forEach(function(s){if(s.nom)hechos[claveServ(s.nom)]=true});
+  if(!Object.keys(hechos).length)return 0;
+  var clave=keyPac(rec.paciente), tocados=[], n=0;
+  DATA.forEach(function(r){
+    if(r.id===rec.id)return;
+    if(keyPac(r.paciente)!==clave)return;
+    if((r.fecha||'')>(rec.fecha||''))return;      // solo presupuestos anteriores
+    var cambio=false;
+    (r.presu||[]).forEach(function(p){
+      if(p.estado)return;
+      if(!hechos[claveServ(p.nom)])return;
+      p.estado='Aceptó'; p.auto=true; p.cerradoTs=new Date().toISOString();
+      cambio=true; n++});
+    if(cambio)tocados.push(r)});
+  if(n){saveLocal(); tocados.forEach(function(r){enviar('save',r)})}
+  return n}
+
+function marcarPresu(idAtencion,idPre,estado,motivo){
+  var r=DATA.filter(function(x){return x.id===idAtencion})[0]; if(!r)return;
+  var p=(r.presu||[]).filter(function(x){return x.id===idPre})[0]; if(!p)return;
+  p.estado=estado; p.auto=false; p.cerradoTs=new Date().toISOString();
+  if(motivo!=null)p.motivo=motivo;
+  persist(r); renderRem(); updateNavRem();
+  toast(estado==='Aceptó'?'Marcado como aceptado ✅':'Anotado, gracias')}
+
+function reabrirPresu(idAtencion,idPre){
+  var r=DATA.filter(function(x){return x.id===idAtencion})[0]; if(!r)return;
+  var p=(r.presu||[]).filter(function(x){return x.id===idPre})[0]; if(!p)return;
+  p.estado=''; p.auto=false; p.cerradoTs='';
+  persist(r); renderRem(); toast('Vuelve a quedar pendiente')}
+
+function txtPresu(x){
+  return 'Hola '+(x.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n\n'+
+    'Cuando vino el '+fmtF(x.fecha)+' le comentamos que necesitaba *'+x.p.nom+'*'+
+    (num(x.p.monto)>0?' ('+bs(x.p.monto)+')':'')+'.\n\n'+
+    '¿Le gustaría que le reservemos un turno para empezar? Cualquier duda sobre el '+
+    'tratamiento o las formas de pago, con gusto se la resolvemos 🦷'}
+
+/* ---------- Recordatorios: la lista de seguimiento ---------- */
+function presuRemHtml(){
+  var ps=presuPend();
+  var h='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">'+
+    '💬 Tratamientos recomendados sin respuesta · '+ps.length+'</h3>';
+  if(!ps.length)return h+'<div class="empty">Ninguno pendiente 🎉'+
+    '<br><span class="mini">Cuando anoten un tratamiento recomendado en la atención, aparece acá.</span></div>';
+  var bs_=ps.reduce(function(a,x){return a+num(x.p.monto)},0);
+  h+='<p class="mini" style="margin:0 0 12px">Son <b>'+bs(bs_)+'</b> en tratamientos que ya se recomendaron '+
+     'y todavía no se hicieron. Si el paciente vuelve y se lo hace, se cierra solo.</p>';
+  ps.slice(0,120).forEach(function(x){
+    var meta='<b>'+esc(x.p.nom)+'</b>'+(num(x.p.monto)>0?' · '+bs(x.p.monto):'')+
+      ' · se lo dijeron hace <b>'+x.dias+' días</b> ('+fmtF(x.fecha)+')'+
+      (x.profesional?' · '+esc(x.profesional):'')+
+      (x.p.motivo?'<br><i>'+esc(x.p.motivo)+'</i>':'')+
+      '<br>📱 '+esc(x.celular||'sin celular');
+    var acts=(x.celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(x.celular,txtPresu(x))+'">WhatsApp</a>':'')+
+      '<button class="btn sec sm" onclick="marcarPresu(\''+x.r.id+'\',\''+x.p.id+'\',\'Aceptó\')">✅ Aceptó</button>'+
+      '<button class="btn sec sm" onclick="pedirMotivoPresu(\''+x.r.id+'\',\''+x.p.id+'\')">✖ No quiso</button>';
+    h+=remCard(x.dias>=30?'due':'money',x.paciente,meta,acts)});
+  return h}
+
+/* Por qué dijo que no vale tanto como el no: es lo que dice si hay que
+   revisar precios, explicar mejor o financiar. */
+function pedirMotivoPresu(idAtencion,idPre){
+  var r=DATA.filter(function(x){return x.id===idAtencion})[0]; if(!r)return;
+  var p=(r.presu||[]).filter(function(x){return x.id===idPre})[0]; if(!p)return;
+  var ops=['Por el precio','Lo va a pensar','Se atiende en otro lado','No le pareció necesario','Otro'];
+  openModal('<h3>'+esc(r.paciente)+'</h3>'+
+    '<p class="mini">'+esc(p.nom)+(num(p.monto)>0?' · '+bs(p.monto):'')+'</p>'+
+    '<label style="margin-top:12px">¿Por qué no lo hizo?</label>'+
+    '<div class="seg" id="seg-nomotivo">'+ops.map(function(o,i){
+      return '<label><input type="radio" name="nomotivo" value="'+esc(o)+'"'+(i===0?' checked':'')+'><span>'+esc(o)+'</span></label>'}).join('')+'</div>'+
+    '<div class="row-btn"><button class="btn" onclick="cerrarNoQuiso(\''+idAtencion+'\',\''+idPre+'\')">Guardar</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function cerrarNoQuiso(idAtencion,idPre){
+  marcarPresu(idAtencion,idPre,'No quiso',getRadio('nomotivo')||'');
+  closeModal()}
+
+/* ---------- Panel ---------- */
+function renderPanelPresu(rows){
+  var ids={}; rows.forEach(function(r){ids[r.id]=1});
+  var todos=presupuestos().filter(function(x){return ids[x.r.id]});
+  var acep=todos.filter(function(x){return x.p.estado==='Aceptó'});
+  var no=todos.filter(function(x){return x.p.estado==='No quiso'});
+  var pend=todos.filter(function(x){return !x.p.estado});
+  var bsT=function(a){return a.reduce(function(s,x){return s+num(x.p.monto)},0)};
+  var tasa=todos.length?Math.round(acep.length/todos.length*100):0;
+
+  $('#p-presu-kpis').innerHTML=
+    '<div class="kpi acc"><div class="k">Recomendados</div><div class="v">'+n0(todos.length)+'</div>'+
+      '<div class="d">'+bs(bsT(todos))+' en juego</div></div>'+
+    '<div class="kpi"><div class="k">Aceptados</div><div class="v" style="color:var(--ok)">'+n0(acep.length)+'</div>'+
+      '<div class="d">'+bs(bsT(acep))+'</div></div>'+
+    '<div class="kpi"><div class="k">Se cierran</div><div class="v">'+tasa+'%</div>'+
+      '<div class="d">de lo que se recomienda</div></div>'+
+    '<div class="kpi"><div class="k">Sin respuesta</div><div class="v" style="color:'+(pend.length?'var(--clay)':'var(--ok)')+'">'+n0(pend.length)+'</div>'+
+      '<div class="d">'+bs(bsT(pend))+' por recuperar</div></div>'+
+    '<div class="kpi"><div class="k">Dijeron que no</div><div class="v">'+n0(no.length)+'</div>'+
+      '<div class="d">'+bs(bsT(no))+'</div></div>';
+
+  /* qué tratamiento se acepta y cuál no */
+  var porServ={};
+  todos.forEach(function(x){
+    var k=x.p.nom||'Sin nombre';
+    if(!porServ[k])porServ[k]={n:0,ok:0,no:0,pend:0,bs:0};
+    porServ[k].n++; porServ[k].bs+=num(x.p.monto);
+    if(x.p.estado==='Aceptó')porServ[k].ok++;
+    else if(x.p.estado==='No quiso')porServ[k].no++;
+    else porServ[k].pend++});
+  var filas=Object.keys(porServ).map(function(k){var v=porServ[k];
+    var pc=v.n?Math.round(v.ok/v.n*100):0;
+    return {k:k,v:v,pc:pc}}).sort(function(a,b){return b.v.n-a.v.n}).slice(0,15);
+  $('#p-presu-serv').innerHTML=tablaRank(
+    [{t:'Tratamiento'},{t:'Recomendado',num:true},{t:'Aceptó',num:true},{t:'No quiso',num:true},
+     {t:'Sin responder',num:true},{t:'Se cierra',barra:true}],
+    filas.map(function(f){
+      return [esc(f.k),n0(f.v.n),n0(f.v.ok),n0(f.v.no),n0(f.v.pend),{v:f.pc,txt:f.pc+'%'}]}),520);
+
+  /* por qué dicen que no */
+  var mot={};
+  no.forEach(function(x){var m=x.p.motivo||'Sin anotar'; mot[m]=(mot[m]||0)+1});
+  var fm=Object.keys(mot).map(function(k){return [esc(k),{v:mot[k],txt:n0(mot[k])}]})
+    .sort(function(a,b){return b[1].v-a[1].v});
+  $('#p-presu-motivo').innerHTML=tablaRank([{t:'Motivo'},{t:'Veces',barra:true}],fm,360);
+
+  /* quién recomienda y con qué resultado */
+  var porProf={};
+  todos.forEach(function(x){
+    var k=x.profesional||'Sin asignar';
+    if(!porProf[k])porProf[k]={n:0,ok:0,bs:0};
+    porProf[k].n++; porProf[k].bs+=num(x.p.monto);
+    if(x.p.estado==='Aceptó')porProf[k].ok++});
+  var fp=Object.keys(porProf).map(function(k){var v=porProf[k];
+    var pc=v.n?Math.round(v.ok/v.n*100):0;
+    return [esc(k),n0(v.n),n0(v.ok),bs(v.bs),{v:pc,txt:pc+'%'}]})
+    .sort(function(a,b){return num(b[1])-num(a[1])});
+  $('#p-presu-prof').innerHTML=tablaRank(
+    [{t:'Profesional'},{t:'Recomendó',num:true},{t:'Aceptaron',num:true},{t:'Bs propuestos',num:true},
+     {t:'Se cierra',barra:true}],fp,480)}
+
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
   $('#c-prof').value=CFG.prof.join('\n');
@@ -4659,6 +4943,22 @@ function bind(){
   $('#btn-ficha-med').onclick=function(){abrirFichaMed($('#f-paciente').value.trim())};
   $('#btn-planes').onclick=function(){abrirPlanes($('#f-paciente').value.trim())};
   $('#btn-add-srv').onclick=function(){readSrv();SRV.push({nom:'',det:'',cant:1,precio:''});renderSrv()};
+  $('#btn-add-pre').onclick=function(){readPre();PRE.push(preBlanco());renderPre()};
+  $('#pre-list').addEventListener('click',function(e){
+    if(!e.target.classList.contains('p-del'))return;
+    readPre(); var i=+e.target.closest('.pre').dataset.i;
+    PRE.splice(i,1); if(!PRE.length)PRE=[preBlanco()]; renderPre()});
+  $('#pre-list').addEventListener('change',function(e){
+    var box=e.target.closest('.pre'); if(!box)return;
+    if(e.target.classList.contains('p-nom')){
+      /* el precio de la lista es solo una sugerencia: si ya escribieron uno, no se pisa */
+      var px=CFG.precios.filter(function(x){return x.nom===e.target.value})[0];
+      var mi=box.querySelector('.p-monto');
+      if(px&&(!mi.value||!mi.dataset.touched))mi.value=px.precio||''}
+    readPre(); pintarPreTot()});
+  $('#pre-list').addEventListener('input',function(e){
+    if(e.target.classList.contains('p-monto'))e.target.dataset.touched='1';
+    readPre(); pintarPreTot()});
   $('#srv-list').addEventListener('click',function(e){
     var bpz=e.target.closest?e.target.closest('.s-pz'):null;
     if(bpz){abrirPiezas(+bpz.dataset.i); return}
@@ -4701,6 +5001,7 @@ function bind(){
   $('#q-paciente').oninput=autoCita;
 
   $('#btn-save').onclick=submitAtencion;
+  renderPre();
   $('#btn-clear').onclick=function(){clearForm();toast('Formulario limpio')};
   $('#btn-cancel-edit').onclick=function(){clearForm();toast('Edición cancelada')};
 
