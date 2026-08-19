@@ -244,6 +244,11 @@ tbody tr.destaca td{background:#FBFCF5}
 .banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+/* Lo que la doctora no puede pasar por alto: rojo y arriba de todo. */
+.alerta-clinica{background:#FBEDE6;border:1px solid #EFCBBD;border-left:4px solid var(--clay);
+  border-radius:10px;padding:11px 14px;font-size:13.5px;color:#7A3418;line-height:1.5}
+.alerta-clinica b{color:#5E2711}
+
 /* Mi día: la información del paciente va en bloques cortos y con color,
    para que se lea de un vistazo entre paciente y paciente. */
 .mi-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
@@ -294,6 +299,61 @@ tbody tr.destaca td{background:#FBFCF5}
 .view{display:none}.view.on{display:block}
 @media print{header,nav,.row-btn,#toast{display:none}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
 
+/* ---- Historia clínica imprimible ----
+   Vive oculta y solo aparece al imprimir. Se hace así, y no con una ventana
+   nueva, porque en el iPad y en el celular los bloqueadores de pop-ups la
+   comen. Los colores van en hex y no en variables: al imprimir en blanco y
+   negro las variables claras desaparecen. */
+#print-area{display:none}
+body.imprimiendo #print-area{display:block}
+@media print{
+  body.imprimiendo>*{display:none !important}
+  body.imprimiendo #print-area{display:block !important}
+  body.imprimiendo{overflow:visible !important}
+  @page{margin:14mm 12mm}
+}
+#print-area{font-family:'Barlow','Inter',system-ui,sans-serif;color:#20241C;font-size:11.5pt;line-height:1.45}
+.hc-cab{display:flex;justify-content:space-between;align-items:flex-start;
+  border-bottom:2.5px solid #B6C932;padding-bottom:10px;margin-bottom:16px}
+.hc-marca{display:flex;align-items:center;gap:11px}
+.hc-corona{width:38px;height:38px;color:#65760F;flex:none}
+.hc-logo{font-family:'Archivo','Barlow',sans-serif;font-size:21pt;font-weight:800;
+  letter-spacing:-.5px;line-height:1;color:#20241C}
+.hc-logo span{color:#65760F}
+.hc-sub{font-size:9pt;color:#57585A;margin-top:2px}
+.hc-fecha{font-size:9pt;color:#57585A;text-align:right;line-height:1.35}
+.hc-h1{font-family:'Archivo','Barlow',sans-serif;font-size:17pt;margin:0 0 10px;letter-spacing:-.3px}
+.hc-h2{font-family:'Archivo','Barlow',sans-serif;font-size:10.5pt;text-transform:uppercase;
+  letter-spacing:.7px;color:#65760F;margin:18px 0 6px;border-bottom:1px solid #E8EADF;padding-bottom:3px;
+  break-after:avoid}
+.hc-datos{border-collapse:collapse;width:100%;margin-bottom:12px}
+.hc-datos th{text-align:left;font-weight:600;color:#57585A;font-size:9.5pt;
+  padding:2.5px 12px 2.5px 0;width:118px;vertical-align:top}
+.hc-datos td{padding:2.5px 0;font-size:10.5pt}
+.hc-alerta{border:1px solid #EFCBBD;border-left:4px solid #B4552F;background:#FBEDE6;
+  border-radius:7px;padding:9px 12px;margin-bottom:12px;font-size:10pt;color:#5E2711}
+.hc-alerta-t{font-weight:700;text-transform:uppercase;font-size:8.5pt;letter-spacing:.6px;margin-bottom:3px}
+.hc-nota{font-size:10pt;color:#57585A;font-style:italic;margin:4px 0}
+.hc-kpis{display:flex;gap:10px;margin:12px 0 4px}
+.hc-kpis>div{flex:1;border:1px solid #E8EADF;border-radius:8px;padding:7px 10px}
+.hc-kpis span{display:block;font-size:8.5pt;text-transform:uppercase;letter-spacing:.5px;color:#57585A}
+.hc-kpis b{font-family:'Archivo','Barlow',sans-serif;font-size:13pt}
+.hc-tabla{width:100%;border-collapse:collapse;font-size:10pt;margin-top:4px}
+.hc-tabla th{background:#F3F5EA;text-align:left;font-size:8.5pt;text-transform:uppercase;
+  letter-spacing:.5px;color:#4C5A16;padding:5px 7px;border-bottom:1px solid #D9DEC6}
+.hc-tabla td{padding:5px 7px;border-bottom:1px solid #EEF0E6;vertical-align:top}
+.hc-tabla tfoot td{font-weight:700;border-top:1.5px solid #B6C932;border-bottom:none}
+.hc-tabla tr{break-inside:avoid}
+.hc-num{text-align:right;white-space:nowrap}
+.hc-pz{font-weight:700;width:52px}
+.hc-mini{font-size:8.5pt;color:#57585A}
+.hc-pie-nota{font-size:9.5pt;color:#57585A;margin-top:12px}
+.hc-firma{margin-top:34px;display:flex;justify-content:flex-end;text-align:center;
+  font-size:9pt;color:#57585A;break-inside:avoid}
+.hc-linea{border-top:1px solid #57585A;width:210px;margin-bottom:4px}
+.hc-pie{margin-top:22px;padding-top:8px;border-top:1px solid #E8EADF;
+  font-size:8pt;color:#57585A;line-height:1.4}
+
 /* pantalla de clave */
 #gate{position:fixed;inset:0;background:var(--paper);z-index:200;display:flex;align-items:center;
   justify-content:center;padding:22px}
@@ -322,6 +382,8 @@ body.locked{overflow:hidden}
     <path fill="currentColor" d="M36 74.5c15.4-5.2 32.6-5.2 48 0l-2.2 8.4c-14.3-4.6-29.3-4.6-43.6 0z"/>
   </symbol>
 </svg>
+
+<div id="print-area" aria-hidden="true"></div>
 
 <div id="gate">
   <div class="box">
@@ -3784,6 +3846,7 @@ function verPaciente(nombre){
       '<button class="btn sec sm" onclick="nuevaParaPaciente(\''+nj+'\')">＋ Nueva atención</button>'+
       '<button class="btn sec sm" onclick="abrirFichaMed(\''+nj+'\')">🩺 Ficha médica</button>'+
       '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">🦷 Planes</button>'+
+      '<button class="btn sec sm" onclick="imprimirHistoria(\''+nj+'\')">🖨 Imprimir historia</button>'+
       '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
 
 function nuevaParaPaciente(nombre){
@@ -4566,6 +4629,147 @@ function llenarProfMiDia(){
   sel.innerHTML='<option value="">Todo el consultorio</option>'+
     CFG.prof.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');
   sel.value=act||''}
+
+/* =====================================================================
+   HISTORIA CLÍNICA IMPRIMIBLE
+   ---------------------------------------------------------------------
+   Para derivar a un especialista, presentar a un seguro o entregarle
+   algo al paciente, había que sacarle una foto a la pantalla. Esto arma
+   una hoja con membrete y la manda a imprimir; en el diálogo del
+   navegador se elige "Guardar como PDF" y queda el archivo.
+   No abre ventana nueva a propósito: en el iPad y en el celular los
+   bloqueadores de pop-ups la comen. Se pinta en un bloque oculto que
+   solo existe para la impresión.
+   ===================================================================== */
+function edadTexto(nac){
+  if(!nac)return '';
+  var e=edadDe(nac);
+  return e?(e+' años'):''}
+
+function filaHC(t,v){
+  return v?'<tr><th>'+t+'</th><td>'+v+'</td></tr>':''}
+
+function imprimirHistoria(nombre){
+  var k=keyPac(nombre), f=pacDe(nombre), hoy=hoyISO();
+  var mios=DATA.filter(function(r){return keyPac(r.paciente)===k});
+  var rs=mios.filter(esAtencion).sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')});
+  if(!rs.length&&pacVacia(f)){toast('Este paciente no tiene nada cargado todavía',1);return}
+
+  /* El CI se carga una vez y en la visita que sea: si se mira solo la última,
+     la historia sale sin documento. Vale el más reciente que NO esté vacío. */
+  var recientes=mios.slice().sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
+  var ultDe=function(campo){
+    for(var i=0;i<recientes.length;i++){
+      var v=recientes[i][campo];
+      if(v!==undefined&&v!==null&&String(v).trim())return String(v).trim()}
+    return ''};
+  var ult={ci:ultDe('ci'), celular:ultDe('celular'), edad:ultDe('edad')};
+  var nom=(rs[0]&&rs[0].paciente)||f.nombre||nombre;
+  var tot=rs.reduce(function(a,r){return a+num(r.total)},0);
+  var pag=rs.reduce(function(a,r){return a+num(r.acuenta)},0);
+  var sal=rs.reduce(function(a,r){return a+num(r.saldo)},0);
+  var m=f.med||{};
+
+  /* --- datos del paciente --- */
+  var datos='<table class="hc-datos">'+
+    filaHC('Paciente','<b>'+esc(nom)+'</b>')+
+    filaHC('Documento',esc(ult.ci||''))+
+    filaHC('Nacimiento',f.nac?fmtF(f.nac)+(edadTexto(f.nac)?' · '+edadTexto(f.nac):''):esc(ult.edad?ult.edad+' años':''))+
+    filaHC('Teléfono',esc(ult.celular||''))+
+    filaHC('Primera visita',rs.length?fmtF(rs[0].fecha):'')+
+    filaHC('Última visita',rs.length?fmtF(rs[rs.length-1].fecha):'')+
+    '</table>';
+
+  /* --- lo que no se puede pasar por alto --- */
+  var alertas=[];
+  if(m.alergias)alertas.push('<b>Alergias:</b> '+esc(m.alergias));
+  if(m.medicacion)alertas.push('<b>Medicación habitual:</b> '+esc(m.medicacion));
+  if((m.antecedentes||[]).length)alertas.push('<b>Antecedentes:</b> '+esc(m.antecedentes.join(', ')));
+  if(m.notas)alertas.push('<b>Notas:</b> '+esc(m.notas));
+  var hAler=alertas.length
+    ? '<div class="hc-alerta"><div class="hc-alerta-t">Antecedentes médicos</div>'+
+      alertas.map(function(a){return '<div>'+a+'</div>'}).join('')+'</div>'
+    : '<div class="hc-nota">Sin antecedentes médicos registrados.</div>';
+
+  /* --- odontograma: qué pieza se tocó y cuándo --- */
+  var mapa=odontoDe(nom), piezas=Object.keys(mapa).sort();
+  var hOdo=piezas.length
+    ? '<table class="hc-tabla"><thead><tr><th>Pieza</th><th>Tratamientos</th></tr></thead><tbody>'+
+      piezas.map(function(c){
+        return '<tr><td class="hc-pz">'+c+'</td><td>'+mapa[c].map(function(x){
+          return esc(x.servicio)+(x.det?' ('+esc(x.det)+')':'')+' · '+fmtF(x.fecha)}).join('<br>')+'</td></tr>'}).join('')+
+      '</tbody></table>'
+    : '<div class="hc-nota">Sin piezas marcadas.</div>';
+
+  /* --- planes de tratamiento --- */
+  var planes=(f.planes||[]);
+  var hPlan=planes.length
+    ? '<table class="hc-tabla"><thead><tr><th>Plan</th><th>Avance</th><th>Estado</th></tr></thead><tbody>'+
+      planes.map(function(p){
+        var ses=p.sesiones||[], hechas=0;
+        for(var i=0;i<ses.length;i++)if(ses[i]&&ses[i].hecha)hechas++;
+        return '<tr><td>'+esc(p.nombre||'Plan')+'</td>'+
+          '<td>'+hechas+(ses.length?' de '+ses.length:'')+' sesiones</td>'+
+          '<td>'+esc(p.estado||'')+'</td></tr>'}).join('')+
+      '</tbody></table>'
+    : '';
+
+  /* --- las visitas, de la más vieja a la más nueva --- */
+  var hVis=rs.length
+    ? '<table class="hc-tabla"><thead><tr><th>Fecha</th><th>Profesional</th><th>Tratamiento</th>'+
+      '<th class="hc-num">Total Bs</th></tr></thead><tbody>'+
+      rs.map(function(r){
+        return '<tr><td>'+fmtF(r.fecha)+'</td><td>'+esc(r.profesional||'')+'</td>'+
+          '<td>'+esc(srvText(r)||'—')+
+          (r.obs?'<br><span class="hc-mini">'+esc(r.obs)+'</span>':'')+'</td>'+
+          '<td class="hc-num">'+n0(r.total)+'</td></tr>'}).join('')+
+      '</tbody><tfoot><tr><td colspan="3">Total tratado</td>'+
+      '<td class="hc-num">'+n0(tot)+'</td></tr></tfoot></table>'
+    : '<div class="hc-nota">Sin visitas registradas.</div>';
+
+  /* --- lo que se recomendó y no se hizo --- */
+  var pend=presuPend().filter(function(x){return keyPac(x.paciente)===k});
+  var hPre=pend.length
+    ? '<table class="hc-tabla"><thead><tr><th>Tratamiento sugerido</th><th>Indicado el</th>'+
+      '<th class="hc-num">Presupuesto Bs</th></tr></thead><tbody>'+
+      pend.map(function(x){
+        return '<tr><td>'+esc(x.p.nom)+'</td><td>'+fmtF(x.fecha)+'</td>'+
+          '<td class="hc-num">'+n0(x.p.monto)+'</td></tr>'}).join('')+
+      '</tbody></table>'
+    : '';
+
+  $('#print-area').innerHTML=
+    '<div class="hc-cab">'+
+      '<div class="hc-marca">'+
+        '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
+        '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
+        '<div class="hc-sub">Dra. Mirna Veizaga · Odontología integral</div></div>'+
+      '</div>'+
+      '<div class="hc-fecha">Historia clínica<br><b>'+fmtF(hoy)+'</b></div>'+
+    '</div>'+
+    '<h1 class="hc-h1">'+esc(nom)+'</h1>'+
+    datos+
+    hAler+
+    '<div class="hc-kpis">'+
+      '<div><span>Visitas</span><b>'+rs.length+'</b></div>'+
+      '<div><span>Tratado</span><b>'+bs(tot)+'</b></div>'+
+      '<div><span>Pagado</span><b>'+bs(pag)+'</b></div>'+
+      '<div><span>Saldo</span><b>'+bs(sal)+'</b></div>'+
+    '</div>'+
+    (hPlan?'<h2 class="hc-h2">Plan de tratamiento</h2>'+hPlan:'')+
+    '<h2 class="hc-h2">Odontograma</h2>'+hOdo+
+    '<h2 class="hc-h2">Historial de atenciones</h2>'+hVis+
+    (hPre?'<h2 class="hc-h2">Tratamientos sugeridos pendientes</h2>'+hPre:'')+
+    (m.consent?'<p class="hc-pie-nota">✍ Consentimiento informado firmado'+
+      (m.consentTs?' el '+fmtF(String(m.consentTs).slice(0,10)):'')+'.</p>':'')+
+    '<div class="hc-firma"><div><div class="hc-linea"></div>Firma y sello del profesional</div></div>'+
+    '<div class="hc-pie">Spadental · documento generado el '+fmtF(hoy)+
+      ' desde el sistema del consultorio. Contiene información de salud: entregar únicamente '+
+      'al paciente o a quien él autorice.</div>';
+
+  document.body.classList.add('imprimiendo');
+  window.print();
+  setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
 
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
