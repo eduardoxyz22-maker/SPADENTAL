@@ -116,6 +116,10 @@ cuántos hay pendientes. Cuatro listas:
   con el mensaje de cobro listo.
 - **😴 Sin volver** — pacientes que no vienen hace mucho y no tienen próxima
   cita agendada: la lista para reactivar.
+- **💳 Cuotas vencidas** — planes con cuotas que ya pasaron de fecha y todavía
+  no están cubiertas por lo cobrado. Muestra cuántas, cuánto falta y desde
+  cuándo, con el mensaje de cobro listo. Una cuota que vence **hoy** no cuenta
+  como vencida: hoy todavía no es tarde.
 - **⏸ Tratamientos a medio hacer** — pacientes con un **plan activo**, sin
   próxima sesión agendada y sin volver hace más de 21 días (configurable).
   No es lo mismo que uno que simplemente no vuelve: este ya dijo que sí, ya
@@ -154,8 +158,13 @@ cinco secciones:
   tratamiento** (de los que entraron solo por consulta, cuántos se trataron),
   frecuencia de visitas y los 15 pacientes que más dejan.
 - **🦷 Servicios** — servicios distintos, el que más deja, precio promedio y
-  servicios por atención. Ranking por facturación con veces y pacientes
-  distintos, agrupado por categoría, y qué hace cada doctora.
+  servicios por atención, con veces y pacientes distintos, agrupado por
+  categoría, y qué hace cada doctora.
+  Si se cargó el **costo de laboratorio** en la lista de precios, el ranking
+  pasa a ordenarse por **margen** y no por facturación, y aparecen el costo de
+  laboratorio del periodo y el margen del trabajo. Es una diferencia que
+  cambia decisiones: una corona de Bs 1.800 con Bs 900 de laboratorio deja
+  menos que tres limpiezas de Bs 230.
 - **📣 Canales** — pacientes distintos y Bs por canal, con el **Bs por paciente**
   de cada uno. Esta tabla es la que dice dónde conviene poner la publicidad.
 - **👩‍⚕️ Equipo** — producción por profesional, con atenciones, pacientes,
@@ -167,16 +176,31 @@ La pestaña contable. Filtrable por día, mes, año o todo:
 
 - **Cobrado, facturado y por cobrar**, más el **efectivo** (lo que se cuenta en
   caja) separado del **QR + transferencias** (lo que tiene que estar en el banco).
+- **Egresos y caja neta.** Todo lo que sale —alquiler, sueldos, laboratorio,
+  insumos, publicidad, impuestos— con su categoría, a quién se le pagó y con
+  qué se pagó. La **caja neta** es *cobrado − egresos*: el número que dice si
+  el mes cerró en verde.
+- **Liquidación de las doctoras.** Cuánto le toca a cada una según su
+  porcentaje, con un botón que registra el pago como egreso. Se calcula
+  **sobre lo facturado**; al lado muestra cuánto de eso se cobró de verdad,
+  porque si el paciente quedó debiendo la comisión se paga igual y el
+  consultorio banca el saldo hasta que entre la plata. En *Ajustes →
+  Comisiones* se puede pedir que el laboratorio se descuente antes de
+  calcular.
 - **Cobrado por forma de pago**, con una fila de *sin identificar* que tiene que
   quedar en cero para que la conciliación cierre.
-- **Arqueo día por día** — cuánto entró cada día y en qué forma de pago.
+- **Arqueo día por día** — cuánto entró y salió cada día y en qué forma de
+  pago. La columna **💵 En caja** es el efectivo que entró menos el que salió:
+  ese es el número que tiene que dar el conteo al cerrar.
 - **Cuentas por cobrar por antigüedad** — 0-30, 31-60, 61-90 y más de 90 días.
   Mira toda la historia, no solo el periodo elegido.
 - **Sin forma de pago anotada** — las atenciones que rompen la conciliación,
   clicables para completarlas.
-- Botón **⬇ Excel de caja**: un informe con portada (resumen, cobrado por forma
-  de pago, cuentas por cobrar por antigüedad y lo que falta completar) y tres
-  hojas de detalle — movimientos, arqueo diario y saldos pendientes.
+- Botón **⬇ Excel de caja**: un informe con portada (resumen con la caja neta,
+  cobrado por forma de pago, egresos por categoría, liquidación de las
+  doctoras, cuentas por cobrar por antigüedad y lo que falta completar) y
+  cuatro hojas de detalle — movimientos, arqueo diario, egresos y saldos
+  pendientes.
 
 ### 👤 Pacientes
 Un registro por persona: visitas, facturado, saldo, canal por el que llegó,
@@ -234,6 +258,14 @@ El presupuesto que se le pasó al paciente, partido en sesiones:
 - **Lo cobrado no se anota a mano**: sale de las atenciones enlazadas al plan,
   así el panel nunca dice que está pagado algo que no se cobró. El saldo es el
   presupuesto menos eso.
+- **Cuotas.** Se puede armar el plan de pago: cuántas cuotas, desde cuándo y
+  cada cuántos días. Si una cuota está pagada **no se guarda como pagada**: se
+  deduce de lo que ya se cobró del plan, así nunca dice que entró plata que no
+  entró. Las cuotas vencidas aparecen solas en Recordatorios.
+- **Plantillas.** Con **💾 Plantilla** se guarda un plan que ya funcionó
+  (sesiones, total y plan de pago) y al crear el siguiente se elige de la
+  lista en vez de escribirlo todo de nuevo. Se administran en *Ajustes →
+  Plantillas de plan*.
 - Botón **📄 Presupuesto**: arma el presupuesto en el idioma del paciente
   —qué le van a hacer, en cuántas sesiones, total, a cuenta y saldo— listo
   para mandarle por WhatsApp.
@@ -248,8 +280,12 @@ Un paciente puede tener varios planes; en el formulario solo se ofrecen los
 - **Clave de entrada** — cambiarla y bloquear la sesión.
 - **Profesionales** — vienen cargadas las 5 doctoras (Mirna, Ximena, Katherine,
   Brenda, Shirley) y **canales de captación**, editables, uno por línea.
-- **Lista de precios** completa y editable — se pueden actualizar los precios
-  sin tocar el código, y restaurar la lista original cuando haga falta.
+- **Lista de precios** completa y editable, con una columna de **costo de
+  laboratorio** por servicio — se pueden actualizar los precios sin tocar el
+  código, y restaurar la lista original cuando haga falta.
+- **Comisiones**: el porcentaje de cada doctora, uno por defecto para las que
+  no tengan el suyo, y si el laboratorio se descuenta antes de calcular.
+- **Plantillas de plan**: las plantillas guardadas, con opción de borrarlas.
 - **Recordatorios**: con cuántos días de anticipación avisar las citas y los
   **cumpleaños**, y a los cuántos días se considera que un paciente "no vuelve".
 - **Controles automáticos**: si se traen o no, cada cuántos meses toca la
@@ -267,8 +303,9 @@ Un paciente puede tener varios planes; en el formulario solo se ofrecen los
 ## Qué se comparte entre los equipos
 
 Con la hoja de Google conectada, **todo se comparte**: atenciones, citas,
-cobros, saldos, las **fichas de los pacientes** (nacimiento, ficha médica y
-planes, que van a una hoja aparte llamada *Pacientes*), y también los **ajustes** (lista de precios, canales,
+cobros, saldos, los **egresos** (en una hoja aparte llamada *Egresos*), las
+**fichas de los pacientes** (nacimiento, ficha médica y planes, en una hoja
+*Pacientes*), y también los **ajustes** (lista de precios, canales,
 profesionales, días de aviso y la clave de entrada). Se cambian en un equipo
 y los demás los toman solos. Si dos equipos editan lo mismo, gana el último
 que guardó.
@@ -367,6 +404,27 @@ frenados — 77 comprobaciones más en Chromium, sobre un servidor local:
   tratamiento, que no se repita en "sin volver", y el presupuesto con total,
   a cuenta y saldo.
 - **Ficha (3)**: el celular sale de la última visita que lo tenga anotado.
+
+De la tanda de contabilidad — 66 comprobaciones más:
+
+- **Egresos (13)**: alta, edición sin duplicar, borrado, filtro por periodo,
+  la caja neta, el efectivo en caja descontando lo que salió en efectivo, que
+  sobrevivan a recargar y que **no se cuelen entre las atenciones** ni entre
+  los pacientes.
+- **Laboratorio (16)**: la migración de la configuración vieja sin perder
+  precios, el costo por unidad, pisarlo en una atención (incluso a 0), que el
+  campo aparezca solo en los servicios que van al laboratorio, y que el
+  ranking pase a ordenar por margen —una limpieza de Bs 920 de margen le gana
+  a una corona de Bs 1.800 que deja 900—.
+- **Liquidación (16)**: agrupación por doctora, porcentaje propio y por
+  defecto, la que no asistió sin sumar, el descuento del laboratorio, el pago
+  convertido en egreso, y que sin porcentajes cargados no invente montos.
+- **Cuotas y plantillas (21)**: el calendario con la última cuota absorbiendo
+  el redondeo, el estado deducido de lo cobrado (pagada / parcial /
+  pendiente), que una cuota que vence hoy no figure vencida, que un plan
+  terminado no reclame, y las plantillas aplicándose y guardándose.
+- **Excel de caja**: las 5 hojas abiertas con `openpyxl`, con la caja neta,
+  los egresos por categoría y la liquidación cuadrando.
 
 Nota sobre el entorno de prueba: abriendo el archivo con `file://` en
 Chromium sin perfil, el navegador a veces descarta el `localStorage` al

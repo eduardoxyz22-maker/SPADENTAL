@@ -569,6 +569,7 @@ body.locked{overflow:hidden}
       <label><input type="radio" name="remf" value="citas" checked><span>📅 Citas</span></label>
       <label><input type="radio" name="remf" value="saldos"><span>💰 Saldos</span></label>
       <label><input type="radio" name="remf" value="dormidos"><span>😴 Sin volver</span></label>
+      <label><input type="radio" name="remf" value="cuotas"><span>💳 Cuotas vencidas</span></label>
       <label><input type="radio" name="remf" value="frenados"><span>⏸ Planes frenados</span></label>
       <label><input type="radio" name="remf" value="cumples"><span>🎂 Cumpleaños</span></label>
       <label><input type="radio" name="remf" value="controles"><span>🪥 Controles</span></label>
@@ -725,7 +726,7 @@ body.locked{overflow:hidden}
 <section class="view" id="v-caja">
   <div class="card">
     <h2>Caja y conciliación de cobros</h2>
-    <p class="hint">Qué entró, en qué forma de pago, y qué queda por cobrar.</p>
+    <p class="hint">Qué entró, qué salió, en qué forma de pago y qué queda por cobrar.</p>
     <div class="grid g3" style="margin-top:10px">
       <div><label>Periodo</label>
         <select id="c-rango"><option value="dia">Un día</option><option value="mes" selected>Un mes</option>
@@ -743,8 +744,21 @@ body.locked{overflow:hidden}
     <div id="cj-metodos"></div></div>
 
   <div class="card"><h2>Arqueo día por día</h2>
-    <p class="hint">Cuánto entró cada día y cómo. La columna Efectivo es la que se cuenta en caja al cerrar.</p>
+    <p class="hint">Cuánto entró y salió cada día. <b>💵 En caja</b> es el efectivo que entró menos el
+      que salió: ese es el número que tiene que dar el conteo al cerrar el día.</p>
     <div id="cj-dias"></div></div>
+
+  <div class="card"><h2>Egresos del periodo</h2>
+    <p class="hint">Todo lo que sale de caja. Sin esto, la Caja solo cuenta la mitad:
+      se sabe cuánto entró, no si el mes cerró en verde.</p>
+    <div class="row-btn" style="margin:0 0 12px">
+      <button class="btn sm" id="btn-nuevo-egreso">➖ Registrar egreso</button></div>
+    <div id="cj-egresos"></div></div>
+
+  <div class="card"><h2>Liquidación de las doctoras</h2>
+    <p class="hint">Se calcula sobre lo <b>facturado</b> del periodo. El porcentaje de cada una se
+      define en <b>Ajustes → Comisiones</b>.</p>
+    <div id="cj-liq"></div></div>
 
   <div class="card"><h2>Cuentas por cobrar</h2>
     <p class="hint">Saldos pendientes agrupados por antigüedad. Los de más de 90 días son los difíciles.</p>
@@ -798,9 +812,12 @@ body.locked{overflow:hidden}
   <div class="card">
     <h2>Lista de precios</h2>
     <p class="hint">Precios sugeridos que se autocompletan. Siempre se pueden pisar al cargar la atención.
+      <b>Costo lab.</b> es lo que cobra el laboratorio por ese trabajo: dejalo en 0 si no va al laboratorio.
+      Con ese dato el panel puede decir qué servicio deja de verdad, y no cuál factura más.
       <b id="cfg-compartida"></b></p>
-    <div class="tw"><table style="min-width:520px"><thead><tr><th>Categoría</th><th>Servicio</th>
-      <th class="num" style="width:130px">Precio Bs</th></tr></thead><tbody id="c-precios"></tbody></table></div>
+    <div class="tw"><table style="min-width:640px"><thead><tr><th>Categoría</th><th>Servicio</th>
+      <th class="num" style="width:130px">Precio Bs</th>
+      <th class="num" style="width:140px">Costo lab. Bs</th></tr></thead><tbody id="c-precios"></tbody></table></div>
     <div class="row-btn"><button class="btn sm" id="btn-save-precios">Guardar precios</button>
       <button class="btn sec sm" id="btn-reset-precios">Restaurar lista original</button></div>
   </div>
@@ -826,6 +843,29 @@ body.locked{overflow:hidden}
       <div><label>Avisar con esta anticipación (días)</label><input id="c-ctrl-aviso" inputmode="numeric"></div>
     </div>
     <div class="row-btn"><button class="btn sm" id="btn-save-rem">Guardar</button></div>
+  </div>
+  <div class="card">
+    <h2>Plantillas de plan</h2>
+    <p class="hint">Planes tipo para no escribir las sesiones cada vez. Se crean desde un plan que ya
+      cargaste, con el botón <b>💾 Plantilla</b> en la ficha del paciente.</p>
+    <div id="c-plantillas"></div>
+  </div>
+  <div class="card">
+    <h2>Comisiones</h2>
+    <p class="hint">Qué porcentaje cobra cada doctora. Se aplica sobre lo <b>facturado</b> del periodo
+      y con eso la pestaña Caja arma la liquidación del mes.</p>
+    <div class="tw"><table style="min-width:420px"><thead><tr><th>Profesional</th>
+      <th class="num" style="width:130px">% comisión</th></tr></thead><tbody id="c-comision"></tbody></table></div>
+    <div class="grid g2" style="margin-top:12px">
+      <div><label>% por defecto (para quien no tenga uno propio)</label>
+        <input id="c-comision-def" inputmode="decimal"></div>
+    </div>
+    <div class="seg lime" style="margin-top:12px">
+      <label><input type="checkbox" id="c-comision-lab"><span>🧪 Descontar el laboratorio antes de calcular</span></label>
+    </div>
+    <p class="hint" style="margin-top:8px">Si el trabajo fue al laboratorio, con esto la comisión se
+      calcula sobre lo que quedó después de pagarlo. Apagado, se calcula sobre el total facturado.</p>
+    <div class="row-btn"><button class="btn sm" id="btn-save-comision">Guardar comisiones</button></div>
   </div>
   <div class="card">
     <h2>Indicaciones post-tratamiento</h2>
@@ -880,6 +920,7 @@ var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx5H9dkidUfTuBFIZYfbaS
 
 var K_DATA='SP_ATENCIONES_V1', K_CFG='SP_CFG_V1', K_PEND='SP_PENDING_V1';
 var K_PASS='SP_PASS_V1', K_UNLOCK='SP_UNLOCK_V1', K_PAC='SP_PACIENTES_V1';
+var K_EGR='SP_EGRESOS_V1';
 var CONNECTED = /^https:\/\/script\.google\.com\/.+\/exec$/.test(SHEETS_URL);
 
 /* ---------------------------------------------------------------------
@@ -1062,11 +1103,12 @@ function telWa(c){var d=String(c||'').replace(/\D/g,'');if(!d)return '';
 /* ---------- estado ---------- */
 var DATA=[], CFG=null, EDIT_ID=null, SRV=[];
 
-function cfgDefault(){return {v:3,prof:PROF_BASE.slice(),canales:CANALES_BASE.slice(),
-  precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}}),
+function cfgDefault(){return {v:4,prof:PROF_BASE.slice(),canales:CANALES_BASE.slice(),
+  precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2],lab:0}}),
   diasProx:3,diasDorm:120,
   diasCumple:7,ctrlAuto:true,ctrlLimpiezaMeses:6,ctrlOrtoDias:30,diasCtrlAviso:7,
-  diasPlanFrenado:21,minCita:30}}
+  diasPlanFrenado:21,minCita:30,
+  comision:{},comisionDefault:0,comisionDescuentaLab:false}}
 function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
     migrarCfg(c);                       // OJO: antes de rellenar defaults, que si no
     var d=cfgDefault();                 // el propio relleno pondría c.v y la saltearía
@@ -1083,8 +1125,12 @@ function migrarCfg(c){
   // anterior (o sea, si nadie la tocó a mano).
   if(!c.v&&JSON.stringify(c.prof)===JSON.stringify(PROF_V1))c.prof=PROF_BASE.slice();
   if(c.v<3&&JSON.stringify(c.prof)===JSON.stringify(PROF_V2))c.prof=PROF_BASE.slice();
-  c.v=3;
-  if(antes!==3)saveCfgObj(c);
+  /* v4: los precios ganaron el costo de laboratorio. Los que ya estaban
+     quedan en 0, que es lo honesto: nadie puede adivinar cuánto cobra el
+     laboratorio de este consultorio. */
+  if(c.v<4&&Array.isArray(c.precios))c.precios.forEach(function(p){if(p.lab==null)p.lab=0});
+  c.v=4;
+  if(antes!==4)saveCfgObj(c);
   return c}
 function saveCfgObj(c){try{localStorage.setItem(K_CFG,JSON.stringify(c))}catch(e){}}
 
@@ -1147,6 +1193,7 @@ function pullServer(){
   return api('list').then(function(r){
     if(r&&r.ok&&Array.isArray(r.registros||r.pedidos)){
       DATA=(r.registros||r.pedidos).map(normalize); saveLocal();
+      if(Array.isArray(r.egresos)){EGR=r.egresos.map(egrNormalize); saveEgrLocal()}
       if(Array.isArray(r.pacientes)){
         var m={};
         r.pacientes.forEach(function(p){var n=pacNormalize(p),k=keyPac(n.nombre); if(k)m[k]=n});
@@ -1386,6 +1433,9 @@ function srvRowHtml(i,s){
       '<div><label>Detalle</label><input class="s-det" value="'+esc(s.det||'')+'" placeholder="Ej. cara oclusal"></div>'+
       '<div><label>Cant.</label><input class="s-cant" inputmode="numeric" value="'+esc(s.cant||1)+'"></div>'+
       '<div><label>Precio c/u</label><input class="s-precio" inputmode="decimal" value="'+esc(s.precio==null?'':s.precio)+'"></div>'+
+      (llevaLab(s)?'<div><label title="Lo que cobra el laboratorio por este trabajo">Lab. c/u</label>'+
+        '<input class="s-lab" inputmode="decimal" value="'+
+        esc(s.lab==null||s.lab===''?labDeLista(s.nom):s.lab)+'"></div>':'')+
     '</div>'+
     '<div class="srv-pz"><button type="button" class="btn sec sm s-pz" data-i="'+i+'">🦷 '+
       (pz.length?'Piezas: '+pz.join(', '):'Marcar piezas')+'</button></div>'+
@@ -1402,11 +1452,38 @@ function readSrv(){
   var antes=SRV;
   SRV=$$('#srv-list .srv').map(function(el,i){
     var prev=antes[i]||{};
+    var lab=el.querySelector('.s-lab');
     return {nom:el.querySelector('.s-nom').value,det:el.querySelector('.s-det').value,
       cant:num(el.querySelector('.s-cant').value)||1,precio:num(el.querySelector('.s-precio').value),
+      lab:lab?num(lab.value):(prev.lab==null?'':prev.lab),
       piezas:(prev.piezas||[]).slice()}})}
 
 function totalSrv(){return SRV.reduce(function(a,s){return a+num(s.precio)*(num(s.cant)||1)},0)}
+
+/* ---------------------------------------------------------------------
+   COSTO DE LABORATORIO
+   Una corona de Bs 1.800 con Bs 900 de laboratorio deja menos que tres
+   limpiezas de Bs 230. Sin este dato, el ranking de "lo que más deja"
+   ordena por facturación y miente. El costo sale de la lista de precios
+   y se puede pisar en cada atención, porque el laboratorio cobra por
+   trabajo, no por tarifa.
+   --------------------------------------------------------------------- */
+function labDeLista(nom){
+  var p=CFG.precios.filter(function(x){return x.nom===nom})[0];
+  return p?num(p.lab):0}
+
+/* Lo que costó el laboratorio en este servicio, por las unidades que sean. */
+function labDe(sv){
+  var q=num(sv.cant)||1;
+  var l=(sv.lab===''||sv.lab==null)?labDeLista(sv.nom):num(sv.lab);
+  return num(l)*q}
+
+function labDeAtencion(r){
+  return (r.servicios||[]).reduce(function(a,sv){return a+labDe(sv)},0)}
+
+/* ¿Este servicio tiene laboratorio? Decide si se muestra el campo. */
+function llevaLab(sv){
+  return labDeLista(sv&&sv.nom)>0||num(sv&&sv.lab)>0}
 
 function recalcTotal(){
   var t=totalSrv();
@@ -1657,6 +1734,7 @@ function submitAtencion(){
     citaDe:(prev&&prev.citaDe)||'', resueltaTs:(prev&&prev.resueltaTs)||'',
     servicios:SRV.filter(function(s){return s.nom}).map(function(s){
       var o={nom:s.nom,det:s.det,cant:s.cant,precio:s.precio};
+      if(num(s.lab)>0)o.lab=num(s.lab);
       if(s.piezas&&s.piezas.length)o.piezas=s.piezas.slice();
       return o}),
     total:num($('#f-total').value), acuenta:num($('#f-acuenta').value), saldo:num($('#f-saldo').value),
@@ -2160,6 +2238,11 @@ function planNormalize(p){
       s=s||{};
       return {n:i+1, desc:s.desc||'', hecha:!!s.hecha, fecha:s.fecha||'',
               atencionId:s.atencionId||''}}),
+    /* las cuotas son solo el calendario de pago: si están pagadas o no sale
+       de lo que se cobró, no de un campo que se puede desincronizar */
+    cuotas:(Array.isArray(p.cuotas)?p.cuotas:[]).map(function(c,i){
+      c=c||{};
+      return {n:i+1, fecha:c.fecha||'', monto:num(c.monto)}}),
     notas:p.notas||''}}
 
 function planesDe(nombre){return pacDe(nombre).planes||[]}
@@ -2203,6 +2286,74 @@ function planesFrenados(){
 function tienePlanFrenado(nombre){
   return (pacDe(nombre).planes||[]).some(function(p){
     return p.estado==='activo'&&proxSesion(p)})}
+
+/* ---------------------------------------------------------------------
+   CUOTAS DEL PLAN
+   Ortodoncia es mensualidad: sin calendario de pago no existe "cuota
+   vencida" y la cobranza se persigue de memoria. El calendario se guarda;
+   si una cuota está pagada NO se guarda, se deduce de lo ya cobrado del
+   plan. Así nunca dice "pagada" una cuota que no entró.
+   --------------------------------------------------------------------- */
+function armarCuotas(total,n,desde,cada){
+  n=Math.max(0,Math.round(num(n))); if(!n)return [];
+  cada=Math.max(1,num(cada)||30);
+  var t=num(total), base=Math.floor(t/n), out=[], f=desde||hoyISO();
+  for(var i=0;i<n;i++){
+    out.push({n:i+1, fecha:(i===0?f:addDias(f,cada*i)),
+      /* la última absorbe el redondeo, así la suma da exacto el total */
+      monto:(i===n-1)?(t-base*(n-1)):base})}
+  return out}
+
+function estadoCuotas(plan){
+  var resto=cobradoPlan(plan), hoy=hoyISO();
+  return (plan.cuotas||[]).map(function(c){
+    var cub=Math.min(num(c.monto),Math.max(0,resto));
+    resto-=cub;
+    var est=cub>=num(c.monto)-0.01?'pagada':(cub>0?'parcial':'pendiente');
+    return {n:c.n, fecha:c.fecha, monto:num(c.monto), cubierto:cub, estado:est,
+      vencida:est!=='pagada'&&c.fecha&&c.fecha<hoy,
+      dias:c.fecha?diasEntre(c.fecha,hoy):0}})}
+
+function proxCuota(plan){
+  return estadoCuotas(plan).filter(function(c){return c.estado!=='pagada'})[0]||null}
+
+/* Todas las cuotas vencidas del consultorio, la más atrasada primero. */
+function cuotasVencidas(){
+  var idx=idxPac(), out=[];
+  Object.keys(PAC).forEach(function(k){
+    (PAC[k].planes||[]).forEach(function(p){
+      if(p.estado!=='activo')return;
+      var venc=estadoCuotas(p).filter(function(c){return c.vencida});
+      if(!venc.length)return;
+      var i=idx[k]||{};
+      out.push({paciente:PAC[k].nombre||k, celular:i.celular||'', plan:p,
+        cuotas:venc, monto:venc.reduce(function(a,c){return a+(c.monto-c.cubierto)},0),
+        dias:venc[0].dias})})});
+  return out.sort(function(a,b){return b.dias-a.dias})}
+
+function txtCuota(x){
+  var t='Hola '+(x.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n';
+  if(x.cuotas.length===1){
+    t+='Le recordamos la cuota '+x.cuotas[0].n+' de su tratamiento *'+x.plan.nombre+'*, de *'+
+      bs(x.cuotas[0].monto-x.cuotas[0].cubierto)+'*, que venció el '+fmtF(x.cuotas[0].fecha)+'.\n'}
+  else{
+    t+='Le recordamos que tiene '+x.cuotas.length+' cuotas vencidas de su tratamiento *'+
+      x.plan.nombre+'*, por un total de *'+bs(x.monto)+'*.\n'}
+  t+='¿Coordinamos el pago? 🦷';
+  return t}
+
+function cuotasHtml(plan){
+  var cs=estadoCuotas(plan); if(!cs.length)return '';
+  var ic={pagada:'✅',parcial:'🟡',pendiente:'·'};
+  return '<div style="margin-top:10px"><div class="mini" style="margin-bottom:4px">Cuotas</div>'+
+    cs.map(function(c){
+      return '<div class="ses'+(c.estado==='pagada'?' ok':'')+'">'+
+        '<div class="n">'+(c.estado==='pagada'?'✓':c.n)+'</div>'+
+        '<div class="d">'+bs(c.monto)+
+          (c.estado==='parcial'?' <span class="pill warn">pagó '+bs(c.cubierto)+'</span>':'')+
+          (c.vencida?' <span class="pill bad">venció hace '+c.dias+' días</span>':'')+
+          '<div class="mini">'+ic[c.estado]+' '+fmtF(c.fecha)+'</div></div></div>'}).join('')+
+    '</div>'}
 
 /* Al guardar una atención enlazada a un plan, la sesión que estaba
    pendiente pasa a hecha y queda apuntando a esa atención. Editar la
@@ -2272,7 +2423,8 @@ function totalPendientes(){
   return citasPend().filter(function(c){return c.dias<=CFG.diasProx}).length
        + cumples().filter(function(c){return c.dias===0}).length
        + controles().filter(function(c){return c.dias<=0}).length
-       + planesFrenados().length}
+       + planesFrenados().length
+       + cuotasVencidas().length}
 
 function updateNavRem(){
   var n=totalPendientes(),el=$('#nav-rem');
@@ -2338,7 +2490,7 @@ function renderRem(){
   var hoy=hoyISO(), f=getRadio('remf')||'citas', cit=citasPend(), sal=saldosPend(), dor=dormidos();
   var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
       sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
-  var cum=cumples(), ctl=controles(), fre=planesFrenados();
+  var cum=cumples(), ctl=controles(), fre=planesFrenados(), cuo=cuotasVencidas();
   var totSaldo=sal.reduce(function(a,p){return a+p.saldo},0);
   $('#k-venc').innerHTML='<div class="k">Citas vencidas</div><div class="v">'+venc.length+'</div><div class="d">sin marcar si vino</div>';
   $('#k-hoy').innerHTML='<div class="k">Citas de hoy</div><div class="v">'+hy.length+'</div><div class="d">'+fmtF(hoy)+'</div>';
@@ -2382,6 +2534,19 @@ function renderRem(){
       var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(p.celular,txtDormido(p))+'">WhatsApp</a>'+
         '<button class="btn sec sm" onclick="verPaciente(\''+jss(p.paciente)+'\')">Ver historial</button>';
       h+=remCard('',p.paciente,meta,acts)})}
+
+  if(f==='cuotas'||f==='todos'){
+    var totCuo=cuo.reduce(function(a,x){return a+x.monto},0);
+    h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">💳 Cuotas vencidas · '+cuo.length+
+      (totCuo?' · '+bs(totCuo):'')+'</h3>';
+    if(!cuo.length)h+='<div class="empty">Ninguna cuota vencida 🎉</div>';
+    cuo.forEach(function(x){
+      var meta='<b>'+esc(x.plan.nombre)+'</b> · '+x.cuotas.length+' cuota'+(x.cuotas.length===1?'':'s')+
+        ' vencida'+(x.cuotas.length===1?'':'s')+' · debe <b>'+bs(x.monto)+'</b>'+
+        '<br>La más vieja venció hace <b>'+x.dias+' días</b> · 📱 '+esc(x.celular||'sin celular');
+      var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(x.celular,txtCuota(x))+'">Cobrar</a>'+
+        '<button class="btn sec sm" onclick="verPaciente(\''+jss(x.paciente)+'\')">Ver ficha</button>';
+      h+=remCard('due',x.paciente,meta,acts)})}
 
   if(f==='frenados'||f==='todos'){
     h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">⏸ Tratamientos a medio hacer · '+fre.length+'</h3>';
@@ -2651,10 +2816,11 @@ function renderPanel(){
     if(k)canal[c].pac[k]=1; canal[c].n++; canal[c].bs+=num(r.total);
     (r.servicios||[]).forEach(function(s){
       if(!s.nom)return; var q=num(s.cant)||1, v=num(s.precio)*q;
-      if(!serv[s.nom])serv[s.nom]={n:0,bs:0,pac:{}};
-      serv[s.nom].n+=q; serv[s.nom].bs+=v; if(k)serv[s.nom].pac[k]=1;
+      var lb=labDe(s);
+      if(!serv[s.nom])serv[s.nom]={n:0,bs:0,lab:0,pac:{}};
+      serv[s.nom].n+=q; serv[s.nom].bs+=v; serv[s.nom].lab+=lb; if(k)serv[s.nom].pac[k]=1;
       var ct=catDe(s.nom);
-      if(!cat[ct])cat[ct]={n:0,bs:0}; cat[ct].n+=q; cat[ct].bs+=v;
+      if(!cat[ct])cat[ct]={n:0,bs:0,lab:0}; cat[ct].n+=q; cat[ct].bs+=v; cat[ct].lab+=lb;
       var pk=r.profesional||'Sin asignar';
       if(!srvProf[pk])srvProf[pk]={};
       if(!srvProf[pk][s.nom])srvProf[pk][s.nom]={n:0,bs:0};
@@ -2868,21 +3034,43 @@ function renderPanel(){
   /* ================= SECCIÓN SERVICIOS ================= */
   if(sec==='servicios'){
     var sArr=Object.keys(serv).map(function(k){
-      return {k:k,n:serv[k].n,bs:serv[k].bs,pac:Object.keys(serv[k].pac).length}})
-      .sort(function(a,b){return b.bs-a.bs});
+      return {k:k,n:serv[k].n,bs:serv[k].bs,lab:serv[k].lab,
+        margen:serv[k].bs-serv[k].lab,pac:Object.keys(serv[k].pac).length}});
     var totalSrvBs=sArr.reduce(function(a,s){return a+s.bs},0);
     var totalSrvN=sArr.reduce(function(a,s){return a+s.n},0);
-    var top=sArr[0]||{k:'—',bs:0};
+    var totalLab=sArr.reduce(function(a,s){return a+s.lab},0);
+    /* si nadie cargó costos de laboratorio, margen y facturación son lo
+       mismo y no tiene sentido llenar la pantalla de columnas iguales */
+    var hayLab=totalLab>0;
+    sArr.sort(function(a,b){return hayLab?(b.margen-a.margen):(b.bs-a.bs)});
+    var top=sArr[0]||{k:'—',bs:0,margen:0};
     $('#p-srv-kpis').innerHTML=
       '<div class="kpi acc"><div class="k">Servicios distintos</div><div class="v">'+n0(sArr.length)+'</div><div class="d">'+n0(totalSrvN)+' procedimientos</div></div>'+
-      '<div class="kpi"><div class="k">El que más deja</div><div class="v" style="font-size:17px">'+esc(top.k)+'</div><div class="d">'+bs(top.bs)+'</div></div>'+
+      '<div class="kpi"><div class="k">El que más deja</div><div class="v" style="font-size:17px">'+esc(top.k)+'</div><div class="d">'+
+        (hayLab?bs(top.margen)+' de margen':bs(top.bs))+'</div></div>'+
       '<div class="kpi"><div class="k">Precio promedio</div><div class="v" style="font-size:21px">'+bs(totalSrvN?totalSrvBs/totalSrvN:0)+'</div><div class="d">por procedimiento</div></div>'+
-      '<div class="kpi"><div class="k">Servicios por atención</div><div class="v">'+(rows.length?(totalSrvN/rows.length).toFixed(1):'0')+'</div><div class="d">promedio</div></div>';
+      '<div class="kpi"><div class="k">Servicios por atención</div><div class="v">'+(rows.length?(totalSrvN/rows.length).toFixed(1):'0')+'</div><div class="d">promedio</div></div>'+
+      (hayLab?'<div class="kpi"><div class="k">🧪 Laboratorio</div><div class="v" style="font-size:21px;color:var(--clay)">'+bs(totalLab)+'</div><div class="d">'+
+        Math.round(totalLab/(totalSrvBs||1)*100)+'% de lo facturado</div></div>'+
+      '<div class="kpi acc"><div class="k">Margen del trabajo</div><div class="v" style="font-size:21px">'+bs(totalSrvBs-totalLab)+'</div><div class="d">facturado − laboratorio</div></div>':'');
 
     $('#p-serv').innerHTML=tablaRank(
-      [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},{t:'Precio prom.',num:1}],
+      hayLab
+        ? [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',num:1},
+           {t:'Laboratorio',num:1},{t:'Margen',barra:1},{t:'% margen',num:1}]
+        : [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},{t:'Precio prom.',num:1}],
       sArr.slice(0,40).map(function(s){
-        return [esc(s.k),n0(s.n),n0(s.pac),{txt:n0(s.bs),v:s.bs},n0(s.n?s.bs/s.n:0)]}),540);
+        return hayLab
+          ? [esc(s.k),n0(s.n),n0(s.pac),n0(s.bs),
+             s.lab?'<span style="color:var(--clay)">'+n0(s.lab)+'</span>':'—',
+             {txt:n0(s.margen),v:Math.max(0,s.margen)},
+             (s.bs?Math.round(s.margen/s.bs*100):0)+'%']
+          : [esc(s.k),n0(s.n),n0(s.pac),{txt:n0(s.bs),v:s.bs},n0(s.n?s.bs/s.n:0)]}),
+      hayLab?660:540)+
+      (hayLab?'<p class="mini" style="margin-top:8px">Ordenado por <b>margen</b>, no por facturación: '+
+        'lo que queda después de pagarle al laboratorio.</p>':
+        '<p class="mini" style="margin-top:8px">Cargá el <b>costo de laboratorio</b> en Ajustes → Lista de precios '+
+        'y esta tabla pasa a ordenarse por lo que cada servicio deja de verdad.</p>');
 
     var cArr2=Object.keys(cat).map(function(k){return {k:k,v:cat[k].bs,n:cat[k].n}})
       .sort(function(a,b){return b.v-a.v});
@@ -2968,6 +3156,132 @@ function renderPanel(){
   }
 }
 
+/* =====================================================================
+   EGRESOS
+   Hasta ahora la pestaña se llamaba Caja pero solo anotaba lo que entra.
+   Sin lo que sale nadie puede responder "¿cuánto tiene que haber en el
+   cajón ahora?" ni si el mes cerró en verde. Los egresos viven en su
+   propia lista, no mezclados con las atenciones: no son visitas y no
+   tienen que ensuciar ninguna métrica de pacientes.
+   ===================================================================== */
+var EGR=[];
+
+var CAT_EGRESO_BASE=['Alquiler','Sueldos y comisiones','Laboratorio','Insumos y materiales',
+  'Servicios (luz, agua, internet)','Publicidad','Equipamiento','Impuestos','Mantenimiento','Otro'];
+
+function egrNormalize(e){
+  e=e||{};
+  return {id:e.id||uid(), fecha:e.fecha||hoyISO(), categoria:e.categoria||'Otro',
+    detalle:e.detalle||'', proveedor:e.proveedor||'', monto:num(e.monto),
+    metodo:e.metodo||'Efectivo', prof:e.prof||'', ts:e.ts||new Date().toISOString()}}
+
+function loadEgr(){
+  try{var a=JSON.parse(localStorage.getItem(K_EGR));
+    if(Array.isArray(a))return a.map(egrNormalize)}catch(e){}
+  return []}
+function saveEgrLocal(){try{localStorage.setItem(K_EGR,JSON.stringify(EGR))}catch(e){
+  toast('No se pudo guardar en este dispositivo',1)}}
+
+function persistEgr(e){
+  saveEgrLocal();
+  if(CONNECTED){api('egreso',e).catch(function(){queue('egreso',e)})}else{queue('egreso',e)}}
+
+function guardarEgreso(e){
+  e=egrNormalize(e);
+  var i=-1;
+  EGR.forEach(function(x,j){if(x.id===e.id)i=j});
+  if(i>=0)EGR[i]=e; else EGR.push(e);
+  persistEgr(e);
+  return e}
+
+function borrarEgreso(id){
+  var e=EGR.filter(function(x){return x.id===id})[0]; if(!e)return;
+  if(!confirm('¿Borrar el egreso de '+bs(e.monto)+' ('+e.categoria+') del '+fmtF(e.fecha)+'?'))return;
+  EGR=EGR.filter(function(x){return x.id!==id}); saveEgrLocal();
+  if(CONNECTED){api('egresoDel',{id:id}).catch(function(){queue('egresoDel',{id:id})})}
+  else{queue('egresoDel',{id:id})}
+  toast('Egreso borrado'); renderCaja()}
+
+function catsEgreso(){
+  var c=CFG.catEgreso;
+  return (Array.isArray(c)&&c.length)?c:CAT_EGRESO_BASE}
+
+/* Los egresos del mismo periodo que está mirando la Caja. */
+function egresosRango(){
+  var r=$('#c-rango').value, out=EGR.slice();
+  if(r==='dia'){var d=$('#c-dia').value; out=out.filter(function(x){return x.fecha===d})}
+  else if(r==='mes'){var m=$('#c-mes').value; out=out.filter(function(x){return (x.fecha||'').slice(0,7)===m})}
+  else if(r==='anio'){var a=$('#c-anio').value; out=out.filter(function(x){return (x.fecha||'').slice(0,4)===a})}
+  return out.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})}
+
+function nuevoEgreso(pre){
+  pre=pre||{};
+  var cats=catsEgreso();
+  openModal('<h3>➖ Registrar egreso</h3>'+
+    '<p class="hint" style="margin-top:6px">Todo lo que sale de caja: alquiler, sueldos, laboratorio, insumos, publicidad.</p>'+
+    '<div class="grid g2" style="margin-top:12px">'+
+      '<div><label>Fecha <span class="req">*</span></label><input type="date" id="eg-fecha" value="'+esc(pre.fecha||hoyISO())+'"></div>'+
+      '<div><label>Monto Bs <span class="req">*</span></label><input id="eg-monto" inputmode="decimal" value="'+esc(pre.monto||'')+'"></div>'+
+    '</div>'+
+    '<div style="margin-top:12px"><label>Categoría <span class="req">*</span></label>'+
+      '<select id="eg-cat">'+cats.map(function(c){
+        return '<option'+(c===(pre.categoria||'')?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></div>'+
+    '<div style="margin-top:12px"><label>Detalle</label>'+
+      '<input id="eg-det" value="'+esc(pre.detalle||'')+'" placeholder="Ej. resinas y anestesia"></div>'+
+    '<div style="margin-top:12px"><label>¿A quién se le pagó?</label>'+
+      '<input id="eg-prov" value="'+esc(pre.proveedor||'')+'" placeholder="Proveedor, laboratorio o persona"></div>'+
+    '<div style="margin-top:12px"><label>¿Con qué se pagó? <span class="req">*</span></label>'+
+      '<div class="seg lime" id="eg-seg">'+METODOS.map(function(m){
+        return '<label><input type="radio" name="egmet" value="'+m+'"'+
+          (m===(pre.metodo||'Efectivo')?' checked':'')+'><span>'+m+'</span></label>'}).join('')+'</div></div>'+
+    '<div class="row-btn"><button class="btn" onclick="submitEgreso('+(pre.id?"'"+pre.id+"'":'null')+')">Guardar egreso</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function submitEgreso(id){
+  var m=num($('#eg-monto').value);
+  if(m<=0){toast('Poné el monto',1);return}
+  var e=guardarEgreso({id:id||undefined, fecha:$('#eg-fecha').value||hoyISO(),
+    categoria:$('#eg-cat').value, detalle:$('#eg-det').value.trim(),
+    proveedor:$('#eg-prov').value.trim(), monto:m, metodo:getRadio('egmet')||'Efectivo'});
+  closeModal(); toast('Egreso de '+bs(e.monto)+' registrado'); renderCaja()}
+
+function editarEgreso(id){
+  var e=EGR.filter(function(x){return x.id===id})[0]; if(e)nuevoEgreso(e)}
+
+/* =====================================================================
+   LIQUIDACIÓN DE LAS DOCTORAS
+   El panel ya sabe quién hizo qué y por cuánto: la liquidación de fin de
+   mes es una cuenta que no tiene por qué hacerse con calculadora.
+   Se paga sobre lo FACTURADO, que es lo que decidió gerencia. Ojo con
+   eso: si el paciente quedó debiendo, la doctora igual gana su parte y
+   el consultorio banca el saldo. Por eso la tabla muestra al lado cuánto
+   de eso se cobró de verdad.
+   ===================================================================== */
+function comisionDe(prof){
+  var c=CFG.comision||{};
+  var v=c[prof];
+  return (v==null||v==='')?num(CFG.comisionDefault):num(v)}
+
+function liquidacion(rows){
+  var by={};
+  rows.forEach(function(r){
+    if(r.estado!=='Atendido')return;
+    var p=r.profesional||'Sin asignar';
+    if(!by[p])by[p]={prof:p,n:0,facturado:0,cobrado:0,lab:0};
+    by[p].n++; by[p].facturado+=num(r.total); by[p].cobrado+=num(r.acuenta);
+    by[p].lab+=labDeAtencion(r)});
+  return Object.keys(by).map(function(p){
+    var x=by[p], pct=comisionDe(p);
+    x.base=CFG.comisionDescuentaLab?Math.max(0,x.facturado-x.lab):x.facturado;
+    x.pct=pct; x.pagar=x.base*pct/100;
+    return x}).sort(function(a,b){return b.pagar-a.pagar})}
+
+/* Convierte la liquidación en un egreso de verdad, así lo que se le pagó
+   a la doctora sale de la caja como cualquier otro gasto. */
+function pagarComision(prof,monto,periodo){
+  nuevoEgreso({categoria:'Sueldos y comisiones', proveedor:prof, monto:Math.round(monto),
+    detalle:'Comisión '+periodo})}
+
 /* ============================ CAJA / CONCILIACIÓN ============================ */
 function cajaRows(){
   var r=$('#c-rango').value, out=soloAtenciones(DATA);
@@ -2977,7 +3291,8 @@ function cajaRows(){
   return out.sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})}
 
 function renderCaja(){
-  var rows=cajaRows();
+  var rows=cajaRows(), egrs=egresosRango();
+  var egr=egrs.reduce(function(a,x){return a+num(x.monto)},0);
   var tot=0,cobr=0,sal=0,porMetodo={},porDia={},sinMetodo=[];
   METODOS.forEach(function(m){porMetodo[m]=0});
   rows.forEach(function(r){
@@ -2995,6 +3310,17 @@ function renderCaja(){
 
   var identificado=METODOS.reduce(function(a,m){return a+porMetodo[m]},0);
   var sinIdent=cobr-identificado;
+  var neto=cobr-egr;
+
+  /* los egresos también salen de algún lado: restan del arqueo del día */
+  var egrDia={}, egrCat={}, egrMetodo={};
+  egrs.forEach(function(x){
+    if(!egrDia[x.fecha])egrDia[x.fecha]={monto:0,m:{}};
+    egrDia[x.fecha].monto+=num(x.monto);
+    egrDia[x.fecha].m[x.metodo]=(egrDia[x.fecha].m[x.metodo]||0)+num(x.monto);
+    egrCat[x.categoria]=(egrCat[x.categoria]||0)+num(x.monto);
+    egrMetodo[x.metodo]=(egrMetodo[x.metodo]||0)+num(x.monto);
+    if(!porDia[x.fecha])porDia[x.fecha]={cobr:0,n:0,m:{}}});
 
   $('#cj-kpis').innerHTML=
     '<div class="kpi acc"><div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">'+n0(rows.length)+' atenciones</div></div>'+
@@ -3002,6 +3328,8 @@ function renderCaja(){
     '<div class="kpi"><div class="k">Por cobrar</div><div class="v" style="font-size:21px;color:'+(sal>0?'var(--clay)':'var(--ok)')+'">'+bs(sal)+'</div><div class="d">saldo del periodo</div></div>'+
     '<div class="kpi"><div class="k">💵 Efectivo</div><div class="v" style="font-size:21px">'+bs(porMetodo['Efectivo'])+'</div><div class="d">'+(cobr?Math.round(porMetodo['Efectivo']/cobr*100):0)+'% de lo cobrado</div></div>'+
     '<div class="kpi"><div class="k">📱 QR + 🏦 Transf.</div><div class="v" style="font-size:21px">'+bs(porMetodo['QR']+porMetodo['Transferencia'])+'</div><div class="d">debe estar en el banco</div></div>'+
+    '<div class="kpi"><div class="k">➖ Egresos</div><div class="v" style="font-size:21px;color:'+(egr>0?'var(--clay)':'var(--gray)')+'">'+bs(egr)+'</div><div class="d">'+n0(egrs.length)+' movimiento'+(egrs.length===1?'':'s')+'</div></div>'+
+    '<div class="kpi'+(neto>=0?' acc':'')+'"><div class="k">Caja neta</div><div class="v" style="font-size:21px;color:'+(neto>=0?'var(--ok)':'var(--clay)')+'">'+bs(neto)+'</div><div class="d">cobrado − egresos</div></div>'+
     '<div class="kpi"><div class="k">Sin identificar</div><div class="v" style="font-size:21px;color:'+((faltaCargar.length)?'var(--clay)':(Math.abs(sinIdent)>0.01?'var(--gray)':'var(--ok)'))+'">'+bs(sinIdent)+'</div><div class="d">'+
       (faltaCargar.length
         ? '<b style="color:var(--clay)">'+faltaCargar.length+' por completar</b>'+(delHistorico.length?' · '+delHistorico.length+' del cuaderno':'')
@@ -3019,12 +3347,65 @@ function renderCaja(){
   var dias=Object.keys(porDia).sort().reverse();
   $('#cj-dias').innerHTML=tabla(
     [{t:'Fecha'},{t:'Atenc.',num:1},{t:'💵 Efectivo',num:1},{t:'📱 QR',num:1},{t:'💳 Tarjeta',num:1},
-     {t:'🏦 Transf.',num:1},{t:'Total del día',num:1}],
+     {t:'🏦 Transf.',num:1},{t:'Entró',num:1},{t:'Salió',num:1},{t:'Neto del día',num:1},
+     {t:'💵 En caja',num:1}],
     dias.slice(0,62).map(function(f){
-      var d=porDia[f];
+      var d=porDia[f], e=egrDia[f]||{monto:0,m:{}};
+      var efe=(d.m['Efectivo']||0)-(e.m['Efectivo']||0);
       return [fmtF(f),n0(d.n),n0(d.m['Efectivo']||0),n0(d.m['QR']||0),n0(d.m['Tarjeta']||0),
-        n0(d.m['Transferencia']||0),'<b>'+n0(d.cobr)+'</b>']}),560)+
+        n0(d.m['Transferencia']||0),n0(d.cobr),
+        e.monto?'<span style="color:var(--clay)">-'+n0(e.monto)+'</span>':'—',
+        '<b'+((d.cobr-e.monto)<0?' style="color:var(--clay)"':'')+'>'+n0(d.cobr-e.monto)+'</b>',
+        '<b'+(efe<0?' style="color:var(--clay)"':'')+'>'+n0(efe)+'</b>']}),760)+
     (dias.length>62?'<p class="mini" style="margin-top:8px">Se muestran los 62 días más recientes de los '+dias.length+' del periodo.</p>':'');
+
+  var liq=liquidacion(rows);
+  var totPagar=liq.reduce(function(a,x){return a+x.pagar},0);
+  var totFact=liq.reduce(function(a,x){return a+x.facturado},0);
+  var totCobr=liq.reduce(function(a,x){return a+x.cobrado},0);
+  var hayPct=liq.some(function(x){return x.pct>0});
+  var periodo=($('#c-rango').value==='mes')?mesLabel($('#c-mes').value)
+    :($('#c-rango').value==='dia'?fmtF($('#c-dia').value)
+    :($('#c-rango').value==='anio'?$('#c-anio').value:'todo'));
+  $('#cj-liq').innerHTML=liq.length
+    /* A pagar va segundo a propósito: en el celular la tabla se scrollea, y
+       ese es el número por el que se abre esta pantalla. */
+    ? tabla([{t:'Profesional'},{t:'A pagar',num:1},{t:'%',num:1},{t:'Facturado',num:1},
+        {t:'De eso, cobrado',num:1}].concat(CFG.comisionDescuentaLab?[{t:'Laboratorio',num:1}]:[])
+        .concat([{t:'Atenc.',num:1},{t:''}]),
+        liq.map(function(x){
+          return ['<b>'+esc(x.prof)+'</b>','<b>'+n0(x.pagar)+'</b>',
+            x.pct?x.pct+'%':'<span style="color:var(--clay)">sin definir</span>',
+            n0(x.facturado),
+            n0(x.cobrado)+(x.facturado>x.cobrado?' <span class="pill warn">falta '+n0(x.facturado-x.cobrado)+'</span>':'')]
+            .concat(CFG.comisionDescuentaLab?[x.lab?n0(x.lab):'—']:[])
+            .concat([n0(x.n),
+              x.pagar>0?'<button class="btn sec sm" onclick="pagarComision(\''+jss(x.prof)+'\','+
+                x.pagar+',\''+jss(periodo)+'\')">Registrar pago</button>':''])})
+          .concat([['<b>TOTAL</b>','<b>'+n0(totPagar)+'</b>','',n0(totFact),n0(totCobr)]
+            .concat(CFG.comisionDescuentaLab?['']:[]).concat(['',''])]),700)+
+      (hayPct
+        ? '<p class="mini" style="margin-top:8px">Se paga sobre lo <b>facturado</b>'+
+          (CFG.comisionDescuentaLab?', descontando el laboratorio':'')+
+          '. Donde dice <b>falta</b>, esa plata todavía no entró: la comisión se paga igual y el '+
+          'consultorio banca el saldo hasta que el paciente pague.</p>'
+        : '<p class="mini" style="margin-top:8px">Cargá el porcentaje de cada doctora en '+
+          '<b>Ajustes → Comisiones</b> y esta tabla calcula sola cuánto pagarle a cada una.</p>')
+    : '<div class="empty">No hay atenciones en este periodo.</div>';
+
+  var cats=Object.keys(egrCat).sort(function(a,b){return egrCat[b]-egrCat[a]});
+  $('#cj-egresos').innerHTML=egrs.length
+    ? barras(cats.map(function(c){return {k:c,v:egrCat[c],lbl:bs(egrCat[c])}}))+
+      tabla([{t:'Fecha'},{t:'Categoría'},{t:'Detalle'},{t:'Pagado a'},{t:'Forma'},{t:'Monto',num:1},{t:''}],
+        egrs.map(function(x){
+          return [fmtF(x.fecha),'<b>'+esc(x.categoria)+'</b>',esc(x.detalle||'—'),esc(x.proveedor||'—'),
+            esc(x.metodo),n0(x.monto),
+            '<button class="btn sec sm" onclick="editarEgreso(\''+x.id+'\')">✏️</button> '+
+            '<button class="btn danger sm" onclick="borrarEgreso(\''+x.id+'\')">✕</button>']})
+          .concat([['<b>TOTAL</b>','','','','','<b>'+n0(egr)+'</b>','']]),640)+
+      '<p class="mini" style="margin-top:8px">💵 En efectivo salieron '+bs(egrMetodo['Efectivo']||0)+
+      ' · el resto por QR, tarjeta o transferencia.</p>'
+    : '<div class="empty">No hay egresos cargados en este periodo.</div>';
 
   /* cuentas por cobrar, por antigüedad */
   var hoy=hoyISO(), tramos=[['0 a 30 días',0,30],['31 a 60 días',31,60],['61 a 90 días',61,90],['Más de 90 días',91,99999]];
@@ -3239,6 +3620,10 @@ function verPaciente(nombre){
       '<div class="barra" style="margin:9px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
       '<div class="mini">'+a.hechas+'/'+a.total+' sesiones · presupuesto '+bs(p.total)+
         ' · saldo '+bs(saldoPlan(p))+(s2?' · sigue: <b>'+esc(s2.desc||('sesión '+s2.n))+'</b>':'')+'</div>'+
+      (function(){var c=proxCuota(p); if(!c)return '';
+        return '<div class="mini">'+(c.vencida
+          ? '<span class="pill bad">cuota '+c.n+' vencida hace '+c.dias+' días · '+bs(c.monto-c.cubierto)+'</span>'
+          : '💳 próxima cuota '+bs(c.monto)+' el '+fmtF(c.fecha))+'</div>'})()+
       '<div class="row-btn" style="margin-top:8px">'+
         '<button class="btn sec sm" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📄 Presupuesto</button>'+
       '</div></div>'}).join(''):'';
@@ -3516,10 +3901,13 @@ function planCardHtml(nombre,p){
           (ses.hecha&&ses.fecha?'<div class="mini">'+fmtF(ses.fecha)+'</div>':'')+'</div>'+
         (ses.hecha?'':'<button class="btn sec sm" onclick="marcarSesion(\''+nj+'\',\''+p.id+'\','+ses.n+')">Marcar hecha</button>')+
         '</div>'}).join('')+'</div>':'')+
+    cuotasHtml(p)+
     (p.notas?'<p class="mini" style="margin-top:9px">'+esc(p.notas)+'</p>':'')+
     '<div class="row-btn">'+
       '<button class="btn sec sm" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📄 Presupuesto</button>'+
       '<button class="btn sec sm" onclick="editarPlan(\''+nj+'\',\''+p.id+'\')">✏️ Editar</button>'+
+      '<button class="btn sec sm" onclick="guardarPlantilla(\''+nj+'\',\''+p.id+'\')" '+
+        'title="Guardar este plan como plantilla para reutilizarlo">💾 Plantilla</button>'+
       (p.estado==='activo'?'<button class="btn sec sm" onclick="cerrarPlan(\''+nj+'\',\''+p.id+'\')">✅ Dar por terminado</button>':'')+
       '<button class="btn danger sm" onclick="borrarPlan(\''+nj+'\',\''+p.id+'\')">Borrar</button>'+
     '</div></div>'}
@@ -3537,6 +3925,12 @@ function txtPresupuesto(nombre,plan){
   if(cob>0)t+='✅ A cuenta: '+bs(cob)+'\n';
   if(sal>0)t+='⏳ Saldo: *'+bs(sal)+'*\n';
   else if(num(plan.total)>0)t+='✅ Pagado completo\n';
+  var cs=estadoCuotas(plan);
+  if(cs.length){
+    t+='\n📅 *Plan de pago*\n';
+    cs.forEach(function(c){
+      t+='Cuota '+c.n+': '+bs(c.monto)+' — '+fmtF(c.fecha)+
+        (c.estado==='pagada'?' ✅':(c.estado==='parcial'?' 🟡 (pagó '+bs(c.cubierto)+')':''))+'\n'})}
   if(a.hechas>0)t+='\n📌 Lleva '+a.hechas+' de '+a.total+' sesiones.\n';
   t+='\nCualquier duda estamos a la orden 🦷';
   return t}
@@ -3551,6 +3945,34 @@ function verPresupuesto(nombre,id){
     '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
     '<button class="btn sec" onclick="abrirPlanes(\''+jss(nombre)+'\')">Volver</button></div>')}
 
+/* ---------- plantillas de plan ----------
+   Cargar "Ortodoncia 18 meses" a mano cada vez es tiempo perdido y se
+   escribe distinto cada vez. Las plantillas salen de un plan que ya
+   funcionó, que es la única fuente honesta. */
+function aplicarPlantilla(i){
+  var t=(CFG.planesTipo||[])[+i]; if(!t)return;
+  $('#pl-nom').value=t.nombre||'';
+  $('#pl-tot').value=num(t.total)||'';
+  $('#pl-ses').value=(t.sesiones||[]).join('\n');
+  if(t.cuotas){$('#pl-ncuo').value=num(t.cuotas.n)||'';$('#pl-dcuo').value=num(t.cuotas.cada)||30}
+  toast('Plantilla "'+(t.nombre||'')+'" aplicada')}
+
+function guardarPlantilla(nombre,id){
+  var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
+  var nom=prompt('¿Con qué nombre guardo esta plantilla?',p.nombre); if(!nom)return;
+  CFG.planesTipo=(CFG.planesTipo||[]).filter(function(t){return t.nombre!==nom});
+  CFG.planesTipo.push({nombre:nom, total:num(p.total),
+    sesiones:(p.sesiones||[]).map(function(s){return s.desc}),
+    cuotas:(p.cuotas||[]).length
+      ? {n:p.cuotas.length, cada:(p.cuotas.length>1?Math.max(1,diasEntre(p.cuotas[0].fecha,p.cuotas[1].fecha)):30)}
+      : null});
+  saveCfg(); toast('Plantilla guardada: '+nom)}
+
+function borrarPlantilla(i){
+  var t=(CFG.planesTipo||[])[+i]; if(!t)return;
+  if(!confirm('¿Borrar la plantilla "'+t.nombre+'"? Los planes ya cargados no se tocan.'))return;
+  CFG.planesTipo.splice(+i,1); saveCfg(); renderConfig(); toast('Plantilla borrada')}
+
 function nuevoPlan(nombre){editorPlan(nombre,null)}
 function editarPlan(nombre,id){
   editorPlan(nombre,planesDe(nombre).filter(function(x){return x.id===id})[0]||null)}
@@ -3558,6 +3980,13 @@ function editarPlan(nombre,id){
 function editorPlan(nombre,p){
   var ses=((p&&p.sesiones)||[]).map(function(x){return x.desc}).join('\n');
   openModal('<h3>'+(p?'Editar plan':'Nuevo plan de tratamiento')+'</h3><p class="mini">'+esc(nombre)+'</p>'+
+    ((!p&&(CFG.planesTipo||[]).length)
+      ? '<div style="margin-top:12px"><label>Empezar desde una plantilla</label>'+
+        '<select id="pl-tipo" onchange="aplicarPlantilla(this.value)">'+
+        '<option value="">— plan nuevo, en blanco —</option>'+
+        (CFG.planesTipo||[]).map(function(t,i){
+          return '<option value="'+i+'">'+esc(t.nombre)+' · '+t.sesiones.length+' sesiones · '+bs(t.total)+'</option>'}).join('')+
+        '</select></div>' : '')+
     '<div style="margin-top:12px"><label>Nombre del plan</label>'+
       '<input id="pl-nom" value="'+esc(p?p.nombre:'')+'" placeholder="Ej. Ortodoncia superior / Rehabilitación"></div>'+
     '<div class="grid g2" style="margin-top:12px">'+
@@ -3566,6 +3995,17 @@ function editorPlan(nombre,p){
     '<div style="margin-top:12px"><label>Sesiones · una por línea</label>'+
       '<textarea id="pl-ses" style="min-height:120px" placeholder="Toma de impresión · Colocación de brackets · Control al mes">'+esc(ses)+'</textarea>'+
       '<p class="hint" style="margin:6px 0 0">Se van marcando solas a medida que cargás atenciones enlazadas al plan. Reescribir la lista no borra lo ya hecho.</p></div>'+
+    '<div style="margin-top:14px"><label>Plan de pago</label>'+
+      '<p class="hint" style="margin:0 0 8px">Dejá las cuotas en 0 si se paga a medida que viene. '+
+      'Con cuotas, las vencidas aparecen solas en Recordatorios.</p>'+
+      '<div class="grid g3">'+
+        '<div><label>Cuotas</label><input id="pl-ncuo" inputmode="numeric" value="'+
+          esc(p&&p.cuotas.length?p.cuotas.length:'')+'" placeholder="0"></div>'+
+        '<div><label>Primera cuota</label><input type="date" id="pl-fcuo" value="'+
+          esc(p&&p.cuotas.length?p.cuotas[0].fecha:hoyISO())+'"></div>'+
+        '<div><label>Cada (días)</label><input id="pl-dcuo" inputmode="numeric" value="'+
+          esc(p&&p.cuotas.length>1?Math.max(1,diasEntre(p.cuotas[0].fecha,p.cuotas[1].fecha)):30)+'"></div>'+
+      '</div></div>'+
     '<div style="margin-top:12px"><label>Notas</label><input id="pl-not" value="'+esc(p?p.notas:'')+'"></div>'+
     '<div class="row-btn"><button class="btn" onclick="guardarPlan(\''+jss(nombre)+'\','+(p?('\''+p.id+'\''):'null')+')">Guardar plan</button>'+
     '<button class="btn sec" onclick="abrirPlanes(\''+jss(nombre)+'\')">Cancelar</button></div>')}
@@ -3581,6 +4021,7 @@ function guardarPlan(nombre,id){
   plan.fecha=$('#pl-fec').value||hoyISO();
   plan.total=num($('#pl-tot').value);
   plan.notas=$('#pl-not').value.trim();
+  plan.cuotas=armarCuotas(plan.total,$('#pl-ncuo').value,$('#pl-fcuo').value,$('#pl-dcuo').value);
   /* reescribir la lista no puede borrar lo ya hecho: se conserva por posición */
   var viejas=plan.sesiones||[];
   plan.sesiones=descs.map(function(d,i){
@@ -3615,6 +4056,24 @@ function renderConfig(){
   $('#c-dias-cumple').value=CFG.diasCumple;
   $('#c-dias-frenado').value=CFG.diasPlanFrenado;
   $('#c-min-cita').value=CFG.minCita;
+  var profsCom={}; CFG.prof.forEach(function(p){profsCom[p]=1});
+  DATA.forEach(function(r){if(r.profesional)profsCom[r.profesional]=1});
+  $('#c-comision').innerHTML=Object.keys(profsCom).sort().map(function(p){
+    var v=(CFG.comision||{})[p];
+    return '<tr style="cursor:default"><td>'+esc(p)+'</td>'+
+      '<td class="num"><input class="cc" data-p="'+esc(p)+'" inputmode="decimal" value="'+
+      esc(v==null?'':v)+'" placeholder="'+num(CFG.comisionDefault)+'" style="text-align:right;padding:6px 8px"></td></tr>'}).join('');
+  var pts=CFG.planesTipo||[];
+  $('#c-plantillas').innerHTML=pts.length
+    ? tabla([{t:'Plantilla'},{t:'Sesiones',num:1},{t:'Cuotas',num:1},{t:'Total',num:1},{t:''}],
+        pts.map(function(t,i){
+          return ['<b>'+esc(t.nombre)+'</b>',n0((t.sesiones||[]).length),
+            t.cuotas?n0(t.cuotas.n)+' · cada '+n0(t.cuotas.cada)+' días':'—',
+            n0(t.total),
+            '<button class="btn danger sm" onclick="borrarPlantilla('+i+')">✕</button>']}),480)
+    : '<div class="empty">Todavía no guardaste ninguna plantilla.</div>';
+  $('#c-comision-def').value=CFG.comisionDefault;
+  $('#c-comision-lab').checked=!!CFG.comisionDescuentaLab;
   $('#c-indicaciones').innerHTML=INDICACIONES_BASE.map(function(g){
     return '<div style="margin-bottom:14px"><label>'+esc(g.label)+'</label>'+
       '<textarea data-ind="'+g.id+'" style="min-height:150px">'+esc(indTexto(g))+'</textarea></div>'}).join('');
@@ -3624,7 +4083,8 @@ function renderConfig(){
   $('#c-ctrl-aviso').value=CFG.diasCtrlAviso;
   $('#c-precios').innerHTML=CFG.precios.map(function(p,i){
     return '<tr style="cursor:default"><td>'+esc(p.cat)+'</td><td>'+esc(p.nom)+'</td>'+
-      '<td class="num"><input class="cp" data-i="'+i+'" inputmode="decimal" value="'+num(p.precio)+'" style="text-align:right;padding:6px 8px"></td></tr>'}).join('');
+      '<td class="num"><input class="cp" data-i="'+i+'" inputmode="decimal" value="'+num(p.precio)+'" style="text-align:right;padding:6px 8px"></td>'+
+      '<td class="num"><input class="cl" data-i="'+i+'" inputmode="decimal" value="'+num(p.lab)+'" style="text-align:right;padding:6px 8px"></td></tr>'}).join('');
   $('#cfg-compartida').innerHTML=CONNECTED
     ? '<span style="color:var(--ok)">Estos ajustes se comparten con todos los equipos.</span>'
     : '<span style="color:var(--clay)">Modo local: estos ajustes valen solo en este equipo.</span>';
@@ -3965,6 +4425,16 @@ function exportCaja(rows,nombre){
     METODOS.forEach(function(k){porDia[r.fecha].m[k]=(porDia[r.fecha].m[k]||0)+(m[k]||0)});
     r.__m=m; r.__ident=ident;
     if(num(r.acuenta)>0&&Math.abs(ident-num(r.acuenta))>0.01)sinId.push(r)});
+  /* los egresos del mismo periodo: sin ellos el informe cuenta la mitad */
+  var egrsE=egresosRango(), egrTot=0, egrCatE={}, egrDiaE={}, egrMetE={};
+  egrsE.forEach(function(x){
+    egrTot+=num(x.monto);
+    egrCatE[x.categoria]=(egrCatE[x.categoria]||0)+num(x.monto);
+    egrMetE[x.metodo]=(egrMetE[x.metodo]||0)+num(x.monto);
+    if(!egrDiaE[x.fecha])egrDiaE[x.fecha]={monto:0,m:{}};
+    egrDiaE[x.fecha].monto+=num(x.monto);
+    egrDiaE[x.fecha].m[x.metodo]=(egrDiaE[x.fecha].m[x.metodo]||0)+num(x.monto)});
+
   var identTot=METODOS.reduce(function(a,k){return a+porMetodo[k]},0);
   var faltaId=Math.max(0,cobrTot-identTot);
   var porCompletar=sinId.filter(function(r){return !esImportada(r)});
@@ -3981,6 +4451,10 @@ function exportCaja(rows,nombre){
   P.push([celda('Cobrado','texto'),celda(cobrTot,'destacadoBs'),
           celda('% cobrado','texto'),celda(totTot?cobrTot/totTot:0,'pc')]);
   P.push([celda('Por cobrar','texto'),celda(salTot,salTot>0?'alerta':'bs'),'','']);
+  P.push([celda('Egresos','texto'),celda(egrTot,egrTot>0?'alerta':'bs'),
+          celda('Movimientos','texto'),celda(egrsE.length,'num')]);
+  P.push([celda('CAJA NETA','totalTexto'),celda(cobrTot-egrTot,'totalBs'),
+          celda('cobrado − egresos','nota'),'']);
   P.push([]);
 
   P.push(filaSeccion('Cobrado por forma de pago',3));
@@ -4013,6 +4487,28 @@ function exportCaja(rows,nombre){
   P.push([celda('La antigüedad mira toda la historia del consultorio, no solo el período '+
     'elegido: una deuda vieja sigue siendo deuda.','nota')]);
 
+  if(egrsE.length){
+    P.push([]);
+    P.push(filaSeccion('Egresos por categoría',3));
+    P.push(filaEncabezado(['Categoría','Monto','% del total']));
+    Object.keys(egrCatE).sort(function(a,b){return egrCatE[b]-egrCatE[a]}).forEach(function(c){
+      P.push([c,celda(egrCatE[c],'bs'),celda(egrTot?egrCatE[c]/egrTot:0,'pc')])});
+    P.push([celda('TOTAL EGRESOS','totalTexto'),celda(egrTot,'totalBs'),celda(1,'pc')])}
+
+  var liqE=liquidacion(rows);
+  if(liqE.length&&liqE.some(function(x){return x.pct>0})){
+    P.push([]);
+    P.push(filaSeccion('Liquidación de las doctoras',4));
+    P.push(filaEncabezado(['Profesional','Facturado','%','A pagar']));
+    liqE.forEach(function(x){
+      P.push([x.prof,celda(x.facturado,'bs'),celda(x.pct/100,'pc'),celda(x.pagar,'bs')])});
+    P.push([celda('TOTAL A PAGAR','totalTexto'),'','',
+      celda(liqE.reduce(function(a,x){return a+x.pagar},0),'totalBs')]);
+    P.push([]);
+    P.push([celda('Se calcula sobre lo facturado'+
+      (CFG.comisionDescuentaLab?', descontando el laboratorio':'')+
+      '. Si el paciente quedó debiendo, la comisión se paga igual.','nota')])}
+
   if(porCompletar.length){
     P.push([]);
     P.push(filaSeccion('Falta anotar cómo pagaron',3));
@@ -4043,14 +4539,24 @@ function exportCaja(rows,nombre){
   A.push([celda('Arqueo día por día','titulo')]);
   A.push([celda('La columna Efectivo es la que se cuenta en caja al cerrar','subtitulo')]);
   A.push([]);
-  A.push(filaEncabezado(['Fecha','Atenciones','Efectivo','QR','Tarjeta','Transferencia','Total del día']));
-  Object.keys(porDia).sort().forEach(function(f){var d=porDia[f];
+  A.push(filaEncabezado(['Fecha','Atenciones','Efectivo','QR','Tarjeta','Transferencia',
+    'Entró','Salió','Neto del día','Efectivo en caja']));
+  var diasA={};
+  Object.keys(porDia).forEach(function(f){diasA[f]=1});
+  egrsE.forEach(function(x){diasA[x.fecha]=1});
+  Object.keys(diasA).sort().forEach(function(f){
+    var d=porDia[f]||{n:0,cobr:0,m:{}}, e=egrDiaE[f]||{monto:0,m:{}};
     A.push([f,d.n,celda(d.m['Efectivo']||0,'bs'),celda(d.m['QR']||0,'bs'),
-      celda(d.m['Tarjeta']||0,'bs'),celda(d.m['Transferencia']||0,'bs'),celda(d.cobr,'bs')])});
+      celda(d.m['Tarjeta']||0,'bs'),celda(d.m['Transferencia']||0,'bs'),
+      celda(d.cobr,'bs'),celda(e.monto,e.monto?'alerta':'bs'),
+      celda(d.cobr-e.monto,(d.cobr-e.monto)<0?'alerta':'bs'),
+      celda((d.m['Efectivo']||0)-(e.m['Efectivo']||0),'bs')])});
   A.push([celda('TOTAL','totalTexto'),
     celda(rows.length,'totalNum'),celda(porMetodo['Efectivo'],'totalBs'),
     celda(porMetodo['QR'],'totalBs'),celda(porMetodo['Tarjeta'],'totalBs'),
-    celda(porMetodo['Transferencia'],'totalBs'),celda(cobrTot,'totalBs')]);
+    celda(porMetodo['Transferencia'],'totalBs'),celda(cobrTot,'totalBs'),
+    celda(egrTot,'totalBs'),celda(cobrTot-egrTot,'totalBs'),
+    celda(porMetodo['Efectivo']-(egrMetE['Efectivo']||0),'totalBs')]);
 
   /* ---------- 4. SALDOS PENDIENTES ---------- */
   var S=[];
@@ -4067,12 +4573,25 @@ function exportCaja(rows,nombre){
         celda(num(r.acuenta),'bs'),celda(num(r.saldo),dd>90?'alerta':'bs'),dd,t?t[0]:''])});
   S.push([celda('TOTAL','totalTexto'),'','','','',celda(totDeu,'totalBs'),'','']);
 
+  /* ---------- 5. EGRESOS ---------- */
+  var E=[];
+  E.push([celda('Egresos del período','titulo')]);
+  E.push([celda(periodoTexto(rows),'subtitulo')]);
+  E.push([]);
+  E.push(filaEncabezado(['Fecha','Categoría','Detalle','Pagado a','Forma de pago','Monto']));
+  egrsE.slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})
+    .forEach(function(x){
+      E.push([x.fecha||'',x.categoria||'',x.detalle||'',x.proveedor||'',x.metodo||'',
+        celda(num(x.monto),'bs')])});
+  E.push([celda('TOTAL','totalTexto'),'','','','',celda(egrTot,'totalBs')]);
+
   rows.forEach(function(r){delete r.__m; delete r.__ident});
 
   descargar(buildXlsx([
     {name:'Resumen',rows:P,widths:[30,16,22,14],merges:['A1:D1','A2:D2','A3:D3']},
     {name:'Movimientos',rows:M,widths:[11,26,17,38,12,12,12,12,11,11,15,15,22],congelar:1},
-    {name:'Arqueo diario',rows:A,widths:[12,11,13,11,11,15,15],congelar:4,merges:['A1:G1','A2:G2']},
+    {name:'Arqueo diario',rows:A,widths:[12,11,13,11,11,15,15,15,15,17],congelar:4,merges:['A1:J1','A2:J2']},
+    {name:'Egresos',rows:E,widths:[11,24,32,22,15,13],congelar:4,merges:['A1:F1','A2:F2']},
     {name:'Saldos pendientes',rows:S,widths:[11,26,13,12,12,12,8,16],congelar:4,merges:['A1:H1','A2:H2']}
   ]),nombre||('Spadental_informe_caja_'+hoyISO()+'.xlsx'));
   toast('Informe de caja descargado ✅')}
@@ -4113,7 +4632,11 @@ function bind(){
     if(e.target.classList.contains('s-nom')){
       var p=CFG.precios.filter(function(x){return x.nom===e.target.value})[0];
       var pi=box.querySelector('.s-precio');
-      if(p&&(!pi.value||!pi.dataset.touched))pi.value=p.precio||''}
+      if(p&&(!pi.value||!pi.dataset.touched))pi.value=p.precio||'';
+      readSrv();
+      /* el campo de laboratorio aparece o desaparece según el servicio */
+      if(SRV[+box.dataset.i]){SRV[+box.dataset.i].lab=p?num(p.lab):0}
+      renderSrv(); return}
     readSrv(); recalcTotal()});
   $('#srv-list').addEventListener('input',function(e){
     if(e.target.classList.contains('s-precio'))e.target.dataset.touched='1';
@@ -4184,6 +4707,7 @@ function bind(){
     CFG.canales=l; saveCfg(); renderCanales(); renderAgendaPor(); toast('Canales guardados')};
   $('#btn-save-precios').onclick=function(){
     $$('#c-precios .cp').forEach(function(i){CFG.precios[+i.dataset.i].precio=num(i.value)});
+    $$('#c-precios .cl').forEach(function(i){CFG.precios[+i.dataset.i].lab=num(i.value)});
     saveCfg(); renderSrv(); toast('Precios guardados')};
   $('#btn-reset-precios').onclick=function(){
     if(!confirm('¿Volver a la lista de precios original?'))return;
@@ -4216,6 +4740,17 @@ function bind(){
     if(!confirm('¿Volver a los textos originales? Se pierde lo que hayan editado.'))return;
     CFG.indicaciones={}; saveCfg(); renderConfig(); toast('Textos originales restaurados')};
 
+  $('#btn-nuevo-egreso').onclick=function(){nuevoEgreso()};
+
+  $('#btn-save-comision').onclick=function(){
+    var m={};
+    $$('#c-comision .cc').forEach(function(i){
+      var v=i.value.trim(); if(v!=='')m[i.dataset.p]=num(v)});
+    CFG.comision=m;
+    CFG.comisionDefault=num($('#c-comision-def').value);
+    CFG.comisionDescuentaLab=$('#c-comision-lab').checked;
+    saveCfg(); toast('Comisiones guardadas')};
+
   $('#btn-save-rem').onclick=function(){
     CFG.diasProx=Math.max(0,num($('#c-dias-prox').value)||3);
     CFG.diasDorm=Math.max(1,num($('#c-dias-dorm').value)||120);
@@ -4229,7 +4764,7 @@ function bind(){
     saveCfg(); updateNavRem(); toast('Recordatorios actualizados')};
 
   $('#btn-json').onclick=function(){
-    descargar(new Blob([JSON.stringify({data:DATA,cfg:CFG,pacientes:PAC},null,1)],{type:'application/json'}),
+    descargar(new Blob([JSON.stringify({data:DATA,cfg:CFG,pacientes:PAC,egresos:EGR},null,1)],{type:'application/json'}),
       'Spadental_respaldo_'+hoyISO()+'.json'); toast('Respaldo descargado')};
   $('#btn-import').onclick=function(){$('#file-json').click()};
   $('#file-json').onchange=function(e){
@@ -4243,6 +4778,10 @@ function bind(){
         var ids={}; DATA.forEach(function(r){ids[r.id]=1});
         arr.map(normalize).forEach(function(r){if(!ids[r.id])DATA.push(r)});
         if(j.cfg&&j.cfg.precios){CFG=j.cfg;saveCfg()}
+        if(Array.isArray(j.egresos)){
+          var ids={}; EGR.forEach(function(x){ids[x.id]=1});
+          j.egresos.map(egrNormalize).forEach(function(x){if(!ids[x.id])EGR.push(x)});
+          saveEgrLocal()}
         if(j.pacientes&&typeof j.pacientes==='object'){
           Object.keys(j.pacientes).forEach(function(k){
             var n=pacNormalize(j.pacientes[k]), kk=keyPac(n.nombre)||k;
@@ -4259,7 +4798,7 @@ function banner(){
     : '<div class="banner local">📴 Modo local · los datos quedan solo en este navegador. Descargá el respaldo seguido desde <b>Ajustes</b>.</div>'}
 
 (function init(){
-  CFG=loadCfg(); DATA=loadLocal().map(normalize); PAC=loadPacLocal();
+  CFG=loadCfg(); DATA=loadLocal().map(normalize); PAC=loadPacLocal(); EGR=loadEgr();
   initGate();
   initFechas(); banner(); renderCanales(); renderAgendaPor(); bind();
   clearForm(); clearCita(); fillDatalists(); updateNavRem();

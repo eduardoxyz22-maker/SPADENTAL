@@ -13,6 +13,8 @@
  *   {action:'cfg',    cfg:{…}}        → {ok:true}   (guarda los ajustes compartidos)
  *   {action:'pac',   registro:{…}}   → {ok:true}   (ficha del paciente: nacimiento,
  *                                                   ficha médica y planes de tratamiento)
+ *   {action:'egreso',   registro:{…}}  → {ok:true}   (lo que sale de caja)
+ *   {action:'egresoDel',registro:{id}} → {ok:true}
  *
  * El list devuelve además `cfg` con los ajustes (precios, canales,
  * profesionales, clave) y `pacientes` con las fichas, para que todos los
@@ -21,6 +23,7 @@
 
 var HOJA = 'Atenciones';
 var HOJA_PAC = 'Pacientes';
+var HOJA_EGR = 'Egresos';
 
 /* Opcional: el ID de la planilla (lo que va entre /d/ y /edit en su URL).
    Se puede dejar vacío: el script usa la planilla en la que está pegado y,
@@ -42,6 +45,11 @@ var COLS = [
    propia hoja porque hay una fila por paciente, no por atención. */
 var COLS_PAC = ['Nombre', 'Nacimiento', 'Alergias', 'Medicación', 'Antecedentes',
   'Consentimiento', 'Planes', 'Actualizado', '_med_json', '_planes_json'];
+
+/* Lo que sale de caja. Va aparte de las atenciones porque no es una visita:
+   mezclarlo ensuciaría cada métrica de pacientes. */
+var COLS_EGR = ['ID', 'Fecha', 'Categoría', 'Detalle', 'Pagado a', 'Monto Bs',
+  'Forma de pago', 'Registrado'];
 
 /* ------------------------------------------------------------------ hoja */
 /**
@@ -164,6 +172,75 @@ function doGuardarPac(p) {
   return { ok: true, paciente: p.nombre };
 }
 
+function getSheetEgr() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(HOJA_EGR);
+  if (!sh) sh = ss.insertSheet(HOJA_EGR);
+  var anchoActual = Math.max(sh.getLastColumn(), 1);
+  var cab = sh.getRange(1, 1, 1, anchoActual).getValues()[0];
+  if (cab.length < COLS_EGR.length || String(cab[0]).trim() !== COLS_EGR[0]) {
+    sh.getRange(1, 1, 1, COLS_EGR.length).setValues([COLS_EGR]);
+    sh.getRange(1, 1, 1, COLS_EGR.length)
+      .setFontWeight('bold').setBackground('#A8C21E').setFontColor('#262625');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function filaDeEgreso(e) {
+  return [e.id || '', e.fecha || '', e.categoria || '', e.detalle || '',
+    e.proveedor || '', Number(e.monto) || 0, e.metodo || '', e.ts || ''];
+}
+
+function egresoDeFila(f) {
+  return {
+    id: f[0], fecha: formatoFecha(f[1]), categoria: f[2], detalle: f[3],
+    proveedor: f[4], monto: Number(f[5]) || 0, metodo: f[6], ts: f[7] || ''
+  };
+}
+
+function doListEgr() {
+  var sh = getSheetEgr();
+  var n = sh.getLastRow();
+  if (n < 2) return [];
+  var filas = sh.getRange(2, 1, n - 1, COLS_EGR.length).getValues();
+  var out = [];
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0]) continue;
+    out.push(egresoDeFila(filas[i]));
+  }
+  return out;
+}
+
+/** Busca la fila de un egreso por su id. Devuelve 0 si no está. */
+function filaEgresoPorId(sh, id) {
+  var n = sh.getLastRow();
+  if (n < 2) return 0;
+  var ids = sh.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(id)) return i + 2;
+  }
+  return 0;
+}
+
+function doGuardarEgreso(e) {
+  if (!e || !e.id) return { ok: false, error: 'sin_id' };
+  var sh = getSheetEgr();
+  var destino = filaEgresoPorId(sh, e.id);
+  var fila = filaDeEgreso(e);
+  if (destino) sh.getRange(destino, 1, 1, COLS_EGR.length).setValues([fila]);
+  else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_EGR.length).setValues([fila]);
+  return { ok: true, egreso: e.id };
+}
+
+function doBorrarEgreso(e) {
+  if (!e || !e.id) return { ok: false, error: 'sin_id' };
+  var sh = getSheetEgr();
+  var fila = filaEgresoPorId(sh, e.id);
+  if (fila) sh.deleteRow(fila);
+  return { ok: true, borrado: !!fila };
+}
+
 /* ------------------------------------------------- serialización servicios */
 function srvTexto(servicios) {
   if (!servicios || !servicios.length) return '';
@@ -253,14 +330,14 @@ function leerCfg() {
 function doList() {
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [], cfg: leerCfg(), pacientes: doListPac() };
+  if (n < 2) return { ok: true, registros: [], cfg: leerCfg(), pacientes: doListPac(), egresos: doListEgr() };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out, cfg: leerCfg(), pacientes: doListPac() };
+  return { ok: true, registros: out, cfg: leerCfg(), pacientes: doListPac(), egresos: doListEgr() };
 }
 
 function doSave(r) {
@@ -369,6 +446,8 @@ function doPost(e) {
     if (body.action === 'info') return json(doInfo());
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg));
     if (body.action === 'pac') return json(doGuardarPac(reg));
+    if (body.action === 'egreso') return json(doGuardarEgreso(reg));
+    if (body.action === 'egresoDel') return json(doBorrarEgreso(reg));
     return json({ ok: false, error: 'accion_desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });

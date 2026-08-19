@@ -298,7 +298,10 @@ arma el mapa de toda la boca, pieza por pieza. Los recordatorios incluyen los
 **cumpleaños** de la semana, los **controles que ya tocan** (limpieza,
 ortodoncia) y los **tratamientos a medio hacer**, deducidos solos. Avisa los
 **choques de horario** al agendar y arma las **indicaciones de cuidado** y el
-**presupuesto del plan** listos para mandar por WhatsApp. Página única, se abre
+**presupuesto del plan** listos para mandar por WhatsApp.
+Del lado contable registra **egresos** y calcula la **caja neta**, la
+**liquidación de cada doctora** por porcentaje y el **margen real** de cada
+servicio descontando el laboratorio. Página única, se abre
 con doble clic, funciona sin internet y opcionalmente sincroniza con una hoja
 de Google.
 

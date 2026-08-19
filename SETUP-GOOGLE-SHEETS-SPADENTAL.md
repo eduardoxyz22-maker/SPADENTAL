@@ -12,9 +12,10 @@ Tiempo estimado: 10 minutos, una sola vez.
 
 1. Entrá a [sheets.new](https://sheets.new) con la cuenta de Google del consultorio.
 2. Ponele un nombre, por ejemplo **Spadental · Pacientes**.
-3. No hace falta crear pestañas ni encabezados: el script arma solo las dos
-   hojas que usa — `Atenciones` (una fila por visita) y `Pacientes` (una fila
-   por persona: nacimiento, ficha médica y planes de tratamiento).
+3. No hace falta crear pestañas ni encabezados: el script arma solo las tres
+   hojas que usa — `Atenciones` (una fila por visita), `Pacientes` (una fila
+   por persona: nacimiento, ficha médica y planes) y `Egresos` (lo que sale
+   de caja).
 
 > **Se puede saltear este paso.** Si preferís crear el proyecto suelto desde
 > [script.google.com](https://script.google.com), el script **crea él mismo**
@@ -77,7 +78,7 @@ Guardá y subí el archivo. Al abrirlo vas a ver el aviso verde
 
 ## Si ya lo tenías conectado y actualizaste el panel
 
-Cuando el `.gs` cambia —por ejemplo al agregarse la hoja `Pacientes` y la
+Cuando el `.gs` cambia —al agregarse las hojas `Pacientes` y `Egresos`, o la
 columna `Plan`— **no alcanza con pegar el código y guardar**: hay que publicar
 una versión nueva, si no la aplicación web sigue sirviendo la anterior.
 
@@ -101,6 +102,8 @@ cambios hasta que el servidor los acepte.
    desaparece de la hoja.
 5. Cargale a alguien la **fecha de nacimiento** desde su ficha médica: tiene
    que aparecer una fila en la hoja `Pacientes`.
+6. Registrá un egreso de prueba desde *Caja*: tiene que aparecer una fila en
+   la hoja `Egresos`. Borralo después y verificá que la fila desaparece.
 
 ## Si algo falla
 
@@ -127,7 +130,8 @@ Conectado o no, en **Ajustes → Datos y respaldo** tenés:
 
 - **⬇ Excel de todo** — planilla con las atenciones, el resumen por canal y por servicio.
 - **⬇ Respaldo JSON** — copia exacta de todo (atenciones + fichas de pacientes
-  con su ficha médica y sus planes + precios y canales configurados).
+  con su ficha médica y sus planes + egresos + precios, comisiones y canales
+  configurados).
 - **⬆ Restaurar JSON** — vuelve a cargar un respaldo (agrega, no pisa lo que ya hay).
 
 En modo local conviene bajar el respaldo una vez por semana: si se borra el
