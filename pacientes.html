@@ -244,6 +244,18 @@ tbody tr.destaca td{background:#FBFCF5}
 .banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+/* Aviso de "estás editando". La unica señal que habia era el texto del boton
+   de guardar, que esta despues de siete secciones: al escribir arriba no se
+   veia, y se podia creer que se estaba cargando una visita nueva cuando en
+   realidad se iba a pisar una vieja. Va pegado arriba a proposito. */
+#edit-aviso:empty{display:none}
+#edit-aviso{position:sticky;top:0;z-index:8;margin-bottom:14px}
+.edit-box{background:#FBF3E2;border:1px solid #E4CE93;border-left:4px solid #C79A2B;
+  border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px;
+  flex-wrap:wrap;box-shadow:0 6px 16px rgba(0,0,0,.07)}
+.edit-box .txt{flex:1;min-width:210px;font-size:13.5px;color:#6B4E10;line-height:1.45}
+.edit-box .txt b{color:#4A360A}
+
 /* Lo que la doctora no puede pasar por alto: rojo y arriba de todo. */
 .alerta-clinica{background:#FBEDE6;border:1px solid #EFCBBD;border-left:4px solid var(--clay);
   border-radius:10px;padding:11px 14px;font-size:13.5px;color:#7A3418;line-height:1.5}
@@ -454,6 +466,7 @@ body.locked{overflow:hidden}
 </section>
 
 <section class="view" id="v-atencion">
+  <div id="edit-aviso"></div>
 
   <div class="card">
     <h2><span class="n">1</span>Visita</h2>
@@ -1810,6 +1823,7 @@ function clearForm(keepFecha){
   refrescarFichaForm('');
   $('#btn-save').textContent='Guardar atención';
   $('#btn-cancel-edit').style.display='none';
+  pintarAvisoEdit(null);
   refreshNro(); recalcSaldo()}
 
 function loadForm(r){
@@ -1854,7 +1868,32 @@ function loadForm(r){
   refrescarFichaForm(r.planId||'');
   $('#btn-save').textContent='Guardar cambios';
   $('#btn-cancel-edit').style.display='';
+  pintarAvisoEdit(r);
   recalcSaldo(); closeModal(); show('atencion')}
+
+/* Deja claro, arriba de todo, que lo que se guarde va a REEMPLAZAR una visita
+   que ya existe. Para cargar una visita nueva de un paciente conocido no hay
+   que editar: se escribe el nombre en el formulario en blanco y los datos se
+   completan solos. */
+function pintarAvisoEdit(r){
+  var el=$('#edit-aviso'); if(!el)return;
+  if(!r){el.innerHTML=''; return}
+  var esCita=r.estado==='Agendada';
+  el.innerHTML='<div class="edit-box">'+
+    '<div class="txt">'+(esCita
+      ? '📅 Estás <b>atendiendo la cita</b> de <b>'+esc(r.paciente||'')+'</b> del '+fmtF(r.fecha)+
+        (r.hora?' a las '+r.hora:'')+'. Lo que cargues queda en esa misma visita.'
+      : '✏️ Estás <b>editando</b> la visita de <b>'+esc(r.paciente||'')+'</b> del <b>'+fmtF(r.fecha)+'</b>'+
+        (num(r.total)>0?' ('+bs(r.total)+')':'')+'. Al guardar, <b>se reemplaza</b> esa visita.')+
+    '<br><span class="mini">Si querés registrar una visita <b>nueva</b>, tocá el botón de al lado.</span></div>'+
+    '<button type="button" class="btn sec sm" onclick="nuevaVisitaDe(\''+jss(r.paciente||'')+'\')">'+
+      '＋ Cargar una visita nueva</button></div>'}
+
+/* Salir de la edición sin perder al paciente: queda el formulario en blanco
+   con sus datos, listo para la visita de hoy. */
+function nuevaVisitaDe(nombre){
+  nuevaParaPaciente(nombre);
+  toast('Listo: esto se guarda como una visita nueva')}
 
 function validar(){
   var bad=[],req=[['f-fecha','fecha'],['f-prof','profesional'],['f-paciente','paciente'],['f-cel','celular']];
