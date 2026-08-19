@@ -244,6 +244,19 @@ tbody tr.destaca td{background:#FBFCF5}
 .banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+/* Mi día: la información del paciente va en bloques cortos y con color,
+   para que se lea de un vistazo entre paciente y paciente. */
+.mi-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.rem.mi{align-items:flex-start}
+.mi-avisos{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.mi-a{font-size:13px;line-height:1.45;padding:5px 9px;border-radius:8px;
+  background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+.mi-a.alergia{background:#FBEDE6;border-color:#EFCBBD;color:#7A3418;font-weight:600}
+.mi-a.plata{background:#FBF3E2;border-color:#EFE0BC;color:#6B4E10}
+.mi-a.plan{background:#F2F6E4;border-color:#DFE8C2;color:#4C5A16}
+.mi-a.presu{background:#EDF1FA;border-color:#CFD9EF;color:#2E3F63}
+.mi-a.nuevo{background:#F0F7F1;border-color:#CDE4D2;color:#2C5535}
+.mi-hecho{margin-top:8px;font-size:13px;color:var(--gray);line-height:1.45}
 .lock{max-width:380px;margin:34px auto;text-align:center}
 .mini{font-size:12.5px;color:var(--gray);max-width:92ch}
 /* Formato del día: a la izquierda lo que no cambia durante la jornada
@@ -332,7 +345,8 @@ body.locked{overflow:hidden}
     <div class="sub"><span id="hd-hoy"></span></div>
   </div>
   <nav>
-    <button data-v="atencion" class="on">＋ Nueva atención</button>
+    <button data-v="midia" class="on">🏠 Mi día</button>
+    <button data-v="atencion">＋ Nueva atención</button>
     <button data-v="cita">📅 Agenda <span class="pill bad" id="nav-cita" style="display:none">0</span></button>
     <button data-v="agenda">🔔 Recordatorios <span class="pill bad" id="nav-rem" style="display:none">0</span></button>
     <button data-v="lista">📋 Atenciones</button>
@@ -347,7 +361,37 @@ body.locked{overflow:hidden}
 <div id="conn-banner"></div>
 
 <!-- ============== VISTA: NUEVA ATENCIÓN ============== -->
-<section class="view on" id="v-atencion">
+<section class="view on" id="v-midia">
+  <div class="card">
+    <div class="mi-cab">
+      <div>
+        <h2 style="margin:0">Mi día</h2>
+        <p class="hint" style="margin:4px 0 0" id="m-saludo"></p>
+      </div>
+      <button class="btn sm" onclick="show('atencion')">＋ Nueva atención</button>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div><label>¿Quién sos?</label><select id="m-prof"></select></div>
+      <div><label>Día</label><input type="date" id="m-dia"></div>
+      <div><label>&nbsp;</label>
+        <div class="row-btn" style="margin:0">
+          <button class="btn sec sm" id="m-ayer">◀</button>
+          <button class="btn sec sm" id="m-hoy">Hoy</button>
+          <button class="btn sec sm" id="m-manana">▶</button>
+        </div></div>
+    </div>
+  </div>
+  <div class="kpis" style="margin-top:14px" id="m-kpis"></div>
+  <div id="m-alertas" style="margin-top:14px"></div>
+  <div class="card" style="margin-top:14px">
+    <h2>Los pacientes del día</h2>
+    <p class="hint">En orden de hora, con lo que hay que saber antes de sentarlos:
+      alergias, lo que deben, por qué sesión van y lo que quedó anotado la vez pasada.</p>
+    <div id="m-lista" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section class="view" id="v-atencion">
 
   <div class="card">
     <h2><span class="n">1</span>Visita</h2>
@@ -1318,6 +1362,9 @@ function show(v){
     if(!$('#q-dia').value)$('#q-dia').value=hoyISO();
     if(!$('#q-fecha').value)$('#q-fecha').value=hoyISO();
     renderCitasProximas()}
+  if(v==='midia'){
+    if(!$('#m-dia').value)$('#m-dia').value=hoyISO();
+    llenarProfMiDia(); renderMiDia()}
   if(v==='agenda')renderRem(); if(v==='lista')renderLista(); if(v==='panel')renderPanel();
   if(v==='caja')renderCaja();
   if(v==='pacientes')renderPacientes(); if(v==='config')renderConfig();
@@ -1717,7 +1764,8 @@ function loadForm(r){
   $('#cita-link').innerHTML=(r.estado==='Agendada')
     ? '<span class="pill info">📅 Viene de una cita agendada'+(r.agendaPor?' por '+esc(r.agendaPor):'')+
       '. Cargá lo que se hizo y guardá.</span>' : '';
-  $$('#seg-canal input').forEach(function(i){i.checked=(i.value===r.canal)});
+  var canal=r.canal||canalHistorico(r.paciente);
+  $$('#seg-canal input').forEach(function(i){i.checked=(i.value===canal)});
   $('#f-canal-det').value=r.canalDetalle||'';
   SRV=(r.servicios&&r.servicios.length)?r.servicios.slice():[{nom:'',det:'',cant:1,precio:''}];
   renderSrv();
@@ -2055,6 +2103,15 @@ function citaCard(r,d){
     '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'Canceló\')">🚫 Canceló</button>'+
     '<button class="btn sec sm" onclick="reagendar(\''+r.id+'\')">🔁 Reprogramar</button>';
   return remCard(cls,r.paciente,meta,acts)}
+
+/* Por dónde nos encontró: es un dato de la persona, no de cada visita. Al
+   agendar a un paciente conocido no se vuelve a preguntar, así que la cita
+   viene sin canal; sin esto, atenderla se frena pidiéndolo de nuevo. */
+function canalHistorico(nombre){
+  var k=keyPac(nombre); if(!k)return '';
+  var r=DATA.filter(function(x){return keyPac(x.paciente)===k&&x.canal})
+    .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})[0];
+  return r?r.canal:''}
 
 function deudaDe(nombre){
   var k=String(nombre||'').trim().toLowerCase();
@@ -4369,6 +4426,147 @@ function renderPanelPresu(rows){
     [{t:'Profesional'},{t:'Recomendó',num:true},{t:'Aceptaron',num:true},{t:'Bs propuestos',num:true},
      {t:'Se cierra',barra:true}],fp,480)}
 
+/* =====================================================================
+   MI DÍA · la pantalla con la que arranca la doctora
+   ---------------------------------------------------------------------
+   Para atender a alguien había que pasar por Agenda, abrir la ficha,
+   mirar si tenía alergias, volver, buscar cuánto debía. Acá está todo
+   junto y por paciente: lo que hay que saber ANTES de sentarlo en el
+   sillón, no repartido en cuatro pestañas.
+   No repite a la Agenda: aquella es para marcar si vino o no vino; esta
+   es para atender.
+   ===================================================================== */
+var K_MIPROF='SP_MIPROF_V1';
+
+function miProf(){try{return localStorage.getItem(K_MIPROF)||''}catch(e){return ''}}
+function setMiProf(v){try{localStorage.setItem(K_MIPROF,v||'')}catch(e){}}
+
+/* Todo lo del día de esa doctora: las citas agendadas y lo ya atendido. */
+function filasDelDia(dia,prof){
+  return DATA.filter(function(r){
+    if(r.fecha!==dia)return false;
+    if(prof&&r.profesional!==prof)return false;
+    return true})
+    .sort(function(a,b){return (a.hora||'99:99').localeCompare(b.hora||'99:99')})}
+
+/* Lo que la doctora necesita saber de este paciente antes de atenderlo. */
+function avisosDe(nombre,rActual){
+  var fi=pacDe(nombre), out=[];
+  if(fi.med&&fi.med.alergias)
+    out.push({t:'alergia',txt:'⚠ Alergia: <b>'+esc(fi.med.alergias)+'</b>'});
+  if(fi.med&&fi.med.medicacion)
+    out.push({t:'ojo',txt:'💊 Toma: '+esc(fi.med.medicacion)});
+  if(fi.med&&(fi.med.antecedentes||[]).length)
+    out.push({t:'ojo',txt:'🩺 '+esc(fi.med.antecedentes.join(', '))});
+
+  var deuda=deudaDe(nombre);
+  if(deuda>0)out.push({t:'plata',txt:'💰 Debe <b>'+bs(deuda)+'</b> de antes'});
+
+  /* plan de tratamiento en curso: por qué sesión va */
+  (planesDe(nombre)||[]).forEach(function(pl){
+    if(pl.estado==='Terminado')return;
+    var ses=pl.sesiones||[], hechas=0;
+    for(var i=0;i<ses.length;i++)if(ses[i]&&ses[i].hecha)hechas++;
+    var sig=null;
+    for(var j=0;j<ses.length;j++)if(ses[j]&&!ses[j].hecha){sig=ses[j];break}
+    out.push({t:'plan',txt:'🦷 <b>'+esc(pl.nombre)+'</b> · sesión '+(hechas+1)+
+      (ses.length?' de '+ses.length:'')+(sig&&sig.desc?' · '+esc(sig.desc):'')})});
+
+  /* lo que se le recomendó y no contestó */
+  var clave=keyPac(nombre);
+  presuPend().forEach(function(x){
+    if(keyPac(x.paciente)!==clave)return;
+    out.push({t:'presu',txt:'💬 Le recomendaron <b>'+esc(x.p.nom)+'</b>'+
+      (num(x.p.monto)>0?' ('+bs(x.p.monto)+')':'')+' hace '+x.dias+' días'})});
+
+  /* qué quedó anotado la última vez que vino */
+  var ant=DATA.filter(function(r){
+    return keyPac(r.paciente)===clave && esAtencion(r) &&
+      (!rActual||r.id!==rActual.id) && (r.fecha||'')<(rActual?rActual.fecha:hoyISO())})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
+  if(ant&&ant.proxMotivo)
+    out.push({t:'nota',txt:'📌 De la última visita: '+esc(ant.proxMotivo)});
+  if(ant&&ant.obs)
+    out.push({t:'nota',txt:'📝 '+esc(String(ant.obs).slice(0,140))});
+  if(!ant)out.push({t:'nuevo',txt:'✨ Primera vez en el consultorio'});
+  return out}
+
+function tarjetaDia(r){
+  var av=avisosDe(r.paciente,r);
+  var grave=av.some(function(a){return a.t==='alergia'});
+  var pend=esCitaPendiente(r);
+  var cls=grave?'due':(pend?'today':'');
+  var estado=pend?'<span class="pill warn">por atender</span>'
+    :r.estado==='Atendido'?'<span class="pill ok">✓ atendida</span>'
+    :'<span class="pill">'+esc(r.estado||'')+'</span>';
+  var cab='<b>'+(r.hora||'sin hora')+'</b>'+(r.nroDia?' · N° '+r.nroDia:'')+' · '+estado+
+    (r.tipo==='Nuevo'?' · <span class="pill lime">nuevo</span>':'')+
+    (r.profesional?' · '+esc(r.profesional):'');
+  var det=av.length
+    ? '<div class="mi-avisos">'+av.map(function(a){
+        return '<div class="mi-a '+a.t+'">'+a.txt+'</div>'}).join('')+'</div>'
+    : '';
+  var hecho=(r.servicios||[]).length
+    ? '<div class="mi-hecho">🦷 '+esc(srvText(r))+
+      (num(r.total)>0?' · '+bs(r.total)+(num(r.saldo)>0?' · <b>queda debiendo '+bs(r.saldo)+'</b>':''):'')+'</div>'
+    : '';
+  var acts=(pend
+      ? '<button class="btn sm" onclick="atenderDeMiDia(\''+r.id+'\')">🦷 Atender</button>'+
+        '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✖ No vino</button>'
+      : '<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver atención</button>')+
+    '<button class="btn sec sm" onclick="abrirFichaMed(\''+jss(r.paciente)+'\')">🩺 Ficha</button>'+
+    (r.celular?'<a class="btn sec sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r))+'">WhatsApp</a>':'');
+  return '<div class="rem mi '+cls+'"><div><div class="who">'+esc(r.paciente)+'</div>'+
+    '<div class="meta">'+cab+'</div>'+det+hecho+'</div>'+
+    '<div class="acts">'+acts+'</div></div>'}
+
+/* Atender una cita: carga el formulario con lo que ya se sabe. */
+function atenderDeMiDia(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  loadForm(r)}
+
+function renderMiDia(){
+  var dia=$('#m-dia').value||hoyISO(), prof=$('#m-prof').value;
+  setMiProf(prof);
+  var filas=filasDelDia(dia,prof);
+  var pend=filas.filter(esCitaPendiente);
+  var hechas=filas.filter(function(r){return esAtencion(r)});
+  var cobr=hechas.reduce(function(a,r){return a+num(r.acuenta)},0);
+  var porCobrar=hechas.reduce(function(a,r){return a+num(r.saldo)},0);
+  var conAlergia=filas.filter(function(r){
+    var f=pacDe(r.paciente); return f.med&&f.med.alergias});
+
+  $('#m-saludo').innerHTML=(prof?esc(prof.replace(/^Dra\.?\s*/i,''))+', ':'')+
+    (dia===hoyISO()?'esto es lo de hoy':'esto es lo del '+fmtF(dia));
+
+  $('#m-kpis').innerHTML=
+    '<div class="kpi acc"><div class="k">Pacientes</div><div class="v">'+n0(filas.length)+'</div>'+
+      '<div class="d">'+(dia===hoyISO()?'hoy':fmtF(dia))+'</div></div>'+
+    '<div class="kpi"><div class="k">Por atender</div><div class="v" style="color:'+(pend.length?'var(--clay)':'var(--ok)')+'">'+
+      n0(pend.length)+'</div><div class="d">'+(pend.length?'esperando':'nadie en espera')+'</div></div>'+
+    '<div class="kpi"><div class="k">Atendidos</div><div class="v" style="color:var(--ok)">'+n0(hechas.length)+'</div>'+
+      '<div class="d">'+bs(hechas.reduce(function(a,r){return a+num(r.total)},0))+' facturado</div></div>'+
+    '<div class="kpi"><div class="k">Cobrado</div><div class="v">'+bs(cobr)+'</div>'+
+      '<div class="d">'+(porCobrar>0?bs(porCobrar)+' quedó debiendo':'sin saldos')+'</div></div>';
+
+  $('#m-alertas').innerHTML=conAlergia.length
+    ? '<div class="alerta-clinica"><b>Ojo hoy:</b> '+conAlergia.map(function(r){
+        return esc(r.paciente)+' ('+esc(pacDe(r.paciente).med.alergias)+')'}).join(' · ')+'</div>'
+    : '';
+
+  $('#m-lista').innerHTML=filas.length
+    ? filas.map(tarjetaDia).join('')
+    : '<div class="empty">No hay nadie cargado para el '+fmtF(dia)+
+      (prof?' con '+esc(prof):'')+'.'+
+      '<br><span class="mini">Las citas agendadas aparecen solas. Si el paciente llegó sin cita, '+
+      'cargalo en <b>Nueva atención</b>.</span></div>'}
+
+function llenarProfMiDia(){
+  var sel=$('#m-prof'), act=sel.value||miProf();
+  sel.innerHTML='<option value="">Todo el consultorio</option>'+
+    CFG.prof.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');
+  sel.value=act||''}
+
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
   $('#c-prof').value=CFG.prof.join('\n');
@@ -5001,6 +5199,11 @@ function bind(){
   $('#q-paciente').oninput=autoCita;
 
   $('#btn-save').onclick=submitAtencion;
+  $('#m-prof').onchange=renderMiDia;
+  $('#m-dia').onchange=renderMiDia;
+  $('#m-hoy').onclick=function(){$('#m-dia').value=hoyISO();renderMiDia()};
+  $('#m-ayer').onclick=function(){$('#m-dia').value=addDias($('#m-dia').value||hoyISO(),-1);renderMiDia()};
+  $('#m-manana').onclick=function(){$('#m-dia').value=addDias($('#m-dia').value||hoyISO(),1);renderMiDia()};
   renderPre();
   $('#btn-clear').onclick=function(){clearForm();toast('Formulario limpio')};
   $('#btn-cancel-edit').onclick=function(){clearForm();toast('Edición cancelada')};
