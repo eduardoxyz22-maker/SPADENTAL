@@ -34,6 +34,10 @@ El formulario del día a día, en 6 pasos:
    WhatsApp, Google/Maps, Referido, Pasó por el local, Volante, Otro. Más un
    campo de detalle libre (*qué campaña*, *quién lo refirió*).
 4. **Servicios realizados** — se eligen de la lista de precios del consultorio.
+   Cada servicio tiene un botón **🦷 Marcar piezas** que abre el odontograma:
+   se tocan las piezas que se trataron y quedan guardadas con el servicio (ya
+   no hace falta escribirlas en el detalle). Mientras se eligen, las piezas que
+   ya tienen trabajo hecho se ven en verde.
    Si el paciente tiene un **plan de tratamiento activo**, aparece un selector
    para marcar que esta visita es una sesión del plan: al guardar se marca
    hecha la sesión que seguía y lo cobrado va contra el saldo del plan.
@@ -52,7 +56,12 @@ El formulario del día a día, en 6 pasos:
    entra automáticamente en Recordatorios.
 
 Al guardar aparece un **resumen listo para mandar por WhatsApp** al paciente
-(botón *Abrir WhatsApp* o *Copiar texto*).
+(botón *Abrir WhatsApp* o *Copiar texto*), y debajo las **📋 indicaciones de
+cuidado** que correspondan a lo que se le hizo —extracción, endodoncia,
+blanqueamiento, ortodoncia, limpieza, restauraciones, placas o estética—, con
+su propio botón para mandarlas aparte. Se pueden volver a abrir después desde
+la ficha de la atención. El texto se edita en *Ajustes → Indicaciones
+post-tratamiento*.
 
 ### 📅 Agenda
 **Acá trabajan las doctoras todos los días.** Tiene tres partes, en este orden:
@@ -60,6 +69,11 @@ Al guardar aparece un **resumen listo para mandar por WhatsApp** al paciente
 1. **⚠ Quedaron sin marcar** — citas de días anteriores que nadie cerró.
    Aparecen arriba de todo y en rojo: mientras estén así no cuentan ni como
    asistidas ni como faltas, y la medición queda coja.
+0. **Choques de horario** — al agendar o reprogramar, si esa doctora ya tiene
+   otra cita cerca de esa hora, el panel avisa y pide confirmación antes de
+   guardar (se puede agendar igual: a veces se hace a propósito). En la agenda
+   del día las citas que se pisan salen marcadas en rojo con **⚠ choca con…**.
+   La ventana se configura en *Ajustes → Duración estimada de una cita*.
 2. **Agenda del día** — las citas de la fecha elegida, ordenadas por hora, con
    botones ◀ Hoy ▶ para moverse y un filtro por profesional. Arriba, el resumen:
    cuántas hay, cuántas faltan marcar, cuántas vinieron y cuántas faltaron.
@@ -102,6 +116,12 @@ cuántos hay pendientes. Cuatro listas:
   con el mensaje de cobro listo.
 - **😴 Sin volver** — pacientes que no vienen hace mucho y no tienen próxima
   cita agendada: la lista para reactivar.
+- **⏸ Tratamientos a medio hacer** — pacientes con un **plan activo**, sin
+  próxima sesión agendada y sin volver hace más de 21 días (configurable).
+  No es lo mismo que uno que simplemente no vuelve: este ya dijo que sí, ya
+  pagó una parte y le queda trabajo empezado. Muestra cuál es la sesión que
+  sigue y cuánto debe del plan; por eso **sale de "sin volver"**, para no
+  contarlo dos veces.
 - **🎂 Cumpleaños** — los de los próximos días (7 por defecto), con la edad
   que cumple y el saludo de WhatsApp ya escrito. Sale de la **fecha de
   nacimiento** de la ficha: el paciente que no la tenga cargada no aparece.
@@ -178,6 +198,22 @@ atender:
 - Botones para mandarle **WhatsApp**, cargarle una **nueva atención**, o abrir
   su **ficha médica** y sus **planes**.
 
+#### 🦷 Odontograma
+El mapa de la boca del paciente, con la numeración FDI de siempre: arcada
+superior arriba (18→11 · 21→28) e inferior abajo (48→41 · 31→38). Las piezas
+con trabajo hecho salen en verde con la cantidad de veces; **tocando una se ve
+qué se le hizo, cuándo y quién**, y desde ahí se abre la atención.
+
+- Las piezas se marcan desde cada servicio, al cargar la atención.
+- **Lo que ya estaba escrito a mano se sigue leyendo**: si el detalle de un
+  servicio viejo decía "pieza 26", esa pieza igual aparece en el odontograma.
+  Solo se aceptan códigos que existen de verdad, así "2 caras" no inventa nada.
+- Los **dientes de leche** (51-55, 61-65, 71-75, 81-85) aparecen solos cuando
+  el paciente tiene algo cargado en ellos, y se pueden mostrar a mano desde el
+  selector de piezas.
+- Solo cuentan las visitas **atendidas**: una cita futura o cancelada no
+  ensucia el odontograma.
+
 #### 🩺 Ficha médica
 Es del paciente, no de la visita: se carga una vez y queda. Fecha de
 nacimiento, **alergias**, **medicación que toma**, **antecedentes** (diabetes,
@@ -198,6 +234,9 @@ El presupuesto que se le pasó al paciente, partido en sesiones:
 - **Lo cobrado no se anota a mano**: sale de las atenciones enlazadas al plan,
   así el panel nunca dice que está pagado algo que no se cobró. El saldo es el
   presupuesto menos eso.
+- Botón **📄 Presupuesto**: arma el presupuesto en el idioma del paciente
+  —qué le van a hacer, en cuántas sesiones, total, a cuenta y saldo— listo
+  para mandarle por WhatsApp.
 - Un plan se cierra solo cuando se hicieron todas las sesiones y no queda
   saldo; también se puede dar por terminado o borrar a mano (borrar el plan
   **no toca las atenciones** ya cargadas).
@@ -216,6 +255,11 @@ Un paciente puede tener varios planes; en el formulario solo se ofrecen los
 - **Controles automáticos**: si se traen o no, cada cuántos meses toca la
   **limpieza**, cada cuántos días el **control de ortodoncia**, y con cuánta
   anticipación avisarlos.
+- **Duración estimada de una cita**: la ventana que se usa para avisar cuando
+  dos pacientes caen a la misma hora con la misma doctora.
+- **Indicaciones post-tratamiento**: el texto de cada bloque de cuidados, con
+  botón para restaurar los originales. A qué servicios corresponde cada bloque
+  está definido en el código; acá se cambia qué dice.
 - **Datos y respaldo**: Excel de todo, respaldo JSON y restaurar JSON.
 
 ---
@@ -303,4 +347,30 @@ De la tanda de cumpleaños, ficha médica, planes y controles:
   plan sin borrar lo ya hecho, y las 8 pestañas dibujándose sin errores.
 - 6 comprobaciones de coherencia del plan al borrar una atención: la sesión
   vuelve a quedar pendiente, el plan se reabre y lo cobrado baja solo.
+
+De la tanda de odontograma, choques, indicaciones, presupuesto y planes
+frenados — 77 comprobaciones más en Chromium, sobre un servidor local:
+
+- **Odontograma (29)**: qué códigos FDI existen y cuáles no, lectura de las
+  piezas escritas a mano, el mapa juntando varias visitas con lo más reciente
+  primero, las citas y canceladas quedando afuera, los 32 dientes dibujados
+  (52 con los de leche), elegir y desmarcar piezas, y que todo sobreviva a
+  recargar.
+- **Choques (16)**: misma hora, 20 minutos después, el límite justo de la
+  ventana, otra doctora, otro día, la cita consigo misma al reprogramar, las
+  canceladas y las que no tienen hora; que cancelar el aviso no guarde y
+  aceptarlo sí.
+- **Indicaciones (17)**: que cada servicio traiga las suyas, que una consulta
+  sola no traiga ninguna, y que el texto editado por el consultorio reemplace
+  al de fábrica sin pisar los demás.
+- **Planes frenados y presupuesto (12)**: que solo caiga quien dejó el
+  tratamiento, que no se repita en "sin volver", y el presupuesto con total,
+  a cuenta y saldo.
+- **Ficha (3)**: el celular sale de la última visita que lo tenga anotado.
+
+Nota sobre el entorno de prueba: abriendo el archivo con `file://` en
+Chromium sin perfil, el navegador a veces descarta el `localStorage` al
+recargar. Se comprobó que pasa **igual con la versión anterior** a estos
+cambios, así que es del navegador de prueba y no del panel; las pruebas
+corren sobre un servidor local para que sean estables.
 - Móvil a 390×844: sin scroll horizontal.

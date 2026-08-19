@@ -204,6 +204,24 @@ tbody tr.destaca td{background:#FBFCF5}
   display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--gray)}
 .ses.ok .n{background:var(--lime-sf);border-color:var(--lime-bd);color:var(--lime-dk)}
 .ses .d{flex:1;min-width:0}
+.odon{overflow-x:auto;padding:4px 0 6px;-webkit-overflow-scrolling:touch}
+/* width:max-content + margin auto: cuando entra queda centrado y cuando no
+   entra arranca pegado a la izquierda. Centrar cada fila dejaría el 18 y el
+   48 fuera de alcance, porque el desborde de la izquierda no se scrollea. */
+.odon .arcs{width:max-content;min-width:400px;margin:0 auto}
+.odon .arc{display:flex;gap:2px;justify-content:center}
+.odon .arc+.arc{margin-top:3px}
+.odon .sep{flex:0 0 10px}
+.odon .linea{height:1px;background:var(--line);margin:7px 0}
+.di{flex:0 0 23px;width:23px;height:31px;border:1px solid var(--line);border-radius:5px;background:#fff;
+  padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer}
+.di[disabled]{cursor:default}
+.di .num{font-size:9px;font-weight:700;color:var(--gray);line-height:1}
+.di .pt{font-size:10px;font-weight:800;line-height:1;color:var(--lime-dk)}
+.di.tratado{background:var(--lime-sf);border-color:var(--lime-bd)}
+.di.sel{background:var(--ink);border-color:var(--ink)}
+.di.sel .num,.di.sel .pt{color:#fff}
+.srv-pz{margin-top:8px}
 @media(max-width:560px){.rem{grid-template-columns:1fr}.rem .acts{justify-content:flex-start}}
 
 .ov{position:fixed;inset:0;background:rgba(38,38,37,.55);display:none;align-items:flex-end;justify-content:center;z-index:60}
@@ -551,13 +569,15 @@ body.locked{overflow:hidden}
       <label><input type="radio" name="remf" value="citas" checked><span>📅 Citas</span></label>
       <label><input type="radio" name="remf" value="saldos"><span>💰 Saldos</span></label>
       <label><input type="radio" name="remf" value="dormidos"><span>😴 Sin volver</span></label>
+      <label><input type="radio" name="remf" value="frenados"><span>⏸ Planes frenados</span></label>
       <label><input type="radio" name="remf" value="cumples"><span>🎂 Cumpleaños</span></label>
       <label><input type="radio" name="remf" value="controles"><span>🪥 Controles</span></label>
       <label><input type="radio" name="remf" value="todos"><span>Todos</span></label>
     </div>
     <div class="kpis" style="margin:14px 0"><div class="kpi" id="k-venc"></div><div class="kpi" id="k-hoy"></div>
       <div class="kpi" id="k-sem"></div><div class="kpi" id="k-saldos"></div>
-      <div class="kpi" id="k-cumple"></div><div class="kpi" id="k-ctrl"></div></div>
+      <div class="kpi" id="k-cumple"></div><div class="kpi" id="k-ctrl"></div>
+      <div class="kpi" id="k-frenado"></div></div>
     <div id="rem-list"></div>
   </div>
 </section>
@@ -790,6 +810,9 @@ body.locked{overflow:hidden}
       <div><label>Avisar citas con esta anticipación (días)</label><input id="c-dias-prox" inputmode="numeric"></div>
       <div><label>Marcar "sin volver" después de (días)</label><input id="c-dias-dorm" inputmode="numeric"></div>
       <div><label>Avisar cumpleaños con esta anticipación (días)</label><input id="c-dias-cumple" inputmode="numeric"></div>
+      <div><label>Plan frenado después de (días sin volver)</label><input id="c-dias-frenado" inputmode="numeric"></div>
+      <div><label>Duración estimada de una cita (minutos)</label><input id="c-min-cita" inputmode="numeric"
+        title="Se usa para avisar cuando dos pacientes caen a la misma hora con la misma doctora"></div>
     </div>
     <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Controles automáticos</h3>
     <p class="hint" style="margin-top:0">El panel deduce a quién le toca volver según el último servicio que se hizo,
@@ -803,6 +826,15 @@ body.locked{overflow:hidden}
       <div><label>Avisar con esta anticipación (días)</label><input id="c-ctrl-aviso" inputmode="numeric"></div>
     </div>
     <div class="row-btn"><button class="btn sm" id="btn-save-rem">Guardar</button></div>
+  </div>
+  <div class="card">
+    <h2>Indicaciones post-tratamiento</h2>
+    <p class="hint">El texto que se le manda al paciente por WhatsApp según lo que se le hizo.
+      A qué servicios corresponde cada bloque ya está definido; acá se cambia <b>qué dice</b>.
+      Se comparte con todos los equipos.</p>
+    <div id="c-indicaciones"></div>
+    <div class="row-btn"><button class="btn sm" id="btn-save-ind">Guardar indicaciones</button>
+      <button class="btn sec sm" id="btn-reset-ind">Restaurar textos originales</button></div>
   </div>
   <div class="card">
     <h2>Clave de entrada</h2>
@@ -1033,7 +1065,8 @@ var DATA=[], CFG=null, EDIT_ID=null, SRV=[];
 function cfgDefault(){return {v:3,prof:PROF_BASE.slice(),canales:CANALES_BASE.slice(),
   precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}}),
   diasProx:3,diasDorm:120,
-  diasCumple:7,ctrlAuto:true,ctrlLimpiezaMeses:6,ctrlOrtoDias:30,diasCtrlAviso:7}}
+  diasCumple:7,ctrlAuto:true,ctrlLimpiezaMeses:6,ctrlOrtoDias:30,diasCtrlAviso:7,
+  diasPlanFrenado:21,minCita:30}}
 function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
     migrarCfg(c);                       // OJO: antes de rellenar defaults, que si no
     var d=cfgDefault();                 // el propio relleno pondría c.v y la saltearía
@@ -1194,9 +1227,145 @@ function show(v){
   if(v==='pacientes')renderPacientes(); if(v==='config')renderConfig();
 }
 
+/* =====================================================================
+   ODONTOGRAMA
+   Hasta ahora la pieza se escribía a mano en el detalle del servicio, así
+   que nadie podía preguntar "¿qué le hicimos a esta muela?". Acá cada
+   servicio apunta a las piezas que tocó (numeración FDI, la de siempre) y
+   la ficha del paciente arma el mapa de toda su boca.
+   Lo que quedó escrito a mano se sigue leyendo: si el detalle dice
+   "pieza 26" y nadie marcó nada, esa pieza igual cuenta.
+   ===================================================================== */
+var FDI_PERM=[['18','17','16','15','14','13','12','11'],['21','22','23','24','25','26','27','28'],
+              ['48','47','46','45','44','43','42','41'],['31','32','33','34','35','36','37','38']];
+var FDI_TEMP=[['55','54','53','52','51'],['61','62','63','64','65'],
+              ['85','84','83','82','81'],['71','72','73','74','75']];
+var FDI_SET={};
+FDI_PERM.concat(FDI_TEMP).forEach(function(f){f.forEach(function(c){FDI_SET[c]=1})});
+
+function esFDI(c){return FDI_SET[c]===1}
+function esTemporal(c){return esFDI(c)&&'5678'.indexOf(String(c).charAt(0))>=0}
+
+/* Piezas escritas a mano en el detalle ("pieza 26", "16 y 17"). Solo se
+   aceptan códigos que existen de verdad, así "2 caras" no inventa nada. */
+function piezasDeDetalle(det){
+  var out=[], re=/\b(\d{2})\b/g, m, t=String(det==null?'':det);
+  while((m=re.exec(t))!==null){
+    if(esFDI(m[1])&&out.indexOf(m[1])<0)out.push(m[1])}
+  return out}
+
+function piezasDe(sv){
+  if(sv&&sv.piezas&&sv.piezas.length)return sv.piezas.slice();
+  return piezasDeDetalle(sv&&sv.det)}
+
+function piezasTexto(sv){
+  var p=piezasDe(sv);
+  return p.length?('pieza'+(p.length===1?' ':'s ')+p.join(', ')):''}
+
+/* El mapa de la boca del paciente: qué se le hizo a cada pieza, lo último
+   primero. Solo cuentan las visitas que de verdad pasaron. */
+function odontoDe(nombre){
+  var k=keyPac(nombre), mapa={};
+  DATA.forEach(function(r){
+    if(keyPac(r.paciente)!==k||r.estado!=='Atendido')return;
+    (r.servicios||[]).forEach(function(sv){
+      piezasDe(sv).forEach(function(c){
+        if(!esFDI(c))return;
+        (mapa[c]=mapa[c]||[]).push({fecha:r.fecha||'', servicio:sv.nom||'', det:sv.det||'',
+          id:r.id, prof:r.profesional||''})})})});
+  Object.keys(mapa).forEach(function(c){
+    mapa[c].sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})});
+  return mapa}
+
+function dienteHtml(c,mapa,sel,fn){
+  var n=(mapa[c]||[]).length;
+  var tit=n?(c+': '+mapa[c].slice(0,3).map(function(x){
+    return x.servicio+(x.fecha?' ('+fmtFcorta(x.fecha)+')':'')}).join(' · ')):('Pieza '+c);
+  return '<button type="button" class="di'+(n?' tratado':'')+
+    ((sel&&sel.indexOf(c)>=0)?' sel':'')+'" title="'+esc(tit)+'"'+
+    (fn?' onclick="'+fn+'(\''+c+'\')"':' disabled')+'>'+
+    '<span class="num">'+c+'</span>'+(n?'<span class="pt">'+n+'</span>':'')+'</button>'}
+
+/* Las dos arcadas como las lee cualquier odontóloga: arriba derecha a
+   izquierda del paciente, abajo igual. */
+function odontogramaHtml(mapa,sel,fn,conTemp){
+  var fila=function(izq,der){
+    return '<div class="arc">'+izq.map(function(c){return dienteHtml(c,mapa,sel,fn)}).join('')+
+      '<span class="sep"></span>'+
+      der.map(function(c){return dienteHtml(c,mapa,sel,fn)}).join('')+'</div>'};
+  var h='<div class="odon"><div class="arcs">';
+  if(conTemp)h+=fila(FDI_TEMP[0],FDI_TEMP[1]);
+  h+=fila(FDI_PERM[0],FDI_PERM[1]);
+  h+='<div class="linea"></div>';
+  h+=fila(FDI_PERM[2],FDI_PERM[3]);
+  if(conTemp)h+=fila(FDI_TEMP[2],FDI_TEMP[3]);
+  return h+'</div></div>'}
+
+/* ¿Hay algo cargado en dientes de leche? Entonces se muestran siempre. */
+function tieneTemporales(mapa){
+  return Object.keys(mapa).some(esTemporal)}
+
+var ODON_PAC='';
+function verDientePac(c){verDiente(ODON_PAC,c)}
+
+function verDiente(nombre,c){
+  var mapa=odontoDe(nombre), hist=mapa[c]||[];
+  openModal('<h3>Pieza '+c+'</h3><p class="mini">'+esc(nombre)+
+    (esTemporal(c)?' · diente de leche':'')+'</p>'+
+    (hist.length?'<div style="margin-top:12px">'+hist.map(function(x){
+      return '<div class="ses ok" onclick="verFicha(\''+x.id+'\')" style="cursor:pointer">'+
+        '<div class="n">🦷</div><div class="d"><b>'+esc(x.servicio)+'</b>'+
+        (x.det?' <span class="mini">('+esc(x.det)+')</span>':'')+
+        '<div class="mini">'+fmtF(x.fecha)+(x.prof?' · '+esc(x.prof):'')+'</div></div></div>'}).join('')+'</div>'
+      :'<div class="empty">A esta pieza todavía no se le hizo nada.</div>')+
+    '<div class="row-btn"><button class="btn sec" onclick="verPaciente(\''+jss(nombre)+'\')">Volver a la ficha</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
+
+/* ---------- elegir las piezas de un servicio ---------- */
+var PZ_I=-1, PZ_SEL=[], PZ_TEMP=false;
+
+function abrirPiezas(i){
+  readSrv();
+  PZ_I=i; PZ_SEL=piezasDe(SRV[i]||{}).slice();
+  var mapa=odontoDe($('#f-paciente').value.trim());
+  PZ_TEMP=tieneTemporales(mapa)||PZ_SEL.some(esTemporal);
+  pintarPiezas(mapa)}
+
+function pintarPiezas(mapa){
+  mapa=mapa||odontoDe($('#f-paciente').value.trim());
+  var sv=SRV[PZ_I]||{};
+  openModal('<h3>🦷 Piezas tratadas</h3>'+
+    '<p class="mini">'+esc(sv.nom||'Servicio')+
+    ($('#f-paciente').value.trim()?' · '+esc($('#f-paciente').value.trim()):'')+'</p>'+
+    '<p class="hint" style="margin-top:8px">Tocá las piezas de este servicio. Las que ya tienen '+
+    'trabajo hecho aparecen en verde con el número de veces.</p>'+
+    odontogramaHtml(mapa,PZ_SEL,'togglePieza',PZ_TEMP)+
+    '<div class="seg lime" style="margin-top:10px">'+
+      '<label><input type="checkbox" id="pz-temp"'+(PZ_TEMP?' checked':'')+
+      ' onchange="PZ_TEMP=this.checked;pintarPiezas()"><span>🧒 Mostrar dientes de leche</span></label></div>'+
+    '<p class="mini" id="pz-elegidas" style="margin-top:10px">'+
+      (PZ_SEL.length?'Elegidas: <b>'+PZ_SEL.join(', ')+'</b>':'Ninguna elegida todavía')+'</p>'+
+    '<div class="row-btn"><button class="btn" onclick="guardarPiezas()">Listo</button>'+
+    '<button class="btn sec" onclick="PZ_SEL=[];pintarPiezas()">Limpiar</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function togglePieza(c){
+  var i=PZ_SEL.indexOf(c);
+  if(i>=0)PZ_SEL.splice(i,1); else PZ_SEL.push(c);
+  PZ_SEL.sort();
+  pintarPiezas()}
+
+function guardarPiezas(){
+  if(SRV[PZ_I]){SRV[PZ_I].piezas=PZ_SEL.slice();
+    /* si el detalle solo decía el número de pieza, ya no hace falta repetirlo */
+    var d=String(SRV[PZ_I].det||'').trim();
+    if(d&&piezasDeDetalle(d).length&&d.replace(/pieza[s]?/i,'').replace(/[\d\s,ye.]/g,'')==='')
+      SRV[PZ_I].det=''}
+  closeModal(); renderSrv()}
+
 /* ============================ FORMULARIO ============================ */
 function srvRowHtml(i,s){
-  var opts='<option value=""></option>';
+  var opts='<option value=""></option>', pz=piezasDe(s);
   var cats={}; CFG.precios.forEach(function(p){(cats[p.cat]=cats[p.cat]||[]).push(p)});
   // Si el servicio guardado no está en la lista (típico de las atenciones
   // importadas de los cuadernos), lo agregamos como opción para no perderlo
@@ -1214,10 +1383,13 @@ function srvRowHtml(i,s){
       '<select class="s-nom">'+opts+'</select></div>'+
       '<div><label>&nbsp;</label><button type="button" class="del s-del" title="Quitar">✕</button></div></div>'+
     '<div class="srv-bot">'+
-      '<div><label>Detalle / pieza</label><input class="s-det" value="'+esc(s.det||'')+'" placeholder="Ej. pieza 26"></div>'+
+      '<div><label>Detalle</label><input class="s-det" value="'+esc(s.det||'')+'" placeholder="Ej. cara oclusal"></div>'+
       '<div><label>Cant.</label><input class="s-cant" inputmode="numeric" value="'+esc(s.cant||1)+'"></div>'+
       '<div><label>Precio c/u</label><input class="s-precio" inputmode="decimal" value="'+esc(s.precio==null?'':s.precio)+'"></div>'+
-    '</div></div>'}
+    '</div>'+
+    '<div class="srv-pz"><button type="button" class="btn sec sm s-pz" data-i="'+i+'">🦷 '+
+      (pz.length?'Piezas: '+pz.join(', '):'Marcar piezas')+'</button></div>'+
+    '</div>'}
 
 function renderSrv(){
   if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}];
@@ -1225,9 +1397,14 @@ function renderSrv(){
   recalcTotal()}
 
 function readSrv(){
-  SRV=$$('#srv-list .srv').map(function(el){
+  /* las piezas no están en un input: viven en SRV y hay que conservarlas al
+     releer el formulario, si no se pierden en cada repintado */
+  var antes=SRV;
+  SRV=$$('#srv-list .srv').map(function(el,i){
+    var prev=antes[i]||{};
     return {nom:el.querySelector('.s-nom').value,det:el.querySelector('.s-det').value,
-      cant:num(el.querySelector('.s-cant').value)||1,precio:num(el.querySelector('.s-precio').value)}})}
+      cant:num(el.querySelector('.s-cant').value)||1,precio:num(el.querySelector('.s-precio').value),
+      piezas:(prev.piezas||[]).slice()}})}
 
 function totalSrv(){return SRV.reduce(function(a,s){return a+num(s.precio)*(num(s.cant)||1)},0)}
 
@@ -1478,7 +1655,10 @@ function submitAtencion(){
     origen:getRadio('origen'),
     agendaPor:getRadio('origen')==='Programada'?(getRadio('agendapor')||(prev&&prev.agendaPor)||''):'',
     citaDe:(prev&&prev.citaDe)||'', resueltaTs:(prev&&prev.resueltaTs)||'',
-    servicios:SRV.filter(function(s){return s.nom}),
+    servicios:SRV.filter(function(s){return s.nom}).map(function(s){
+      var o={nom:s.nom,det:s.det,cant:s.cant,precio:s.precio};
+      if(s.piezas&&s.piezas.length)o.piezas=s.piezas.slice();
+      return o}),
     total:num($('#f-total').value), acuenta:num($('#f-acuenta').value), saldo:num($('#f-saldo').value),
     metodo:getRadio('metodo'), pagos:leerPagos(), estado:getRadio('estado'),
     prox:$('#f-prox').value, proxHora:$('#f-prox-hora').value, proxMotivo:$('#f-prox-motivo').value.trim(),
@@ -1568,6 +1748,7 @@ function guardarCita(){
     $('#seg-q-agendapor').style.outline='2px solid var(--clay)';
     setTimeout(function(){$('#seg-q-agendapor').style.outline=''},2200)}
   if(bad.length){toast('Falta: '+bad.join(', '),1);return}
+  if(!confirmarChoque($('#q-fecha').value,$('#q-hora').value,$('#q-prof').value.trim(),null))return;
 
   var fecha=$('#q-fecha').value;
   var rec={
@@ -1721,7 +1902,11 @@ function citaCard(r,d){
     d===0?'<b>hoy</b>':d===1?'mañana':('en '+d+' días');
   var cls=d<0?'due':d===0?'today':'soon';
   var deuda=deudaDe(r.paciente);
+  var ch=choquesDe(r.fecha,r.hora,r.profesional,r.id);
   var meta='📅 '+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+' · '+cuando+
+    (ch.length?' · <span class="pill bad" title="'+esc(ch.map(function(x){
+      return (x.hora||'')+' '+(x.paciente||'')}).join(' · '))+'">⚠ choca con '+
+      esc(ch[0].paciente||'otra cita')+(ch.length>1?' +'+(ch.length-1):'')+'</span>':'')+
     (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
     (r.contactado?' · <span class="pill ok">✓ ya le avisamos</span>':'')+
     (deuda>0?' · <span class="pill warn">debe '+bs(deuda)+'</span>':'')+
@@ -1741,6 +1926,43 @@ function deudaDe(nombre){
   var k=String(nombre||'').trim().toLowerCase();
   return DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k})
              .reduce(function(a,r){return a+num(r.saldo)},0)}
+
+/* ---------------------------------------------------------------------
+   CHOQUES DE HORARIO
+   Dos pacientes citados con la misma doctora a la misma hora terminan
+   siempre igual: uno esperando. El panel no puede impedirlo —a veces se
+   hace a propósito— pero sí tiene que decirlo antes de guardar.
+   Como las citas no tienen duración, se usa una ventana configurable.
+   --------------------------------------------------------------------- */
+function minutos(hhmm){
+  var p=String(hhmm||'').split(':');
+  if(p.length<2)return null;
+  var h=parseInt(p[0],10), m=parseInt(p[1],10);
+  return (isFinite(h)&&isFinite(m))?h*60+m:null}
+
+/* Lo que ya ocupa la agenda de esa doctora ese día: las citas sin resolver
+   y las atenciones que ya se cargaron. Sin hora no hay choque posible. */
+function choquesDe(fecha,hora,prof,exceptId){
+  var m=minutos(hora); if(m===null||!fecha||!prof)return [];
+  var vent=Math.max(1,num(CFG.minCita)||30), p=String(prof).trim().toLowerCase();
+  return DATA.filter(function(r){
+    if(r.id===exceptId||r.fecha!==fecha)return false;
+    if(String(r.profesional||'').trim().toLowerCase()!==p)return false;
+    if(r.estado==='Canceló'||r.estado==='Reprogramó')return false;
+    var m2=minutos(r.hora); if(m2===null)return false;
+    return Math.abs(m2-m)<vent})}
+
+/* Devuelve true si se puede seguir: o no hay choque, o la doctora lo
+   confirmó a propósito. */
+function confirmarChoque(fecha,hora,prof,exceptId){
+  var ch=choquesDe(fecha,hora,prof,exceptId);
+  if(!ch.length)return true;
+  var lista=ch.slice(0,4).map(function(r){
+    return '· '+(r.hora||'')+'  '+(r.paciente||'')+
+      (esCitaPendiente(r)?'':' (ya atendido)')}).join('\n');
+  return confirm(prof+' ya tiene '+(ch.length===1?'una cita':ch.length+' citas')+
+    ' cerca de las '+hora+' el '+fmtF(fecha)+':\n\n'+lista+
+    '\n\n¿Agendar igual?')}
 
 /* --------- resolver una cita --------- */
 function resolverCita(id,estado){
@@ -1954,6 +2176,34 @@ function avancePlan(plan){
 function proxSesion(plan){
   return (plan.sesiones||[]).filter(function(s){return !s.hecha})[0]||null}
 
+/* ---------------------------------------------------------------------
+   PLANES FRENADOS
+   Un paciente que dejó un tratamiento por la mitad no es lo mismo que uno
+   que simplemente no vuelve: ya dijo que sí, ya pagó una parte y le queda
+   trabajo a medio hacer. Por eso tiene lista propia y sale de "sin volver".
+   --------------------------------------------------------------------- */
+function planesFrenados(){
+  var hoy=hoyISO(), lim=Math.max(0,num(CFG.diasPlanFrenado)), idx=idxPac(), out=[];
+  Object.keys(PAC).forEach(function(k){
+    var activos=(PAC[k].planes||[]).filter(function(p){
+      return p.estado==='activo'&&proxSesion(p)});
+    if(!activos.length)return;
+    var i=idx[k]||{};
+    if(i.prox)return;                       // ya tiene la próxima sesión agendada
+    var dias=i.ult?diasEntre(i.ult,hoy):null;
+    if(dias!==null&&dias<lim)return;         // todavía es reciente, no está frenado
+    activos.forEach(function(p){
+      out.push({paciente:PAC[k].nombre||k, celular:i.celular||'', plan:p,
+        ses:proxSesion(p), ult:i.ult||'', dias:dias===null?9999:dias,
+        avance:avancePlan(p), saldo:saldoPlan(p)})})});
+  return out.sort(function(a,b){return b.dias-a.dias})}
+
+/* ¿Tiene algún tratamiento a medio hacer? Sirve para no repetirlo en la
+   lista de los que no vuelven. */
+function tienePlanFrenado(nombre){
+  return (pacDe(nombre).planes||[]).some(function(p){
+    return p.estado==='activo'&&proxSesion(p)})}
+
 /* Al guardar una atención enlazada a un plan, la sesión que estaba
    pendiente pasa a hecha y queda apuntando a esa atención. Editar la
    misma atención no consume otra sesión: se busca primero la suya. */
@@ -2012,6 +2262,8 @@ function dormidos(){
     if(r.prox&&r.prox>=hoy&&r.prox>by[k].prox)by[k].prox=r.prox});
   return Object.keys(by).map(function(k){return by[k]})
     .filter(function(p){return !p.prox&&p.ult&&diasEntre(p.ult,hoy)>=lim})
+    /* los que tienen un tratamiento a medio hacer van en su propia lista */
+    .filter(function(p){return !tienePlanFrenado(p.paciente)})
     .sort(function(a,b){return (a.ult||'').localeCompare(b.ult||'')})}
 
 function totalPendientes(){
@@ -2019,7 +2271,8 @@ function totalPendientes(){
      y los controles que se pasaron de fecha */
   return citasPend().filter(function(c){return c.dias<=CFG.diasProx}).length
        + cumples().filter(function(c){return c.dias===0}).length
-       + controles().filter(function(c){return c.dias<=0}).length}
+       + controles().filter(function(c){return c.dias<=0}).length
+       + planesFrenados().length}
 
 function updateNavRem(){
   var n=totalPendientes(),el=$('#nav-rem');
@@ -2054,6 +2307,16 @@ function txtCumple(c){
   t+='\n\nQue lo disfrute mucho 🦷✨';
   return t}
 
+function txtFrenado(f){
+  var t='Hola '+(f.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n';
+  t+='Le quedó pendiente su tratamiento *'+f.plan.nombre+'*';
+  if(f.ult)t+=' — la última sesión fue el '+fmtF(f.ult);
+  t+='.\n';
+  if(f.ses)t+='Sigue: *'+(f.ses.desc||('sesión '+f.ses.n))+'* ('+
+    f.avance.hechas+' de '+f.avance.total+' hechas).\n';
+  t+='¿Le agendamos para seguir? 🦷';
+  return t}
+
 function txtControl(c){
   var quien=(c.paciente||'').split(' ')[0];
   var t='Hola '+quien+'! 👋 Le escribimos de *Spadental*.\n';
@@ -2075,7 +2338,7 @@ function renderRem(){
   var hoy=hoyISO(), f=getRadio('remf')||'citas', cit=citasPend(), sal=saldosPend(), dor=dormidos();
   var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
       sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
-  var cum=cumples(), ctl=controles();
+  var cum=cumples(), ctl=controles(), fre=planesFrenados();
   var totSaldo=sal.reduce(function(a,p){return a+p.saldo},0);
   $('#k-venc').innerHTML='<div class="k">Citas vencidas</div><div class="v">'+venc.length+'</div><div class="d">sin marcar si vino</div>';
   $('#k-hoy').innerHTML='<div class="k">Citas de hoy</div><div class="v">'+hy.length+'</div><div class="d">'+fmtF(hoy)+'</div>';
@@ -2087,6 +2350,8 @@ function renderRem(){
   var ctlVenc=ctl.filter(function(c){return c.dias<=0}).length;
   $('#k-ctrl').innerHTML='<div class="k">Controles que tocan</div><div class="v">'+ctl.length+'</div><div class="d">'+
     (ctlVenc?ctlVenc+' ya vencidos':'ninguno vencido')+'</div>';
+  $('#k-frenado').innerHTML='<div class="k">Planes frenados</div><div class="v">'+fre.length+'</div><div class="d">'+
+    (fre.length?bs(fre.reduce(function(a,x){return a+x.saldo},0))+' sin cobrar':'ninguno a medio hacer')+'</div>';
 
   var h='';
   if(f==='citas'||f==='todos'){
@@ -2117,6 +2382,19 @@ function renderRem(){
       var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(p.celular,txtDormido(p))+'">WhatsApp</a>'+
         '<button class="btn sec sm" onclick="verPaciente(\''+jss(p.paciente)+'\')">Ver historial</button>';
       h+=remCard('',p.paciente,meta,acts)})}
+
+  if(f==='frenados'||f==='todos'){
+    h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">⏸ Tratamientos a medio hacer · '+fre.length+'</h3>';
+    if(!fre.length)h+='<div class="empty">Ningún plan frenado 🎉</div>';
+    fre.forEach(function(x){
+      var meta='<b>'+esc(x.plan.nombre)+'</b> · '+x.avance.hechas+' de '+x.avance.total+' sesiones'+
+        (x.ses?' · sigue: '+esc(x.ses.desc||('sesión '+x.ses.n)):'')+
+        (x.saldo>0?' · debe '+bs(x.saldo):'')+
+        '<br>📱 '+esc(x.celular||'sin celular')+
+        (x.ult?' · última sesión '+fmtF(x.ult)+' · hace <b>'+x.dias+' días</b>':' · sin sesiones cargadas');
+      var acts='<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(x.celular,txtFrenado(x))+'">WhatsApp</a>'+
+        '<button class="btn sec sm" onclick="verPaciente(\''+jss(x.paciente)+'\')">Ver ficha</button>';
+      h+=remCard('money',x.paciente,meta,acts)})}
 
   if(f==='cumples'||f==='todos'){
     h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">🎂 Cumpleaños · próximos '+CFG.diasCumple+' días · '+cum.length+'</h3>';
@@ -2174,6 +2452,7 @@ function reagendar(id){
 function guardarReagenda(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   var f=$('#rg-f').value; if(!f){toast('Poné la fecha nueva',1);return}
+  if(!confirmarChoque(f,$('#rg-h').value,r.profesional,r.id))return;
   var nueva={
     id:uid(), ts:new Date().toISOString(),
     fecha:f, hora:$('#rg-h').value, nroDia:nroDelDia(f,null),
@@ -2197,7 +2476,8 @@ function guardarReagenda(id){
 /* ============================ LISTA DE ATENCIONES ============================ */
 function srvText(r){
   return (r.servicios||[]).map(function(s){
-    return s.nom+(s.det?' ('+s.det+')':'')+((num(s.cant)||1)>1?' ×'+s.cant:'')}).join(' · ')}
+    var pz=(s.piezas&&s.piezas.length)?(' · '+piezasTexto(s)):'';
+    return s.nom+(s.det?' ('+s.det+')':'')+pz+((num(s.cant)||1)>1?' ×'+s.cant:'')}).join(' · ')}
 
 function filtrarLista(){
   var rango=$('#l-rango').value, q=$('#l-q').value.trim().toLowerCase();
@@ -2838,7 +3118,9 @@ function mrow(k,v){return '<div class="mrow"><span class="mk">'+k+'</span><b>'+v
 function verFicha(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   var srv=(r.servicios||[]).map(function(s){
+    var pz=piezasTexto(s);
     return '<div class="mrow"><span>'+esc(s.nom)+(s.det?' <span class="mini">('+esc(s.det)+')</span>':'')+
+      (pz?' <span class="pill lime">🦷 '+esc(pz)+'</span>':'')+
       ((num(s.cant)||1)>1?' <span class="pill">×'+s.cant+'</span>':'')+'</span><b>'+bs(num(s.precio)*(num(s.cant)||1))+'</b></div>'}).join('');
   openModal('<h3>'+esc(r.paciente||'—')+'</h3>'+
     '<p class="mini">'+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+(r.nroDia?' · N° del día #'+r.nroDia:'')+' · '+esc(r.profesional||'')+'</p>'+
@@ -2870,6 +3152,7 @@ function verFicha(id){
       (r.celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r.prox?r:{paciente:r.paciente,prox:hoyISO(),saldo:r.saldo}))+'">WhatsApp</a>':'')+
       '<button class="btn sec sm" onclick="editarId(\''+r.id+'\')">✏️ Editar</button>'+
       (num(r.saldo)>0?'<button class="btn sec sm" onclick="cobrarSaldo(\''+r.id+'\')">💰 Registrar pago</button>':'')+
+      (indicacionesDe(r).length?'<button class="btn sec sm" onclick="verIndicaciones(\''+r.id+'\')">📋 Indicaciones</button>':'')+
       '<button class="btn sec sm" onclick="verPaciente(\''+jss(r.paciente)+'\')">👤 Historial</button>'+
       '<button class="btn danger sm" onclick="borrar(\''+r.id+'\')">Borrar</button>'+
       '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
@@ -2916,10 +3199,17 @@ function verPaciente(nombre){
 
   var nom=(rs[0]&&rs[0].paciente)||(citas[0]&&citas[0].paciente)||f.nombre||String(nombre||'');
   var nj=jss(nom);
+  ODON_PAC=nom;
+  var mapa=odontoDe(nom), nPiezas=Object.keys(mapa).length, conTemp=tieneTemporales(mapa);
   var tot=rs.reduce(function(a,r){return a+num(r.total)},0),
       sal=rs.reduce(function(a,r){return a+num(r.saldo)},0);
   var p0=rs[rs.length-1]||{};
-  var cel=(rs[0]&&rs[0].celular)||(citas[0]&&citas[0].celular)||'';
+  /* el celular sale de la última visita que lo tenga anotado, no de la
+     última a secas: si la de ayer se cargó sin número, el paciente no se
+     queda sin WhatsApp */
+  var cel='';
+  rs.forEach(function(r){if(!cel&&r.celular)cel=r.celular});          // rs ya viene de la más nueva a la más vieja
+  if(!cel)citas.forEach(function(r){if(!cel&&r.celular)cel=r.celular});
   var edad=f.nac?edadDe(f.nac):((rs[0]&&rs[0].edad)||'');
 
   /* aviso médico: lo primero que tiene que ver */
@@ -2949,7 +3239,9 @@ function verPaciente(nombre){
       '<div class="barra" style="margin:9px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
       '<div class="mini">'+a.hechas+'/'+a.total+' sesiones · presupuesto '+bs(p.total)+
         ' · saldo '+bs(saldoPlan(p))+(s2?' · sigue: <b>'+esc(s2.desc||('sesión '+s2.n))+'</b>':'')+'</div>'+
-      '</div>'}).join(''):'';
+      '<div class="row-btn" style="margin-top:8px">'+
+        '<button class="btn sec sm" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📄 Presupuesto</button>'+
+      '</div></div>'}).join(''):'';
 
   openModal('<h3>'+esc(nom)+'</h3>'+
     '<p class="mini">📱 '+esc(cel||'sin celular')+
@@ -2970,6 +3262,12 @@ function verPaciente(nombre){
       '<div class="meta">'+fmtF(prox.f)+(prox.h?' · '+prox.h:'')+(prox.mot?' · '+esc(prox.mot):'')+'</div>'+
       '</div><div class="acts"></div></div>':'')+
     (hPlan?'<h4 style="margin:16px 0 0;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Plan de tratamiento</h4>'+hPlan:'')+
+    '<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Odontograma</h4>'+
+    (nPiezas?'<p class="mini" style="margin:0 0 4px">'+nPiezas+' pieza'+(nPiezas===1?'':'s')+
+        ' con trabajo hecho. Tocá una para ver qué se le hizo.</p>'
+      :'<p class="mini" style="margin:0 0 4px">Todavía no hay ninguna pieza marcada. Se van marcando '+
+        'al elegir las piezas de cada servicio en la atención.</p>')+
+    odontogramaHtml(mapa,null,nPiezas?'verDientePac':'',conTemp)+
     '<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Visitas</h4>'+
     (rs.length?'<div class="tw" style="margin:0"><table style="min-width:0"><thead><tr><th>Fecha</th><th>Servicios</th>'+
       '<th class="num">Total</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody>'+
@@ -3007,19 +3305,133 @@ function showWhatsappModal(r,cita){
   if(r.prox)t+='\n📌 Próxima cita: *'+fmtF(r.prox)+'*'+(r.proxHora?' a las '+r.proxHora:'')+(r.proxMotivo?' ('+r.proxMotivo+')':'')+'\n';
   var aviso=cita?'<p class="mini" style="margin-top:6px">📅 Se agendó sola la cita del <b>'+fmtF(cita.fecha)+'</b>. Cuando llegue el día, marcá en <b>Recordatorios</b> si vino o no.</p>':'';
   t+='\nCualquier consulta estamos a la orden 🦷';
+  var ind=txtIndicaciones(r);
   openModal('<h3>Atención guardada ✅</h3><p class="mini">Podés enviarle el resumen al paciente.</p>'+aviso+
     '<div class="wa" id="wa-txt">'+esc(t)+'</div>'+
     '<div class="row-btn">'+
     (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,t)+'">Abrir WhatsApp</a>':'')+
     '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
-    '<button class="btn sec" onclick="closeModal()">Listo</button></div>')}
+    '<button class="btn sec" onclick="closeModal()">Listo</button></div>'+
+    (ind?'<h4 style="margin:20px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">📋 Indicaciones de cuidado</h4>'+
+      '<p class="hint" style="margin:0 0 8px">Salen de los servicios que cargaste. Van aparte del resumen, para que le queden por escrito.</p>'+
+      '<div class="wa" id="wa-ind">'+esc(ind)+'</div>'+
+      '<div class="row-btn">'+
+      (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,ind)+'">Mandar indicaciones</a>':'')+
+      '<button class="btn sec" onclick="copiarTexto(\'wa-ind\')">Copiar indicaciones</button></div>':''))}
 
-function copiarWa(){
-  var t=$('#wa-txt').textContent;
+function copiarWa(){return copiarTexto('wa-txt')}
+function copiarTexto(id){
+  var el=$('#'+id); if(!el)return;
+  var t=el.textContent;
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('Texto copiado')})}
   else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
     try{document.execCommand('copy');toast('Texto copiado')}catch(e){toast('No se pudo copiar',1)}
     document.body.removeChild(a)}}
+
+/* =====================================================================
+   INDICACIONES POST-TRATAMIENTO
+   Lo que la doctora repite diez veces por día y el paciente igual olvida
+   apenas sale. Se arman solas según los servicios que se cargaron y salen
+   listas para mandar por WhatsApp, para que le queden por escrito.
+   El texto se edita en Ajustes; a qué servicio corresponde cada una está
+   en el código, porque depende de cómo se llaman en la lista de precios.
+   ===================================================================== */
+var INDICACIONES_BASE = [
+  {id:'extraccion', label:'Extracción y cirugía',
+   rx:/extracci[oó]n|cirug[ií]a|recorte de enc[ií]a/i,
+   txt:'🦷 *Después de una extracción*\n'+
+     '• Mordé la gasa 30 a 40 minutos sin cambiarla.\n'+
+     '• Las primeras 24 h: no escupas, no te enjuagues fuerte y no tomes con sorbete. Eso saca el coágulo y ahí empieza el dolor.\n'+
+     '• Hielo por fuera de la mejilla, 10 minutos sí y 10 no, las primeras horas.\n'+
+     '• Comé blando y frío el primer día. Evitá lo caliente.\n'+
+     '• Nada de fumar ni alcohol por 48 h.\n'+
+     '• Cepillate el resto de la boca normal, pero no la zona operada los primeros 2 días.\n'+
+     '• Tomá los remedios en el horario que te indicamos.\n'+
+     '⚠️ Si el sangrado no para, el dolor aumenta en vez de bajar o tenés fiebre, escribinos.'},
+  {id:'endodoncia', label:'Endodoncia (tratamiento de conducto)',
+   rx:/endodoncia/i,
+   txt:'🦷 *Después de la endodoncia*\n'+
+     '• No mastiques de ese lado hasta que se coloque la corona o restauración definitiva: el diente queda frágil y se puede partir.\n'+
+     '• Es normal que quede sensible al morder unos días.\n'+
+     '• Tomá el analgésico como te indicamos.\n'+
+     '• Vení a la próxima sesión aunque ya no te duela: un conducto sin terminar se infecta y se pierde la pieza.\n'+
+     '⚠️ Si hay hinchazón o el dolor va en aumento, escribinos.'},
+  {id:'blanqueamiento', label:'Blanqueamiento',
+   rx:/blanqueamiento/i,
+   txt:'🦷 *Después del blanqueamiento*\n'+
+     '• 48 h de dieta blanca: nada de café, té, mate, vino, gaseosas oscuras, remolacha, curry ni salsa de tomate.\n'+
+     '• No fumes por 48 h.\n'+
+     '• Puede haber sensibilidad al frío 1 o 2 días: es normal y pasa.\n'+
+     '• Si molesta, usá pasta para dientes sensibles.\n'+
+     '• Cuanto más cuides estas 48 h, más te dura el resultado.'},
+  {id:'ortodoncia', label:'Ortodoncia y brackets',
+   rx:/ortodoncia|bracket|ligas|arco/i,
+   txt:'🦷 *Cuidados con los brackets*\n'+
+     '• Los primeros días molesta y los dientes se sienten flojos: es que se están moviendo. Es buena señal.\n'+
+     '• Evitá lo duro y lo pegajoso: hielo, caramelos, chicle, nueces, pan muy duro. Cortá en trozos la manzana y la carne.\n'+
+     '• Cepillate después de cada comida y usá el cepillo interdental.\n'+
+     '• Si se despega un bracket o el alambre pincha, ponete cera y avisanos: no esperes al control.\n'+
+     '• Vení a todos los controles. Faltar estira el tratamiento meses.'},
+  {id:'limpieza', label:'Limpieza dental',
+   rx:/limpieza|profilaxis|detartraje/i,
+   txt:'🦷 *Después de la limpieza*\n'+
+     '• Puede haber algo de sensibilidad y sangrado leve por 1 o 2 días: la encía estaba inflamada y se está recuperando.\n'+
+     '• Evitá lo muy frío y muy caliente el primer día.\n'+
+     '• Cepillate 2 o 3 veces al día y usá hilo dental una vez al día.\n'+
+     '• La próxima limpieza toca en 6 meses: te avisamos.'},
+  {id:'restauracion', label:'Resinas, carillas, coronas e incrustaciones',
+   rx:/restauraci[oó]n|carie|carilla|corona|incrustaci[oó]n|cementaci[oó]n|perno|lente de contacto/i,
+   txt:'🦷 *Después de la restauración*\n'+
+     '• No comas del lado tratado por 2 horas.\n'+
+     '• Podés sentir sensibilidad al frío unos días.\n'+
+     '• No muerdas cosas muy duras con esa pieza: hielo, huesos de pollo, lapiceros.\n'+
+     '• Si al morder sentís que "topa" o queda alto, avisanos: es un ajuste de 5 minutos.'},
+  {id:'placa', label:'Placas y prótesis',
+   rx:/placa|pr[oó]tesis/i,
+   txt:'🦷 *Cuidados con la placa*\n'+
+     '• Los primeros días cuesta hablar y sale saliva de más. Es normal: la boca se acostumbra en una semana.\n'+
+     '• Sacala para dormir, salvo que te hayamos indicado lo contrario.\n'+
+     '• Limpiala con cepillo y jabón neutro, con agua fría. Nunca con agua caliente: se deforma.\n'+
+     '• Guardala en su estuche con agua, nunca envuelta en una servilleta (así es como se rompen).\n'+
+     '• Si lastima en algún punto, no la limes vos: traela y la ajustamos.'},
+  {id:'estetico', label:'Estética facial y capilar',
+   rx:/botox|hilos|radiesse|rinomodelaci[oó]n|plasma|lipo|bichectom|[áa]cido hialur/i,
+   txt:'✨ *Cuidados después del procedimiento*\n'+
+     '• No toques ni masajees la zona por 6 horas.\n'+
+     '• Nada de ejercicio fuerte, sauna ni sol directo por 24 a 48 h.\n'+
+     '• No te acuestes boca abajo las primeras 4 horas.\n'+
+     '• Puede haber algo de hinchazón o moretones leves unos días.\n'+
+     '⚠️ Si el dolor aumenta, cambia el color de la piel o notás algo raro, escribinos.'}
+];
+
+/* El texto puede estar editado por el consultorio; la regla de a qué
+   servicio aplica vive siempre en el código. */
+function indTexto(g){
+  var e=CFG.indicaciones&&CFG.indicaciones[g.id];
+  return (typeof e==='string'&&e.trim())?e:g.txt}
+
+function indicacionesDe(rec){
+  var txt=srvText(rec); if(!txt)return [];
+  return INDICACIONES_BASE.filter(function(g){return g.rx.test(txt)})}
+
+function txtIndicaciones(rec){
+  var gs=indicacionesDe(rec); if(!gs.length)return '';
+  var t='Hola '+(rec.paciente||'').split(' ')[0]+'! 👋 Le dejamos por escrito los cuidados de hoy, de *Spadental*.\n\n';
+  t+=gs.map(indTexto).join('\n\n');
+  t+='\n\nCualquier duda escribinos por acá 🦷';
+  return t}
+
+function verIndicaciones(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  var t=txtIndicaciones(r);
+  if(!t){toast('Los servicios de esta atención no tienen indicaciones cargadas',1);return}
+  openModal('<h3>📋 Indicaciones para el paciente</h3>'+
+    '<p class="mini">'+esc(r.paciente||'')+' · '+fmtF(r.fecha)+'</p>'+
+    '<div class="wa" id="wa-ind">'+esc(t)+'</div>'+
+    '<div class="row-btn">'+
+    (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,t)+'">Abrir WhatsApp</a>':'')+
+    '<button class="btn sec" onclick="copiarTexto(\'wa-ind\')">Copiar texto</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
 
 /* ============================ FICHA MÉDICA ============================ */
 var ANTECEDENTES=['Diabetes','Hipertensión','Cardiopatía','Embarazo','Anticoagulantes',
@@ -3106,10 +3518,38 @@ function planCardHtml(nombre,p){
         '</div>'}).join('')+'</div>':'')+
     (p.notas?'<p class="mini" style="margin-top:9px">'+esc(p.notas)+'</p>':'')+
     '<div class="row-btn">'+
+      '<button class="btn sec sm" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📄 Presupuesto</button>'+
       '<button class="btn sec sm" onclick="editarPlan(\''+nj+'\',\''+p.id+'\')">✏️ Editar</button>'+
       (p.estado==='activo'?'<button class="btn sec sm" onclick="cerrarPlan(\''+nj+'\',\''+p.id+'\')">✅ Dar por terminado</button>':'')+
       '<button class="btn danger sm" onclick="borrarPlan(\''+nj+'\',\''+p.id+'\')">Borrar</button>'+
     '</div></div>'}
+
+/* El presupuesto como se lo mandamos al paciente: qué le van a hacer, en
+   cuántas sesiones y cuánto le queda por pagar. Es lo que hace que acepte
+   el tratamiento, así que va en su idioma, no en el nuestro. */
+function txtPresupuesto(nombre,plan){
+  var a=avancePlan(plan), cob=cobradoPlan(plan), sal=saldoPlan(plan);
+  var t='Hola '+String(nombre||'').split(' ')[0]+'! 👋 Le pasamos el presupuesto de su tratamiento en *Spadental*.\n\n';
+  t+='🦷 *'+plan.nombre+'*\n';
+  (plan.sesiones||[]).forEach(function(ses){
+    t+=ses.n+'. '+(ses.desc||('Sesión '+ses.n))+(ses.hecha?' ✅':'')+'\n'});
+  t+='\n💵 Total: *'+bs(plan.total)+'*\n';
+  if(cob>0)t+='✅ A cuenta: '+bs(cob)+'\n';
+  if(sal>0)t+='⏳ Saldo: *'+bs(sal)+'*\n';
+  else if(num(plan.total)>0)t+='✅ Pagado completo\n';
+  if(a.hechas>0)t+='\n📌 Lleva '+a.hechas+' de '+a.total+' sesiones.\n';
+  t+='\nCualquier duda estamos a la orden 🦷';
+  return t}
+
+function verPresupuesto(nombre,id){
+  var plan=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!plan)return;
+  var i=idxPac()[keyPac(nombre)]||{}, t=txtPresupuesto(nombre,plan);
+  openModal('<h3>📄 Presupuesto</h3><p class="mini">'+esc(nombre)+' · '+esc(plan.nombre)+'</p>'+
+    '<div class="wa" id="wa-txt">'+esc(t)+'</div>'+
+    '<div class="row-btn">'+
+    (i.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(i.celular,t)+'">Abrir WhatsApp</a>':'')+
+    '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
+    '<button class="btn sec" onclick="abrirPlanes(\''+jss(nombre)+'\')">Volver</button></div>')}
 
 function nuevoPlan(nombre){editorPlan(nombre,null)}
 function editarPlan(nombre,id){
@@ -3173,6 +3613,11 @@ function renderConfig(){
   $('#c-dias-prox').value=CFG.diasProx;
   $('#c-dias-dorm').value=CFG.diasDorm;
   $('#c-dias-cumple').value=CFG.diasCumple;
+  $('#c-dias-frenado').value=CFG.diasPlanFrenado;
+  $('#c-min-cita').value=CFG.minCita;
+  $('#c-indicaciones').innerHTML=INDICACIONES_BASE.map(function(g){
+    return '<div style="margin-bottom:14px"><label>'+esc(g.label)+'</label>'+
+      '<textarea data-ind="'+g.id+'" style="min-height:150px">'+esc(indTexto(g))+'</textarea></div>'}).join('');
   $('#c-ctrl-auto').checked=CFG.ctrlAuto!==false;
   $('#c-ctrl-limp').value=CFG.ctrlLimpiezaMeses;
   $('#c-ctrl-orto').value=CFG.ctrlOrtoDias;
@@ -3658,6 +4103,8 @@ function bind(){
   $('#btn-planes').onclick=function(){abrirPlanes($('#f-paciente').value.trim())};
   $('#btn-add-srv').onclick=function(){readSrv();SRV.push({nom:'',det:'',cant:1,precio:''});renderSrv()};
   $('#srv-list').addEventListener('click',function(e){
+    var bpz=e.target.closest?e.target.closest('.s-pz'):null;
+    if(bpz){abrirPiezas(+bpz.dataset.i); return}
     if(e.target.classList.contains('s-del')){
       readSrv(); var i=+e.target.closest('.srv').dataset.i;
       SRV.splice(i,1); if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv()}});
@@ -3755,10 +4202,26 @@ function bind(){
     toast('Clave cambiada ✅ · anotala en algún lado')};
   $('#btn-lock').onclick=function(){bloquear()};
 
+  $('#btn-save-ind').onclick=function(){
+    var m={};
+    $$('#c-indicaciones textarea').forEach(function(t){
+      var v=t.value.trim();
+      /* solo se guarda lo que de verdad cambió: así, si algún día mejoramos
+         el texto de fábrica, lo reciben las que nunca lo editaron */
+      var base=(INDICACIONES_BASE.filter(function(g){return g.id===t.dataset.ind})[0]||{}).txt;
+      if(v&&v!==base)m[t.dataset.ind]=v});
+    CFG.indicaciones=m; saveCfg(); toast('Indicaciones guardadas')};
+
+  $('#btn-reset-ind').onclick=function(){
+    if(!confirm('¿Volver a los textos originales? Se pierde lo que hayan editado.'))return;
+    CFG.indicaciones={}; saveCfg(); renderConfig(); toast('Textos originales restaurados')};
+
   $('#btn-save-rem').onclick=function(){
     CFG.diasProx=Math.max(0,num($('#c-dias-prox').value)||3);
     CFG.diasDorm=Math.max(1,num($('#c-dias-dorm').value)||120);
     CFG.diasCumple=Math.max(0,num($('#c-dias-cumple').value)||7);
+    CFG.diasPlanFrenado=Math.max(0,num($('#c-dias-frenado').value)||21);
+    CFG.minCita=Math.max(5,num($('#c-min-cita').value)||30);
     CFG.ctrlAuto=$('#c-ctrl-auto').checked;
     CFG.ctrlLimpiezaMeses=Math.max(1,num($('#c-ctrl-limp').value)||6);
     CFG.ctrlOrtoDias=Math.max(1,num($('#c-ctrl-orto').value)||30);

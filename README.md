@@ -293,8 +293,12 @@ precio editable, **a cuenta / saldo**, y **recordatorios para reagendar o
 contactar**. Cada paciente tiene su **ficha**: fecha de nacimiento, **ficha
 médica** (alergias, medicación y antecedentes, que avisan en rojo antes de
 atender), **consentimiento** y **planes de tratamiento** con sesiones y avance.
-Los recordatorios incluyen los **cumpleaños** de la semana y los **controles
-que ya tocan** (limpieza, ortodoncia), deducidos solos. Página única, se abre
+Tiene **odontograma**: cada servicio apunta a las piezas que trató y la ficha
+arma el mapa de toda la boca, pieza por pieza. Los recordatorios incluyen los
+**cumpleaños** de la semana, los **controles que ya tocan** (limpieza,
+ortodoncia) y los **tratamientos a medio hacer**, deducidos solos. Avisa los
+**choques de horario** al agendar y arma las **indicaciones de cuidado** y el
+**presupuesto del plan** listos para mandar por WhatsApp. Página única, se abre
 con doble clic, funciona sin internet y opcionalmente sincroniza con una hoja
 de Google.
 
