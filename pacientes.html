@@ -1381,12 +1381,18 @@ function pullServer(){
    --------------------------------------------------------------------- */
 var REFRESCO_MS=180000, ultimoPull=0, refrescando=false;
 
+var ULT_TECLA=0;
+['input','change'].forEach(function(ev){
+  document.addEventListener(ev,function(){ULT_TECLA=+new Date()},true)});
+
 function hayAlgoAMedioCargar(){
   if($('#ov').classList.contains('on'))return true;          // modal abierto
   if(EDIT_ID)return true;                                     // editando
-  if($('#f-paciente').value.trim()||$('#q-paciente').value.trim())return true;
-  var a=document.activeElement;
-  return !!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))}
+  /* Antes bloqueaba con solo tener el foco en un campo: un cursor olvidado en
+     el buscador dejaba ese equipo sin refrescar TODO el día. Ahora solo
+     bloquea si de verdad escribieron hace poco; el refresco no repinta el
+     formulario, así que un dato a medio tipear no corre peligro. */
+  return (+new Date()-ULT_TECLA)<120000}
 
 function refrescarSiCorresponde(forzar){
   if(!CONNECTED||refrescando)return Promise.resolve(false);

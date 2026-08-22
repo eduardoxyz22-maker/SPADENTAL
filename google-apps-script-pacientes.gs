@@ -400,8 +400,10 @@ function doSave(r) {
     // edita traiga uno viejo. Sin esto, un equipo sin refrescar podía pisar
     // el número corregido y duplicarlo.
     r.nroDia = nroGuardado;
-  } else if (!r.nroDia || r.nroDia <= maxNro) {
-    // Alta nueva, registro movido a otro día, o número que ya está tomado.
+  } else if (!r.nroDia || r.nroDia <= maxNro ||
+             (destino && fechaGuardada && fechaGuardada !== r.fecha)) {
+    // Alta nueva, número que ya está tomado, o registro movido a otro día
+    // (el número viejo pertenece al día viejo: acá recibe el del nuevo).
     r.nroDia = Math.max(cuantas, maxNro) + 1;
   }
 
