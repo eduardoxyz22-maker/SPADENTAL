@@ -2220,7 +2220,9 @@ function canalHistorico(nombre){
 
 function deudaDe(nombre){
   var k=String(nombre||'').trim().toLowerCase();
-  return DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k})
+  /* solo visitas reales: el saldo de una atención que después se marcó como
+     cancelada no existe, y cobrarlo por WhatsApp sería un papelón */
+  return DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k&&esAtencion(r)})
              .reduce(function(a,r){return a+num(r.saldo)},0)}
 
 /* ---------------------------------------------------------------------
@@ -2283,6 +2285,18 @@ function crearCitaDesde(r){
   if(!r.prox)return null;
   var ya=DATA.filter(function(x){return x.citaDe===r.id&&x.fecha===r.prox})[0];
   if(ya)return ya;
+  /* Si esta atención ya dejó una cita y TODAVÍA está pendiente, corregir la
+     fecha la MUEVE en vez de crear otra: si no, la agenda queda con una cita
+     fantasma en la fecha vieja y el paciente aparece dos veces.
+     Una cita ya resuelta no se toca: esa visita ya pasó. */
+  var pendiente=DATA.filter(function(x){return x.citaDe===r.id&&x.estado==='Agendada'})[0];
+  if(pendiente){
+    pendiente.fecha=r.prox; pendiente.hora=r.proxHora||'';
+    pendiente.proxMotivo=r.proxMotivo||pendiente.proxMotivo;
+    pendiente.nroDia=nroDelDia(r.prox,pendiente.id);
+    pendiente.contactado=false; pendiente.contactadoTs='';   // hay que volver a avisar
+    persist(pendiente);
+    return pendiente}
   var c={
     id:uid(), ts:new Date().toISOString(),
     fecha:r.prox, hora:r.proxHora||'', nroDia:nroDelDia(r.prox,null),
@@ -4315,7 +4329,8 @@ function preBlanco(){return {id:uid(),nom:'',monto:'',estado:'',ts:'',motivo:''}
 function preNormalize(p){
   p=p||{};
   return {id:p.id||uid(), nom:p.nom||'', monto:num(p.monto),
-    estado:p.estado||'', ts:p.ts||'', motivo:p.motivo||'', auto:!!p.auto}}
+    estado:p.estado||'', ts:p.ts||'', motivo:p.motivo||'', auto:!!p.auto,
+    cerradoTs:p.cerradoTs||''}}
 
 /* ---------- el bloque del formulario ---------- */
 function preRowHtml(i,p){
@@ -4367,7 +4382,8 @@ function preParaGuardar(prev){
     var v=viejos[p.id]||{};
     return preNormalize({id:p.id, nom:p.nom, monto:p.monto, motivo:p.motivo,
       /* el estado no se toca desde el formulario: se marca en Recordatorios */
-      estado:v.estado||'', ts:v.ts||new Date().toISOString(), auto:v.auto})})}
+      estado:v.estado||'', ts:v.ts||new Date().toISOString(), auto:v.auto,
+      cerradoTs:v.cerradoTs||''})})}
 
 /* ---------- consultas ---------- */
 /* Todos los presupuestos, con la atención de la que salieron. */
@@ -4636,7 +4652,10 @@ function renderMiDia(){
   setMiProf(prof);
   var filas=filasDelDia(dia,prof);
   var pend=filas.filter(esCitaPendiente);
-  var hechas=filas.filter(function(r){return esAtencion(r)});
+  /* "atendido" es solo el que se sentó en el sillón; el que no vino ocupa
+     lugar en la lista pero no puede engordar el conteo de atendidos */
+  var hechas=filas.filter(function(r){return r.estado==='Atendido'});
+  var noVino=filas.filter(function(r){return r.estado==='No asistió'}).length;
   var cobr=hechas.reduce(function(a,r){return a+num(r.acuenta)},0);
   var porCobrar=hechas.reduce(function(a,r){return a+num(r.saldo)},0);
   var conAlergia=filas.filter(function(r){
@@ -4645,9 +4664,11 @@ function renderMiDia(){
   $('#m-saludo').innerHTML=(prof?esc(prof.replace(/^Dra\.?\s*/i,''))+', ':'')+
     (dia===hoyISO()?'esto es lo de hoy':'esto es lo del '+fmtF(dia));
 
+  /* una cita cancelada o reprogramada nunca sucedió: no es un paciente del día */
+  var delDia=pend.length+hechas.length+noVino;
   $('#m-kpis').innerHTML=
-    '<div class="kpi acc"><div class="k">Pacientes</div><div class="v">'+n0(filas.length)+'</div>'+
-      '<div class="d">'+(dia===hoyISO()?'hoy':fmtF(dia))+'</div></div>'+
+    '<div class="kpi acc"><div class="k">Pacientes</div><div class="v">'+n0(delDia)+'</div>'+
+      '<div class="d">'+(dia===hoyISO()?'hoy':fmtF(dia))+(noVino?' · '+noVino+' no vino':'')+'</div></div>'+
     '<div class="kpi"><div class="k">Por atender</div><div class="v" style="color:'+(pend.length?'var(--clay)':'var(--ok)')+'">'+
       n0(pend.length)+'</div><div class="d">'+(pend.length?'esperando':'nadie en espera')+'</div></div>'+
     '<div class="kpi"><div class="k">Atendidos</div><div class="v" style="color:var(--ok)">'+n0(hechas.length)+'</div>'+
