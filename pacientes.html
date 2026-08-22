@@ -283,6 +283,23 @@ tbody tr.destaca td{background:#FBFCF5}
   cursor:pointer;font-size:14px;padding:2px 0;margin-top:auto}
 .sem-add:hover{border-color:var(--lime-dk);color:var(--lime-dk)}
 
+/* El mes: un calendario clásico, denso pero legible. */
+.mes-sem{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px;
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);text-align:center}
+.mes-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px}
+.mes-dia{border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;
+  min-height:54px;padding:5px 6px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  font-family:inherit;color:var(--ink)}
+.mes-dia:hover{border-color:var(--lime-dk)}
+.mes-dia.fuera{opacity:.35}
+.mes-dia.hoy{border-color:var(--lime-dk);border-width:2px}
+.mes-dia.choca{background:#FBEDE6;border-color:var(--clay)}
+.mes-num{font-size:12.5px;font-weight:700}
+.mes-pend{background:var(--lime);color:var(--ink);border-radius:20px;padding:1px 8px;
+  font-size:11.5px;font-weight:800}
+.mes-res{font-size:10.5px;color:var(--gray)}
+@media(max-width:520px){.mes-dia{min-height:44px;padding:4px 5px}.mes-pend{padding:1px 6px}}
+
 /* La meta del mes */
 .meta-card{margin-top:14px}
 .meta-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -695,15 +712,20 @@ body.locked{overflow:hidden}
   <!-- ---------- la semana ---------- -->
   <div class="card">
     <div class="sem-top">
-      <h2 style="margin:0">📆 La semana</h2>
+      <h2 style="margin:0">📆 El calendario</h2>
+      <div class="seg lime" id="seg-agv" style="margin:0">
+        <label><input type="radio" name="agv" value="sem" checked><span>Semana</span></label>
+        <label><input type="radio" name="agv" value="mes"><span>Mes</span></label>
+      </div>
       <div class="row-btn" style="margin:0">
         <button type="button" class="btn sec sm" id="sem-prev">◀</button>
-        <button type="button" class="btn sec sm" id="sem-hoy">Esta semana</button>
+        <button type="button" class="btn sec sm" id="sem-hoy">Hoy</button>
         <button type="button" class="btn sec sm" id="sem-next">▶</button>
       </div>
     </div>
     <p class="hint" id="sem-titulo" style="margin:6px 0 0"></p>
-    <p class="hint" style="margin:2px 0 0">Cada día con sus citas: tocá una para ir a ese día,
+    <p class="hint" style="margin:2px 0 0">La semana muestra cada cita; el mes muestra cuántas hay
+      por día, para la que agendan hoy para dentro de tres semanas. Tocá un día para ir a él,
       o el ＋ para agendar ahí. Los choques salen en rojo.</p>
     <div id="sem-grid"></div>
   </div>
@@ -2210,7 +2232,7 @@ function renderCitasProximas(){
   $('#q-lista-h').innerHTML='Agenda del '+fmtF(dia)+
     (delDia.length?' <span class="cnt'+(pend?'':' ok')+'">'+(pend?pend+' sin marcar':'todas marcadas')+'</span>':'');
 
-  renderSemana();
+  renderAgendaVista();
   $('#q-lista-dia').innerHTML=delDia.length
     ? delDia.map(function(r){
         return esCitaPendiente(r)?citaCard(r,diasEntre(hoy,r.fecha)):citaResueltaCard(r)}).join('')
@@ -4926,7 +4948,7 @@ function imprimirHistoria(nombre){
    día. Acá está la semana entera: cada día con sus citas en orden, los
    choques en rojo, lo resuelto apagado y el hueco a la vista.
    ===================================================================== */
-var SEM_INI=null;
+var SEM_INI=null, MES_VER=null, AG_MODO='sem';
 
 function lunesDe(f){
   var d=parseISO(f), dw=(d.getDay()+6)%7;
@@ -4941,8 +4963,52 @@ function agendarEse(f){
   try{$('#q-paciente').scrollIntoView({behavior:'smooth'})}catch(e){}
   $('#q-paciente').focus()}
 
+/* El calendario tiene dos alturas: la semana (cada cita con su nombre) y el
+   mes (cuántas hay por día). La segunda existe porque un paciente que agenda
+   hoy para dentro de tres semanas no se veía en ningún mapa. */
+function renderAgendaVista(){
+  if(AG_MODO==='mes')renderMes(); else renderSemana()}
+
+function renderMes(){
+  var el=$('#sem-grid'); if(!el)return;
+  if(!MES_VER)MES_VER=hoyISO().slice(0,7);
+  var prof=$('#q-filtro-prof').value, hoy=hoyISO();
+  var d1=MES_VER+'-01';
+  var dFin=parseISO(d1); dFin.setMonth(dFin.getMonth()+1); dFin.setDate(0);
+  var fin=iso(dFin);
+  var ini=lunesDe(d1);                                   // el calendario arranca en lunes
+  var cierre=addDias(lunesDe(fin),6);
+
+  /* cuántos turnos hay cada día (pendientes por un lado, resueltos por otro) */
+  var por={};
+  DATA.forEach(function(r){
+    if(!r.fecha||r.fecha<ini||r.fecha>cierre)return;
+    if(prof&&r.profesional!==prof)return;
+    if(r.estado!=='Agendada'&&r.origen!=='Programada')return;
+    var b=por[r.fecha]=por[r.fecha]||{pend:0,res:0,choca:false};
+    if(esCitaPendiente(r)){b.pend++;
+      if(choquesDe(r.fecha,r.hora,r.profesional,r.id).length)b.choca=true}
+    else b.res++});
+
+  $('#sem-titulo').textContent=mesLabel(MES_VER)+(prof?' · '+prof:'');
+  var h='<div class="mes-sem">'+['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+    .map(function(x){return '<span>'+x+'</span>'}).join('')+'</div><div class="mes-grid">';
+  for(var f=ini;f<=cierre;f=addDias(f,1)){
+    var b=por[f]||{pend:0,res:0,choca:false};
+    var fuera=f.slice(0,7)!==MES_VER;
+    h+='<button type="button" class="mes-dia'+(fuera?' fuera':'')+(f===hoy?' hoy':'')+
+      (b.choca?' choca':'')+'" onclick="irAlDia(\''+f+'\')" '+
+      'title="'+fmtF(f)+(b.pend?' · '+b.pend+' cita'+(b.pend===1?'':'s')+' pendiente'+(b.pend===1?'':'s'):' · libre')+
+      (b.choca?' · ⚠ hay un choque':'')+'">'+
+      '<span class="mes-num">'+f.slice(8,10)+'</span>'+
+      (b.pend?'<span class="mes-pend">'+b.pend+'</span>':'')+
+      (b.res?'<span class="mes-res">'+b.res+'✓</span>':'')+
+      '</button>'}
+  el.innerHTML=h+'</div>'}
+
 function renderSemana(){
   var el=$('#sem-grid'); if(!el)return;
+  if(AG_MODO!=='sem')return renderMes();
   if(!SEM_INI)SEM_INI=lunesDe(hoyISO());
   var prof=$('#q-filtro-prof').value, hoy=hoyISO();
   var dias=[]; for(var i=0;i<7;i++)dias.push(addDias(SEM_INI,i));
@@ -5697,9 +5763,17 @@ function initFechas(){
 function bind(){
   $$('nav button').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
   $('#nav-buscar').onclick=abrirBuscador;
-  $('#sem-prev').onclick=function(){SEM_INI=addDias(SEM_INI||lunesDe(hoyISO()),-7);renderSemana()};
-  $('#sem-next').onclick=function(){SEM_INI=addDias(SEM_INI||lunesDe(hoyISO()),7);renderSemana()};
-  $('#sem-hoy').onclick=function(){SEM_INI=lunesDe(hoyISO());renderSemana()};
+  function moverAgenda(dir){
+    if(AG_MODO==='mes'){
+      var d=parseISO((MES_VER||hoyISO().slice(0,7))+'-01');
+      d.setMonth(d.getMonth()+dir); MES_VER=iso(d).slice(0,7)}
+    else{SEM_INI=addDias(SEM_INI||lunesDe(hoyISO()),dir*7)}
+    renderAgendaVista()}
+  $('#sem-prev').onclick=function(){moverAgenda(-1)};
+  $('#sem-next').onclick=function(){moverAgenda(1)};
+  $('#sem-hoy').onclick=function(){SEM_INI=lunesDe(hoyISO());MES_VER=hoyISO().slice(0,7);renderAgendaVista()};
+  $$('#seg-agv input').forEach(function(i){i.onchange=function(){
+    AG_MODO=getRadio('agv')||'sem'; renderAgendaVista()}});
   $('#btn-resumen-dia').onclick=function(){
     abrirResumenDia($('#c-rango').value==='dia'?($('#c-dia').value||hoyISO()):hoyISO(),'')};
   $('#btn-resumen-midia').onclick=function(){
