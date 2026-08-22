@@ -258,6 +258,47 @@ tbody tr.destaca td{background:#FBFCF5}
 .edit-box .txt{flex:1;min-width:210px;font-size:13.5px;color:#6B4E10;line-height:1.45}
 .edit-box .txt b{color:#4A360A}
 
+/* La semana: 7 columnas en pantalla grande, 2 en el teléfono. */
+.sem-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#sem-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+@media(max-width:900px){#sem-grid{grid-template-columns:repeat(2,1fr)}}
+.sem-dia{border:1px solid var(--line);border-radius:11px;padding:8px;min-height:74px;
+  display:flex;flex-direction:column;gap:5px;background:#fff}
+.sem-dia.hoy{border-color:var(--lime-dk);border-width:2px}
+.sem-cab{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);
+  display:flex;align-items:center;gap:5px}
+.sem-cab b{font-size:14px;color:var(--ink)}
+.sem-n{margin-left:auto;background:var(--lime);color:var(--ink);border-radius:20px;
+  padding:1px 7px;font-size:11px;font-weight:700}
+.sem-chip{display:block;width:100%;text-align:left;border:1px solid var(--line);
+  border-radius:8px;padding:4px 7px;font-size:12px;background:var(--paper);cursor:pointer;
+  color:var(--ink);line-height:1.35}
+.sem-chip b{font-size:11px}
+.sem-chip.choca{background:#FBEDE6;border-color:var(--clay);color:#7A3418;font-weight:600}
+.sem-chip.vencida{border-color:var(--clay);border-style:dashed}
+.sem-chip.okk{opacity:.55}
+.sem-chip.off{opacity:.4;text-decoration:line-through}
+.sem-libre{font-size:11.5px;color:var(--gray);font-style:italic;padding:2px 0}
+.sem-add{border:1px dashed var(--line);background:none;border-radius:8px;color:var(--gray);
+  cursor:pointer;font-size:14px;padding:2px 0;margin-top:auto}
+.sem-add:hover{border-color:var(--lime-dk);color:var(--lime-dk)}
+
+/* La meta del mes */
+.meta-card{margin-top:14px}
+.meta-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.meta-pc{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.meta-pc.lograda{color:var(--ok)}
+.meta-bar{height:14px;border-radius:20px;background:var(--paper);border:1px solid var(--line);
+  overflow:hidden;margin-top:10px}
+.meta-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--lime),var(--lime-dk));
+  border-radius:20px;transition:width .4s}
+.meta-datos{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-size:13px;color:var(--gray)}
+.meta-datos b{color:var(--ink)}
+.meta-logro{color:var(--ok);font-weight:700}
+
+/* El cuerpo de la receta impresa */
+.rc-cuerpo{margin-top:16px;font-size:12pt;line-height:1.8;min-height:120px;white-space:normal}
+
 /* Lo que la doctora no puede pasar por alto: rojo y arriba de todo. */
 .alerta-clinica{background:#FBEDE6;border:1px solid #EFCBBD;border-left:4px solid var(--clay);
   border-radius:10px;padding:11px 14px;font-size:13.5px;color:#7A3418;line-height:1.5}
@@ -430,6 +471,7 @@ body.locked{overflow:hidden}
     <button data-v="caja">💰 Caja</button>
     <button data-v="pacientes">👤 Pacientes</button>
     <button data-v="config">⚙️ Ajustes</button>
+    <button id="nav-buscar" title="Buscar paciente">🔍</button>
   </nav>
 </header>
 
@@ -444,7 +486,10 @@ body.locked{overflow:hidden}
         <h2 style="margin:0">Mi día</h2>
         <p class="hint" style="margin:4px 0 0" id="m-saludo"></p>
       </div>
-      <button class="btn sm" onclick="show('atencion')">＋ Nueva atención</button>
+      <div class="row-btn" style="margin:0">
+        <button class="btn sec sm" id="btn-resumen-midia">📲 Resumen del día</button>
+        <button class="btn sm" onclick="show('atencion')">＋ Nueva atención</button>
+      </div>
     </div>
     <div class="grid g3" style="margin-top:14px">
       <div><label>¿Quién sos?</label><select id="m-prof"></select></div>
@@ -647,6 +692,22 @@ body.locked{overflow:hidden}
     </div>
   </div>
 
+  <!-- ---------- la semana ---------- -->
+  <div class="card">
+    <div class="sem-top">
+      <h2 style="margin:0">📆 La semana</h2>
+      <div class="row-btn" style="margin:0">
+        <button type="button" class="btn sec sm" id="sem-prev">◀</button>
+        <button type="button" class="btn sec sm" id="sem-hoy">Esta semana</button>
+        <button type="button" class="btn sec sm" id="sem-next">▶</button>
+      </div>
+    </div>
+    <p class="hint" id="sem-titulo" style="margin:6px 0 0"></p>
+    <p class="hint" style="margin:2px 0 0">Cada día con sus citas: tocá una para ir a ese día,
+      o el ＋ para agendar ahí. Los choques salen en rojo.</p>
+    <div id="sem-grid"></div>
+  </div>
+
   <!-- ---------- lo que viene ---------- -->
   <div class="card">
     <h2>Lo que viene</h2>
@@ -755,6 +816,7 @@ body.locked{overflow:hidden}
       <div id="wrap-p-anio" style="display:none"><label>Año</label><input id="p-anio" inputmode="numeric"></div>
     </div>
   </div>
+  <div id="p-meta"></div>
   <div class="kpis" style="margin-top:14px" id="p-kpis"></div>
 
   <div class="card" style="padding-bottom:8px">
@@ -920,7 +982,8 @@ body.locked{overflow:hidden}
     <div class="tw"><table><thead><tr><th>Fecha</th><th>Paciente</th><th>Profesional</th>
       <th class="num">Total</th><th class="num">Cobrado</th><th class="num">Saldo</th><th>Forma de pago</th></tr></thead>
       <tbody id="cj-body"></tbody></table></div>
-    <div class="row-btn"><button class="btn dark sm" id="btn-xls-caja">⬇ Excel de caja</button></div>
+    <div class="row-btn"><button class="btn dark sm" id="btn-xls-caja">⬇ Excel de caja</button>
+      <button class="btn sec sm" id="btn-resumen-dia">📲 Resumen del día por WhatsApp</button></div>
   </div>
 </section>
 
@@ -978,6 +1041,12 @@ body.locked{overflow:hidden}
       <div><label>Plan frenado después de (días sin volver)</label><input id="c-dias-frenado" inputmode="numeric"></div>
       <div><label>Duración estimada de una cita (minutos)</label><input id="c-min-cita" inputmode="numeric"
         title="Se usa para avisar cuando dos pacientes caen a la misma hora con la misma doctora"></div>
+    </div>
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Meta del mes</h3>
+    <p class="hint" style="margin-top:0">Lo que el consultorio se propone facturar cada mes. El Panel muestra
+      el avance, lo que falta y el ritmo diario necesario. En 0, no se muestra nada.</p>
+    <div class="grid g3" style="margin-bottom:6px">
+      <div><label>Meta mensual (Bs)</label><input id="c-meta-mes" inputmode="numeric" placeholder="Ej. 40000"></div>
     </div>
     <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Controles automáticos</h3>
     <p class="hint" style="margin-top:0">El panel deduce a quién le toca volver según el último servicio que se hizo,
@@ -1256,7 +1325,7 @@ function cfgDefault(){return {v:4,prof:PROF_BASE.slice(),canales:CANALES_BASE.sl
   precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2],lab:0}}),
   diasProx:3,diasDorm:120,
   diasCumple:7,ctrlAuto:true,ctrlLimpiezaMeses:6,ctrlOrtoDias:30,diasCtrlAviso:7,
-  diasPlanFrenado:21,minCita:30,
+  diasPlanFrenado:21,minCita:30,metaMes:0,
   comision:{},comisionDefault:0,comisionDescuentaLab:false}}
 function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
     migrarCfg(c);                       // OJO: antes de rellenar defaults, que si no
@@ -2141,6 +2210,7 @@ function renderCitasProximas(){
   $('#q-lista-h').innerHTML='Agenda del '+fmtF(dia)+
     (delDia.length?' <span class="cnt'+(pend?'':' ok')+'">'+(pend?pend+' sin marcar':'todas marcadas')+'</span>':'');
 
+  renderSemana();
   $('#q-lista-dia').innerHTML=delDia.length
     ? delDia.map(function(r){
         return esCitaPendiente(r)?citaCard(r,diasEntre(hoy,r.fecha)):citaResueltaCard(r)}).join('')
@@ -3053,6 +3123,7 @@ function renderPanel(){
   var sec=getRadio('psec')||'pacientes';
   $$('.psec').forEach(function(d){d.style.display=(d.dataset.sec===sec)?'':'none'});
   if(sec==='presu')renderPanelPresu(rows);
+  renderMeta(rows);
 
   /* ---------------- acumuladores ---------------- */
   var pacs={},canal={},serv={},prof={},dow={},mens={},cat={},srvProf={},porDia={};
@@ -3916,6 +3987,7 @@ function verPaciente(nombre){
       '<button class="btn sec sm" onclick="abrirFichaMed(\''+nj+'\')">🩺 Ficha médica</button>'+
       '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">🦷 Planes</button>'+
       '<button class="btn sec sm" onclick="imprimirHistoria(\''+nj+'\')">🖨 Imprimir historia</button>'+
+      '<button class="btn sec sm" onclick="abrirReceta(\''+nj+'\')">💊 Receta</button>'+
       '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
 
 function nuevaParaPaciente(nombre){
@@ -4847,11 +4919,224 @@ function imprimirHistoria(nombre){
   window.print();
   setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
 
+/* =====================================================================
+   AGENDA SEMANAL · los huecos de la semana de un vistazo
+   ---------------------------------------------------------------------
+   "¿Cuándo me puede atender la doctora?" se contestaba yendo día por
+   día. Acá está la semana entera: cada día con sus citas en orden, los
+   choques en rojo, lo resuelto apagado y el hueco a la vista.
+   ===================================================================== */
+var SEM_INI=null;
+
+function lunesDe(f){
+  var d=parseISO(f), dw=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-dw); return iso(d)}
+
+function irAlDia(f){
+  $('#q-dia').value=f; renderCitasProximas();
+  try{$('#q-resumen-dia').scrollIntoView({behavior:'smooth'})}catch(e){}}
+
+function agendarEse(f){
+  $('#q-fecha').value=f;
+  try{$('#q-paciente').scrollIntoView({behavior:'smooth'})}catch(e){}
+  $('#q-paciente').focus()}
+
+function renderSemana(){
+  var el=$('#sem-grid'); if(!el)return;
+  if(!SEM_INI)SEM_INI=lunesDe(hoyISO());
+  var prof=$('#q-filtro-prof').value, hoy=hoyISO();
+  var dias=[]; for(var i=0;i<7;i++)dias.push(addDias(SEM_INI,i));
+
+  /* la libreta de turnos: lo agendado, pendiente o ya resuelto */
+  var por={}; dias.forEach(function(f){por[f]=[]});
+  DATA.forEach(function(r){
+    if(r.fecha<dias[0]||r.fecha>dias[6])return;
+    if(prof&&r.profesional!==prof)return;
+    if(r.estado!=='Agendada'&&r.origen!=='Programada')return;
+    por[r.fecha].push(r)});
+  dias.forEach(function(f){por[f].sort(function(a,b){
+    return (a.hora||'99:99').localeCompare(b.hora||'99:99')})});
+
+  var DN=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  $('#sem-titulo').textContent='Del '+fmtF(dias[0])+' al '+fmtF(dias[6])+
+    (prof?' · '+prof:'');
+  el.innerHTML=dias.map(function(f,i){
+    var lista=por[f];
+    var chips=lista.map(function(r){
+      var pend=esCitaPendiente(r);
+      var ch=pend?choquesDe(r.fecha,r.hora,r.profesional,r.id):[];
+      var cls=pend?(ch.length?' choca':(f<hoy?' vencida':''))
+                  :(r.estado==='Atendido'?' okk':' off');
+      var marca=pend?'':(r.estado==='Atendido'?' ✓':' ✖');
+      return '<button type="button" class="sem-chip'+cls+'" onclick="irAlDia(\''+f+'\')" '+
+        'title="'+esc((r.hora||'sin hora')+' · '+(r.paciente||'')+' · '+(r.profesional||'')+
+          (ch.length?' · ⚠ choca con '+(ch[0].paciente||''):''))+'">'+
+        (r.hora?'<b>'+r.hora+'</b> ':'')+esc((r.paciente||'').split(' ')[0])+marca+'</button>'}).join('');
+    return '<div class="sem-dia'+(f===hoy?' hoy':'')+'">'+
+      '<div class="sem-cab">'+DN[i]+' <b>'+f.slice(8,10)+'</b>'+
+        (lista.length?'<span class="sem-n">'+lista.length+'</span>':'')+'</div>'+
+      (chips||'<div class="sem-libre">libre</div>')+
+      '<button type="button" class="sem-add" title="Agendar este día" onclick="agendarEse(\''+f+'\')">＋</button>'+
+      '</div>'}).join('')}
+
+/* =====================================================================
+   META DEL MES · la vista de dueña
+   ===================================================================== */
+function diasHabilesHasta(finMes){
+  /* de hoy (incluido) al fin de mes, sin domingos */
+  var d=parseISO(hoyISO()), n=0;
+  while(iso(d)<=finMes){if(d.getDay()!==0)n++; d.setDate(d.getDate()+1)}
+  return n}
+
+function renderMeta(rows){
+  var el=$('#p-meta'); if(!el)return;
+  var meta=num(CFG.metaMes), rango=$('#p-rango').value;
+  if(!meta||rango!=='mes'){el.innerHTML='';return}
+  var ym=$('#p-mes').value||hoyISO().slice(0,7);
+  var fact=rows.reduce(function(a,r){return a+num(r.total)},0);
+  var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0);
+  var pc=Math.min(100,meta?Math.round(fact/meta*100):0);
+  var falta=Math.max(0,meta-fact);
+  var esEsteMes=ym===hoyISO().slice(0,7);
+  var d=parseISO(ym+'-01'); d.setMonth(d.getMonth()+1); d.setDate(0);
+  var rest=esEsteMes?diasHabilesHasta(iso(d)):0;
+  var ritmo=rest>0?Math.ceil(falta/rest):0;
+  el.innerHTML='<div class="card meta-card">'+
+    '<div class="meta-top"><h2 style="margin:0">Meta de '+mesLabel(ym)+'</h2>'+
+      '<b class="meta-pc'+(pc>=100?' lograda':'')+'">'+pc+'%</b></div>'+
+    '<div class="meta-bar"><span style="width:'+pc+'%"></span></div>'+
+    '<div class="meta-datos">'+
+      '<span><b>'+bs(fact)+'</b> de '+bs(meta)+'</span>'+
+      '<span>cobrado '+bs(cobr)+'</span>'+
+      (pc>=100?'<span class="meta-logro">🎉 Meta cumplida</span>'
+        :(esEsteMes&&rest>0
+          ?'<span>faltan <b>'+bs(falta)+'</b> · '+rest+' día'+(rest===1?'':'s')+' hábiles · ritmo <b>'+bs(ritmo)+'/día</b></span>'
+          :'<span>faltaron '+bs(falta)+'</span>'))+
+    '</div></div>'}
+
+/* =====================================================================
+   RESUMEN DEL DÍA · el cierre en un mensaje de WhatsApp
+   ===================================================================== */
+function waLibre(t){return 'https://wa.me/?text='+encodeURIComponent(t)}
+
+function txtResumenDia(fecha,prof){
+  var rows=DATA.filter(function(r){
+    return r.fecha===fecha&&(!prof||r.profesional===prof)});
+  var at=rows.filter(function(r){return r.estado==='Atendido'});
+  var fact=at.reduce(function(a,r){return a+num(r.total)},0);
+  var cobr=at.reduce(function(a,r){return a+num(r.acuenta)},0);
+  var deuda=at.reduce(function(a,r){return a+num(r.saldo)},0);
+  var porM={};
+  at.forEach(function(r){pagosDe(r).forEach(function(p){
+    porM[p.metodo]=(porM[p.metodo]||0)+num(p.monto)})});
+  var noV=rows.filter(function(r){return r.estado==='No asistió'});
+  var canc=rows.filter(function(r){return r.estado==='Canceló'});
+  var pend=rows.filter(esCitaPendiente);
+  var ICONO={'Efectivo':'💵','QR':'📱','Tarjeta':'💳','Transferencia':'🏦'};
+
+  var t='🦷 *Spadental · '+fmtF(fecha)+'*'+(prof?' · '+prof:'')+'\n\n';
+  t+='👥 Atendidos: *'+at.length+'*\n';
+  t+='🧾 Facturado: *'+bs(fact)+'*\n';
+  t+='💰 Cobrado: *'+bs(cobr)+'*\n';
+  METODOS.forEach(function(m2){
+    if(porM[m2])t+='   '+(ICONO[m2]||'')+' '+m2+': '+bs(porM[m2])+'\n'});
+  if(deuda>0)t+='⏳ Quedó debiéndose: '+bs(deuda)+' ('+
+    at.filter(function(r){return num(r.saldo)>0}).map(function(r){return r.paciente}).join(', ')+')\n';
+  if(!prof){
+    var egs=EGR.filter(function(e){return e.fecha===fecha});
+    var egr=egs.reduce(function(a,e){return a+num(e.monto)},0);
+    if(egr>0)t+='➖ Egresos: '+bs(egr)+'\n';
+    t+='🏦 Caja neta: *'+bs(cobr-egs.reduce(function(a,e){return a+num(e.monto)},0))+'*\n'}
+  if(noV.length)t+='✖ No vinieron: '+noV.map(function(r){return r.paciente}).join(', ')+'\n';
+  if(canc.length)t+='🚫 Cancelaron: '+canc.map(function(r){return r.paciente}).join(', ')+'\n';
+  if(pend.length)t+='📅 Sin marcar: '+pend.length+' cita'+(pend.length===1?'':'s')+' (revisar Agenda)\n';
+  return t}
+
+function abrirResumenDia(fecha,prof){
+  fecha=fecha||hoyISO();
+  var t=txtResumenDia(fecha,prof||'');
+  openModal('<h3>📲 Resumen del día</h3>'+
+    '<p class="mini">Listo para mandar al grupo del consultorio o a la doctora.</p>'+
+    '<div class="wa" id="wa-txt">'+esc(t)+'</div>'+
+    '<div class="row-btn">'+
+    '<a class="btn" target="_blank" rel="noopener" href="'+waLibre(t)+'">Abrir WhatsApp</a>'+
+    '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
+
+/* =====================================================================
+   BUSCADOR DE PACIENTE · desde cualquier pestaña
+   ===================================================================== */
+function abrirBuscador(){
+  openModal('<h3>🔍 Buscar paciente</h3>'+
+    '<input id="bsq" placeholder="Nombre o parte del nombre…" autocomplete="off">'+
+    '<div id="bsq-res" style="margin-top:12px"></div>');
+  var i=$('#bsq');
+  i.oninput=pintarBusqueda;
+  i.onkeydown=function(e){if(e.key==='Enter'){var b=$('#bsq-res .rem .btn'); if(b)b.click()}};
+  i.focus(); pintarBusqueda()}
+
+function pintarBusqueda(){
+  var q=claveServ($('#bsq').value);
+  var vistos={}, out=[];
+  DATA.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||vistos[k])return; vistos[k]=1;
+    if(q&&claveServ(r.paciente).indexOf(q)<0)return;
+    var mios=DATA.filter(function(x){return keyPac(x.paciente)===k});
+    var ult=mios.filter(esAtencion).map(function(x){return x.fecha||''}).sort().pop()||'';
+    out.push({nombre:r.paciente,cel:r.celular||'',ult:ult,n:mios.filter(esAtencion).length})});
+  out.sort(function(a,b){return b.ult.localeCompare(a.ult)});
+  $('#bsq-res').innerHTML=q&&!out.length
+    ? '<div class="empty">Nadie se llama así todavía.</div>'
+    : out.slice(0,10).map(function(p){
+        return '<div class="rem"><div><div class="who">'+esc(p.nombre)+'</div>'+
+          '<div class="meta">'+(p.ult?'última visita '+fmtF(p.ult)+' · '+p.n+' visita'+(p.n===1?'':'s'):'sin visitas')+
+          (p.cel?' · 📱 '+esc(p.cel):'')+'</div></div>'+
+          '<div class="acts"><button class="btn sm" onclick="verPaciente(\''+jss(p.nombre)+'\')">Abrir ficha</button></div></div>'}).join('')}
+
+/* =====================================================================
+   RECETA / INDICACIONES IMPRESAS · con el membrete
+   ===================================================================== */
+function abrirReceta(nombre){
+  var k=keyPac(nombre);
+  var ult=DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
+  var pre=ult?indicacionesDe(ult).map(indTexto).join('\n\n'):'';
+  openModal('<h3>🖨 Receta / indicaciones</h3>'+
+    '<p class="mini">'+esc(nombre)+' · se imprime con el membrete del consultorio.</p>'+
+    '<div style="margin-top:10px"><label>Profesional</label><input id="rc-prof" value="'+
+      esc((ult&&ult.profesional)||'Dra. Mirna Veizaga')+'"></div>'+
+    '<div style="margin-top:10px"><label>Texto (podés editarlo)</label>'+
+    '<textarea id="rc-tx" style="min-height:170px" placeholder="Rp.&#10;— …">'+esc(pre)+'</textarea></div>'+
+    '<div class="row-btn"><button class="btn" onclick="imprimirReceta(\''+jss(nombre)+'\')">🖨 Imprimir</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function imprimirReceta(nombre){
+  var tx=$('#rc-tx').value.trim();
+  if(!tx){toast('Escribí las indicaciones primero',1);return}
+  var prof=$('#rc-prof').value.trim();
+  var f=pacDe(nombre), edad=f.nac?edadDe(f.nac):'';
+  $('#print-area').innerHTML=
+    '<div class="hc-cab"><div class="hc-marca">'+
+      '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
+      '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
+      '<div class="hc-sub">'+esc(prof||'Dra. Mirna Veizaga')+' · Odontología integral</div></div></div>'+
+      '<div class="hc-fecha">Indicaciones<br><b>'+fmtF(hoyISO())+'</b></div></div>'+
+    '<table class="hc-datos">'+
+      '<tr><th>Paciente</th><td><b>'+esc(nombre)+'</b>'+(edad?' · '+edad+' años':'')+'</td></tr>'+
+    '</table>'+
+    '<div class="rc-cuerpo">'+esc(tx).replace(/\n/g,'<br>')+'</div>'+
+    '<div class="hc-firma"><div><div class="hc-linea"></div>'+esc(prof||'Firma y sello')+'</div></div>'+
+    '<div class="hc-pie">Spadental · '+fmtF(hoyISO())+' · ante cualquier molestia fuera de lo indicado, comuníquese con el consultorio.</div>';
+  document.body.classList.add('imprimiendo');
+  closeModal(); window.print();
+  setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
+
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
   $('#c-prof').value=CFG.prof.join('\n');
   $('#c-canal').value=CFG.canales.join('\n');
   $('#c-dias-prox').value=CFG.diasProx;
+  $('#c-meta-mes').value=CFG.metaMes||'';
   $('#c-dias-dorm').value=CFG.diasDorm;
   $('#c-dias-cumple').value=CFG.diasCumple;
   $('#c-dias-frenado').value=CFG.diasPlanFrenado;
@@ -5411,6 +5696,14 @@ function initFechas(){
 
 function bind(){
   $$('nav button').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
+  $('#nav-buscar').onclick=abrirBuscador;
+  $('#sem-prev').onclick=function(){SEM_INI=addDias(SEM_INI||lunesDe(hoyISO()),-7);renderSemana()};
+  $('#sem-next').onclick=function(){SEM_INI=addDias(SEM_INI||lunesDe(hoyISO()),7);renderSemana()};
+  $('#sem-hoy').onclick=function(){SEM_INI=lunesDe(hoyISO());renderSemana()};
+  $('#btn-resumen-dia').onclick=function(){
+    abrirResumenDia($('#c-rango').value==='dia'?($('#c-dia').value||hoyISO()):hoyISO(),'')};
+  $('#btn-resumen-midia').onclick=function(){
+    abrirResumenDia($('#m-dia').value||hoyISO(),$('#m-prof').value||'')};
   $('#ov').onclick=function(e){if(e.target===$('#ov'))closeModal()};
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
 
@@ -5583,6 +5876,7 @@ function bind(){
     CFG.ctrlLimpiezaMeses=Math.max(1,num($('#c-ctrl-limp').value)||6);
     CFG.ctrlOrtoDias=Math.max(1,num($('#c-ctrl-orto').value)||30);
     CFG.diasCtrlAviso=Math.max(0,num($('#c-ctrl-aviso').value)||7);
+    CFG.metaMes=Math.max(0,num($('#c-meta-mes').value));
     saveCfg(); updateNavRem(); toast('Recordatorios actualizados')};
 
   $('#btn-json').onclick=function(){
