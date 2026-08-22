@@ -313,6 +313,10 @@ tbody tr.destaca td{background:#FBFCF5}
 .meta-datos b{color:var(--ink)}
 .meta-logro{color:var(--ok);font-weight:700}
 
+/* La meta dentro del informe impreso */
+.inf-meta{margin:4px 0 14px}
+.inf-meta-t{font-size:10.5pt;margin-bottom:5px}
+
 /* El cuerpo de la receta impresa */
 .rc-cuerpo{margin-top:16px;font-size:12pt;line-height:1.8;min-height:120px;white-space:normal}
 
@@ -835,6 +839,8 @@ body.locked{overflow:hidden}
         <select id="p-rango"><option value="mes" selected>Un mes</option><option value="anio">Un año</option>
         <option value="todo">Todo</option></select></div>
       <div id="wrap-p-mes"><label>Mes</label><input type="month" id="p-mes"></div>
+      <div id="wrap-p-inf"><label>&nbsp;</label>
+        <button class="btn sec sm" id="btn-informe" style="width:100%">🖨 Informe del mes</button></div>
       <div id="wrap-p-anio" style="display:none"><label>Año</label><input id="p-anio" inputmode="numeric"></div>
     </div>
   </div>
@@ -1138,6 +1144,7 @@ body.locked{overflow:hidden}
       <button class="btn sec sm" id="btn-json">⬇ Respaldo JSON</button>
       <button class="btn sec sm" id="btn-import">⬆ Restaurar JSON</button>
       <button class="btn sec sm" id="btn-subir">☁ Subir a la nube lo de este equipo</button>
+      <a class="btn sec sm" href="guia.html" target="_blank" rel="noopener">📖 Guía de uso para el equipo</a>
       <input type="file" id="file-json" accept="application/json,.json" class="sr" style="display:none">
     </div>
   </div>
@@ -5197,6 +5204,143 @@ function imprimirReceta(nombre){
   closeModal(); window.print();
   setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
 
+/* =====================================================================
+   INFORME DEL MES · el cierre mensual en una hoja con membrete
+   ---------------------------------------------------------------------
+   Lo que hoy es recorrer siete secciones del Panel, en un documento
+   imprimible para la reunión de equipo o el contador. Se imprime desde
+   el diálogo del navegador (ahí se elige "Guardar como PDF").
+   ===================================================================== */
+function tablaHC(cab,filas,tot){
+  if(!filas.length)return '<div class="hc-nota">Sin movimientos este mes.</div>';
+  return '<table class="hc-tabla"><thead><tr>'+cab.map(function(c,i){
+      return '<th'+(i>0?' class="hc-num"':'')+'>'+c+'</th>'}).join('')+'</tr></thead><tbody>'+
+    filas.map(function(f){return '<tr>'+f.map(function(v,i){
+      return '<td'+(i>0?' class="hc-num"':'')+'>'+v+'</td>'}).join('')+'</tr>'}).join('')+
+    '</tbody>'+(tot?'<tfoot><tr>'+tot.map(function(v,i){
+      return '<td'+(i>0?' class="hc-num"':'')+'>'+v+'</td>'}).join('')+'</tr></tfoot>':'')+'</table>'}
+
+function imprimirInforme(){
+  var ym=$('#p-mes').value||hoyISO().slice(0,7);
+  var rows=soloAtenciones(DATA).filter(function(r){return (r.fecha||'').slice(0,7)===ym});
+  var todos=DATA.filter(function(r){return (r.fecha||'').slice(0,7)===ym});
+  if(!todos.length){toast('No hay nada cargado en '+mesLabel(ym),1);return}
+
+  var at=rows.filter(function(r){return r.estado==='Atendido'});
+  var fact=rows.reduce(function(a,r){return a+num(r.total)},0);
+  var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0);
+  var sal=rows.reduce(function(a,r){return a+num(r.saldo)},0);
+  var pacs={},nuevos={};
+  rows.forEach(function(r){var k=keyPac(r.paciente); if(!k)return;
+    pacs[k]=1; if(r.tipo==='Nuevo')nuevos[k]=1});
+
+  /* por doctora: solo lo atendido — un "no asistió" no es trabajo hecho */
+  var prof={};
+  at.forEach(function(r){var p=r.profesional||'Sin asignar';
+    if(!prof[p])prof[p]={n:0,bs:0,cob:0};
+    prof[p].n++; prof[p].bs+=num(r.total); prof[p].cob+=num(r.acuenta)});
+  var fProf=Object.keys(prof).sort(function(a,b){return prof[b].bs-prof[a].bs})
+    .map(function(p){return [esc(p),n0(prof[p].n),n0(prof[p].bs),n0(prof[p].cob)]});
+
+  /* top servicios */
+  var serv={};
+  rows.forEach(function(r){(r.servicios||[]).forEach(function(s2){
+    if(!s2.nom)return; var q=num(s2.cant)||1;
+    if(!serv[s2.nom])serv[s2.nom]={n:0,bs:0};
+    serv[s2.nom].n+=q; serv[s2.nom].bs+=num(s2.precio)*q})});
+  var fServ=Object.keys(serv).sort(function(a,b){return serv[b].bs-serv[a].bs}).slice(0,10)
+    .map(function(k){return [esc(k),n0(serv[k].n),n0(serv[k].bs)]});
+
+  /* canales de los nuevos */
+  var canal={};
+  rows.forEach(function(r){if(r.tipo!=='Nuevo')return;
+    var c=r.canal||'Sin anotar'; canal[c]=(canal[c]||0)+1});
+  var fCanal=Object.keys(canal).sort(function(a,b){return canal[b]-canal[a]})
+    .map(function(c){return [esc(c),n0(canal[c])]});
+
+  /* asistencia de la agenda */
+  var cuenta=function(e){return todos.filter(function(r){return r.estado===e}).length};
+  var noAs=cuenta('No asistió'), canc=cuenta('Canceló'), repr=cuenta('Reprogramó');
+  var deCita=todos.filter(function(r){return r.origen==='Programada'&&r.estado==='Atendido'}).length;
+  var resueltas=deCita+noAs+canc;
+  var pcAsis=resueltas?Math.round(deCita/resueltas*100):0;
+
+  /* caja */
+  var porM={}; METODOS.forEach(function(m2){porM[m2]=0});
+  var sinId=0;
+  rows.forEach(function(r){var ps=pagosDe(r),sm=0;
+    ps.forEach(function(p){porM[p.metodo]=(porM[p.metodo]||0)+num(p.monto); sm+=num(p.monto)});
+    sinId+=Math.max(0,num(r.acuenta)-sm)});
+  var egs=EGR.filter(function(e){return (e.fecha||'').slice(0,7)===ym});
+  var egr=egs.reduce(function(a,e){return a+num(e.monto)},0);
+  var porCat={};
+  egs.forEach(function(e){var c=e.categoria||'Otro'; porCat[c]=(porCat[c]||0)+num(e.monto)});
+
+  /* recomendaciones */
+  var pres=[].concat.apply([],rows.map(function(r){return r.presu||[]}));
+  var pAc=pres.filter(function(p){return p.estado==='Aceptó'}).length;
+
+  var meta=num(CFG.metaMes);
+  var pcMeta=meta?Math.min(100,Math.round(fact/meta*100)):0;
+
+  $('#print-area').innerHTML=
+    '<div class="hc-cab"><div class="hc-marca">'+
+      '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
+      '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
+      '<div class="hc-sub">Dra. Mirna Veizaga · Odontología integral</div></div></div>'+
+      '<div class="hc-fecha">Informe mensual<br><b>'+mesLabel(ym)+'</b></div></div>'+
+
+    (meta?'<div class="inf-meta"><div class="inf-meta-t">Meta del mes: '+bs(meta)+
+      ' · <b>'+pcMeta+'%</b>'+(pcMeta>=100?' · 🎉 cumplida':'')+'</div>'+
+      '<div class="meta-bar"><span style="width:'+pcMeta+'%"></span></div></div>':'')+
+
+    '<div class="hc-kpis">'+
+      '<div><span>Pacientes</span><b>'+n0(Object.keys(pacs).length)+'</b></div>'+
+      '<div><span>Nuevos</span><b>'+n0(Object.keys(nuevos).length)+'</b></div>'+
+      '<div><span>Atenciones</span><b>'+n0(at.length)+'</b></div>'+
+      '<div><span>Facturado</span><b>'+bs(fact)+'</b></div>'+
+      '<div><span>Cobrado</span><b>'+bs(cobr)+'</b></div>'+
+      '<div><span>Por cobrar</span><b>'+bs(sal)+'</b></div>'+
+    '</div>'+
+
+    '<h2 class="hc-h2">Por profesional</h2>'+
+    tablaHC(['Profesional','Atenciones','Facturado Bs','Cobrado Bs'],fProf,
+      ['Total',n0(at.length),n0(fact),n0(cobr)])+
+
+    '<h2 class="hc-h2">Los servicios que más facturaron</h2>'+
+    tablaHC(['Servicio','Veces','Bs'],fServ)+
+
+    '<h2 class="hc-h2">¿De dónde llegaron los pacientes nuevos?</h2>'+
+    tablaHC(['Canal','Pacientes'],fCanal)+
+
+    '<h2 class="hc-h2">Asistencia de la agenda</h2>'+
+    tablaHC(['','Citas'],[
+      ['Atendidas',n0(deCita)],['No asistió',n0(noAs)],
+      ['Canceló',n0(canc)],['Reprogramó',n0(repr)]])+
+    (resueltas?'<p class="hc-pie-nota">De cada 100 citas resueltas, vinieron '+pcAsis+'.</p>':'')+
+
+    '<h2 class="hc-h2">Caja</h2>'+
+    tablaHC(['Forma de pago','Bs'],
+      METODOS.filter(function(m2){return porM[m2]>0}).map(function(m2){return [m2,n0(porM[m2])]})
+        .concat(sinId>0.01?[['Sin identificar',n0(sinId)]]:[]),
+      ['Cobrado',n0(cobr)])+
+    (egs.length?'<h2 class="hc-h2">Egresos</h2>'+
+      tablaHC(['Categoría','Bs'],Object.keys(porCat).map(function(c){return [esc(c),n0(porCat[c])]}),
+        ['Total egresos',n0(egr)])+
+      '<p class="hc-pie-nota"><b>Caja neta del mes: '+bs(cobr-egr)+'</b></p>':'')+
+
+    (pres.length?'<h2 class="hc-h2">Tratamientos recomendados</h2>'+
+      '<p class="hc-pie-nota">Se recomendaron '+pres.length+' · aceptados '+pAc+
+      ' · tasa de cierre '+Math.round(pAc/pres.length*100)+'%.</p>':'')+
+
+    '<div class="hc-firma"><div><div class="hc-linea"></div>Dra. Mirna Veizaga</div></div>'+
+    '<div class="hc-pie">Spadental · informe generado el '+fmtF(hoyISO())+
+      ' desde el sistema del consultorio.</div>';
+
+  document.body.classList.add('imprimiendo');
+  window.print();
+  setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
+
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
   $('#c-prof').value=CFG.prof.join('\n');
@@ -5774,6 +5918,7 @@ function bind(){
   $('#sem-hoy').onclick=function(){SEM_INI=lunesDe(hoyISO());MES_VER=hoyISO().slice(0,7);renderAgendaVista()};
   $$('#seg-agv input').forEach(function(i){i.onchange=function(){
     AG_MODO=getRadio('agv')||'sem'; renderAgendaVista()}});
+  $('#btn-informe').onclick=imprimirInforme;
   $('#btn-resumen-dia').onclick=function(){
     abrirResumenDia($('#c-rango').value==='dia'?($('#c-dia').value||hoyISO()):hoyISO(),'')};
   $('#btn-resumen-midia').onclick=function(){

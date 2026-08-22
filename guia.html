@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Guía de uso · Spadental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#20241C;--lime:#B6C932;--lime-dk:#65760F;--paper:#FAFBF6;--gray:#727865;
+  --line:#E8EADF;--clay:#B4552F;--ok:#2E7D4F}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Barlow',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+  font-size:16px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:0 clamp(16px,4vw,32px) 90px}
+h1,h2,h3{font-family:'Archivo',sans-serif;letter-spacing:-.3px}
+
+/* ---------- cabecera ---------- */
+header{background:#fff;border-bottom:1px solid var(--line);padding:26px 0 22px;margin-bottom:34px}
+.hd{max-width:900px;margin:0 auto;padding:0 clamp(16px,4vw,32px);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.corona{width:44px;height:44px;color:var(--lime-dk);flex:none}
+.logo{font-size:27px;font-weight:800;font-family:'Archivo',sans-serif}
+.logo span{color:var(--lime-dk)}
+.hd .sub{width:100%;color:var(--gray);font-size:14.5px}
+.hd .sub b{color:var(--ink)}
+
+/* ---------- índice ---------- */
+.toc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:30px}
+.toc h2{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--lime-dk);margin-bottom:10px}
+.toc ol{margin-left:20px;columns:2;column-gap:30px}
+.toc li{margin:4px 0;font-size:14.5px}
+.toc a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--line)}
+.toc a:hover{color:var(--lime-dk)}
+@media(max-width:640px){.toc ol{columns:1}}
+
+/* ---------- secciones ---------- */
+section{background:#fff;border:1px solid var(--line);border-radius:16px;
+  padding:24px 24px 20px;margin-bottom:22px;scroll-margin-top:16px}
+section h2{font-size:20px;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+section h2 .n{background:var(--lime);color:var(--ink);border-radius:50%;width:30px;height:30px;
+  display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.para-quien{font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--lime-dk);
+  font-weight:700;margin-bottom:12px}
+section p{margin:10px 0;color:#3a3e33}
+section b{color:var(--ink)}
+.paso{display:flex;gap:12px;margin:12px 0;align-items:flex-start}
+.paso .pn{background:var(--paper);border:1.5px solid var(--lime-dk);color:var(--lime-dk);
+  border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:13px;flex:none;margin-top:2px}
+.ojo{background:#FBEDE6;border:1px solid #EFCBBD;border-left:4px solid var(--clay);
+  border-radius:10px;padding:12px 15px;margin:14px 0;font-size:14.5px;color:#7A3418}
+.ojo b{color:#5E2711}
+.tip{background:#F2F6E4;border:1px solid #DFE8C2;border-left:4px solid var(--lime-dk);
+  border-radius:10px;padding:12px 15px;margin:14px 0;font-size:14.5px;color:#4C5A16}
+
+/* ---------- maquetas ---------- */
+.mock{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:14px;margin:14px 0;font-size:13.5px}
+.mock .mt{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:9px}
+.mbtn{display:inline-block;background:var(--ink);color:#fff;border-radius:9px;
+  padding:7px 14px;font-weight:600;font-size:13px;margin:2px 4px 2px 0}
+.mbtn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.mchip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:20px;
+  padding:5px 13px;margin:2px 4px 2px 0;font-size:13px}
+.mchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.aviso-a{border-radius:8px;padding:5px 10px;margin:4px 0;font-size:13px;border:1px solid var(--line)}
+.aviso-a.alergia{background:#FBEDE6;border-color:#EFCBBD;color:#7A3418;font-weight:600}
+.aviso-a.plata{background:#FBF3E2;border-color:#EFE0BC;color:#6B4E10}
+.aviso-a.presu{background:#EDF1FA;border-color:#CFD9EF;color:#2E3F63}
+.aviso-a.nota{background:var(--paper);color:var(--ink)}
+.mbanner{border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin:5px 0}
+.mbanner.verde{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+.mbanner.naranja{background:#FBF3E2;border:1px solid #E4CE93;color:#6B4E10}
+.mbanner.amarillo{background:#FBF3E2;border:1px solid #E4CE93;border-left:4px solid #C79A2B;color:#6B4E10;font-weight:400}
+.mtabla{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:8px;overflow:hidden}
+.mtabla th{background:#F3F5EA;text-align:left;padding:6px 9px;font-size:11px;text-transform:uppercase;
+  letter-spacing:.4px;color:#4C5A16}
+.mtabla td{padding:6px 9px;border-top:1px solid var(--line)}
+
+/* ---------- reglas de oro ---------- */
+.regla{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+  border-radius:12px;padding:13px 15px;margin:10px 0}
+.regla .ic{font-size:20px;flex:none}
+.regla b{display:block}
+.regla span{font-size:14px;color:var(--gray)}
+footer{text-align:center;color:var(--gray);font-size:13px;margin-top:36px}
+footer a{color:var(--lime-dk)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="corona" viewBox="0 0 120 92">
+    <path fill="currentColor" d="M60 4c-9.5 0-15.5 7.2-15.5 17.4 0 8.4 3.1 14.4 5.2 21.6l6.3 22.4 4-20.6 4 20.6 6.3-22.4c2.1-7.2 5.2-13.2 5.2-21.6C75.5 11.2 69.5 4 60 4z"/>
+    <path fill="currentColor" d="M21 19c-9.4 2.2-13.4 10.6-10.9 19.6 2.2 7.9 7.2 12.4 11.6 18.2l14.9 19.4-4.6-22.5 16.7 14.4c-6.4-8.2-11.6-14.6-14.9-23-4.4-11.3-4.3-28.4-12.8-26.1z"/>
+    <path fill="currentColor" d="M99 19c9.4 2.2 13.4 10.6 10.9 19.6-2.2 7.9-7.2 12.4-11.6 18.2L83.4 76.2l4.6-22.5-16.7 14.4c6.4-8.2 11.6-14.6 14.9-23C90.6 33.8 90.5 16.7 99 19z"/>
+    <path fill="currentColor" d="M36 74.5c15.4-5.2 32.6-5.2 48 0l-2.2 8.4c-14.3-4.6-29.3-4.6-43.6 0z"/>
+  </symbol>
+</svg>
+
+<header><div class="hd">
+  <svg class="corona"><use href="#corona"/></svg>
+  <div class="logo">SPA<span>DENTAL</span> · Guía de uso</div>
+  <div class="sub">El paso a paso del sistema del consultorio, escrito para el equipo.
+    Se abre en <b>eduardoxyz22-maker.github.io/SPADENTAL/pacientes.html</b> con la clave del consultorio.
+    Todo lo que se carga <b>se guarda solo y se ve en todas las computadoras, tablets y celulares</b>.</div>
+</div></header>
+
+<div class="wrap">
+
+<div class="toc">
+  <h2>¿Qué necesitás hacer?</h2>
+  <ol>
+    <li><a href="#midia">Empezar el día (Mi día)</a></li>
+    <li><a href="#concita">Atender a un paciente CON cita</a></li>
+    <li><a href="#sincita">Atender a uno que llegó SIN cita</a></li>
+    <li><a href="#agendar">Agendar una cita</a></li>
+    <li><a href="#desenlace">Marcar si vino o no vino</a></li>
+    <li><a href="#editar">El cartel amarillo (editar vs nueva)</a></li>
+    <li><a href="#recordatorios">A quién contactar hoy</a></li>
+    <li><a href="#ficha">La ficha médica y las alergias</a></li>
+    <li><a href="#caja">La caja y el cierre del día</a></li>
+    <li><a href="#panel">El Panel y la meta (dueña)</a></li>
+    <li><a href="#reglas">Las 5 reglas de oro</a></li>
+    <li><a href="#raro">Si algo se ve raro</a></li>
+  </ol>
+</div>
+
+<section id="midia">
+  <h2><span class="n">1</span>Empezar el día · 🏠 Mi día</h2>
+  <div class="para-quien">Para las doctoras</div>
+  <p>Al abrir el sistema, lo primero es <b>Mi día</b>. Elegí tu nombre una sola vez
+  (el equipo lo recuerda) y vas a ver a <b>tus pacientes de hoy, en orden de hora</b>,
+  cada uno con lo que hay que saber <b>antes</b> de sentarlo en el sillón:</p>
+  <div class="mock"><div class="mt">Así se ve una tarjeta de paciente</div>
+    <b>Rosa Vaca Miranda</b> · 09:00 · por atender
+    <div class="aviso-a alergia">⚠ Alergia: <b>Penicilina</b></div>
+    <div class="aviso-a plata">💰 Debe Bs 400 de antes</div>
+    <div class="aviso-a presu">💬 Le recomendaron Endodoncia (Bs 650) hace 30 días</div>
+    <div class="aviso-a nota">📌 De la última visita: seguir con la endodoncia</div>
+    <div style="margin-top:9px"><span class="mbtn">🦷 Atender</span><span class="mbtn sec">🩺 Ficha</span><span class="mbtn sec">WhatsApp</span></div>
+  </div>
+  <p>El botón <b>🦷 Atender</b> abre el formulario con todo ya cargado: nombre, celular,
+  su doctora. Solo cargás lo que se hizo hoy.</p>
+  <div class="tip">💡 Si las alergias no aparecen es porque nadie llenó la ficha médica todavía.
+  Eso se arregla en la sección 8 — lleva un minuto por paciente y se hace una sola vez.</div>
+</section>
+
+<section id="concita">
+  <h2><span class="n">2</span>Atender a un paciente CON cita</h2>
+  <div class="para-quien">Para las doctoras</div>
+  <div class="paso"><div class="pn">1</div><div>En <b>Mi día</b> (o en 📅 Agenda), tocá <b>🦷 Atender</b> en su tarjeta.</div></div>
+  <div class="paso"><div class="pn">2</div><div><b>Servicios realizados:</b> elegí el tratamiento de la lista.
+    El precio se sugiere solo, pero <b>manda lo que escribas vos</b> — se puede cambiar siempre.
+    Con "Marcar piezas" anotás qué muela se tocó (eso arma el odontograma solo).</div></div>
+  <div class="paso"><div class="pn">3</div><div><b>¿Le recomendaste algo más?</b> Si el paciente necesita un tratamiento
+    y hoy no se lo hizo, anotalo acá con su precio. Queda en Recordatorios para hacerle seguimiento,
+    y <b>si vuelve y se lo hace, se cierra solo</b>.</div></div>
+  <div class="paso"><div class="pn">4</div><div><b>Cobro:</b> escribí cuánto dejó a cuenta y tocá cómo pagó.</div></div>
+  <div class="mock"><div class="mt">Las formas de pago</div>
+    <span class="mchip on">💵 Efectivo</span><span class="mchip">📱 QR</span>
+    <span class="mchip">💳 Tarjeta</span><span class="mchip">🏦 Transferencia</span><span class="mchip">🧾 Mixto</span>
+    <p style="margin-top:8px;font-size:13px;color:var(--gray)">Si pagó parte en efectivo y parte por QR,
+    elegí <b>Mixto</b> y repartí el monto: la caja necesita saber dónde está cada boliviano.</p>
+  </div>
+  <div class="paso"><div class="pn">5</div><div><b>Próxima cita:</b> si tiene que volver, poné la fecha y el motivo.
+    <b>La cita se agenda sola</b> — no hay que ir a agendarla aparte.</div></div>
+  <div class="paso"><div class="pn">6</div><div><b>Guardar atención.</b> Sale el resumen listo para mandarle
+    por WhatsApp, con sus indicaciones de cuidado.</div></div>
+</section>
+
+<section id="sincita">
+  <h2><span class="n">3</span>Llegó SIN cita (espontáneo)</h2>
+  <div class="para-quien">Para recepción y doctoras</div>
+  <p>Andá directo a <b>＋ Nueva atención</b>. Si el paciente ya vino antes, escribí su nombre
+  y <b>sus datos se completan solos</b> (celular, CI, canal) — el cobro y los servicios arrancan
+  siempre en blanco, así que no hay riesgo de pisar nada.</p>
+  <div class="ojo"><b>El dato que nunca se saltea: ¿por dónde nos encontró?</b><br>
+  Facebook, Instagram, recomendación, pasó por el local… Ese campo es el que después dice
+  <b>en qué canal conviene invertir</b> la publicidad. Con paciente nuevo, preguntalo siempre.</div>
+  <p>El <b>N° del día</b> se asigna solo y no se repite aunque dos doctoras carguen a la vez
+  desde equipos distintos.</p>
+</section>
+
+<section id="agendar">
+  <h2><span class="n">4</span>Agendar una cita</h2>
+  <div class="para-quien">Para recepción</div>
+  <p>Pestaña <b>📅 Agenda → Agendar una cita nueva</b>. Nombre, celular, fecha, hora, doctora,
+  y <b>por dónde agendó</b> (WhatsApp, llamada, Instagram…). Con eso después sabemos cuántos
+  de los que escriben por WhatsApp realmente vienen.</p>
+  <p>Arriba está <b>el calendario</b> con dos vistas:</p>
+  <div class="mock"><div class="mt">Semana · cada cita con su nombre</div>
+    <span class="mchip"><b>09:00</b> Rosa</span><span class="mchip" style="background:#FBEDE6;border-color:var(--clay);color:#7A3418"><b>09:00</b> Iris ⚠</span>
+    <span class="mchip" style="opacity:.5">10:00 Leo ✓</span>
+    <p style="margin-top:8px;font-size:13px;color:var(--gray)">Rojo = dos pacientes a la misma hora
+    con la misma doctora. Apagado con ✓ = ya se atendió.</p>
+  </div>
+  <div class="mock"><div class="mt">Mes · cuántas citas hay por día</div>
+    <p style="font-size:13px;color:var(--gray)">Para el paciente que agenda hoy para dentro de tres semanas:
+    cambiá a <b>Mes</b> y cada día muestra su contador de citas. Un día sin número = hay lugar.
+    Tocá el día y el <b>＋</b> deja la fecha lista.</p>
+  </div>
+</section>
+
+<section id="desenlace">
+  <h2><span class="n">5</span>Marcar si vino o no vino</h2>
+  <div class="para-quien">Para todas — es la métrica más importante de la agenda</div>
+  <p>Cada cita del día tiene cuatro botones:</p>
+  <div class="mock">
+    <span class="mbtn">✅ Vino</span><span class="mbtn sec">✖ No vino</span>
+    <span class="mbtn sec">🚫 Canceló</span><span class="mbtn sec">🔁 Reprogramar</span>
+  </div>
+  <p><b>✅ Vino</b> abre el formulario para cargar la atención. Los otros tres cierran la cita
+  con su motivo. <b>Ninguna cita puede quedar sin marcar</b>: mientras haya citas viejas sin
+  resolver, el número rojo en la pestaña Agenda no se apaga.</p>
+  <div class="tip">💡 ¿Para qué sirve? Al fin de mes el Panel dice "de cada 100 citas, vinieron 78".
+  Si no se marca, ese número miente y no sabemos cuánta agenda se nos escapa.</div>
+</section>
+
+<section id="editar">
+  <h2><span class="n">6</span>El cartel amarillo: ¿estoy editando o cargando una visita nueva?</h2>
+  <div class="para-quien">Para todas</div>
+  <p>Si abrís una visita vieja desde el historial, el formulario se llena con <b>esa</b> visita
+  y aparece este cartel pegado arriba:</p>
+  <div class="mbanner amarillo">✏️ Estás <b>editando</b> la visita de <b>Juan Pérez</b> del <b>22/07/2026</b> (Bs 430).
+  Al guardar, <b>se reemplaza</b> esa visita. &nbsp;<span class="mbtn sec" style="font-size:12px">＋ Cargar una visita nueva</span></div>
+  <p>Si lo que querés es registrar que <b>vino de nuevo hoy</b>, tocá
+  <b>＋ Cargar una visita nueva</b>: conserva al paciente y deja el cobro en blanco.
+  Cada visita es un registro aparte — la de julio no se toca.</p>
+</section>
+
+<section id="recordatorios">
+  <h2><span class="n">7</span>¿A quién contacto hoy? · 🔔 Recordatorios</h2>
+  <div class="para-quien">Para recepción, 10 minutos por día</div>
+  <p>La pestaña Recordatorios arma las listas solas. Cada persona sale con su botón de
+  <b>WhatsApp ya escrito</b> — un toque y se manda:</p>
+  <table class="mtabla">
+    <tr><th>Lista</th><th>Quién aparece</th></tr>
+    <tr><td>📅 Citas</td><td>Las de mañana para confirmar, y las vencidas</td></tr>
+    <tr><td>💰 Saldos</td><td>Quien quedó debiendo, con el monto</td></tr>
+    <tr><td>💬 Recomendados</td><td>Tratamientos sugeridos sin respuesta (¡acá está la plata!)</td></tr>
+    <tr><td>😴 Sin volver</td><td>Pacientes dormidos hace meses</td></tr>
+    <tr><td>🎂 Cumpleaños</td><td>Los del mes, con saludo listo</td></tr>
+    <tr><td>🪥 Controles</td><td>A quien le toca limpieza o control de ortodoncia</td></tr>
+  </table>
+</section>
+
+<section id="ficha">
+  <h2><span class="n">8</span>La ficha médica: 1 minuto que puede salvar un susto</h2>
+  <div class="para-quien">Para las doctoras, la primera vez que atienden a cada paciente</div>
+  <p>En el formulario de atención está el botón <b>🩺 Ficha médica</b>: alergias, medicación,
+  antecedentes y fecha de nacimiento. Se llena <b>una sola vez</b> y desde ahí:</p>
+  <p>· La alergia aparece <b>en rojo</b> en Mi día antes de sentar al paciente.<br>
+  · El cumpleaños entra solo a la lista de saludos.<br>
+  · La historia clínica imprimible sale completa (botón <b>🖨 Imprimir historia</b> en su ficha,
+  y <b>💊 Receta</b> para indicaciones con membrete).</p>
+</section>
+
+<section id="caja">
+  <h2><span class="n">9</span>La caja y el cierre del día</h2>
+  <div class="para-quien">Para recepción / quien cierra</div>
+  <p>En <b>💰 Caja</b>: lo cobrado por forma de pago, lo que salió (egresos: laboratorio,
+  insumos, sueldos) y la caja neta. Anotá cada egreso cuando pasa, no a fin de mes.</p>
+  <p>Al cerrar, tocá <b>📲 Resumen del día por WhatsApp</b>: arma el mensaje con atendidos,
+  cobrado por método, egresos, caja neta y ausencias — listo para el grupo del consultorio.</p>
+</section>
+
+<section id="panel">
+  <h2><span class="n">10</span>El Panel, la meta y el informe · para la dueña</h2>
+  <div class="para-quien">Para la Dra. Mirna</div>
+  <p><b>📊 Panel</b> responde: cuántos pacientes nuevos, por qué canal llegan, qué servicios
+  dejan más, cómo va cada doctora, cuánta agenda se concreta.</p>
+  <p>En <b>Ajustes → Meta del mes</b> se pone la cifra del mes una sola vez: el Panel muestra
+  el avance, cuánto falta y el <b>ritmo diario necesario</b>.</p>
+  <p>Y el botón <b>🖨 Informe del mes</b> imprime el cierre completo con membrete —
+  para la reunión de equipo o el contador, se guarda como PDF desde el diálogo de impresión.</p>
+</section>
+
+<section id="reglas">
+  <h2><span class="n">11</span>Las 5 reglas de oro</h2>
+  <div class="regla"><div class="ic">📣</div><div><b>Canal, siempre.</b>
+    <span>A cada paciente nuevo: ¿por dónde nos encontró? Es lo que decide dónde invertir.</span></div></div>
+  <div class="regla"><div class="ic">💵</div><div><b>Cada cobro con su forma de pago.</b>
+    <span>Efectivo, QR, tarjeta o mixto. Sin eso la caja no cuadra.</span></div></div>
+  <div class="regla"><div class="ic">📅</div><div><b>Ninguna cita sin marcar.</b>
+    <span>Vino, no vino, canceló o reprogramó — el número rojo de Agenda tiene que estar en cero.</span></div></div>
+  <div class="regla"><div class="ic">💬</div><div><b>Lo recomendado se anota.</b>
+    <span>Si necesita un tratamiento y hoy no se lo hizo, va en el paso 5. Es la lista que más plata recupera.</span></div></div>
+  <div class="regla"><div class="ic">✏️</div><div><b>Cartel amarillo = cuidado.</b>
+    <span>Estás editando una visita vieja. Para una visita de hoy: "＋ Cargar una visita nueva".</span></div></div>
+</section>
+
+<section id="raro">
+  <h2><span class="n">12</span>Si algo se ve raro</h2>
+  <p>Arriba del formulario hay un semáforo:</p>
+  <div class="mbanner verde">🟢 Conectado a la hoja de Google · lo que cargues se ve en todos los dispositivos</div>
+  <div class="mbanner naranja">⏳ <b>2 registros sin subir</b> · están guardados acá y se reintentan solos. <u>Reintentar ahora</u></div>
+  <p><b>Verde</b>: todo en la nube. <b>Naranja</b>: se cortó internet un rato — no se perdió nada,
+  está guardado en ese equipo y sube solo al volver la conexión (o tocando "Reintentar ahora").</p>
+  <p>La pantalla se actualiza sola cada 3 minutos. Si ves datos viejos, <b>recargá la página</b>
+  (deslizá hacia abajo en el celular, F5 en la compu).</p>
+</section>
+
+<footer>
+  <p><a href="pacientes.html">← Abrir el sistema</a> · Spadental · Dra. Mirna Veizaga</p>
+</footer>
+
+</div>
+</body>
+</html>
