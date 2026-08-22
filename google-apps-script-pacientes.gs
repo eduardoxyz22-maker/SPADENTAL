@@ -376,13 +376,14 @@ function doSave(r) {
   var n = sh.getLastRow();
 
   // Busca si el registro ya existe y, de paso, cuenta los del mismo día.
-  var destino = 0, nroGuardado = 0, cuantas = 0, maxNro = 0;
+  var destino = 0, nroGuardado = 0, fechaGuardada = '', cuantas = 0, maxNro = 0;
   if (n >= 2) {
     var datos = sh.getRange(2, 1, n - 1, 5).getValues(); // ID · ts · Fecha · Hora · N° del día
     for (var j = 0; j < datos.length; j++) {
       if (datos[j][0] === r.id) {
         destino = j + 2;
         nroGuardado = Number(datos[j][4]) || 0;
+        fechaGuardada = formatoFecha(datos[j][2]);
         continue;
       }
       if (r.fecha && formatoFecha(datos[j][2]) === r.fecha) {
@@ -394,10 +395,14 @@ function doSave(r) {
 
   // N° del día: lo asigna el servidor para que no se repita entre celulares.
   // Es el mayor entre (cuántas atenciones ya hay ese día) y (el N° más alto usado).
-  if (destino && nroGuardado && !r.nroDia) {
-    r.nroDia = nroGuardado;                       // editar no cambia el número
-  } else if (!r.nroDia || (!destino && r.nroDia <= maxNro)) {
-    r.nroDia = Math.max(cuantas, maxNro) + 1;     // alta nueva o número ya tomado
+  if (destino && nroGuardado && fechaGuardada === r.fecha) {
+    // Editar no cambia el número: el guardado manda, aunque el equipo que
+    // edita traiga uno viejo. Sin esto, un equipo sin refrescar podía pisar
+    // el número corregido y duplicarlo.
+    r.nroDia = nroGuardado;
+  } else if (!r.nroDia || r.nroDia <= maxNro) {
+    // Alta nueva, registro movido a otro día, o número que ya está tomado.
+    r.nroDia = Math.max(cuantas, maxNro) + 1;
   }
 
   var fila = filaDeRegistro(r);

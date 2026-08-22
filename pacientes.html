@@ -2826,7 +2826,13 @@ function renderRem(){
 
 function persist(rec){
   saveLocal();
-  enviar('save',rec)}
+  /* El N° del día definitivo lo pone el servidor (es el único que ve lo de
+     todos los equipos). Sin esta lectura, tres citas agendadas seguidas
+     quedaban como N° 1, 1 y 1 en el equipo que las creó, y recién se
+     corregían al refrescar. */
+  enviar('save',rec).then(function(res){
+    if(res&&res.ok&&res.registro&&res.registro.nroDia&&res.registro.nroDia!==rec.nroDia){
+      rec.nroDia=res.registro.nroDia; saveLocal()}})}
 
 function marcarContactado(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||r.contactado)return;
