@@ -38,8 +38,28 @@ var COLS = [
   'Total Bs', 'A cuenta Bs', 'Saldo Bs', 'Método', 'Estado', 'Próxima cita',
   'Hora próxima', 'Motivo próximo', 'Contactado', 'Observaciones', '_servicios_json',
   'Efectivo', 'QR', 'Tarjeta', 'Transferencia', '_pagos_json',
-  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el', 'Plan'
+  'Cómo llegó', 'Agendó por', 'Viene de cita', 'Resuelta el', 'Plan', '_extra_json'
 ];
+
+/* Todo lo que filaDeRegistro ya escribe en su propia columna. Lo que no esté
+   en esta lista viaja en _extra_json, así agregar un campo al panel no obliga
+   a redeployar el script nunca más. */
+var CLAVES_MAPEADAS = ['id', 'ts', 'fecha', 'hora', 'nroDia', 'profesional',
+  'paciente', 'celular', 'ci', 'edad', 'tipo', 'canal', 'canalDetalle',
+  'servicios', 'total', 'acuenta', 'saldo', 'metodo', 'estado', 'prox',
+  'proxHora', 'proxMotivo', 'contactado', 'obs', 'pagos', 'origen',
+  'agendaPor', 'citaDe', 'resueltaTs', 'planId'];
+
+function extraDeRegistro(r) {
+  var e = {}, vacio = true;
+  for (var k in r) {
+    if (!Object.prototype.hasOwnProperty.call(r, k)) continue;
+    if (CLAVES_MAPEADAS.indexOf(k) >= 0) continue;
+    if (r[k] === undefined || r[k] === null || r[k] === '') continue;
+    e[k] = r[k]; vacio = false;
+  }
+  return vacio ? '' : JSON.stringify(e);
+}
 
 /* Ficha del paciente: lo que es suyo y no de una visita puntual. Va en su
    propia hoja porque hay una fila por paciente, no por atención. */
@@ -263,7 +283,8 @@ function filaDeRegistro(r) {
     r.contactado ? 'SÍ' : 'NO', r.obs || '', JSON.stringify(r.servicios || []),
     montoDe(r, 'Efectivo'), montoDe(r, 'QR'), montoDe(r, 'Tarjeta'), montoDe(r, 'Transferencia'),
     JSON.stringify(r.pagos || []),
-    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || '', r.planId || ''
+    r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || '', r.planId || '',
+    extraDeRegistro(r)
   ];
 }
 
@@ -282,7 +303,7 @@ function registroDeFila(f) {
   var servicios = [], pagos = [];
   try { servicios = JSON.parse(f[24] || '[]'); } catch (e) { servicios = []; }
   try { pagos = JSON.parse(f[29] || '[]'); } catch (e) { pagos = []; }
-  return {
+  var base = {
     id: f[0], ts: f[1], fecha: formatoFecha(f[2]), hora: f[3], nroDia: f[4],
     profesional: f[5], paciente: f[6], celular: String(f[7] || ''), ci: String(f[8] || ''),
     edad: String(f[9] || ''), tipo: f[10], canal: f[11], canalDetalle: f[12],
@@ -294,6 +315,15 @@ function registroDeFila(f) {
     origen: f[30] || '', agendaPor: f[31] || '', citaDe: f[32] || '', resueltaTs: f[33] || '',
     planId: f[34] || ''
   };
+  /* lo que llegó en _extra_json vuelve tal cual, sin pisar nada mapeado */
+  var extra = {};
+  try { extra = JSON.parse(f[35] || '{}'); } catch (e) { extra = {}; }
+  for (var k in extra) {
+    if (!Object.prototype.hasOwnProperty.call(extra, k)) continue;
+    if (CLAVES_MAPEADAS.indexOf(k) >= 0) continue;
+    base[k] = extra[k];
+  }
+  return base;
 }
 
 /* Google a veces devuelve las fechas como objeto Date: las volvemos YYYY-MM-DD */
@@ -346,13 +376,14 @@ function doSave(r) {
   var n = sh.getLastRow();
 
   // Busca si el registro ya existe y, de paso, cuenta los del mismo día.
-  var destino = 0, nroGuardado = 0, cuantas = 0, maxNro = 0;
+  var destino = 0, nroGuardado = 0, fechaGuardada = '', cuantas = 0, maxNro = 0;
   if (n >= 2) {
     var datos = sh.getRange(2, 1, n - 1, 5).getValues(); // ID · ts · Fecha · Hora · N° del día
     for (var j = 0; j < datos.length; j++) {
       if (datos[j][0] === r.id) {
         destino = j + 2;
         nroGuardado = Number(datos[j][4]) || 0;
+        fechaGuardada = formatoFecha(datos[j][2]);
         continue;
       }
       if (r.fecha && formatoFecha(datos[j][2]) === r.fecha) {
@@ -364,10 +395,16 @@ function doSave(r) {
 
   // N° del día: lo asigna el servidor para que no se repita entre celulares.
   // Es el mayor entre (cuántas atenciones ya hay ese día) y (el N° más alto usado).
-  if (destino && nroGuardado && !r.nroDia) {
-    r.nroDia = nroGuardado;                       // editar no cambia el número
-  } else if (!r.nroDia || (!destino && r.nroDia <= maxNro)) {
-    r.nroDia = Math.max(cuantas, maxNro) + 1;     // alta nueva o número ya tomado
+  if (destino && nroGuardado && fechaGuardada === r.fecha) {
+    // Editar no cambia el número: el guardado manda, aunque el equipo que
+    // edita traiga uno viejo. Sin esto, un equipo sin refrescar podía pisar
+    // el número corregido y duplicarlo.
+    r.nroDia = nroGuardado;
+  } else if (!r.nroDia || r.nroDia <= maxNro ||
+             (destino && fechaGuardada && fechaGuardada !== r.fecha)) {
+    // Alta nueva, número que ya está tomado, o registro movido a otro día
+    // (el número viejo pertenece al día viejo: acá recibe el del nuevo).
+    r.nroDia = Math.max(cuantas, maxNro) + 1;
   }
 
   var fila = filaDeRegistro(r);
