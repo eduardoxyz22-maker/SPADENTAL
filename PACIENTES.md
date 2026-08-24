@@ -86,6 +86,12 @@ post-tratamiento*.
 El número rojo de la pestaña cuenta **lo de hoy sin marcar más lo vencido**:
 si está en cero, la agenda está al día.
 
+Al agendar se pueden anotar los **servicios previstos** ("¿qué se le va a
+hacer?"). No es un presupuesto ni un cobro: la cita sigue en Bs 0 y no toca
+ninguna caja ni ningún panel. Cuando la paciente llega y se toca **✅ Vino**,
+el formulario abre con esos servicios ya cargados y el total calculado, para
+revisar y ajustar en vez de escribir todo de nuevo.
+
 Abajo del todo, el formulario para agendar una cita nueva, para cuando piden
 hora por WhatsApp, por teléfono o en el mostrador. Fecha, hora, paciente, celular, profesional, motivo — y el dato
 clave: **¿por dónde agendó?** (📱 WhatsApp · ☎️ Llamada · 📷 Instagram ·
@@ -99,7 +105,11 @@ mensaje de confirmación listo para mandar.
 > Facebook puede agendar por WhatsApp.
 
 Cuando una atención deja una **próxima cita**, esa cita **se crea sola** en la
-agenda, así también se mide si el paciente vino al control.
+agenda, así también se mide si el paciente vino al control. Si la atención era
+**sesión de un plan**, la cita nueva se lleva el enlace al plan: al atenderla
+el selector ya viene marcado y esa sesión descuenta del plan sin que nadie se
+acuerde de elegirlo. Lo mismo al **reprogramar**: la cita nueva conserva el
+plan y los servicios previstos.
 
 ### 🔔 Recordatorios
 La pestaña que dice **a quién llamar hoy**. El número rojo en la pestaña avisa
@@ -384,6 +394,10 @@ De la tanda de cumpleaños, ficha médica, planes y controles:
   plan sin borrar lo ya hecho, y las 8 pestañas dibujándose sin errores.
 - 6 comprobaciones de coherencia del plan al borrar una atención: la sesión
   vuelve a quedar pendiente, el plan se reabre y lo cobrado baja solo.
+- 21 comprobaciones del circuito cita → atención: que el plan viaje a la cita
+  que se crea sola y a la reprogramada, que al atenderla el selector venga
+  marcado y la sesión se consuma sola, y que los servicios previstos abran el
+  formulario con el total ya calculado sin haber tocado ninguna caja antes.
 
 De la tanda de odontograma, choques, indicaciones, presupuesto y planes
 frenados — 77 comprobaciones más en Chromium, sobre un servidor local:

@@ -550,6 +550,13 @@ body.locked{overflow:hidden}
       <label>Es un paciente nuevo · ¿cómo nos conoció?</label>
       <div class="seg" id="seg-q-canal"></div>
     </div>
+    <div style="margin-top:16px">
+      <label>¿Qué se le va a hacer? <span class="mini">(opcional)</span></label>
+      <p class="hint" style="margin:0 0 8px">Lo que se anote acá aparece cargado cuando la paciente
+        llegue y se toque <b>✅ Vino</b>: el formulario abre medio lleno en vez de en blanco.</p>
+      <select id="q-srv"></select>
+      <div id="q-srv-chips" style="margin-top:8px"></div>
+    </div>
     <div style="margin-top:12px"><label>Nota</label>
       <input id="q-obs" placeholder="Opcional"></div>
     <div class="row-btn">
@@ -1666,7 +1673,10 @@ function loadForm(r){
   $('#wrap-agendapor').style.display=(getRadio('origen')==='Programada')?'':'none';
   $('#cita-link').innerHTML=(r.estado==='Agendada')
     ? '<span class="pill info">📅 Viene de una cita agendada'+(r.agendaPor?' por '+esc(r.agendaPor):'')+
-      '. Cargá lo que se hizo y guardá.</span>' : '';
+      '. Cargá lo que se hizo y guardá.</span>'+
+      ((r.servicios||[]).length?' <span class="pill lime">🦷 ya viene con lo previsto: revisá y ajustá</span>':'')+
+      (r.planId?' <span class="pill lime">🦷 es sesión de un plan</span>':'')
+    : '';
   $$('#seg-canal input').forEach(function(i){i.checked=(i.value===r.canal)});
   $('#f-canal-det').value=r.canalDetalle||'';
   SRV=(r.servicios&&r.servicios.length)?r.servicios.slice():[{nom:'',det:'',cant:1,precio:''}];
@@ -1691,6 +1701,10 @@ function loadForm(r){
   $('#f-obs').value=r.obs||'';
   $('#f-nro').value=r.nroDia?('#'+r.nroDia):'';
   refrescarFichaForm(r.planId||'');
+  /* Una cita que viene con servicios previstos tiene total 0, y unas líneas
+     más arriba ese 0 pisa el total que ya había calculado renderSrv. Sin
+     esto la doctora ve los servicios cargados y el Total en blanco. */
+  if(num(r.total)<=0&&SRV.some(function(x){return x.nom}))recalcTotal();
   $('#btn-save').textContent='Guardar cambios';
   $('#btn-cancel-edit').style.display='';
   recalcSaldo(); closeModal(); show('atencion')}
@@ -1797,6 +1811,39 @@ function esPacienteConocido(nombre){
   var n=String(nombre||'').trim().toLowerCase();
   return !!n&&DATA.some(function(r){return (r.paciente||'').trim().toLowerCase()===n})}
 
+/* ---------- servicios previstos de una cita ----------
+   No es un presupuesto ni un cobro: es lo que la recepción anotó que se
+   va a hacer. La cita sigue con total 0, así no ensucia ninguna caja ni
+   ningún panel; el precio recién existe cuando se guarda la atención. */
+var QSRV=[];
+
+function renderQSrv(){
+  var sel=$('#q-srv');
+  var cats={}; CFG.precios.forEach(function(p){(cats[p.cat]=cats[p.cat]||[]).push(p)});
+  sel.innerHTML='<option value="">— agregar un servicio —</option>'+
+    Object.keys(cats).map(function(c){
+      return '<optgroup label="'+esc(c)+'">'+cats[c].map(function(p){
+        return '<option value="'+esc(p.nom)+'">'+esc(p.nom)+'</option>'}).join('')+'</optgroup>'}).join('');
+  $('#q-srv-chips').innerHTML=QSRV.length
+    ? QSRV.map(function(n,i){
+        return '<span class="pill lime" style="margin:0 6px 6px 0;display:inline-block">'+esc(n)+
+          ' <b style="cursor:pointer" onclick="quitarQSrv('+i+')">✕</b></span>'}).join('')
+    : '<span class="mini">Nada anotado todavía.</span>'}
+
+function agregarQSrv(nom){
+  if(!nom)return;
+  if(QSRV.indexOf(nom)<0)QSRV.push(nom);
+  $('#q-srv').value=''; renderQSrv()}
+
+function quitarQSrv(i){QSRV.splice(i,1); renderQSrv()}
+
+/* Lo previsto se guarda con el precio de la lista del día que se agendó,
+   como referencia. Al atender se puede pisar, como cualquier precio. */
+function serviciosPrevistos(){
+  return QSRV.map(function(n){
+    var p=CFG.precios.filter(function(x){return x.nom===n})[0];
+    return {nom:n, det:'', cant:1, precio:p?num(p.precio):0}})}
+
 function clearCita(){
   $('#q-fecha').value=hoyISO(); $('#q-hora').value='';
   if(!$('#q-dia').value)$('#q-dia').value=hoyISO();
@@ -1805,6 +1852,7 @@ function clearCita(){
   $$('input[name="qagenda"]').forEach(function(i){i.checked=false});
   $$('input[name="qcanal"]').forEach(function(i){i.checked=false});
   $('#q-nuevo').style.display='none';
+  QSRV=[]; renderQSrv();
   renderCitasProximas()}
 
 function autoCita(){
@@ -1838,7 +1886,7 @@ function guardarCita(){
     tipo:esPacienteConocido($('#q-paciente').value)?'Recurrente':'Nuevo',
     canal:getRadio('qcanal')||'', canalDetalle:'',
     origen:'Programada', agendaPor:ag,
-    servicios:[], total:0, acuenta:0, saldo:0, metodo:'', pagos:[],
+    servicios:serviciosPrevistos(), total:0, acuenta:0, saldo:0, metodo:'', pagos:[],
     estado:'Agendada',
     prox:'', proxHora:'', proxMotivo:$('#q-motivo').value.trim(),
     contactado:false, contactadoTs:'',
@@ -1988,6 +2036,7 @@ function citaCard(r,d){
     (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
     (r.contactado?' · <span class="pill ok">✓ ya le avisamos</span>':'')+
     (deuda>0?' · <span class="pill warn">debe '+bs(deuda)+'</span>':'')+
+    ((r.servicios||[]).length?'<br>🦷 previsto: '+esc(srvText(r)):'')+
     '<br>'+(r.agendaPor?(AGENDA_ICONO[r.agendaPor]||'')+' agendó por <b>'+esc(r.agendaPor)+'</b> · ':'')+
     '📱 '+esc(r.celular||'sin celular')+
     (r.profesional?' · '+esc(r.profesional):'')+
@@ -2074,6 +2123,10 @@ function crearCitaDesde(r){
     origen:'Programada', agendaPor:'En el consultorio',
     servicios:[], total:0, acuenta:0, saldo:0, metodo:'', pagos:[],
     estado:'Agendada',
+    /* la sesión que viene sigue siendo del mismo plan: si el enlace no
+       viaja con la cita, al atenderla nadie se acuerda de marcarlo y esa
+       sesión no descuenta del plan */
+    planId:r.planId||'',
     prox:'', proxHora:'', proxMotivo:r.proxMotivo||'',
     contactado:false, contactadoTs:'', citaDe:r.id,
     obs:'Cita creada al cerrar la atención del '+fmtF(r.fecha)
@@ -2625,7 +2678,10 @@ function guardarReagenda(id){
     ci:r.ci||'', edad:r.edad||'', tipo:r.tipo||'Recurrente',
     canal:r.canal||'', canalDetalle:r.canalDetalle||'',
     origen:'Programada', agendaPor:getRadio('rgag')||r.agendaPor||'WhatsApp',
-    servicios:[], total:0, acuenta:0, saldo:0, metodo:'', pagos:[],
+    /* se reprograma la misma visita: lo previsto y el plan viajan con ella */
+    planId:r.planId||'',
+    servicios:esCitaPendiente(r)?(r.servicios||[]).slice():[],
+    total:0, acuenta:0, saldo:0, metodo:'', pagos:[],
     estado:'Agendada',
     prox:'', proxHora:'', proxMotivo:$('#rg-m').value.trim(),
     contactado:false, contactadoTs:'', citaDe:r.id,
@@ -4708,7 +4764,7 @@ function bind(){
   $('#btn-save-precios').onclick=function(){
     $$('#c-precios .cp').forEach(function(i){CFG.precios[+i.dataset.i].precio=num(i.value)});
     $$('#c-precios .cl').forEach(function(i){CFG.precios[+i.dataset.i].lab=num(i.value)});
-    saveCfg(); renderSrv(); toast('Precios guardados')};
+    saveCfg(); renderSrv(); renderQSrv(); toast('Precios guardados')};
   $('#btn-reset-precios').onclick=function(){
     if(!confirm('¿Volver a la lista de precios original?'))return;
     CFG.precios=PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}});
@@ -4739,6 +4795,8 @@ function bind(){
   $('#btn-reset-ind').onclick=function(){
     if(!confirm('¿Volver a los textos originales? Se pierde lo que hayan editado.'))return;
     CFG.indicaciones={}; saveCfg(); renderConfig(); toast('Textos originales restaurados')};
+
+  $('#q-srv').onchange=function(){agregarQSrv(this.value)};
 
   $('#btn-nuevo-egreso').onclick=function(){nuevoEgreso()};
 
