@@ -759,6 +759,7 @@ body.locked{overflow:hidden}
       <div><label>Celular <span class="req">*</span></label>
         <input id="q-cel" inputmode="tel" placeholder="7XXXXXXX"></div>
     </div>
+    <div id="q-aviso"></div>
     <div style="margin-top:16px">
       <label>¿Por dónde agendó? <span class="req">*</span></label>
       <div class="seg lime" id="seg-q-agendapor"></div>
@@ -2166,16 +2167,32 @@ function clearCita(){
   $$('input[name="qcanal"]').forEach(function(i){i.checked=false});
   $('#q-nuevo').style.display='none';
   QSRV=[]; renderQSrv();
+  if($('#q-aviso'))$('#q-aviso').innerHTML='';
   renderCitasProximas()}
 
 function autoCita(){
-  var n=$('#q-paciente').value.trim().toLowerCase();
+  var nom=$('#q-paciente').value.trim(), n=nom.toLowerCase();
   var prev=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n})
                .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   if(prev&&!$('#q-cel').value)$('#q-cel').value=prev.celular||'';
   if(prev&&!$('#q-prof').value)$('#q-prof').value=prev.profesional||'';
   // el canal solo se pregunta si es alguien que nunca vino
-  $('#q-nuevo').style.display=(n&&!prev)?'':'none'}
+  $('#q-nuevo').style.display=(n&&!prev)?'':'none';
+
+  /* Si le recomendaron un tratamiento y todavía no respondió, la recepción
+     tiene que verlo AL AGENDAR: seguramente viene a eso. También el saldo. */
+  var av=$('#q-aviso'); if(!av)return;
+  if(!prev){av.innerHTML='';return}
+  var pend=presuPendDe(nom), deuda=deudaDe(nom), tr=[];
+  if(pend.length){
+    tr.push('💬 Tiene recomendado: <b>'+pend.map(function(x){
+      return esc(x.p.nom)+(num(x.p.monto)>0?' ('+bs(x.p.monto)+')':'')}).join(', ')+'</b>');
+    if(!$('#q-motivo').value)$('#q-motivo').value=pend[0].p.nom}
+  if(deuda>0)tr.push('💰 Debe <b>'+bs(deuda)+'</b> de antes');
+  av.innerHTML=tr.length
+    ? '<div class="mi-avisos" style="margin-top:10px">'+tr.map(function(t2){
+        return '<div class="mi-a presu">'+t2+'</div>'}).join('')+'</div>'
+    : ''}
 
 function guardarCita(){
   var bad=[];
@@ -2350,6 +2367,9 @@ function citaCard(r,d){
     (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
     (r.contactado?' · <span class="pill ok">✓ ya le avisamos</span>':'')+
     (deuda>0?' · <span class="pill warn">debe '+bs(deuda)+'</span>':'')+
+    (function(){var rec=presuPendDe(r.paciente);
+      return rec.length?' · <span class="pill info">💬 viene por: '+esc(rec[0].p.nom)+
+        (rec.length>1?' +'+(rec.length-1):'')+'</span>':''})()+
     ((r.servicios||[]).length?'<br>🦷 previsto: '+esc(srvText(r)):'')+
     '<br>'+(r.agendaPor?(AGENDA_ICONO[r.agendaPor]||'')+' agendó por <b>'+esc(r.agendaPor)+'</b> · ':'')+
     '📱 '+esc(r.celular||'sin celular')+
@@ -2977,9 +2997,12 @@ function renderRem(){
   if(f==='presu'||f==='todos')h+=presuRemHtml();
 
   $('#rem-list').innerHTML=h||'<div class="empty">Nada pendiente por ahora ✨</div>';
-  var pp=presuPend();
+  var ppTodos=presuPend();
+  var pp=ppTodos.filter(function(x){return !citaFuturaDe(x.paciente)});
+  var yaCita=ppTodos.length-pp.length;
   $('#k-presu').innerHTML='<div class="k">Recomendados</div><div class="v">'+pp.length+'</div>'+
-    '<div class="d">'+(pp.length?bs(pp.reduce(function(a,x){return a+num(x.p.monto)},0))+' sin decidir':'todo respondido')+'</div>';
+    '<div class="d">'+(pp.length?bs(pp.reduce(function(a,x){return a+num(x.p.monto)},0))+' sin decidir':'todo respondido')+
+    (yaCita?' · '+yaCita+' ya con cita':'')+'</div>';
   updateNavRem()}
 
 function persist(rec){
@@ -4616,14 +4639,31 @@ function txtPresu(x){
     'tratamiento o las formas de pago, con gusto se la resolvemos 🦷'}
 
 /* ---------- Recordatorios: la lista de seguimiento ---------- */
+/* Los recomendados pendientes de UNA persona. */
+function presuPendDe(nombre){
+  var k=keyPac(nombre); if(!k)return [];
+  return presuPend().filter(function(x){return keyPac(x.paciente)===k})}
+
+/* Su próxima cita ya agendada, si tiene. */
+function citaFuturaDe(nombre){
+  var k=keyPac(nombre), hoy=hoyISO();
+  return DATA.filter(function(r){return keyPac(r.paciente)===k&&esCitaPendiente(r)&&r.fecha>=hoy})
+    .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})[0]||null}
+
 function presuRemHtml(){
-  var ps=presuPend();
+  /* El que YA agendó para venir no necesita que lo llamen: contactarlo igual
+     es quemar al paciente. Va aparte, solo para tenerlo a la vista. */
+  var todos=presuPend(), ps=[], conCita=[];
+  todos.forEach(function(x){
+    var c=citaFuturaDe(x.paciente);
+    if(c){x.cita=c; conCita.push(x)}else ps.push(x)});
   var h='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">'+
     '💬 Tratamientos recomendados sin respuesta · '+ps.length+'</h3>';
-  if(!ps.length)return h+'<div class="empty">Ninguno pendiente 🎉'+
+  if(!ps.length&&!conCita.length)return h+'<div class="empty">Ninguno pendiente 🎉'+
     '<br><span class="mini">Cuando anoten un tratamiento recomendado en la atención, aparece acá.</span></div>';
+  if(!ps.length)h+='<div class="empty">Nadie por contactar: los que faltan ya tienen cita 👇</div>';
   var bs_=ps.reduce(function(a,x){return a+num(x.p.monto)},0);
-  h+='<p class="mini" style="margin:0 0 12px">Son <b>'+bs(bs_)+'</b> en tratamientos que ya se recomendaron '+
+  if(ps.length)h+='<p class="mini" style="margin:0 0 12px">Son <b>'+bs(bs_)+'</b> en tratamientos que ya se recomendaron '+
      'y todavía no se hicieron. Si el paciente vuelve y se lo hace, se cierra solo.</p>';
   ps.slice(0,120).forEach(function(x){
     var meta='<b>'+esc(x.p.nom)+'</b>'+(num(x.p.monto)>0?' · '+bs(x.p.monto):'')+
@@ -4635,6 +4675,18 @@ function presuRemHtml(){
       '<button class="btn sec sm" onclick="marcarPresu(\''+x.r.id+'\',\''+x.p.id+'\',\'Aceptó\')">✅ Aceptó</button>'+
       '<button class="btn sec sm" onclick="pedirMotivoPresu(\''+x.r.id+'\',\''+x.p.id+'\')">✖ No quiso</button>';
     h+=remCard(x.dias>=30?'due':'money',x.paciente,meta,acts)});
+
+  if(conCita.length){
+    h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">'+
+      '📅 Ya agendaron para hacérselo · '+conCita.length+'</h3>'+
+      '<p class="mini" style="margin:0 0 12px">No hace falta contactarlos: cuando se atienda la cita, '+
+      'el recomendado se cierra solo.</p>';
+    conCita.forEach(function(x){
+      var meta='<b>'+esc(x.p.nom)+'</b>'+(num(x.p.monto)>0?' · '+bs(x.p.monto):'')+
+        ' · <span class="pill ok">📅 cita el '+fmtF(x.cita.fecha)+(x.cita.hora?' '+x.cita.hora:'')+'</span>'+
+        (x.cita.profesional?' · '+esc(x.cita.profesional):'');
+      var acts='<button class="btn sec sm" onclick="verPaciente(\''+jss(x.paciente)+'\')">Ver ficha</button>';
+      h+=remCard('',x.paciente,meta,acts)})}
   return h}
 
 /* Por qué dijo que no vale tanto como el no: es lo que dice si hay que
