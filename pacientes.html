@@ -320,6 +320,15 @@ tbody tr.destaca td{background:#FBFCF5}
 /* El cuerpo de la receta impresa */
 .rc-cuerpo{margin-top:16px;font-size:12pt;line-height:1.8;min-height:120px;white-space:normal}
 
+/* Modo equipo: la plata global y la comparación entre doctoras son de la
+   dueña. Se esconde la pestaña Y la vista, por si algo intenta mostrarla. */
+body.rol-equipo nav button[data-v="panel"],
+body.rol-equipo nav button[data-v="caja"],
+body.rol-equipo #v-panel,
+body.rol-equipo #v-caja,
+body.rol-equipo .solo-admin{display:none !important}
+#nav-duena{font-size:15px}
+
 /* Lo que la doctora no puede pasar por alto: rojo y arriba de todo. */
 .alerta-clinica{background:#FBEDE6;border:1px solid #EFCBBD;border-left:4px solid var(--clay);
   border-radius:10px;padding:11px 14px;font-size:13.5px;color:#7A3418;line-height:1.5}
@@ -493,6 +502,7 @@ body.locked{overflow:hidden}
     <button data-v="pacientes">👤 Pacientes</button>
     <button data-v="config">⚙️ Ajustes</button>
     <button id="nav-buscar" title="Buscar paciente">🔍</button>
+    <button id="nav-duena" title="Modo dueña">🔐</button>
   </nav>
 </header>
 
@@ -1078,11 +1088,13 @@ body.locked{overflow:hidden}
       <div><label>Duración estimada de una cita (minutos)</label><input id="c-min-cita" inputmode="numeric"
         title="Se usa para avisar cuando dos pacientes caen a la misma hora con la misma doctora"></div>
     </div>
+    <div class="solo-admin">
     <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Meta del mes</h3>
     <p class="hint" style="margin-top:0">Lo que el consultorio se propone facturar cada mes. El Panel muestra
       el avance, lo que falta y el ritmo diario necesario. En 0, no se muestra nada.</p>
     <div class="grid g3" style="margin-bottom:6px">
       <div><label>Meta mensual (Bs)</label><input id="c-meta-mes" inputmode="numeric" placeholder="Ej. 40000"></div>
+    </div>
     </div>
     <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Controles automáticos</h3>
     <p class="hint" style="margin-top:0">El panel deduce a quién le toca volver según el último servicio que se hizo,
@@ -1103,7 +1115,7 @@ body.locked{overflow:hidden}
       cargaste, con el botón <b>💾 Plantilla</b> en la ficha del paciente.</p>
     <div id="c-plantillas"></div>
   </div>
-  <div class="card">
+  <div class="card solo-admin">
     <h2>Comisiones</h2>
     <p class="hint">Qué porcentaje cobra cada doctora. Se aplica sobre lo <b>facturado</b> del periodo
       y con eso la pestaña Caja arma la liquidación del mes.</p>
@@ -1129,7 +1141,7 @@ body.locked{overflow:hidden}
     <div class="row-btn"><button class="btn sm" id="btn-save-ind">Guardar indicaciones</button>
       <button class="btn sec sm" id="btn-reset-ind">Restaurar textos originales</button></div>
   </div>
-  <div class="card">
+  <div class="card solo-admin">
     <h2>Clave de entrada</h2>
     <p class="hint">Es la clave que pide al abrir la página, y vale para todos los equipos.
       Frena al curioso, pero <b>no es seguridad de verdad</b>: quien sepa mirar el código
@@ -1141,10 +1153,18 @@ body.locked{overflow:hidden}
     </div>
     <div class="row-btn">
       <button class="btn sm" id="btn-save-pass">Cambiar clave</button>
+    </div>
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Clave de administradora</h3>
+    <p class="hint" style="margin-top:0">La de la Dra. Mirna: abre la caja, el panel y los totales.
+      La de arriba (del equipo) no los muestra.</p>
+    <div class="grid g2">
+      <div><label>Nueva clave de administradora</label>
+        <input type="password" id="c-pass-admin" placeholder="Mínimo 6 caracteres"></div>
+      <div><label>&nbsp;</label><button class="btn sm" id="btn-save-pass-admin" style="width:100%">Cambiar clave de dueña</button></div>
       <button class="btn sec sm" id="btn-lock">🔒 Bloquear ahora</button>
     </div>
   </div>
-  <div class="card">
+  <div class="card solo-admin">
     <h2>Datos y respaldo</h2>
     <p class="hint" id="c-modo"></p>
     <div class="row-btn">
@@ -1238,28 +1258,85 @@ function passHash(){
   if(CFG&&hashValido(CFG.passHash))return CFG.passHash;
   try{var h=localStorage.getItem(K_PASS); if(hashValido(h))return h}catch(e){}
   return DEFAULT_HASH}
-function yaDesbloqueado(){
+/* =====================================================================
+   MODO EQUIPO vs MODO DUEÑA
+   ---------------------------------------------------------------------
+   La clave del consultorio abre el modo equipo: cada doctora ve lo que
+   ella maneja, sin los totales del consultorio ni la caja. La clave de
+   administradora (solo de la Dra. Mirna) abre todo.
+   Es control de VISTA, no un candado criptográfico: alguien con
+   conocimientos técnicos y la clave del equipo podría ver más. Para el
+   uso diario del consultorio alcanza; lo confidencial de verdad no debe
+   cargarse acá.
+   ===================================================================== */
+var ROL='equipo';
+function esAdmin(){return ROL==='admin'}
+
+function adminHash(){
+  if(CFG&&hashValido(CFG.adminHash))return CFG.adminHash;
+  return sha256('mirna2026')}
+
+function rolGuardado(){
   try{
-    if(sessionStorage.getItem(K_UNLOCK)===passHash())return true;
-    return localStorage.getItem(K_UNLOCK)===passHash();
-  }catch(e){return false}}
+    var v=sessionStorage.getItem(K_UNLOCK)||localStorage.getItem(K_UNLOCK);
+    if(v===adminHash())return 'admin';
+    if(v===passHash())return 'equipo';
+    return null
+  }catch(e){return null}}
+
+function aplicarRol(){
+  document.body.classList.toggle('rol-equipo',!esAdmin());
+  var nb=$('#nav-duena');
+  if(nb){nb.textContent=esAdmin()?'👑':'🔐';
+    nb.title=esAdmin()?'Modo dueña activo · tocá para salir':'Modo dueña (clave de administradora)'}
+  if(!esAdmin()){
+    var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
+    if(v&&(v.v==='panel'||v.v==='caja'))show('midia')}}
+
+function pedirModoDuena(){
+  if(esAdmin()){
+    ROL='equipo';
+    try{sessionStorage.setItem(K_UNLOCK,passHash())}catch(e){}
+    aplicarRol(); toast('Volviste al modo equipo'); return}
+  openModal('<h3>👑 Modo dueña</h3>'+
+    '<p class="mini">La vista completa del consultorio: caja, panel y totales. Solo con la clave de administradora.</p>'+
+    '<input type="password" id="adm-pass" placeholder="Clave de administradora" style="margin-top:10px">'+
+    '<p class="err" id="adm-err" style="color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:6px 0 0"></p>'+
+    '<div class="row-btn"><button class="btn" onclick="entrarModoDuena()">Entrar</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  var i=$('#adm-pass');
+  i.onkeydown=function(e){if(e.key==='Enter')entrarModoDuena()};
+  setTimeout(function(){i.focus()},60)}
+
+function entrarModoDuena(){
+  if(sha256($('#adm-pass').value)===adminHash()){
+    ROL='admin';
+    try{sessionStorage.setItem(K_UNLOCK,adminHash())}catch(e){}
+    closeModal(); aplicarRol(); refreshAll(); toast('👑 Modo dueña activo')}
+  else{$('#adm-err').textContent='Clave incorrecta';$('#adm-pass').value='';$('#adm-pass').focus()}}
+
+function yaDesbloqueado(){return !!rolGuardado()}
 function desbloquear(recordar){
+  var h=esAdmin()?adminHash():passHash();
   try{
-    sessionStorage.setItem(K_UNLOCK,passHash());
-    if(recordar)localStorage.setItem(K_UNLOCK,passHash());
+    sessionStorage.setItem(K_UNLOCK,h);
+    if(recordar)localStorage.setItem(K_UNLOCK,h);
   }catch(e){}
   document.body.classList.remove('locked');
-  $('#gate').classList.add('off')}
+  $('#gate').classList.add('off');
+  aplicarRol()}
 function bloquear(){
   try{sessionStorage.removeItem(K_UNLOCK);localStorage.removeItem(K_UNLOCK)}catch(e){}
   document.body.classList.add('locked');
   $('#gate').classList.remove('off');
   $('#gate-pass').value=''}
 function initGate(){
-  if(yaDesbloqueado()){desbloquear(false);return}
+  var r=rolGuardado();
+  if(r){ROL=r;desbloquear(false);return}
   var intentar=function(){
-    var v=$('#gate-pass').value;
-    if(sha256(v)===passHash()){$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
+    var h=sha256($('#gate-pass').value);
+    if(h===adminHash()){ROL='admin';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
+    else if(h===passHash()){ROL='equipo';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
     else{$('#gate-err').textContent='Clave incorrecta';$('#gate-pass').value='';$('#gate-pass').focus()}};
   $('#gate-btn').onclick=intentar;
   $('#gate-pass').onkeydown=function(e){if(e.key==='Enter')intentar()};
@@ -1415,6 +1492,7 @@ function aplicarCfgServidor(remota){
   var claveVieja=CFG.passHash;
   // una clave corrupta no se copia: se conserva la que ya funciona
   if(remota.passHash&&!hashValido(remota.passHash))remota.passHash=claveVieja||DEFAULT_HASH;
+  if(remota.adminHash&&!hashValido(remota.adminHash))remota.adminHash=CFG.adminHash||'';
   CFG=migrarCfg(remota);
   var d=cfgDefault(); for(var k in d){if(CFG[k]==null)CFG[k]=d[k]}
   saveCfgObj(CFG);
@@ -1546,6 +1624,7 @@ function normalize(r){
 
 /* ---------- navegación ---------- */
 function show(v){
+  if(!esAdmin()&&(v==='panel'||v==='caja')){toast('Esa vista es del modo dueña 👑',1);return}
   $$('nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});
   $$('.view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+v)});
   window.scrollTo(0,0);
@@ -3116,9 +3195,13 @@ function renderLista(){
       tot=rows.reduce(function(a,r){return a+num(r.total)},0),
       nAt=rows.filter(function(r){return r.estado==='Atendido'}).length;
   $('#k-l-pac').innerHTML='<div class="k">Atenciones</div><div class="v">'+rows.length+'</div><div class="d">'+Object.keys(pacs).length+' pacientes · '+nAt+' atendidos</div>';
-  $('#k-l-cobr').innerHTML='<div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">de '+bs(tot)+' facturado</div>';
-  $('#k-l-saldo').innerHTML='<div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(saldo)+'</div><div class="d">saldo pendiente</div>';
-  $('#k-l-tkt').innerHTML='<div class="k">Ticket promedio</div><div class="v" style="font-size:21px">'+bs(nAt?tot/nAt:0)+'</div><div class="d">por paciente atendido</div>';
+  /* los totales de plata del consultorio son de la dueña */
+  ['#k-l-cobr','#k-l-saldo','#k-l-tkt'].forEach(function(id){
+    $(id).style.display=esAdmin()?'':'none'});
+  if(esAdmin()){
+    $('#k-l-cobr').innerHTML='<div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">de '+bs(tot)+' facturado</div>';
+    $('#k-l-saldo').innerHTML='<div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(saldo)+'</div><div class="d">saldo pendiente</div>';
+    $('#k-l-tkt').innerHTML='<div class="k">Ticket promedio</div><div class="v" style="font-size:21px">'+bs(nAt?tot/nAt:0)+'</div><div class="d">por paciente atendido</div>'}
 
   $('#l-body').innerHTML=rows.length?rows.map(function(r){
     return '<tr class="'+estadoCls(r.estado)+'" onclick="verFicha(\''+r.id+'\')">'+
@@ -4887,15 +4970,21 @@ function renderMiDia(){
 
   /* una cita cancelada o reprogramada nunca sucedió: no es un paciente del día */
   var delDia=pend.length+hechas.length+noVino;
+  /* la plata se muestra si es LO SUYO (eligió su nombre) o si es la dueña;
+     "todo el consultorio" sin clave de dueña muestra solo los conteos */
+  var verPlata=esAdmin()||!!prof;
   $('#m-kpis').innerHTML=
     '<div class="kpi acc"><div class="k">Pacientes</div><div class="v">'+n0(delDia)+'</div>'+
       '<div class="d">'+(dia===hoyISO()?'hoy':fmtF(dia))+(noVino?' · '+noVino+' no vino':'')+'</div></div>'+
     '<div class="kpi"><div class="k">Por atender</div><div class="v" style="color:'+(pend.length?'var(--clay)':'var(--ok)')+'">'+
       n0(pend.length)+'</div><div class="d">'+(pend.length?'esperando':'nadie en espera')+'</div></div>'+
     '<div class="kpi"><div class="k">Atendidos</div><div class="v" style="color:var(--ok)">'+n0(hechas.length)+'</div>'+
-      '<div class="d">'+bs(hechas.reduce(function(a,r){return a+num(r.total)},0))+' facturado</div></div>'+
-    '<div class="kpi"><div class="k">Cobrado</div><div class="v">'+bs(cobr)+'</div>'+
-      '<div class="d">'+(porCobrar>0?bs(porCobrar)+' quedó debiendo':'sin saldos')+'</div></div>';
+      '<div class="d">'+(verPlata?bs(hechas.reduce(function(a,r){return a+num(r.total)},0))+' facturado':'en el día')+'</div></div>'+
+    (verPlata
+      ? '<div class="kpi"><div class="k">Cobrado</div><div class="v">'+bs(cobr)+'</div>'+
+        '<div class="d">'+(porCobrar>0?bs(porCobrar)+' quedó debiendo':'sin saldos')+'</div></div>'
+      : '<div class="kpi"><div class="k">Cobros</div><div class="v">🔐</div>'+
+        '<div class="d">elegí tu nombre para ver los tuyos</div></div>');
 
   $('#m-alertas').innerHTML=conAlergia.length
     ? '<div class="alerta-clinica"><b>Ojo hoy:</b> '+conAlergia.map(function(r){
@@ -6015,6 +6104,7 @@ function initFechas(){
 function bind(){
   $$('nav button').forEach(function(b){b.onclick=function(){show(b.dataset.v)}});
   $('#nav-buscar').onclick=abrirBuscador;
+  $('#nav-duena').onclick=pedirModoDuena;
   function moverAgenda(dir){
     if(AG_MODO==='mes'){
       var d=parseISO((MES_VER||hoyISO().slice(0,7))+'-01');
@@ -6030,7 +6120,9 @@ function bind(){
   $('#btn-resumen-dia').onclick=function(){
     abrirResumenDia($('#c-rango').value==='dia'?($('#c-dia').value||hoyISO()):hoyISO(),'')};
   $('#btn-resumen-midia').onclick=function(){
-    abrirResumenDia($('#m-dia').value||hoyISO(),$('#m-prof').value||'')};
+    var pr=$('#m-prof').value||'';
+    if(!esAdmin()&&!pr){toast('Elegí tu nombre arriba para ver tu resumen',1);return}
+    abrirResumenDia($('#m-dia').value||hoyISO(),pr)};
   $('#ov').onclick=function(e){if(e.target===$('#ov'))closeModal()};
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
 
@@ -6155,6 +6247,14 @@ function bind(){
     if(!confirm('¿Volver a la lista de precios original?'))return;
     CFG.precios=PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}});
     saveCfg(); renderConfig(); renderSrv(); toast('Lista restaurada')};
+  $('#btn-save-pass-admin').onclick=function(){
+    var v=$('#c-pass-admin').value;
+    if(v.length<6){toast('Mínimo 6 caracteres',1);return}
+    if(sha256(v)===passHash()){toast('No puede ser igual a la clave del equipo',1);return}
+    CFG.adminHash=sha256(v); saveCfg();
+    try{if(esAdmin())sessionStorage.setItem(K_UNLOCK,CFG.adminHash)}catch(e){}
+    $('#c-pass-admin').value='';
+    toast('Clave de administradora cambiada 👑')};
   $('#btn-save-pass').onclick=function(){
     var vieja=$('#c-pass-old').value, n1=$('#c-pass-new').value, n2=$('#c-pass-new2').value;
     if(sha256(vieja)!==passHash()){toast('La clave actual no coincide',1);return}
