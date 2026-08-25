@@ -458,9 +458,7 @@ body.imprimiendo #print-area{display:block}
 #gate p{font-size:13px;color:var(--gray);margin:0 0 18px}
 #gate input{text-align:center;font-size:17px;letter-spacing:1px;margin-bottom:12px}
 #gate .btn{width:100%}
-#gate label.chk{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;
-  color:var(--gray);margin-top:14px;font-weight:500;cursor:pointer}
-#gate label.chk input{width:16px;height:16px;margin:0}
+#gate .chk-nota{font-size:12px;color:var(--gray);margin-top:14px;line-height:1.5}
 #gate .err{color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:0 0 4px}
 body.locked{overflow:hidden}
 </style>
@@ -486,7 +484,8 @@ body.locked{overflow:hidden}
     <p class="err" id="gate-err"></p>
     <input type="password" id="gate-pass" placeholder="Clave" autocomplete="current-password">
     <button class="btn" id="gate-btn">Entrar</button>
-    <label class="chk"><input type="checkbox" id="gate-rec" checked> Recordar en este equipo</label>
+    <p class="chk-nota">La sesión se cierra al cerrar el navegador.<br>
+      Cuando termines, tocá 🔑 arriba → <b>Cambiar de usuario</b>.</p>
   </div>
 </div>
 
@@ -1329,7 +1328,8 @@ function adminHash(){
 
 function rolGuardado(){
   try{
-    var v=sessionStorage.getItem(K_UNLOCK)||localStorage.getItem(K_UNLOCK);
+    try{localStorage.removeItem(K_UNLOCK)}catch(e2){}   // sesiones viejas recordadas
+    var v=sessionStorage.getItem(K_UNLOCK);
     if(v===adminHash())return 'admin';
     if(v===passHash())return 'equipo';
     var p=profDeHash(v);
@@ -1400,11 +1400,14 @@ function entrarModoDuena(){
   else{$('#adm-err').textContent='Clave incorrecta';$('#adm-pass').value='';$('#adm-pass').focus()}}
 
 function yaDesbloqueado(){return !!rolGuardado()}
-function desbloquear(recordar){
+/* La sesion NO se recuerda entre visitas: la compu del consultorio la usan
+   todas, y una sesion guardada dejaba entrar a la siguiente con el usuario de
+   la anterior. Vive en sessionStorage: sobrevive a un F5, muere al cerrar. */
+function desbloquear(){
   var h=esAdmin()?adminHash():(esDoctora()?clavesProf()[PROF_ACTUAL]:passHash());
   try{
     sessionStorage.setItem(K_UNLOCK,h);
-    if(recordar)localStorage.setItem(K_UNLOCK,h);
+    localStorage.removeItem(K_UNLOCK);   // por si quedo de la version anterior
   }catch(e){}
   document.body.classList.remove('locked');
   $('#gate').classList.add('off');
@@ -1417,13 +1420,13 @@ function bloquear(){
   $('#gate-pass').value=''}
 function initGate(){
   var r=rolGuardado();
-  if(r){ROL=r;desbloquear(false);return}
+  if(r){ROL=r;desbloquear();return}
   var intentar=function(){
     var h=sha256($('#gate-pass').value);
-    if(h===adminHash()){ROL='admin';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
+    if(h===adminHash()){ROL='admin';$('#gate-err').textContent='';desbloquear()}
     else if(profDeHash(h)){ROL='doctora';PROF_ACTUAL=profDeHash(h);
-      $('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
-    else if(h===passHash()){ROL='equipo';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
+      $('#gate-err').textContent='';desbloquear()}
+    else if(h===passHash()){ROL='equipo';$('#gate-err').textContent='';desbloquear()}
     else{$('#gate-err').textContent='Clave incorrecta';$('#gate-pass').value='';$('#gate-pass').focus()}};
   ponerOjos($('#gate'));
   $('#gate-btn').onclick=intentar;
