@@ -244,6 +244,13 @@ tbody tr.destaca td{background:#FBFCF5}
 .banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+.ojo-wrap{position:relative}
+.ojo-wrap input{width:100%;padding-right:46px}
+.btn-ojo{position:absolute;right:5px;top:50%;transform:translateY(-50%);
+  background:none;border:none;font-size:17px;cursor:pointer;color:var(--gray);
+  padding:4px 7px;line-height:1}
+.btn-ojo:hover{color:var(--ink)}
+
 .banner.pend{background:#FBF3E2;border:1px solid #E4CE93;color:#6B4E10}
 .banner.pend .btn{margin-left:8px;vertical-align:baseline}
 /* Aviso de "estás editando". La unica señal que habia era el texto del boton
@@ -1375,6 +1382,7 @@ function initGate(){
       $('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
     else if(h===passHash()){ROL='equipo';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
     else{$('#gate-err').textContent='Clave incorrecta';$('#gate-pass').value='';$('#gate-pass').focus()}};
+  ponerOjos($('#gate'));
   $('#gate-btn').onclick=intentar;
   $('#gate-pass').onkeydown=function(e){if(e.key==='Enter')intentar()};
   setTimeout(function(){$('#gate-pass').focus()},80)}
@@ -4083,7 +4091,27 @@ function renderPacientes(){
   }).join(''):'<tr><td colspan="8" class="empty">Sin pacientes todavía.</td></tr>'}
 
 /* ============================ MODALES ============================ */
-function openModal(html){$('#modal').innerHTML=html;$('#ov').classList.add('on')}
+/* A todo campo de clave le cuelga un 👁 para ver lo que se escribió.
+   Sin esto, asignar claves era tipear a ciegas. */
+function ponerOjos(raiz){
+  (raiz||document).querySelectorAll('input[type="password"]:not([data-ojo])')
+    .forEach(function(inp){
+      inp.dataset.ojo='1';
+      var wrap=document.createElement('div');
+      wrap.className='ojo-wrap';
+      inp.parentNode.insertBefore(wrap,inp);
+      wrap.appendChild(inp);
+      var b=document.createElement('button');
+      b.type='button'; b.className='btn-ojo'; b.textContent='👁'; b.tabIndex=-1;
+      b.title='Ver / ocultar la clave';
+      b.onclick=function(){
+        var ver=inp.type==='password';
+        inp.type=ver?'text':'password';
+        b.textContent=ver?'🙈':'👁';
+        inp.focus()};
+      wrap.appendChild(b)})}
+
+function openModal(html){$('#modal').innerHTML=html;$('#ov').classList.add('on');ponerOjos($('#modal'))}
 function closeModal(){$('#ov').classList.remove('on')}
 
 function mrow(k,v){return '<div class="mrow"><span class="mk">'+k+'</span><b>'+v+'</b></div>'}
@@ -5633,7 +5661,8 @@ function renderConfig(){
   var cp=clavesProf();
   $('#claves-prof-lista')&&($('#claves-prof-lista').innerHTML=CFG.prof.map(function(p){
     return '<div><label>'+esc(p)+(cp[p]?' <span class="pill ok">tiene clave</span>':' <span class="pill">sin clave</span>')+'</label>'+
-      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(cp[p]?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password"></div>'}).join(''));
+      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(cp[p]?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password"></div>'}).join(''))
+  ponerOjos($('#v-config'));
   $('#c-dias-dorm').value=CFG.diasDorm;
   $('#c-dias-cumple').value=CFG.diasCumple;
   $('#c-dias-frenado').value=CFG.diasPlanFrenado;
