@@ -252,6 +252,16 @@ tbody tr.destaca td{background:#FBFCF5}
 .btn-ojo:hover{color:var(--ink)}
 .cperr{color:var(--clay);font-size:12.5px;font-weight:600;min-height:16px;margin-top:3px}
 
+/* Respaldo: el aviso de que hace mucho que no se descarga, y la advertencia
+   de que el archivo lleva datos de salud. */
+.resp-aviso{background:#FBF3E2;border:1px solid #E4CE93;border-left:4px solid #C79A2B;
+  border-radius:12px;padding:12px 15px;margin-bottom:14px;font-size:13.5px;color:#6B4E10;line-height:1.5}
+.ojo-aviso{background:#FBEDE6;border:1px solid #EFCBBD;border-left:4px solid var(--clay);
+  border-radius:10px;padding:10px 13px;margin-top:12px;font-size:13px;color:#7A3418;line-height:1.45}
+
+/* una historia por página cuando se imprimen todas juntas */
+.hc-pagina.salto{break-before:page;page-break-before:always}
+
 .banner.pend{background:#FBF3E2;border:1px solid #E4CE93;color:#6B4E10}
 .banner.pend .btn{margin-left:8px;vertical-align:baseline}
 /* Aviso de "estás editando". La unica señal que habia era el texto del boton
@@ -874,6 +884,7 @@ body.locked{overflow:hidden}
       <div id="wrap-p-anio" style="display:none"><label>Año</label><input id="p-anio" inputmode="numeric"></div>
     </div>
   </div>
+  <div id="p-aviso-resp"></div>
   <div id="p-meta"></div>
   <div class="kpis" style="margin-top:14px" id="p-kpis"></div>
 
@@ -1183,6 +1194,24 @@ body.locked{overflow:hidden}
       <button class="btn sec sm" id="btn-lock">🔒 Bloquear ahora</button>
     </div>
   </div>
+  <div class="card solo-admin">
+    <h2>Respaldo de historias clínicas</h2>
+    <p class="hint">Llevarse las historias fuera del sistema, por si un día no está.
+      <b>Los archivos salen legibles</b> y llevan datos de salud: guardalos donde solo vos entres
+      (un pendrive tuyo, tu Drive personal), nunca en la computadora compartida del consultorio.</p>
+    <div id="resp-estado" style="margin:10px 0"></div>
+    <div class="row-btn">
+      <button class="btn dark sm" id="btn-resp-xlsx">⬇ Excel de historias clínicas</button>
+      <button class="btn sec sm" id="btn-resp-lote">🖨 Historias impresas (todas)</button>
+    </div>
+    <div class="grid g3" style="margin-top:12px">
+      <div><label>Avisarme si no hay respaldo hace (días)</label>
+        <input id="c-dias-respaldo" inputmode="numeric" placeholder="30"></div>
+      <div><label>&nbsp;</label>
+        <button class="btn sec sm" id="btn-save-respaldo" style="width:100%">Guardar</button></div>
+    </div>
+  </div>
+
   <div class="card solo-admin">
     <h2>Datos y respaldo</h2>
     <p class="hint" id="c-modo"></p>
@@ -1550,7 +1579,7 @@ function cfgDefault(){return {v:4,prof:PROF_BASE.slice(),canales:CANALES_BASE.sl
   precios:PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2],lab:0}}),
   diasProx:3,diasDorm:120,
   diasCumple:7,ctrlAuto:true,ctrlLimpiezaMeses:6,ctrlOrtoDias:30,diasCtrlAviso:7,
-  diasPlanFrenado:21,minCita:30,metaMes:0,
+  diasPlanFrenado:21,minCita:30,metaMes:0,diasRespaldo:30,ultimoRespaldo:'',
   comision:{},comisionDefault:0,comisionDescuentaLab:false}}
 function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
     migrarCfg(c);                       // OJO: antes de rellenar defaults, que si no
@@ -3489,6 +3518,7 @@ function renderPanel(){
   $$('.psec').forEach(function(d){d.style.display=(d.dataset.sec===sec)?'':'none'});
   if(sec==='presu')renderPanelPresu(rows);
   renderMeta(rows);
+  if($('#p-aviso-resp'))$('#p-aviso-resp').innerHTML=avisoRespaldoHtml();
 
   /* ---------------- acumuladores ---------------- */
   var pacs={},canal={},serv={},prof={},dow={},mens={},cat={},srvProf={},porDia={};
@@ -5222,11 +5252,13 @@ function edadTexto(nac){
 function filaHC(t,v){
   return v?'<tr><th>'+t+'</th><td>'+v+'</td></tr>':''}
 
-function imprimirHistoria(nombre){
+/* El cuerpo de la historia, sin imprimir: lo usa tanto el botón de un
+   paciente como el respaldo en lote. Devuelve '' si no hay nada que contar. */
+function htmlHistoria(nombre){
   var k=keyPac(nombre), f=pacDe(nombre), hoy=hoyISO();
   var mios=DATA.filter(function(r){return keyPac(r.paciente)===k});
   var rs=mios.filter(esAtencion).sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')});
-  if(!rs.length&&pacVacia(f)){toast('Este paciente no tiene nada cargado todavía',1);return}
+  if(!rs.length&&pacVacia(f))return '';
 
   /* El CI se carga una vez y en la visita que sea: si se mira solo la última,
      la historia sale sin documento. Vale el más reciente que NO esté vacío. */
@@ -5311,8 +5343,7 @@ function imprimirHistoria(nombre){
       '</tbody></table>'
     : '';
 
-  $('#print-area').innerHTML=
-    '<div class="hc-cab">'+
+  return '<div class="hc-cab">'+
       '<div class="hc-marca">'+
         '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
         '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
@@ -5338,8 +5369,12 @@ function imprimirHistoria(nombre){
     '<div class="hc-firma"><div><div class="hc-linea"></div>Firma y sello del profesional</div></div>'+
     '<div class="hc-pie">Spadental · documento generado el '+fmtF(hoy)+
       ' desde el sistema del consultorio. Contiene información de salud: entregar únicamente '+
-      'al paciente o a quien él autorice.</div>';
+      'al paciente o a quien él autorice.</div>'}
 
+function imprimirHistoria(nombre){
+  var h=htmlHistoria(nombre);
+  if(!h){toast('Este paciente no tiene nada cargado todavía',1);return}
+  $('#print-area').innerHTML=h;
   document.body.classList.add('imprimiendo');
   window.print();
   setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
@@ -5737,12 +5772,215 @@ function imprimirInforme(){
   window.print();
   setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
 
+/* =====================================================================
+   RESPALDO DE HISTORIAS CLÍNICAS
+   ---------------------------------------------------------------------
+   Lo que el consultorio tiene que poder llevarse: la historia de cada
+   paciente fuera del sistema, por si un día no está.
+   Son datos de salud: los archivos salen legibles, así que se generan
+   solo en modo dueña y el propio archivo lo advierte.
+   ===================================================================== */
+function ultimoRespaldo(){return (CFG&&CFG.ultimoRespaldo)||''}
+
+function marcarRespaldo(){
+  CFG.ultimoRespaldo=hoyISO(); saveCfg();
+  if($('#resp-estado'))pintarEstadoRespaldo()}
+
+function diasSinRespaldo(){
+  var u=ultimoRespaldo();
+  return u?diasEntre(u,hoyISO()):null}
+
+/* Aviso para la dueña: un respaldo viejo no se nota hasta que se necesita. */
+function avisoRespaldoHtml(){
+  if(!esAdmin())return '';
+  var d=diasSinRespaldo(), cada=Math.max(1,num(CFG.diasRespaldo)||30);
+  if(d!==null&&d<cada)return '';
+  return '<div class="resp-aviso">💾 <b>'+(d===null
+      ? 'Todavía no se descargó ningún respaldo de las historias clínicas.'
+      : 'Hace '+d+' días que no se descarga el respaldo.')+'</b>'+
+    '<br><span class="mini">Ajustes → Respaldo de historias clínicas. '+
+    'Guardalo fuera de la computadora del consultorio.</span></div>'}
+
+function pintarEstadoRespaldo(){
+  var el=$('#resp-estado'); if(!el)return;
+  var d=diasSinRespaldo();
+  el.innerHTML=d===null
+    ? '<span class="pill warn">Nunca se descargó</span>'
+    : '<span class="pill'+(d>=(num(CFG.diasRespaldo)||30)?' warn':' ok')+'">Último: '+
+      fmtF(ultimoRespaldo())+(d===0?' (hoy)':' · hace '+d+' día'+(d===1?'':'s'))+'</span>'}
+
+/* ---------------------------------------------------------------------
+   1. EXCEL DE HISTORIAS CLÍNICAS
+   Una hoja por cosa, para que se pueda leer y cruzar sin el sistema.
+   --------------------------------------------------------------------- */
+function exportHistorias(){
+  if(!esAdmin()){toast('El respaldo es del modo dueña',1);return}
+  var pacs=idxRespaldo();
+  if(!pacs.length){toast('Todavía no hay pacientes cargados',1);return}
+  var hoy=hoyISO(), hojas=[];
+
+  /* --- pacientes --- */
+  var f=hojaPortada('Spadental · Historias clínicas','Generado el '+fmtF(hoy)+
+    ' · '+pacs.length+' pacientes · CONTIENE DATOS DE SALUD',7);
+  f.push(filaEncabezado(['Paciente','Celular','CI','Nacimiento','Edad','Canal',
+    'Primera visita','Última visita','Visitas','Facturado Bs','Cobrado Bs','Saldo Bs']));
+  pacs.forEach(function(p){
+    /* la edad sale del nacimiento si nadie la anotó a mano */
+    var ed=p.nac?edadDe(p.nac):(p.edad||'');
+    f.push([p.nombre,p.celular,p.ci,p.nac?fmtF(p.nac):'',ed===''?'':num(ed),p.canal,
+      p.prim?fmtF(p.prim):'',p.ult?fmtF(p.ult):'',p.visitas,
+      celda(p.total,'bs'),celda(p.cobrado,'bs'),celda(p.saldo,'bs')])});
+  hojas.push({name:'Pacientes',rows:f,congelar:4,
+    widths:[30,14,12,13,7,16,13,13,9,13,13,12]});
+
+  /* --- ficha médica --- */
+  var fm=hojaPortada('Ficha médica','Alergias, medicación y antecedentes',6);
+  fm.push(filaEncabezado(['Paciente','Nacimiento','Alergias','Medicación',
+    'Antecedentes','Consentimiento','Notas']));
+  var conFicha=0;
+  pacs.forEach(function(p){
+    var m=p.med||{};
+    if(!m.alergias&&!m.medicacion&&!(m.antecedentes||[]).length&&!m.notas&&!m.consent)return;
+    conFicha++;
+    fm.push([p.nombre,p.nac?fmtF(p.nac):'',m.alergias||'',m.medicacion||'',
+      (m.antecedentes||[]).join(', '),m.consent?'SÍ':'no',m.notas||''])});
+  if(!conFicha)fm.push(['(todavía no se cargó ninguna ficha médica)']);
+  hojas.push({name:'Ficha médica',rows:fm,congelar:4,widths:[30,13,28,24,26,15,40]});
+
+  /* --- planes de tratamiento --- */
+  var pl=hojaPortada('Planes de tratamiento','Lo que se planificó y cómo va',6);
+  pl.push(filaEncabezado(['Paciente','Plan','Estado','Sesiones hechas','Sesiones totales',
+    'Presupuesto Bs']));
+  var nPl=0;
+  pacs.forEach(function(p){
+    (p.planes||[]).forEach(function(x){
+      var ses=x.sesiones||[],hechas=0;
+      for(var i=0;i<ses.length;i++)if(ses[i]&&ses[i].hecha)hechas++;
+      nPl++;
+      pl.push([p.nombre,x.nombre||'Plan',x.estado||'',hechas,ses.length,
+        celda(num(x.presupuesto),'bs')])})});
+  if(!nPl)pl.push(['(todavía no se cargó ningún plan)']);
+  hojas.push({name:'Planes',rows:pl,congelar:4,widths:[30,28,14,16,16,15]});
+
+  /* --- todas las visitas --- */
+  var vs=hojaPortada('Visitas','Cada atención con lo que se hizo y lo que se cobró',9);
+  vs.push(filaEncabezado(['Fecha','Hora','N° día','Paciente','Profesional','Estado',
+    'Servicios','Piezas','Total Bs','A cuenta Bs','Saldo Bs','Forma de pago','Observaciones']));
+  DATA.slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})
+    .forEach(function(r){
+      var pz=(r.servicios||[]).reduce(function(a,sv){return a.concat(piezasDe(sv))},[]);
+      vs.push([r.fecha?fmtF(r.fecha):'',r.hora||'',r.nroDia||'',r.paciente||'',
+        r.profesional||'',r.estado||'',srvText(r)||'',pz.join(', '),
+        celda(num(r.total),'bs'),celda(num(r.acuenta),'bs'),celda(num(r.saldo),'bs'),
+        metodoText(r),r.obs||''])});
+  hojas.push({name:'Visitas',rows:vs,congelar:4,
+    widths:[12,8,8,26,17,13,34,14,12,13,12,18,34]});
+
+  /* --- odontograma --- */
+  var od=hojaPortada('Odontograma','Qué se le hizo a cada pieza',5);
+  od.push(filaEncabezado(['Paciente','Pieza','Tratamiento','Detalle','Fecha','Profesional']));
+  var nOd=0;
+  pacs.forEach(function(p){
+    var mapa=odontoDe(p.nombre);
+    Object.keys(mapa).sort().forEach(function(c){
+      mapa[c].forEach(function(x){nOd++;
+        od.push([p.nombre,c,x.servicio||'',x.det||'',x.fecha?fmtF(x.fecha):'',x.prof||''])})})});
+  if(!nOd)od.push(['(todavía no se marcaron piezas en ninguna atención)']);
+  hojas.push({name:'Odontograma',rows:od,congelar:4,widths:[30,8,26,24,12,17]});
+
+  /* --- tratamientos recomendados --- */
+  var pr=hojaPortada('Tratamientos recomendados','Lo que se sugirió y en qué quedó',6);
+  pr.push(filaEncabezado(['Paciente','Tratamiento','Presupuesto Bs','Indicado el',
+    'Profesional','Estado','Motivo']));
+  var lista=presupuestos();
+  lista.forEach(function(x){
+    pr.push([x.paciente,x.p.nom,celda(num(x.p.monto),'bs'),x.fecha?fmtF(x.fecha):'',
+      x.profesional||'',x.p.estado||'sin responder',x.p.motivo||''])});
+  if(!lista.length)pr.push(['(todavía no se anotó ningún tratamiento recomendado)']);
+  hojas.push({name:'Recomendados',rows:pr,congelar:4,widths:[30,26,15,13,17,16,26]});
+
+  descargar(buildXlsx(hojas),'Spadental_historias_clinicas_'+hoy+'.xlsx');
+  marcarRespaldo();
+  toast('Respaldo descargado · guardalo fuera de esta computadora 💾')}
+
+/* Un índice de pacientes con todo lo suyo junto, para el respaldo. */
+function idxRespaldo(){
+  var by={};
+  DATA.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k)return;
+    if(!by[k])by[k]={nombre:(r.paciente||'').trim(),celular:'',ci:'',edad:'',canal:'',
+      prim:'',ult:'',visitas:0,total:0,cobrado:0,saldo:0};
+    var p=by[k];
+    if(r.celular)p.celular=r.celular;
+    if(r.ci)p.ci=r.ci;
+    if(r.edad)p.edad=r.edad;
+    if(r.canal&&!p.canal)p.canal=r.canal;
+    if(!esAtencion(r))return;
+    p.visitas++; p.total+=num(r.total); p.cobrado+=num(r.acuenta); p.saldo+=num(r.saldo);
+    if(r.fecha&&(!p.prim||r.fecha<p.prim))p.prim=r.fecha;
+    if(r.fecha&&r.fecha>p.ult)p.ult=r.fecha});
+  /* las fichas se suman aunque el paciente todavía no tenga visitas */
+  Object.keys(PAC).forEach(function(k){
+    var f=PAC[k];
+    if(!by[k])by[k]={nombre:f.nombre||'',celular:'',ci:'',edad:'',canal:'',
+      prim:'',ult:'',visitas:0,total:0,cobrado:0,saldo:0};
+    by[k].nac=f.nac||''; by[k].med=f.med||{}; by[k].planes=f.planes||[]});
+  return Object.keys(by).map(function(k){return by[k]})
+    .sort(function(a,b){return a.nombre.localeCompare(b.nombre)})}
+
+/* ---------------------------------------------------------------------
+   2. LAS HISTORIAS IMPRESAS, TODAS DE UNA
+   Un solo documento con una historia por página: en el diálogo de
+   impresión se elige "Guardar como PDF" y queda el archivo completo.
+   --------------------------------------------------------------------- */
+function abrirImprimirLote(){
+  if(!esAdmin()){toast('El respaldo es del modo dueña',1);return}
+  var todos=idxRespaldo();
+  var conFicha=todos.filter(function(p){
+    var m=p.med||{};
+    return m.alergias||m.medicacion||(m.antecedentes||[]).length||m.notas||m.consent||(p.planes||[]).length});
+  var conVisitas=todos.filter(function(p){return p.visitas>0});
+  openModal('<h3>🖨 Historias clínicas en lote</h3>'+
+    '<p class="mini">Sale un documento con <b>una historia por página</b>. En el diálogo de '+
+    'impresión elegí <b>Guardar como PDF</b> y queda el archivo con todas.</p>'+
+    '<label style="margin-top:12px">¿De quiénes?</label>'+
+    '<div class="seg" id="seg-lote">'+
+      '<label><input type="radio" name="lote" value="ficha" checked><span>Con ficha médica o plan ('+conFicha.length+')</span></label>'+
+      '<label><input type="radio" name="lote" value="visitas"><span>Con visitas ('+conVisitas.length+')</span></label>'+
+      '<label><input type="radio" name="lote" value="todos"><span>Todos ('+todos.length+')</span></label>'+
+    '</div>'+
+    '<div class="ojo-aviso">⚠ El archivo lleva datos de salud de los pacientes. '+
+    'Guardalo donde solo vos entres.</div>'+
+    '<div class="row-btn"><button class="btn" onclick="imprimirLote()">🖨 Generar</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function imprimirLote(){
+  var cual=getRadio('lote')||'ficha', todos=idxRespaldo(), lista;
+  if(cual==='todos')lista=todos;
+  else if(cual==='visitas')lista=todos.filter(function(p){return p.visitas>0});
+  else lista=todos.filter(function(p){
+    var m=p.med||{};
+    return m.alergias||m.medicacion||(m.antecedentes||[]).length||m.notas||m.consent||(p.planes||[]).length});
+  if(!lista.length){toast('No hay pacientes en ese grupo',1);return}
+  closeModal();
+  toast('Armando '+lista.length+' historia'+(lista.length===1?'':'s')+'…');
+  /* se arma en el mismo bloque de impresión, una por página */
+  var partes=lista.map(function(p,i){
+    return '<div class="hc-pagina'+(i?' salto':'')+'">'+htmlHistoria(p.nombre)+'</div>'});
+  $('#print-area').innerHTML=partes.join('');
+  document.body.classList.add('imprimiendo');
+  window.print();
+  setTimeout(function(){document.body.classList.remove('imprimiendo')},900);
+  marcarRespaldo()}
+
 /* ============================ AJUSTES ============================ */
 function renderConfig(){
   $('#c-prof').value=CFG.prof.join('\n');
   $('#c-canal').value=CFG.canales.join('\n');
   $('#c-dias-prox').value=CFG.diasProx;
   $('#c-meta-mes').value=CFG.metaMes||'';
+  $('#c-dias-respaldo').value=CFG.diasRespaldo||30;
+  pintarEstadoRespaldo();
   pintarClavesProf();
   ponerOjos($('#v-config'));
   $('#c-dias-dorm').value=CFG.diasDorm;
@@ -6449,6 +6687,11 @@ function bind(){
     if(!confirm('¿Volver a la lista de precios original?'))return;
     CFG.precios=PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}});
     saveCfg(); renderConfig(); renderSrv(); toast('Lista restaurada')};
+  $('#btn-resp-xlsx').onclick=exportHistorias;
+  $('#btn-resp-lote').onclick=abrirImprimirLote;
+  $('#btn-save-respaldo').onclick=function(){
+    CFG.diasRespaldo=Math.max(1,num($('#c-dias-respaldo').value)||30);
+    saveCfg(); pintarEstadoRespaldo(); toast('Aviso de respaldo actualizado')};
   $('#btn-save-claves-prof').onclick=function(){
     /* Cada campo por su cuenta: las claves buenas SE GUARDAN, las malas se
        marcan en rojo con su motivo AL LADO y conservan lo escrito. La
