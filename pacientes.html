@@ -1319,8 +1319,10 @@ function aplicarRol(){
   document.body.classList.toggle('rol-equipo',!esAdmin());
   fijarSelectoresProf();
   var nb=$('#nav-duena');
-  if(nb){nb.textContent=esAdmin()?'👑':'🔐';
-    nb.title=esAdmin()?'Modo dueña activo · tocá para salir':'Modo dueña (clave de administradora)'}
+  if(nb){nb.textContent=esAdmin()?'👑':(esDoctora()?'👩‍⚕️':'🔐');
+    nb.title=esAdmin()?'Modo dueña · sesión y cambio de usuario'
+      :(esDoctora()?('Sesión: '+PROF_ACTUAL+' · tocá para cambiar de usuario')
+      :'Sesión, cambio de usuario y modo dueña')}
   if(!esAdmin()){
     var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
     if(v&&(v.v==='panel'||v.v==='caja'))show('midia')}}
@@ -1336,19 +1338,37 @@ function fijarSelectoresProf(){
     else sel.disabled=false})}
 
 function pedirModoDuena(){
+  var quien=esAdmin()?'Modo dueña 👑':(esDoctora()?PROF_ACTUAL:'Equipo / recepción');
+  var h='<h3>🔑 Sesión</h3>'+
+    '<p class="mini">En este equipo ahora está: <b>'+esc(quien)+'</b></p>';
   if(esAdmin()){
-    ROL='equipo';
-    try{sessionStorage.setItem(K_UNLOCK,passHash())}catch(e){}
-    aplicarRol(); toast('Volviste al modo equipo'); return}
-  openModal('<h3>👑 Modo dueña</h3>'+
-    '<p class="mini">La vista completa del consultorio: caja, panel y totales. Solo con la clave de administradora.</p>'+
-    '<input type="password" id="adm-pass" placeholder="Clave de administradora" style="margin-top:10px">'+
-    '<p class="err" id="adm-err" style="color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:6px 0 0"></p>'+
-    '<div class="row-btn"><button class="btn" onclick="entrarModoDuena()">Entrar</button>'+
-    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+    h+='<div class="row-btn" style="flex-direction:column;align-items:stretch">'+
+      '<button class="btn sec" onclick="salirModoDuena()">Volver al modo equipo</button>'+
+      '<button class="btn sec" onclick="cambiarUsuario()">🔄 Cambiar de usuario</button>'+
+      '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>'}
+  else{
+    h+='<div style="margin-top:12px"><label>Clave de administradora (solo la dueña)</label>'+
+      '<input type="password" id="adm-pass" placeholder="Clave de administradora"></div>'+
+      '<p class="err" id="adm-err" style="color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:6px 0 0"></p>'+
+      '<div class="row-btn" style="flex-direction:column;align-items:stretch">'+
+      '<button class="btn" onclick="entrarModoDuena()">👑 Entrar al modo dueña</button>'+
+      '<button class="btn sec" onclick="cambiarUsuario()">🔄 Cambiar de usuario</button>'+
+      '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>'}
+  openModal(h);
   var i=$('#adm-pass');
-  i.onkeydown=function(e){if(e.key==='Enter')entrarModoDuena()};
-  setTimeout(function(){i.focus()},60)}
+  if(i){i.onkeydown=function(e){if(e.key==='Enter')entrarModoDuena()};
+    setTimeout(function(){i.focus()},60)}}
+
+function salirModoDuena(){
+  ROL='equipo';
+  try{sessionStorage.setItem(K_UNLOCK,passHash())}catch(e){}
+  closeModal(); aplicarRol(); toast('Volviste al modo equipo')}
+
+/* Para la compu compartida: cierra la sesión y deja la pantalla de clave
+   lista para que entre la siguiente con la suya. */
+function cambiarUsuario(){
+  closeModal(); bloquear();
+  setTimeout(function(){var g=$('#gate-pass'); if(g)g.focus()},80)}
 
 function entrarModoDuena(){
   if(sha256($('#adm-pass').value)===adminHash()){
@@ -1368,6 +1388,7 @@ function desbloquear(recordar){
   $('#gate').classList.add('off');
   aplicarRol()}
 function bloquear(){
+  ROL='equipo'; PROF_ACTUAL='';
   try{sessionStorage.removeItem(K_UNLOCK);localStorage.removeItem(K_UNLOCK)}catch(e){}
   document.body.classList.add('locked');
   $('#gate').classList.remove('off');
