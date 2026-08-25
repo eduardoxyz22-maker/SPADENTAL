@@ -460,6 +460,7 @@ body.imprimiendo #print-area{display:block}
 #gate .btn{width:100%}
 #gate .chk-nota{font-size:12px;color:var(--gray);margin-top:14px;line-height:1.5}
 #gate .err{color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:0 0 4px}
+#gate .err .sync{color:var(--lime-dk);font-weight:600;display:block;line-height:1.4}
 body.locked{overflow:hidden}
 </style>
 </head>
@@ -1288,6 +1289,10 @@ function passHash(){
    cargarse acá.
    ===================================================================== */
 var ROL='equipo', PROF_ACTUAL='';
+/* La config (con las claves de las doctoras) llega del servidor unos segundos
+   despues de abrir. Hasta que llega, una clave valida parece incorrecta: por
+   eso el gate avisa y reintenta solo. */
+var CFG_DEL_SERVIDOR=false, CFG_SIN_RESPUESTA=false, CLAVE_EN_ESPERA='';
 function esAdmin(){return ROL==='admin'}
 function esDoctora(){return ROL==='doctora'}
 
@@ -1418,19 +1423,34 @@ function bloquear(){
   document.body.classList.add('locked');
   $('#gate').classList.remove('off');
   $('#gate-pass').value=''}
+var INTENTAR_GATE=null;
 function initGate(){
   var r=rolGuardado();
   if(r){ROL=r;desbloquear();return}
-  var intentar=function(){
-    var h=sha256($('#gate-pass').value);
+  var intentar=function(auto){
+    var v=$('#gate-pass').value;
+    var h=sha256(v);
     if(h===adminHash()){ROL='admin';$('#gate-err').textContent='';desbloquear()}
     else if(profDeHash(h)){ROL='doctora';PROF_ACTUAL=profDeHash(h);
       $('#gate-err').textContent='';desbloquear()}
     else if(h===passHash()){ROL='equipo';$('#gate-err').textContent='';desbloquear()}
-    else{$('#gate-err').textContent='Clave incorrecta';$('#gate-pass').value='';$('#gate-pass').focus()}};
+    else if(CONNECTED&&!CFG_DEL_SERVIDOR&&!CFG_SIN_RESPUESTA){
+      /* Puede ser la clave de una doctora que todavia no llego del servidor.
+         No se borra lo escrito ni se la trata de incorrecta: queda en espera
+         y se reintenta sola apenas llega la config. */
+      CLAVE_EN_ESPERA=v;
+      $('#gate-err').innerHTML='<span class="sync">⏳ Sincronizando con el consultorio… '+
+        'si la clave es correcta, entra sola en unos segundos</span>';
+      pullCfg()}
+    else{$('#gate-err').textContent=auto?'Clave incorrecta':'Clave incorrecta';
+      $('#gate-pass').value='';$('#gate-pass').focus()}};
+  INTENTAR_GATE=intentar;
   ponerOjos($('#gate'));
-  $('#gate-btn').onclick=intentar;
-  $('#gate-pass').onkeydown=function(e){if(e.key==='Enter')intentar()};
+  $('#gate-btn').onclick=function(){intentar(false)};
+  $('#gate-pass').onkeydown=function(e){if(e.key==='Enter')intentar(false)};
+  /* apenas abre, se pide la config liviana: las claves de las doctoras
+     tienen que estar disponibles cuanto antes */
+  if(CONNECTED)pullCfg();
   setTimeout(function(){$('#gate-pass').focus()},80)}
 
 /* ---------- lista de precios base (docx PRECIOS DE TRATAMIENTOS) ---------- */
@@ -1578,6 +1598,7 @@ function cfgSana(c){
 
 function aplicarCfgServidor(remota){
   if(!cfgSana(remota))return false;
+  CFG_DEL_SERVIDOR=true;
   // solo se pisa lo local si lo del servidor es más nuevo
   if(CFG.ts&&remota.ts&&remota.ts<=CFG.ts)return false;
   var claveVieja=CFG.passHash;
@@ -1637,6 +1658,22 @@ function flushQueue(){
       if(!(r&&r.ok))queue(item.action,item.rec)
     }).catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
 }
+/* Trae SOLO la config: no arrastra las miles de atenciones, asi que llega en
+   un segundo en vez de en catorce. Si el servidor todavia no conoce la accion
+   (falta redeployar), no pasa nada: el pull normal la trae despues. */
+function pullCfg(){
+  if(!CONNECTED)return Promise.resolve(false);
+  return api('cfgGet').then(function(r){
+    if(r&&r.ok&&r.cfg&&aplicarCfgServidor(r.cfg)){reintentarClaveEnEspera(); return true}
+    return false}).catch(function(){CFG_SIN_RESPUESTA=true; return false})}
+
+function reintentarClaveEnEspera(){
+  if(!CLAVE_EN_ESPERA)return;
+  if(!document.body.classList.contains('locked')){CLAVE_EN_ESPERA='';return}
+  var v=CLAVE_EN_ESPERA; CLAVE_EN_ESPERA='';
+  var g=$('#gate-pass'); if(g)g.value=v;
+  if(typeof INTENTAR_GATE==='function')INTENTAR_GATE(true)}
+
 function pullServer(){
   if(!CONNECTED)return Promise.resolve(false);
   return api('list').then(function(r){
@@ -1647,9 +1684,9 @@ function pullServer(){
         var m={};
         r.pacientes.forEach(function(p){var n=pacNormalize(p),k=keyPac(n.nombre); if(k)m[k]=n});
         PAC=m; savePacLocal()}
-      if(r.cfg)aplicarCfgServidor(r.cfg);
+      if(r.cfg){aplicarCfgServidor(r.cfg); reintentarClaveEnEspera()}
       return true}
-    return false}).catch(function(){return false})
+    return false}).catch(function(){CFG_SIN_RESPUESTA=true; return false})
 }
 
 /* ---------------------------------------------------------------------

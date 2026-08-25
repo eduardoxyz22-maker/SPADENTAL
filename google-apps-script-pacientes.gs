@@ -482,6 +482,9 @@ function doPost(e) {
     if (body.action === 'bulk') return json(doBulk(body.registros || []));
     if (body.action === 'info') return json(doInfo());
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg));
+    /* Solo la configuracion: el list arrastra miles de atenciones y tarda
+       segundos; las claves de las doctoras tienen que llegar ya. */
+    if (body.action === 'cfgGet') return json({ ok: true, cfg: leerCfg() });
     if (body.action === 'pac') return json(doGuardarPac(reg));
     if (body.action === 'egreso') return json(doGuardarEgreso(reg));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg));
