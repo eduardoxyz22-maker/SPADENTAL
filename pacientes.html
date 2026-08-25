@@ -1158,6 +1158,13 @@ body.locked{overflow:hidden}
     <div class="row-btn">
       <button class="btn sm" id="btn-save-pass">Cambiar clave</button>
     </div>
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Claves de las doctoras</h3>
+    <p class="hint" style="margin-top:0">Cada doctora entra con SU clave y ve solo lo suyo: sus cobros,
+      sus saldos, su agenda. Sin clave propia, entra con la del equipo y no ve montos.
+      Escribí la clave nueva solo en las que quieras cambiar (mínimo 6).</p>
+    <div id="claves-prof-lista" class="grid g2" style="margin-bottom:8px"></div>
+    <div class="row-btn" style="margin-bottom:18px">
+      <button class="btn sm" id="btn-save-claves-prof">Guardar claves de doctoras</button></div>
     <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Clave de administradora</h3>
     <p class="hint" style="margin-top:0">La de la Dra. Mirna: abre la caja, el panel y los totales.
       La de arriba (del equipo) no los muestra.</p>
@@ -1273,8 +1280,19 @@ function passHash(){
    uso diario del consultorio alcanza; lo confidencial de verdad no debe
    cargarse acá.
    ===================================================================== */
-var ROL='equipo';
+var ROL='equipo', PROF_ACTUAL='';
 function esAdmin(){return ROL==='admin'}
+function esDoctora(){return ROL==='doctora'}
+
+/* La clave personal de cada doctora, guardada como hash en la config
+   compartida. Se asignan en modo dueña. */
+function clavesProf(){return (CFG&&CFG.clavesProf)||{}}
+function cssId(t){return String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-')}
+
+function profDeHash(h){
+  var cp=clavesProf();
+  for(var p in cp)if(cp[p]===h)return p;
+  return ''}
 
 function adminHash(){
   if(CFG&&hashValido(CFG.adminHash))return CFG.adminHash;
@@ -1285,17 +1303,30 @@ function rolGuardado(){
     var v=sessionStorage.getItem(K_UNLOCK)||localStorage.getItem(K_UNLOCK);
     if(v===adminHash())return 'admin';
     if(v===passHash())return 'equipo';
+    var p=profDeHash(v);
+    if(p){PROF_ACTUAL=p;return 'doctora'}
     return null
   }catch(e){return null}}
 
 function aplicarRol(){
   document.body.classList.toggle('rol-equipo',!esAdmin());
+  fijarSelectoresProf();
   var nb=$('#nav-duena');
   if(nb){nb.textContent=esAdmin()?'👑':'🔐';
     nb.title=esAdmin()?'Modo dueña activo · tocá para salir':'Modo dueña (clave de administradora)'}
   if(!esAdmin()){
     var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
     if(v&&(v.v==='panel'||v.v==='caja'))show('midia')}}
+
+/* En modo doctora, los selectores de doctora quedan clavados en ella:
+   elegir a otra es justamente lo que no se puede. */
+function fijarSelectoresProf(){
+  ['#m-prof','#rem-prof','#q-filtro-prof'].forEach(function(id){
+    var sel=$(id); if(!sel)return;
+    if(esDoctora()){
+      sel.innerHTML='<option value="'+esc(PROF_ACTUAL)+'">'+esc(PROF_ACTUAL)+'</option>';
+      sel.value=PROF_ACTUAL; sel.disabled=true}
+    else sel.disabled=false})}
 
 function pedirModoDuena(){
   if(esAdmin()){
@@ -1321,7 +1352,7 @@ function entrarModoDuena(){
 
 function yaDesbloqueado(){return !!rolGuardado()}
 function desbloquear(recordar){
-  var h=esAdmin()?adminHash():passHash();
+  var h=esAdmin()?adminHash():(esDoctora()?clavesProf()[PROF_ACTUAL]:passHash());
   try{
     sessionStorage.setItem(K_UNLOCK,h);
     if(recordar)localStorage.setItem(K_UNLOCK,h);
@@ -1340,6 +1371,8 @@ function initGate(){
   var intentar=function(){
     var h=sha256($('#gate-pass').value);
     if(h===adminHash()){ROL='admin';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
+    else if(profDeHash(h)){ROL='doctora';PROF_ACTUAL=profDeHash(h);
+      $('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
     else if(h===passHash()){ROL='equipo';$('#gate-err').textContent='';desbloquear($('#gate-rec').checked)}
     else{$('#gate-err').textContent='Clave incorrecta';$('#gate-pass').value='';$('#gate-pass').focus()}};
   $('#gate-btn').onclick=intentar;
@@ -1497,6 +1530,9 @@ function aplicarCfgServidor(remota){
   // una clave corrupta no se copia: se conserva la que ya funciona
   if(remota.passHash&&!hashValido(remota.passHash))remota.passHash=claveVieja||DEFAULT_HASH;
   if(remota.adminHash&&!hashValido(remota.adminHash))remota.adminHash=CFG.adminHash||'';
+  if(remota.clavesProf){
+    for(var kk in remota.clavesProf)
+      if(!hashValido(remota.clavesProf[kk]))delete remota.clavesProf[kk]}
   CFG=migrarCfg(remota);
   var d=cfgDefault(); for(var k in d){if(CFG[k]==null)CFG[k]=d[k]}
   saveCfgObj(CFG);
@@ -2009,6 +2045,7 @@ function clearForm(keepFecha){
   EDIT_ID=null;
   if(!keepFecha)$('#f-fecha').value=hoyISO();
   var d=new Date(); $('#f-hora').value=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+  if(esDoctora()&&!$('#f-prof').value)$('#f-prof').value=PROF_ACTUAL;
   ['f-paciente','f-cel','f-ci','f-edad','f-nac','f-canal-det','f-obs','f-total','f-acuenta','f-saldo','f-prox','f-prox-hora','f-prox-motivo']
     .forEach(function(id){var e=$('#'+id);e.value='';delete e.dataset.touched;e.classList.remove('bad')});
   $$('input[name="metodo"]').forEach(function(i){i.checked=false});
@@ -2360,7 +2397,7 @@ function renderCitasProximas(){
   /* --- resumen: el día a la izquierda, y debajo el mes ---
      La plata del mes es de la dueña. Una doctora la ve solo de sí misma,
      eligiéndose en el filtro de arriba. */
-  var verPlata=esAdmin()||!!prof;
+  var verPlata=esAdmin()||(esDoctora()&&prof===PROF_ACTUAL);
   var ym=dia.slice(0,7);
   var delMes=soloAtenciones(DATA).filter(function(r){
     return (r.fecha||'').slice(0,7)===ym&&(!prof||r.profesional===prof)});
@@ -2388,7 +2425,7 @@ function renderCitasProximas(){
           '<div class="l">Facturado'+(prof?'<br>'+esc(prof.replace(/^Dra\.?\s*/i,'')):'')+
           '<br>ticket '+bs(delMes.length?bsMes/delMes.length:0)+'</div></div>'
         : '<div class="fig chico"><div class="n">🔐</div>'+
-          '<div class="l">Facturado<br>elegí doctora</div></div>')+
+          '<div class="l">Facturado<br>con tu clave</div></div>')+
     '</div>'+
     '<div class="fig-sep"></div>'+
     '<div class="fig-row">'+
@@ -2441,6 +2478,10 @@ function reabrirCita(id){
 
 function llenarFiltroProf(){
   var sel=$('#q-filtro-prof'), actual=sel.value;
+  if(esDoctora()){
+    sel.innerHTML='<option value="'+esc(PROF_ACTUAL)+'">'+esc(PROF_ACTUAL)+'</option>';
+    sel.value=PROF_ACTUAL; sel.disabled=true; return}
+  sel.disabled=false;
   var profs={}; CFG.prof.forEach(function(p){profs[p]=1});
   DATA.forEach(function(r){if(r.profesional)profs[r.profesional]=1});
   sel.innerHTML='<option value="">Todas</option>'+Object.keys(profs).sort().map(function(p){
@@ -2999,6 +3040,10 @@ function remCard(cls,who,meta,acts){
 
 function llenarRemProf(){
   var sel=$('#rem-prof'); if(!sel)return '';
+  if(esDoctora()){
+    sel.innerHTML='<option value="'+esc(PROF_ACTUAL)+'">'+esc(PROF_ACTUAL)+'</option>';
+    sel.value=PROF_ACTUAL; sel.disabled=true; return PROF_ACTUAL}
+  sel.disabled=false;
   var act=sel.value;
   sel.innerHTML='<option value="">Todas las doctoras</option>'+
     CFG.prof.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');
@@ -3015,12 +3060,12 @@ function renderRem(){
   $('#k-venc').innerHTML='<div class="k">Citas vencidas</div><div class="v">'+venc.length+'</div><div class="d">sin marcar si vino</div>';
   $('#k-hoy').innerHTML='<div class="k">Citas de hoy</div><div class="v">'+hy.length+'</div><div class="d">'+fmtF(hoy)+'</div>';
   $('#k-sem').innerHTML='<div class="k">Próximos 7 días</div><div class="v">'+sem.length+'</div><div class="d">citas agendadas</div>';
-  if(esAdmin()||rprof){
+  if(esAdmin()||(esDoctora()&&rprof===PROF_ACTUAL)){
     $('#k-saldos').innerHTML='<div class="k">Saldos'+(rprof?' de '+esc(rprof.replace(/^Dra\.?\s*/i,'')):' por cobrar')+'</div>'+
       '<div class="v" style="font-size:20px">'+bs(totSaldo)+'</div><div class="d">'+sal.length+' pacientes</div>'}
   else{
     $('#k-saldos').innerHTML='<div class="k">Saldos por cobrar</div><div class="v">'+sal.length+'</div>'+
-      '<div class="d">pacientes · elegí doctora para ver Bs</div>'}
+      '<div class="d">pacientes con saldo</div>'}
   var cumHoy=cum.filter(function(c){return c.dias===0}).length;
   $('#k-cumple').innerHTML='<div class="k">Cumpleaños</div><div class="v">'+cum.length+'</div><div class="d">'+
     (cumHoy?cumHoy+' hoy 🎂':'en '+CFG.diasCumple+' días')+'</div>';
@@ -5008,7 +5053,7 @@ function renderMiDia(){
   var delDia=pend.length+hechas.length+noVino;
   /* la plata se muestra si es LO SUYO (eligió su nombre) o si es la dueña;
      "todo el consultorio" sin clave de dueña muestra solo los conteos */
-  var verPlata=esAdmin()||!!prof;
+  var verPlata=esAdmin()||(esDoctora()&&prof===PROF_ACTUAL);
   $('#m-kpis').innerHTML=
     '<div class="kpi acc"><div class="k">Pacientes</div><div class="v">'+n0(delDia)+'</div>'+
       '<div class="d">'+(dia===hoyISO()?'hoy':fmtF(dia))+(noVino?' · '+noVino+' no vino':'')+'</div></div>'+
@@ -5020,7 +5065,7 @@ function renderMiDia(){
       ? '<div class="kpi"><div class="k">Cobrado</div><div class="v">'+bs(cobr)+'</div>'+
         '<div class="d">'+(porCobrar>0?bs(porCobrar)+' quedó debiendo':'sin saldos')+'</div></div>'
       : '<div class="kpi"><div class="k">Cobros</div><div class="v">🔐</div>'+
-        '<div class="d">elegí tu nombre para ver los tuyos</div></div>');
+        '<div class="d">con tu clave de doctora</div></div>');
 
   $('#m-alertas').innerHTML=conAlergia.length
     ? '<div class="alerta-clinica"><b>Ojo hoy:</b> '+conAlergia.map(function(r){
@@ -5035,7 +5080,12 @@ function renderMiDia(){
       'cargalo en <b>Nueva atención</b>.</span></div>'}
 
 function llenarProfMiDia(){
-  var sel=$('#m-prof'), act=sel.value||miProf();
+  var sel=$('#m-prof');
+  if(esDoctora()){
+    sel.innerHTML='<option value="'+esc(PROF_ACTUAL)+'">'+esc(PROF_ACTUAL)+'</option>';
+    sel.value=PROF_ACTUAL; sel.disabled=true; return}
+  sel.disabled=false;
+  var act=sel.value||miProf();
   sel.innerHTML='<option value="">Todo el consultorio</option>'+
     CFG.prof.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');
   sel.value=act||''}
@@ -5580,6 +5630,10 @@ function renderConfig(){
   $('#c-canal').value=CFG.canales.join('\n');
   $('#c-dias-prox').value=CFG.diasProx;
   $('#c-meta-mes').value=CFG.metaMes||'';
+  var cp=clavesProf();
+  $('#claves-prof-lista')&&($('#claves-prof-lista').innerHTML=CFG.prof.map(function(p){
+    return '<div><label>'+esc(p)+(cp[p]?' <span class="pill ok">tiene clave</span>':' <span class="pill">sin clave</span>')+'</label>'+
+      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(cp[p]?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password"></div>'}).join(''));
   $('#c-dias-dorm').value=CFG.diasDorm;
   $('#c-dias-cumple').value=CFG.diasCumple;
   $('#c-dias-frenado').value=CFG.diasPlanFrenado;
@@ -6156,9 +6210,9 @@ function bind(){
   $('#btn-resumen-dia').onclick=function(){
     abrirResumenDia($('#c-rango').value==='dia'?($('#c-dia').value||hoyISO()):hoyISO(),'')};
   $('#btn-resumen-midia').onclick=function(){
-    var pr=$('#m-prof').value||'';
-    if(!esAdmin()&&!pr){toast('Elegí tu nombre arriba para ver tu resumen',1);return}
-    abrirResumenDia($('#m-dia').value||hoyISO(),pr)};
+    if(esDoctora()){abrirResumenDia($('#m-dia').value||hoyISO(),PROF_ACTUAL);return}
+    if(!esAdmin()){toast('El resumen con montos es con tu clave de doctora o la de la dueña',1);return}
+    abrirResumenDia($('#m-dia').value||hoyISO(),$('#m-prof').value||'')};
   $('#ov').onclick=function(e){if(e.target===$('#ov'))closeModal()};
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
 
@@ -6284,6 +6338,22 @@ function bind(){
     if(!confirm('¿Volver a la lista de precios original?'))return;
     CFG.precios=PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}});
     saveCfg(); renderConfig(); renderSrv(); toast('Lista restaurada')};
+  $('#btn-save-claves-prof').onclick=function(){
+    var cp=Object.assign({},clavesProf()), cambios=0, errs=[];
+    CFG.prof.forEach(function(p){
+      var el=$('#cp-'+cssId(p)); if(!el)return;
+      var v=el.value; if(!v)return;
+      if(v.length<6){errs.push(p+': mínimo 6 caracteres');return}
+      var h=sha256(v);
+      if(h===passHash()||h===adminHash()){errs.push(p+': no puede repetir otra clave del sistema');return}
+      var dueDe=profDeHash(h);
+      if(dueDe&&dueDe!==p){errs.push(p+': esa clave ya la usa '+dueDe);return}
+      cp[p]=h; cambios++; el.value=''});
+    if(errs.length){toast(errs[0],1);return}
+    if(!cambios){toast('No escribiste ninguna clave nueva',1);return}
+    CFG.clavesProf=cp; saveCfg();
+    toast(cambios===1?'Clave guardada 🔑':cambios+' claves guardadas 🔑')};
+
   $('#btn-save-pass-admin').onclick=function(){
     var v=$('#c-pass-admin').value;
     if(v.length<6){toast('Mínimo 6 caracteres',1);return}
