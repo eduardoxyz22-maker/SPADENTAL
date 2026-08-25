@@ -250,6 +250,7 @@ tbody tr.destaca td{background:#FBFCF5}
   background:none;border:none;font-size:17px;cursor:pointer;color:var(--gray);
   padding:4px 7px;line-height:1}
 .btn-ojo:hover{color:var(--ink)}
+.cperr{color:var(--clay);font-size:12.5px;font-weight:600;min-height:16px;margin-top:3px}
 
 .banner.pend{background:#FBF3E2;border:1px solid #E4CE93;color:#6B4E10}
 .banner.pend .btn{margin-left:8px;vertical-align:baseline}
@@ -1296,6 +1297,27 @@ function esDoctora(){return ROL==='doctora'}
 function clavesProf(){return (CFG&&CFG.clavesProf)||{}}
 function cssId(t){return String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-')}
 
+/* Repintar la lista de claves SIN comerse lo que estén tipeando: el refresco
+   automático repinta Ajustes cada tanto y antes borraba los campos a medio
+   escribir. */
+function pintarClavesProf(){
+  var cont=$('#claves-prof-lista'); if(!cont)return;
+  var cp=clavesProf(), escritos={};
+  CFG.prof.forEach(function(p){
+    var el=$('#cp-'+cssId(p));
+    if(el&&el.value)escritos[p]={v:el.value,bad:el.classList.contains('bad'),
+      err:($('#cperr-'+cssId(p))||{}).textContent||''}});
+  cont.innerHTML=CFG.prof.map(function(p){
+    return '<div><label>'+esc(p)+(cp[p]?' <span class="pill ok">tiene clave</span>':' <span class="pill">sin clave</span>')+'</label>'+
+      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(cp[p]?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password">'+
+      '<div class="cperr" id="cperr-'+cssId(p)+'"></div></div>'}).join('');
+  CFG.prof.forEach(function(p){
+    var e2=escritos[p]; if(!e2)return;
+    var el=$('#cp-'+cssId(p)); el.value=e2.v;
+    if(e2.bad)el.classList.add('bad');
+    if(e2.err)$('#cperr-'+cssId(p)).textContent=e2.err});
+  ponerOjos(cont)}
+
 function profDeHash(h){
   var cp=clavesProf();
   for(var p in cp)if(cp[p]===h)return p;
@@ -1605,7 +1627,9 @@ function flushQueue(){
   /* al terminar, el banner tiene que reflejar lo que de verdad quedó */
   setTimeout(function(){if(window.banner)banner()},0);
   return q.reduce(function(p,item){return p.then(function(){
-    var llamada=item.action==='cfg'?api('cfg',null,item.rec):api(item.action,item.rec);
+    /* la config es un ESTADO, no un evento: si quedó encolada de hace rato,
+       reenviar la foto vieja pisaría cambios más nuevos en el servidor */
+    var llamada=item.action==='cfg'?api('cfg',null,CFG):api(item.action,item.rec);
     return llamada.then(function(r){
       if(!(r&&r.ok))queue(item.action,item.rec)
     }).catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
@@ -5679,10 +5703,7 @@ function renderConfig(){
   $('#c-canal').value=CFG.canales.join('\n');
   $('#c-dias-prox').value=CFG.diasProx;
   $('#c-meta-mes').value=CFG.metaMes||'';
-  var cp=clavesProf();
-  $('#claves-prof-lista')&&($('#claves-prof-lista').innerHTML=CFG.prof.map(function(p){
-    return '<div><label>'+esc(p)+(cp[p]?' <span class="pill ok">tiene clave</span>':' <span class="pill">sin clave</span>')+'</label>'+
-      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(cp[p]?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password"></div>'}).join(''))
+  pintarClavesProf();
   ponerOjos($('#v-config'));
   $('#c-dias-dorm').value=CFG.diasDorm;
   $('#c-dias-cumple').value=CFG.diasCumple;
@@ -6389,20 +6410,30 @@ function bind(){
     CFG.precios=PRECIOS_BASE.map(function(r){return {cat:r[0],nom:r[1],precio:r[2]}});
     saveCfg(); renderConfig(); renderSrv(); toast('Lista restaurada')};
   $('#btn-save-claves-prof').onclick=function(){
-    var cp=Object.assign({},clavesProf()), cambios=0, errs=[];
+    /* Cada campo por su cuenta: las claves buenas SE GUARDAN, las malas se
+       marcan en rojo con su motivo AL LADO y conservan lo escrito. La
+       primera versión abortaba todo por un solo error y encima borraba los
+       campos válidos antes de abortar: el consultorio "perdió" cuatro
+       claves por una colisión en la quinta. Nunca más. */
+    var cp=Object.assign({},clavesProf()), guardadas=0, malas=0;
     CFG.prof.forEach(function(p){
       var el=$('#cp-'+cssId(p)); if(!el)return;
+      var err=$('#cperr-'+cssId(p));
+      var marcar=function(m){malas++; el.classList.add('bad'); if(err)err.textContent=m};
+      el.classList.remove('bad'); if(err)err.textContent='';
       var v=el.value; if(!v)return;
-      if(v.length<6){errs.push(p+': mínimo 6 caracteres');return}
+      if(v.length<6){marcar('Mínimo 6 caracteres');return}
       var h=sha256(v);
-      if(h===passHash()||h===adminHash()){errs.push(p+': no puede repetir otra clave del sistema');return}
+      if(h===passHash()){marcar('Es la clave del equipo: elegí otra');return}
+      if(h===adminHash()){marcar('Es la clave de la dueña: elegí otra');return}
       var dueDe=profDeHash(h);
-      if(dueDe&&dueDe!==p){errs.push(p+': esa clave ya la usa '+dueDe);return}
-      cp[p]=h; cambios++; el.value=''});
-    if(errs.length){toast(errs[0],1);return}
-    if(!cambios){toast('No escribiste ninguna clave nueva',1);return}
-    CFG.clavesProf=cp; saveCfg();
-    toast(cambios===1?'Clave guardada 🔑':cambios+' claves guardadas 🔑')};
+      if(dueDe&&dueDe!==p){marcar('Ya la usa '+dueDe);return}
+      cp[p]=h; guardadas++; el.value=''});
+    if(guardadas){CFG.clavesProf=cp; saveCfg(); pintarClavesProf()}
+    if(guardadas&&malas)toast(guardadas+' guardada'+(guardadas===1?'':'s')+' 🔑 · revisá la'+(malas===1?'':'s')+' marcada'+(malas===1?'':'s')+' en rojo',1);
+    else if(guardadas)toast(guardadas===1?'Clave guardada 🔑':guardadas+' claves guardadas 🔑');
+    else if(malas)toast('Ninguna se guardó: revisá lo marcado en rojo',1);
+    else toast('No escribiste ninguna clave nueva',1)};
 
   $('#btn-save-pass-admin').onclick=function(){
     var v=$('#c-pass-admin').value;
