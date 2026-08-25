@@ -800,6 +800,10 @@ body.locked{overflow:hidden}
     <h2>Para contactar</h2>
     <p class="hint">Citas vencidas, de hoy y próximas, saldos por cobrar, pacientes que no vuelven,
       cumpleaños de la semana y los controles que ya tocan.</p>
+    <div class="grid g3" style="margin:0 0 12px">
+      <div><label>Ver de</label>
+        <select id="rem-prof"></select></div>
+    </div>
     <div class="seg lime" id="seg-rem" style="margin-bottom:6px">
       <label><input type="radio" name="remf" value="citas" checked><span>📅 Citas</span></label>
       <label><input type="radio" name="remf" value="saldos"><span>💰 Saldos</span></label>
@@ -1927,7 +1931,8 @@ function fillDatalists(){
   DATA.forEach(function(r){if(r.paciente)pac[r.paciente]=1;if(r.profesional)prof[r.profesional]=1});
   CFG.prof.forEach(function(p){prof[p]=1});
   $('#dl-pac').innerHTML=Object.keys(pac).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('');
-  $('#dl-prof').innerHTML=Object.keys(prof).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('')}
+  $('#dl-prof').innerHTML='<option value="Por definir">'+
+    Object.keys(prof).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('')}
 
 function autoPaciente(){
   var n=$('#f-paciente').value.trim().toLowerCase(); if(!n)return;
@@ -2024,7 +2029,8 @@ function clearForm(keepFecha){
 function loadForm(r){
   EDIT_ID=r.id;
   $('#f-fecha').value=r.fecha||hoyISO(); $('#f-hora').value=r.hora||'';
-  $('#f-prof').value=r.profesional||''; $('#f-paciente').value=r.paciente||'';
+  $('#f-prof').value=(r.profesional==='Por definir'?'':r.profesional)||'';
+  $('#f-paciente').value=r.paciente||'';
   $('#f-cel').value=r.celular||''; $('#f-ci').value=r.ci||''; $('#f-edad').value=r.edad||'';
   $('#f-nac').value=pacDe(r.paciente).nac||'';
   setRadio('tipo',r.tipo||'Nuevo');
@@ -2275,7 +2281,7 @@ function autoCita(){
 
 function guardarCita(){
   var bad=[];
-  [['q-fecha','fecha'],['q-prof','profesional'],['q-paciente','paciente'],['q-cel','celular']]
+  [['q-fecha','fecha'],['q-paciente','paciente'],['q-cel','celular']]
     .forEach(function(p){var e=$('#'+p[0]),ok=!!e.value.trim();
       e.classList.toggle('bad',!ok); if(!ok)bad.push(p[1])});
   var ag=getRadio('qagenda');
@@ -2289,7 +2295,9 @@ function guardarCita(){
   var rec={
     id:uid(), ts:new Date().toISOString(),
     fecha:fecha, hora:$('#q-hora').value, nroDia:nroDelDia(fecha,null),
-    profesional:$('#q-prof').value.trim(),
+    /* a veces el paciente agenda sin saber con quién: la doctora se define
+       recién al atender */
+    profesional:$('#q-prof').value.trim()||'Por definir',
     paciente:$('#q-paciente').value.trim(), celular:$('#q-cel').value.trim(),
     ci:'', edad:'',
     tipo:esPacienteConocido($('#q-paciente').value)?'Recurrente':'Nuevo',
@@ -2327,7 +2335,8 @@ function citasAgendadas(){
 function renderCitasProximas(){
   var hoy=hoyISO(), dia=$('#q-dia').value||hoy, prof=$('#q-filtro-prof').value;
   var todas=citasAgendadas();
-  var filtra=function(a){return prof?a.filter(function(r){return r.profesional===prof}):a};
+  var filtra=function(a){return prof?a.filter(function(r){
+    return r.profesional===prof||r.profesional==='Por definir'}):a};
 
   /* --- vencidas: citas de días pasados que nadie cerró --- */
   var venc=filtra(todas.filter(function(r){return r.fecha<hoy}));
@@ -2348,14 +2357,19 @@ function renderCitasProximas(){
   var falt=delDia.filter(function(r){return r.estado==='No asistió'||r.estado==='Canceló'}).length;
   var rep2=delDia.filter(function(r){return r.estado==='Reprogramó'}).length;
 
-  /* --- resumen: el día a la izquierda, y debajo el mes --- */
+  /* --- resumen: el día a la izquierda, y debajo el mes ---
+     La plata del mes es de la dueña. Una doctora la ve solo de sí misma,
+     eligiéndose en el filtro de arriba. */
+  var verPlata=esAdmin()||!!prof;
   var ym=dia.slice(0,7);
-  var delMes=soloAtenciones(DATA).filter(function(r){return (r.fecha||'').slice(0,7)===ym});
+  var delMes=soloAtenciones(DATA).filter(function(r){
+    return (r.fecha||'').slice(0,7)===ym&&(!prof||r.profesional===prof)});
   var pacMes={}; delMes.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)pacMes[k]=1});
   var bsMes=delMes.reduce(function(a,r){return a+num(r.total)},0);
   var nuevosMes={}; delMes.forEach(function(r){
     var k=(r.paciente||'').trim().toLowerCase(); if(k&&r.tipo==='Nuevo')nuevosMes[k]=1});
-  var deudaMes=DATA.reduce(function(a,r){return a+num(r.saldo)},0);
+  var deudaMes=DATA.filter(function(r){return esAtencion(r)&&(!prof||r.profesional===prof)})
+    .reduce(function(a,r){return a+num(r.saldo)},0);
 
   $('#q-resumen-dia').innerHTML=
     '<div class="fig"><div class="n">'+n0(delDia.length)+'<sup>hoy</sup></div>'+
@@ -2369,15 +2383,21 @@ function renderCitasProximas(){
     '<div class="fig-row">'+
       '<div class="fig chico"><div class="n">'+n0(Object.keys(pacMes).length)+'</div>'+
       '<div class="l">Pacientes<br>de '+mesLabel(ym).split(' ')[0]+'</div></div>'+
-      '<div class="fig chico"><div class="n">'+n0(bsMes)+'</div>'+
-      '<div class="l">Facturado<br>ticket '+bs(delMes.length?bsMes/delMes.length:0)+'</div></div>'+
+      (verPlata
+        ? '<div class="fig chico"><div class="n">'+n0(bsMes)+'</div>'+
+          '<div class="l">Facturado'+(prof?'<br>'+esc(prof.replace(/^Dra\.?\s*/i,'')):'')+
+          '<br>ticket '+bs(delMes.length?bsMes/delMes.length:0)+'</div></div>'
+        : '<div class="fig chico"><div class="n">🔐</div>'+
+          '<div class="l">Facturado<br>elegí doctora</div></div>')+
     '</div>'+
     '<div class="fig-sep"></div>'+
     '<div class="fig-row">'+
       '<div class="fig chico"><div class="n">'+n0(Object.keys(nuevosMes).length)+'</div>'+
       '<div class="l">Nuevos<br>del mes</div></div>'+
-      '<div class="fig chico"><div class="n"'+(deudaMes>0?' style="color:var(--clay)"':'')+'>'+n0(deudaMes)+'</div>'+
-      '<div class="l">Por cobrar<br>saldo Bs</div></div>'+
+      (verPlata
+        ? '<div class="fig chico"><div class="n"'+(deudaMes>0?' style="color:var(--clay)"':'')+'>'+n0(deudaMes)+'</div>'+
+          '<div class="l">Por cobrar<br>saldo Bs</div></div>'
+        : '')+
     '</div>';
 
   $('#q-lista-h').innerHTML='Agenda del '+fmtF(dia)+
@@ -2496,6 +2516,7 @@ function minutos(hhmm){
 function choquesDe(fecha,hora,prof,exceptId){
   var m=minutos(hora); if(m===null||!fecha||!prof)return [];
   var vent=Math.max(1,num(CFG.minCita)||30), p=String(prof).trim().toLowerCase();
+  if(p==='por definir')return [];
   return DATA.filter(function(r){
     if(r.id===exceptId||r.fecha!==fecha)return false;
     if(String(r.profesional||'').trim().toLowerCase()!==p)return false;
@@ -2878,10 +2899,11 @@ function citasPend(){
     .map(function(r){return {r:r,dias:diasEntre(hoy,r.fecha)}})
     .sort(function(a,b){return a.dias-b.dias})}
 
-function saldosPend(){
+function saldosPend(prof){
   var by={};
   DATA.forEach(function(r){
     if(num(r.saldo)<=0||!esAtencion(r))return;
+    if(prof&&r.profesional!==prof)return;
     var k=(r.paciente||'—').trim();
     if(!by[k])by[k]={paciente:k,celular:r.celular,saldo:0,n:0,ult:'',ids:[]};
     by[k].saldo+=num(r.saldo); by[k].n++; by[k].ids.push(r.id);
@@ -2975,8 +2997,17 @@ function remCard(cls,who,meta,acts){
   return '<div class="rem '+cls+'"><div><div class="who">'+esc(who)+'</div>'+
     '<div class="meta">'+meta+'</div></div><div class="acts">'+acts+'</div></div>'}
 
+function llenarRemProf(){
+  var sel=$('#rem-prof'); if(!sel)return '';
+  var act=sel.value;
+  sel.innerHTML='<option value="">Todas las doctoras</option>'+
+    CFG.prof.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');
+  sel.value=act||''; return sel.value}
+
 function renderRem(){
-  var hoy=hoyISO(), f=getRadio('remf')||'citas', cit=citasPend(), sal=saldosPend(), dor=dormidos();
+  var hoy=hoyISO(), f=getRadio('remf')||'citas', rprof=llenarRemProf();
+  var mismaProf=function(r){return !rprof||r.profesional===rprof||r.profesional==='Por definir'};
+  var cit=citasPend().filter(mismaProf), sal=saldosPend(rprof), dor=dormidos();
   var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
       sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
   var cum=cumples(), ctl=controles(), fre=planesFrenados(), cuo=cuotasVencidas();
@@ -2984,7 +3015,12 @@ function renderRem(){
   $('#k-venc').innerHTML='<div class="k">Citas vencidas</div><div class="v">'+venc.length+'</div><div class="d">sin marcar si vino</div>';
   $('#k-hoy').innerHTML='<div class="k">Citas de hoy</div><div class="v">'+hy.length+'</div><div class="d">'+fmtF(hoy)+'</div>';
   $('#k-sem').innerHTML='<div class="k">Próximos 7 días</div><div class="v">'+sem.length+'</div><div class="d">citas agendadas</div>';
-  $('#k-saldos').innerHTML='<div class="k">Saldos por cobrar</div><div class="v" style="font-size:20px">'+bs(totSaldo)+'</div><div class="d">'+sal.length+' pacientes</div>';
+  if(esAdmin()||rprof){
+    $('#k-saldos').innerHTML='<div class="k">Saldos'+(rprof?' de '+esc(rprof.replace(/^Dra\.?\s*/i,'')):' por cobrar')+'</div>'+
+      '<div class="v" style="font-size:20px">'+bs(totSaldo)+'</div><div class="d">'+sal.length+' pacientes</div>'}
+  else{
+    $('#k-saldos').innerHTML='<div class="k">Saldos por cobrar</div><div class="v">'+sal.length+'</div>'+
+      '<div class="d">pacientes · elegí doctora para ver Bs</div>'}
   var cumHoy=cum.filter(function(c){return c.dias===0}).length;
   $('#k-cumple').innerHTML='<div class="k">Cumpleaños</div><div class="v">'+cum.length+'</div><div class="d">'+
     (cumHoy?cumHoy+' hoy 🎂':'en '+CFG.diasCumple+' días')+'</div>';
@@ -3073,10 +3109,10 @@ function renderRem(){
         '<button class="btn sec sm" onclick="verPaciente(\''+jss(c.paciente)+'\')">Ver ficha</button>';
       h+=remCard(c.dias<=0?'due':'',c.paciente,meta,acts)})}
 
-  if(f==='presu'||f==='todos')h+=presuRemHtml();
+  if(f==='presu'||f==='todos')h+=presuRemHtml(rprof);
 
   $('#rem-list').innerHTML=h||'<div class="empty">Nada pendiente por ahora ✨</div>';
-  var ppTodos=presuPend();
+  var ppTodos=presuPend().filter(function(x){return !rprof||x.profesional===rprof});
   var pp=ppTodos.filter(function(x){return !citaFuturaDe(x.paciente)});
   var yaCita=ppTodos.length-pp.length;
   $('#k-presu').innerHTML='<div class="k">Recomendados</div><div class="v">'+pp.length+'</div>'+
@@ -4733,10 +4769,10 @@ function citaFuturaDe(nombre){
   return DATA.filter(function(r){return keyPac(r.paciente)===k&&esCitaPendiente(r)&&r.fecha>=hoy})
     .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})[0]||null}
 
-function presuRemHtml(){
+function presuRemHtml(rprof){
   /* El que YA agendó para venir no necesita que lo llamen: contactarlo igual
      es quemar al paciente. Va aparte, solo para tenerlo a la vista. */
-  var todos=presuPend(), ps=[], conCita=[];
+  var todos=presuPend().filter(function(x){return !rprof||x.profesional===rprof}), ps=[], conCita=[];
   todos.forEach(function(x){
     var c=citaFuturaDe(x.paciente);
     if(c){x.cita=c; conCita.push(x)}else ps.push(x)});
@@ -4871,7 +4907,7 @@ function setMiProf(v){try{localStorage.setItem(K_MIPROF,v||'')}catch(e){}}
 function filasDelDia(dia,prof){
   return DATA.filter(function(r){
     if(r.fecha!==dia)return false;
-    if(prof&&r.profesional!==prof)return false;
+    if(prof&&r.profesional!==prof&&r.profesional!=='Por definir')return false;
     return true})
     .sort(function(a,b){return (a.hora||'99:99').localeCompare(b.hora||'99:99')})}
 
@@ -5187,7 +5223,7 @@ function renderMes(){
   var por={};
   DATA.forEach(function(r){
     if(!r.fecha||r.fecha<ini||r.fecha>cierre)return;
-    if(prof&&r.profesional!==prof)return;
+    if(prof&&r.profesional!==prof&&r.profesional!=='Por definir')return;
     if(r.estado!=='Agendada'&&r.origen!=='Programada')return;
     var b=por[r.fecha]=por[r.fecha]||{pend:0,res:0,choca:false};
     if(esCitaPendiente(r)){b.pend++;
@@ -5221,7 +5257,7 @@ function renderSemana(){
   var por={}; dias.forEach(function(f){por[f]=[]});
   DATA.forEach(function(r){
     if(r.fecha<dias[0]||r.fecha>dias[6])return;
-    if(prof&&r.profesional!==prof)return;
+    if(prof&&r.profesional!==prof&&r.profesional!=='Por definir')return;
     if(r.estado!=='Agendada'&&r.origen!=='Programada')return;
     por[r.fecha].push(r)});
   dias.forEach(function(f){por[f].sort(function(a,b){
@@ -6178,6 +6214,7 @@ function bind(){
     $('#wrap-agendapor').style.display=(getRadio('origen')==='Programada')?'':'none'}});
 
   $('#q-dia').onchange=renderCitasProximas;
+  $('#rem-prof')&&($('#rem-prof').onchange=renderRem);
   $('#q-filtro-prof').onchange=renderCitasProximas;
   $('#btn-dia-hoy').onclick=function(){$('#q-dia').value=hoyISO();renderCitasProximas()};
   $('#btn-dia-ayer').onclick=function(){
