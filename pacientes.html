@@ -977,8 +977,9 @@ body.locked{overflow:hidden}
       <p class="hint">La barra clara son pacientes que vienen por primera vez; la oscura, los que ya eran del consultorio.</p>
       <div id="p-pac-mes"></div></div>
     <div class="grid g2">
-      <div class="card"><h2>De la consulta al tratamiento</h2>
-        <p class="hint">De los que entraron solo por una consulta, cuántos terminaron haciéndose algo.</p>
+      <div class="card"><h2>¿Cuántos pacientes nuevos se tratan?</h2>
+        <p class="hint">De los pacientes nuevos, cuántos se hicieron algo más que una
+          consulta. Es el número que dice si la clínica está convirtiendo.</p>
         <div id="p-conversion"></div></div>
       <div class="card"><h2>¿Cuántas veces vuelve cada paciente?</h2>
         <p class="hint">Pacientes agrupados por cantidad de visitas en el periodo.</p>
@@ -3931,10 +3932,24 @@ function renderPanel(){
       var k=keyPac(r.paciente); if(!k||!visitaReal(r))return;
       if((r.servicios||[]).length&&!soloConsulta(r))seTrato[k]=1});
 
+    /* La fecha en que cada paciente se trató por primera vez. */
+    var primerTrat={};
+    DATA.forEach(function(r){
+      var k=keyPac(r.paciente); if(!k||!r.fecha||!visitaReal(r))return;
+      if(!(r.servicios||[]).length||soloConsulta(r))return;
+      if(!primerTrat[k]||r.fecha<primerTrat[k])primerTrat[k]=r.fecha});
+
+    /* Una consulta cuenta como puerta de entrada solo si a esa fecha el
+       paciente todavía no se había tratado nunca. Sarah Jalil se hizo dos
+       endodoncias en mayo y vino a consultar en agosto: esa consulta no es
+       una puerta, ya era paciente de tratamiento, y contarla ahí hacía
+       parecer que la consulta convierte peor de lo que convierte. */
     var pasoPorConsulta={};
     rows.forEach(function(r){
       var k=keyPac(r.paciente);
-      if(k&&visitaReal(r)&&soloConsulta(r))pasoPorConsulta[k]=1});
+      if(!k||!visitaReal(r)||!soloConsulta(r))return;
+      if(primerTrat[k]&&primerTrat[k]<r.fecha)return;
+      pasoPorConsulta[k]=1});
     var base=Object.keys(pasoPorConsulta);
     var conv=base.filter(function(k){return seTrato[k]});
     var pc=base.length?Math.round(conv.length/base.length*100):0;
@@ -3943,21 +3958,49 @@ function renderPanel(){
     var baseNue=base.filter(function(k){return nuevos[k]});
     var convNue=baseNue.filter(function(k){return seTrato[k]});
 
+    /* Se muestra el cuadro entero. Solo el "3 de 17" hacía pensar que de 45
+       pacientes nuevos apenas 3 se habían tratado: los 17 son los que
+       salieron con una consulta y nada más, no todos los del mes. */
+    var tratados=Object.keys(pacs).filter(function(k){return seTrato[k]}).length;
+    var nueTratados=Object.keys(nuevos).filter(function(k){return seTrato[k]}).length;
+    var nueDirecto=Object.keys(nuevos).filter(function(k){return !pasoPorConsulta[k]}).length;
+
+    /* El número que importa: de los pacientes nuevos, cuántos se hicieron
+       algo más que la consulta. Ese dice si la clínica convierte; el resto
+       del cuadro está para explicarlo. */
+    var nNuevos=Object.keys(nuevos).length;
     $('#p-conversion').innerHTML=
-      '<div class="kpis"><div class="kpi acc"><div class="k">Conversión</div><div class="v">'+pc+'%</div>'+
-      '<div class="d">'+conv.length+' de '+base.length+' pasaron a tratarse</div></div>'+
-      '<div class="kpi" style="cursor:pointer" onclick="verSinTratarse()" '+
-        'title="Ver quiénes son y escribirles">'+
-        '<div class="k">Solo consulta y se fueron sin tratarse</div>'+
-        '<div class="v">'+(base.length-conv.length)+'</div>'+
-        '<div class="d">el mismo número de arriba · <b>tocá para verlos</b></div></div>'+
-      (baseNue.length
-        ? '<div class="kpi"><div class="k">Entre los que eran nuevos</div><div class="v">'+
-          (baseNue.length?Math.round(convNue.length/baseNue.length*100):0)+'%</div>'+
-          '<div class="d">'+convNue.length+' de '+baseNue.length+
-          ' que vinieron por primera vez</div></div>'
-        : '')+
+      '<div class="kpis">'+
+        '<div class="kpi acc"><div class="k">Conversión de pacientes nuevos</div><div class="v">'+
+          (nNuevos?Math.round(nueTratados/nNuevos*100):0)+'%</div>'+
+          '<div class="d"><b>'+n0(nueTratados)+' de '+n0(nNuevos)+
+          '</b> se hicieron algo más que la consulta</div></div>'+
+        '<div class="kpi"><div class="k">Contando también a los conocidos</div><div class="v">'+
+          (nPac?Math.round(tratados/nPac*100):0)+'%</div>'+
+          '<div class="d">'+n0(tratados)+' de '+n0(nPac)+' pacientes del periodo</div></div>'+
+        '<div class="kpi"><div class="k">Salieron con una consulta y nada más</div>'+
+          '<div class="v">'+n0(base.length)+'</div>'+
+          '<div class="d">'+n0(baseNue.length)+' que venían por primera vez'+
+          (base.length-baseNue.length?' · '+n0(base.length-baseNue.length)+
+            ' que ya habían venido y tampoco se habían tratado':'')+
+          (conv.length?' · '+n0(conv.length)+' volvió a tratarse después':'')+
+          '</div></div>'+
+        '<div class="kpi" style="cursor:pointer" onclick="verSinTratarse()" '+
+          'title="Ver quiénes son y escribirles">'+
+          '<div class="k">Y siguen sin tratarse</div>'+
+          '<div class="v">'+n0(base.length-conv.length)+'</div>'+
+          '<div class="d">el mismo número de arriba · <b>tocá para verlos</b></div></div>'+
       '</div>'+
+      (nNuevos
+        ? '<p class="mini" style="margin-top:12px">De esos <b>'+n0(nNuevos)+
+          ' pacientes nuevos</b>, <b>'+n0(nueDirecto)+'</b> ya se trataron en su primera '+
+          'visita —una limpieza, una restauración— y <b>'+n0(baseNue.length)+
+          '</b> salieron solo con la consulta.'+
+          (nNuevos-nueTratados
+            ? ' Los <b>'+n0(nNuevos-nueTratados)+'</b> que faltan para el 100% son los que '+
+              'todavía no se hicieron nada.'
+            : ' Se trataron todos.')+'</p>'
+        : '')+
       (base.length?'':'<p class="mini" style="margin-top:10px">En este periodo nadie salió solo con una consulta.</p>');
 
     var buckets={'1 visita':0,'2 visitas':0,'3 a 5':0,'6 o más':0};
