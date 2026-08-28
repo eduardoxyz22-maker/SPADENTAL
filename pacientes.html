@@ -305,11 +305,14 @@ input.fijo{background:var(--paper);color:var(--gray);cursor:not-allowed}
 /* "¿Qué pasó?": los desenlaces se leen como respuestas a una pregunta y no
    como el estado en el que está la cita. */
 .rot-marcar{font-size:12px;color:var(--gray);font-weight:600;align-self:center;margin-left:4px}
+.kpi .k{min-height:2.4em}
 .sintratar{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:60vh;overflow-y:auto}
 .st-fila{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
 .st-cab{font-size:14px}
 .st-cot{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
 .st-acts{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+table.matriz tr.otros td{background:var(--paper);color:var(--gray);font-style:italic}
+table.matriz tr.otros td:first-child{font-style:normal}
 .rep-par{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;background:#fff}
 .rep-razon{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:var(--gray);margin-bottom:10px}
@@ -894,6 +897,7 @@ body.locked{overflow:hidden}
       <div><label>Mostrar</label>
         <select id="l-tipo"><option value="atenciones" selected>Atenciones</option>
         <option value="citas">Citas agendadas</option><option value="todo">Todo</option></select></div>
+      <div><label>Doctora</label><select id="l-prof"><option value="">Todas</option></select></div>
       <div><label>Buscar</label><input id="l-q" placeholder="Paciente, servicio, canal…"></div>
     </div>
     <div class="kpis" style="margin:14px 0">
@@ -2787,6 +2791,22 @@ function reabrirCita(id){
   r.estado='Agendada'; r.resueltaTs='';
   persist(r); toast('Vuelve a quedar pendiente'); refreshAll()}
 
+/* Las doctoras que aparecen en las atenciones, no solo las de la lista de
+   Ajustes: si alguien cargó una atención con un nombre que ya no está en la
+   lista, sin esto no habría forma de filtrarla. */
+function llenarFiltroProfLista(){
+  var sel=$('#l-prof'); if(!sel)return;
+  var hay={};
+  (CFG.prof||[]).forEach(function(p){hay[p]=1});
+  DATA.forEach(function(r){if(r.profesional)hay[r.profesional]=1});
+  var antes=sel.value;
+  sel.innerHTML='<option value="">Todas</option>'+
+    Object.keys(hay).sort().map(function(p){
+      return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');
+  /* una doctora solo ve lo suyo: el filtro no le sirve para nada más */
+  if(esDoctora()){sel.value=PROF_ACTUAL; sel.disabled=true}
+  else{sel.disabled=false; if(antes)sel.value=antes}}
+
 function llenarFiltroProf(){
   var sel=$('#q-filtro-prof'), actual=sel.value;
   if(esDoctora()){
@@ -3562,6 +3582,8 @@ function filtrarLista(){
      sería el facturado del consultorio */
   if(esDoctora())out=out.filter(function(r){
     return r.profesional===PROF_ACTUAL||r.profesional==='Por definir'});
+  var soloProf=$('#l-prof')?$('#l-prof').value:'';
+  if(soloProf)out=out.filter(function(r){return r.profesional===soloProf});
   if(tipo==='atenciones')out=out.filter(esAtencion);
   else if(tipo==='citas')out=out.filter(esCitaPendiente);
   if(rango==='dia'){var d=$('#l-dia').value; out=out.filter(function(r){return r.fecha===d})}
@@ -3596,6 +3618,7 @@ function soloAtenciones(a){return a.filter(esAtencion)}
 function esImportada(r){return /^Importado del /.test(r.obs||'')}
 
 function renderLista(){
+  llenarFiltroProfLista();
   var rows=filtrarLista();
   var pacs={}; rows.forEach(function(r){if(r.paciente)pacs[r.paciente.trim().toLowerCase()]=1});
   var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0),
@@ -3706,12 +3729,16 @@ function barras2(items){
   var max=Math.max.apply(null,items.map(function(i){return i.a+i.b}))||1;
   return '<div class="bars">'+items.map(function(i){
     var ta=i.a/max*100, tb=i.b/max*100;
+    /* el porcentaje va sobre el total del mes, no sobre el ancho de la barra:
+       lo que se quiere saber es qué parte de los pacientes fue nueva */
+    var totalFila=i.a+i.b;
     var seg=function(v,pc,cls){
       if(!v)return '';
-      var dentro=pc>=7;
+      var dentro=pc>=14;
+      var txt=n0(v)+' · '+Math.round(v/(totalFila||1)*100)+'%';
       return '<div class="bar-fill'+cls+'" style="width:'+pc.toFixed(1)+'%">'+
-        (dentro?'<span class="bar-n">'+n0(v)+'</span>':'')+'</div>'+
-        (dentro?'':'<span class="bar-fuera'+cls+'">'+n0(v)+'</span>')};
+        (dentro?'<span class="bar-n">'+txt+'</span>':'')+'</div>'+
+        (dentro?'':'<span class="bar-fuera'+cls+'">'+txt+'</span>')};
     return '<div class="bar-row"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.k)+'</div>'+
       '<div class="bar-track apilada">'+
         seg(i.a,ta,'')+seg(i.b,tb,' b2')+
@@ -3737,7 +3764,10 @@ function renderPanel(){
     var c=r.canal||'Sin dato';
     if(!canal[c])canal[c]={pac:{},n:0,bs:0};
     if(k)canal[c].pac[k]=1; canal[c].n++; canal[c].bs+=num(r.total);
-    (r.servicios||[]).forEach(function(s){
+    /* Los servicios de una cita agendada son lo que se PIENSA hacer, no lo
+       que se hizo: contarlos acá inflaba la sección Servicios por encima de
+       lo facturado. */
+    if(visitaReal(r))(r.servicios||[]).forEach(function(s){
       if(!s.nom)return; var q=num(s.cant)||1, v=num(s.precio)*q;
       var lb=labDe(s);
       if(!serv[s.nom])serv[s.nom]={n:0,bs:0,lab:0,pac:{}};
@@ -3805,16 +3835,23 @@ function renderPanel(){
     var diasConAtencion=Object.keys(porDia).length||1;
 
     $('#p-pac-kpis').innerHTML=
-      '<div class="kpi"><div class="k">Nuevos</div><div class="v">'+n0(nNue)+'</div><div class="d">primera vez en el consultorio</div></div>'+
-      '<div class="kpi"><div class="k">Ya eran pacientes</div><div class="v">'+n0(nVue)+'</div><div class="d">'+(nPac?Math.round(nVue/nPac*100):0)+'% de los atendidos</div></div>'+
-      '<div class="kpi"><div class="k">Reconsultas</div><div class="v">'+n0(reconsultas)+'</div><div class="d">atenciones de pacientes que ya venían</div></div>'+
+      '<div class="kpi" style="cursor:pointer" onclick="verNuevosDelPanel()" '+
+        'title="Ver quiénes son"><div class="k">Nuevos</div><div class="v">'+n0(nNue)+'</div>'+
+        '<div class="d">primera vez en el consultorio · <b>tocá para verlos</b></div></div>'+
+      '<div class="kpi" style="cursor:pointer" onclick="verYaEranPacientes()" '+
+        'title="Ver quiénes son"><div class="k">Ya eran pacientes</div><div class="v">'+n0(nVue)+'</div>'+
+        '<div class="d">'+(nPac?Math.round(nVue/nPac*100):0)+
+        '% de los atendidos · <b>tocá para verlos</b></div></div>'+
+      '<div class="kpi" style="cursor:pointer" onclick="verReconsultas()" '+
+        'title="Ver cuáles son"><div class="k">Reconsultas</div><div class="v">'+n0(reconsultas)+'</div>'+
+        '<div class="d">atenciones de pacientes que ya venían · <b>tocá para verlas</b></div></div>'+
       '<div class="kpi acc" style="cursor:pointer" onclick="verSinTratarse()" '+
         'title="Ver quiénes son y escribirles">'+
-        '<div class="k">Se fueron sin tratarse</div><div class="v">'+n0(sinTratar.length)+'</div>'+
+        '<div class="k">Solo consulta y se fueron sin tratarse</div>'+
+        '<div class="v">'+n0(sinTratar.length)+'</div>'+
         '<div class="d">'+(nPac?Math.round(sinTratar.length/nPac*100):0)+
         '% de los atendidos · <b>tocá para verlos</b></div></div>'+
       '<div class="kpi"><div class="k">Visitas por paciente</div><div class="v">'+visProm.toFixed(1)+'</div><div class="d">promedio del periodo</div></div>'+
-      '<div class="kpi"><div class="k">Gasto por paciente</div><div class="v" style="font-size:21px">'+bs(nPac?tot/nPac:0)+'</div><div class="d">facturado / paciente</div></div>'+
       /* cien pacientes no son cien atenciones: uno vuelve tres veces y son tres */
       '<div class="kpi"><div class="k">Atenciones</div><div class="v">'+n0(rows.length)+'</div>'+
         '<div class="d">en '+n0(diasConAtencion)+' día'+(diasConAtencion===1?'':'s')+' de consultorio</div></div>'+
@@ -4024,13 +4061,32 @@ function renderPanel(){
           var r=v/maxCel, cls=r>=.66?' hot3':r>=.33?' hot2':r>0?' hot1':'';
           return '<td class="'+cls.trim()+'">'+n0(v)+'</td>'}).join('');
         h+='<tr><td>'+esc(sv)+'</td>'+celdasF+'<td><b>'+n0(totF)+'</b></td></tr>'});
+      /* Lo que hizo cada doctora fuera de esos 12 servicios. Sin esta fila el
+         TOTAL de la columna no coincidía con la tabla del equipo —Brenda salía
+         con Bs 730 en un lado y Bs 2.220 en el otro— y parecía un error de
+         cuentas cuando era solo lo que la tabla dejaba afuera. */
+      var otrosTot=0, hayOtros=false;
+      var celdasOtros=docs.map(function(d){
+        var todo=0, enTop=0;
+        Object.keys(srvProf[d]||{}).forEach(function(sv){
+          todo+=srvProf[d][sv].bs;
+          if(topS.indexOf(sv)>=0)enTop+=srvProf[d][sv].bs});
+        var resto=todo-enTop; otrosTot+=resto;
+        if(resto>0)hayOtros=true;
+        return resto>0?('<td>'+n0(resto)+'</td>'):'<td class="z">·</td>'}).join('');
+      if(hayOtros)
+        h+='<tr class="otros"><td>Otros '+n0(Math.max(0,sArr.length-topS.length))+
+           ' servicios</td>'+celdasOtros+'<td><b>'+n0(otrosTot)+'</b></td></tr>';
+
       var granTot=0;
       h+='<tr class="tot"><td>TOTAL</td>'+docs.map(function(d){
-        var t=0; topS.forEach(function(sv){if(srvProf[d]&&srvProf[d][sv])t+=srvProf[d][sv].bs});
+        var t=0; Object.keys(srvProf[d]||{}).forEach(function(sv){t+=srvProf[d][sv].bs});
         granTot+=t; return '<td>'+n0(t)+'</td>'}).join('')+'<td>'+n0(granTot)+'</td></tr>';
       h+='</tbody></table></div>'+
         '<p class="mini" style="margin-top:10px">Bolivianos facturados. Cuanto más verde, '+
-        'más peso tiene ese servicio en esa doctora. Un punto quiere decir que no lo hizo.</p>';
+        'más peso tiene ese servicio en esa doctora. Un punto quiere decir que no lo hizo. '+
+        'La fila <b>Otros</b> junta todo lo que no entra en los 12 de arriba, así el '+
+        'TOTAL coincide con lo que muestra <b>Equipo</b>.</p>';
       $('#p-srv-prof').innerHTML=h;
     } else {$('#p-srv-prof').innerHTML='<div class="empty">Sin datos en este periodo.</div>'}
   }
@@ -4442,6 +4498,90 @@ function agrupaPacientes(){
     if(!p.canal&&r.canal)p.canal=r.canal;
     if(r.prox&&r.prox>=hoy&&(!p.prox||r.prox<p.prox))p.prox=r.prox});
   return Object.keys(by).map(function(k){return by[k]})}
+
+/* Detrás de cada número tiene que estar la lista: un KPI que dice 45 y no
+   deja ver quiénes son no se puede revisar ni corregir. */
+function modalLista(titulo,hint,filas,vacio){
+  if(!filas.length){toast(vacio||'No hay nada que mostrar acá');return}
+  openModal('<h3>'+esc(titulo)+' <span class="pill">'+filas.length+'</span></h3>'+
+    '<p class="hint">'+hint+'</p>'+
+    '<div class="sintratar">'+filas.map(function(f){
+      return '<div class="st-fila">'+
+        '<div class="st-cab"><b>'+esc(f.nombre)+'</b>'+
+          (f.meta?'<span class="mini"> · '+f.meta+'</span>':'')+'</div>'+
+        (f.extra?'<div class="st-cot">'+f.extra+'</div>':'')+
+        '<div class="st-acts">'+
+          '<button class="btn sec sm" onclick="closeModal();verPaciente(\''+jss(f.nombre)+
+            '\')">Ver su ficha</button>'+
+          (f.wa||'')+
+        '</div></div>'}).join('')+'</div>')}
+
+/* Los pacientes del período, con lo que hicieron, para las tres listas. */
+function resumenPacientes(rows,claves){
+  var por={};
+  rows.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||!claves[k])return;
+    if(!por[k])por[k]={nombre:(r.paciente||'').trim(),n:0,bs:0,
+      primera:r.fecha||'',ultima:r.fecha||'',profs:{},srv:{},cel:r.celular||''};
+    var p=por[k];
+    p.n++; p.bs+=num(r.total);
+    if(r.fecha){if(!p.primera||r.fecha<p.primera)p.primera=r.fecha;
+                if(!p.ultima||r.fecha>p.ultima)p.ultima=r.fecha}
+    if(r.profesional)p.profs[r.profesional]=1;
+    if(!p.cel&&r.celular)p.cel=r.celular;
+    (r.servicios||[]).forEach(function(x){if(x.nom)p.srv[x.nom]=1})});
+  return Object.keys(por).map(function(k){return por[k]})
+    .sort(function(a,b){return (b.ultima||'').localeCompare(a.ultima||'')})}
+
+function filaDePaciente(p,verPlata){
+  return {nombre:p.nombre,
+    meta:(p.primera?fmtFcorta(p.primera):'')+
+      (p.ultima&&p.ultima!==p.primera?' → '+fmtFcorta(p.ultima):'')+
+      ' · '+n0(p.n)+(p.n===1?' visita':' visitas')+
+      (verPlata?' · '+bs(p.bs):'')+
+      (Object.keys(p.profs).length?' · '+esc(Object.keys(p.profs).join(', ')):''),
+    extra:Object.keys(p.srv).slice(0,6).map(function(x){
+      return '<span class="pill">'+esc(x)+'</span>'}).join(' ')}}
+
+function verNuevosDelPanel(){
+  var rows=periodoRows();
+  modalLista('Pacientes nuevos',
+    'Vinieron por primera vez al consultorio en este periodo. '+
+    'Es la gente que la clínica ganó: si este número baja, la agenda se sostiene '+
+    'sola con los de siempre y eso tiene techo.',
+    resumenPacientes(rows,nuevosDelPeriodo(rows)).map(function(p){
+      return filaDePaciente(p,esAdmin())}),
+    'No hubo pacientes nuevos en este periodo')}
+
+function verYaEranPacientes(){
+  var rows=periodoRows(), nuevos=nuevosDelPeriodo(rows), viejos={};
+  rows.forEach(function(r){
+    var k=keyPac(r.paciente); if(k&&!nuevos[k])viejos[k]=1});
+  modalLista('Ya eran pacientes',
+    'Vinieron en este periodo pero ya habían estado antes en el consultorio.',
+    resumenPacientes(rows,viejos).map(function(p){
+      return filaDePaciente(p,esAdmin())}),
+    'En este periodo no vino ningún paciente conocido')}
+
+function verReconsultas(){
+  var rows=periodoRows(), pv=primeraVisitaDe();
+  /* una reconsulta es cada visita que no fue la primera de ese paciente */
+  var l=rows.filter(function(r){
+    var k=keyPac(r.paciente);
+    return k&&r.fecha&&visitaReal(r)&&pv[k]!==r.fecha})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
+  var verPlata=esAdmin();
+  modalLista('Reconsultas',
+    'Cada visita que <b>no</b> fue la primera de ese paciente. Un mismo paciente '+
+    'puede aparecer varias veces: son atenciones, no personas.',
+    l.map(function(r){
+      return {nombre:(r.paciente||'').trim(),
+        meta:fmtFcorta(r.fecha)+(r.hora?' · '+r.hora:'')+
+          (r.profesional?' · '+esc(r.profesional):'')+
+          (verPlata&&num(r.total)>0?' · '+bs(r.total):''),
+        extra:(r.servicios||[]).filter(function(x){return x.nom})
+          .map(function(x){return '<span class="pill">'+esc(x.nom)+'</span>'}).join(' ')}}),
+    'En este periodo no hubo reconsultas')}
 
 /* La lista de los que se fueron sin tratarse, para llamarlos uno por uno. */
 function verSinTratarse(){
@@ -7194,6 +7334,7 @@ function bind(){
     $('#wrap-l-mes').style.display=this.value==='mes'?'':'none'; renderLista()};
   ['#l-dia','#l-mes','#l-tipo'].forEach(function(s){$(s).onchange=renderLista});
   $('#l-q').oninput=renderLista;
+  $('#l-prof').onchange=renderLista;
   $('#btn-buscar-rep').onclick=renderRepetidos;
   $('#btn-xls').onclick=function(){exportXlsx(filtrarLista(),'Ezequiel_Spadental_atenciones_'+hoyISO()+'.xlsx')};
   $('#btn-xls2').onclick=function(){exportXlsx(DATA,'Ezequiel_Spadental_atenciones_completo_'+hoyISO()+'.xlsx')};
