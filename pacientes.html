@@ -369,6 +369,8 @@ body.rol-equipo .solo-admin{display:none !important}
 .mi-a.plata{background:#FBF3E2;border-color:#EFE0BC;color:#6B4E10}
 .mi-a.plan{background:#F2F6E4;border-color:#DFE8C2;color:#4C5A16}
 .mi-a.presu{background:#EDF1FA;border-color:#CFD9EF;color:#2E3F63}
+.mi-a.fija{background:#F6EFFA;border-color:#E0D0EA;color:#4B2E63;font-weight:600}
+.pill.nota{background:#F6EFFA;border-color:#E0D0EA;color:#4B2E63}
 .mi-a.nuevo{background:#F0F7F1;border-color:#CDE4D2;color:#2C5535}
 .mi-hecho{margin-top:8px;font-size:13px;color:var(--gray);line-height:1.45}
 .lock{max-width:380px;margin:34px auto;text-align:center}
@@ -706,7 +708,7 @@ body.locked{overflow:hidden}
         </datalist></div>
     </div>
     <div style="margin-top:12px"><label>Observaciones</label>
-      <textarea id="f-obs" placeholder="Notas clínicas, alergias, acuerdos de pago…"></textarea></div>
+      <textarea id="f-obs" placeholder="Lo que pasó hoy: hallazgos, acuerdos de pago, cómo reaccionó…"></textarea></div>
     <div class="row-btn">
       <button class="btn" id="btn-save">Guardar atención</button>
       <button class="btn sec" id="btn-clear">Limpiar</button>
@@ -2688,6 +2690,35 @@ function renderCitasProximas(){
   llenarFiltroProf();
   updateNavCita()}
 
+/* Lo que hay que saber sí o sí antes de que el paciente entre: la alergia
+   y la nota que alguien dejó sobre él. Va en la tarjeta de la cita porque
+   la agenda del día es lo que se mira antes de sentarlo, no la ficha. */
+function avisoAntesDeEntrar(nombre){
+  var m=pacDe(nombre).med, out=[];
+  if(m.alergias)out.push('<span class="pill due">⚠ alergia: '+esc(m.alergias)+'</span>');
+  if(m.notas)out.push('<span class="pill nota">📌 '+esc(m.notas)+'</span>');
+  return out.length?'<br>'+out.join(' '):''}
+
+/* Escribir esa nota sin tener que entrar a editar la ficha entera. */
+function notaRapida(nombre){
+  var f=pacDe(nombre);
+  openModal('<h3>Nota sobre '+esc(nombre)+'</h3>'+
+    '<p class="hint">Queda pegada al paciente y la ven todas las doctoras cada vez '+
+    'que venga: en la agenda del día, al empezar la atención y en su ficha. '+
+    'Para lo clínico de una visita puntual, usá las notas de la atención.</p>'+
+    '<textarea id="nr-txt" rows="3" placeholder="Ej. Prefiere que le expliquen antes de cada paso">'+
+      esc(f.med.notas||'')+'</textarea>'+
+    '<div class="row-btn" style="margin-top:12px">'+
+      '<button class="btn" onclick="guardarNotaRapida(\''+esc(nombre).replace(/'/g,"\\'")+'\')">Guardar</button>'+
+      '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  var t=$('#nr-txt'); if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}}
+
+function guardarNotaRapida(nombre){
+  var f=pacDe(nombre);
+  f.med.notas=$('#nr-txt').value.trim();
+  savePac(f); closeModal(); refreshAll();
+  toast(f.med.notas?'Nota guardada 📌':'Nota borrada')}
+
 /* Una cita ya resuelta: se ve el desenlace y se puede corregir */
 function citaResueltaCard(r){
   var cls={'Atendido':'today','No asistió':'due','Canceló':'due','Reprogramó':'money'}[r.estado]||'';
@@ -2695,7 +2726,8 @@ function citaResueltaCard(r){
     (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
     (r.estado==='Atendido'&&num(r.total)>0?' · '+bs(r.total):'')+
     '<br>'+(r.agendaPor?(AGENDA_ICONO[r.agendaPor]||'')+' agendó por '+esc(r.agendaPor)+' · ':'')+
-    '📱 '+esc(r.celular||'sin celular')+(r.profesional?' · '+esc(r.profesional):'');
+    '📱 '+esc(r.celular||'sin celular')+(r.profesional?' · '+esc(r.profesional):'')+
+    avisoAntesDeEntrar(r.paciente);
   var acts='<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver ficha</button>'+
     '<button class="btn sec sm" onclick="reabrirCita(\''+r.id+'\')">↩ Corregir</button>';
   return remCard(cls,r.paciente,meta,acts)}
@@ -2747,7 +2779,8 @@ function citaCard(r,d){
     '<br>'+(r.agendaPor?(AGENDA_ICONO[r.agendaPor]||'')+' agendó por <b>'+esc(r.agendaPor)+'</b> · ':'')+
     '📱 '+esc(r.celular||'sin celular')+
     (r.profesional?' · '+esc(r.profesional):'')+
-    (r.tipo==='Nuevo'?' · <span class="pill lime">paciente nuevo</span>':'');
+    (r.tipo==='Nuevo'?' · <span class="pill lime">paciente nuevo</span>':'')+
+    avisoAntesDeEntrar(r.paciente);
   /* Los cuatro botones al mismo peso visual: el verde del botón principal
      hacía creer que la cita YA estaba marcada como "Vino". El estado va
      escrito, no insinuado por un color. */
@@ -5238,6 +5271,10 @@ function avisosDe(nombre,rActual){
     out.push({t:'ojo',txt:'💊 Toma: '+esc(fi.med.medicacion)});
   if(fi.med&&(fi.med.antecedentes||[]).length)
     out.push({t:'ojo',txt:'🩺 '+esc(fi.med.antecedentes.join(', '))});
+  /* La nota que alguien dejó sobre este paciente. Vale para todas sus
+     visitas, no solo para una: por eso va arriba y no se pierde. */
+  if(fi.med&&fi.med.notas)
+    out.push({t:'fija',txt:'📌 '+esc(fi.med.notas)});
 
   var deuda=deudaDe(nombre);
   if(deuda>0)out.push({t:'plata',txt:'💰 Debe <b>'+bs(deuda)+'</b> de antes'});
@@ -5272,6 +5309,8 @@ function avisosDe(nombre,rActual){
   return out}
 
 function tarjetaDia(r){
+  var notaBtn='<button class="btn sec sm" onclick="notaRapida(\''+
+    esc(r.paciente||'').replace(/'/g,"\\'")+'\')" title="Dejar una nota sobre este paciente">📌 Nota</button>';
   var av=avisosDe(r.paciente,r);
   var grave=av.some(function(a){return a.t==='alergia'});
   var pend=esCitaPendiente(r);
