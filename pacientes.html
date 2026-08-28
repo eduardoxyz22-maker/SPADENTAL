@@ -2699,6 +2699,10 @@ function avisoAntesDeEntrar(nombre){
   if(m.notas)out.push('<span class="pill nota">📌 '+esc(m.notas)+'</span>');
   return out.length?'<br>'+out.join(' '):''}
 
+function botonNota(nombre){
+  return '<button class="btn sec sm" onclick="notaRapida(\''+jss(nombre)+'\')" '+
+    'title="Dejar una nota sobre este paciente, para todas sus visitas">📌 Nota</button>'}
+
 /* Escribir esa nota sin tener que entrar a editar la ficha entera. */
 function notaRapida(nombre){
   var f=pacDe(nombre);
@@ -2729,7 +2733,8 @@ function citaResueltaCard(r){
     '📱 '+esc(r.celular||'sin celular')+(r.profesional?' · '+esc(r.profesional):'')+
     avisoAntesDeEntrar(r.paciente);
   var acts='<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver ficha</button>'+
-    '<button class="btn sec sm" onclick="reabrirCita(\''+r.id+'\')">↩ Corregir</button>';
+    '<button class="btn sec sm" onclick="reabrirCita(\''+r.id+'\')">↩ Corregir</button>'+
+    botonNota(r.paciente);
   return remCard(cls,r.paciente,meta,acts)}
 
 /* Volver a dejarla pendiente, por si se marcó mal */
@@ -2790,7 +2795,9 @@ function citaCard(r,d){
     '<button class="btn sec sm marcar" onclick="resolverCita(\''+r.id+'\',\'Atendido\')">✅ Vino</button>'+
     '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✖ No vino</button>'+
     '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'Canceló\')">🚫 Canceló</button>'+
-    '<button class="btn sec sm" onclick="reagendar(\''+r.id+'\')">🔁 Reprogramar</button>';
+    '<button class="btn sec sm" onclick="reagendar(\''+r.id+'\')">🔁 Reprogramar</button>'+
+    '<button class="btn sec sm" onclick="verPaciente(\''+jss(r.paciente)+'\')">👤 Ficha</button>'+
+    botonNota(r.paciente);
   return remCard(cls,r.paciente,meta,acts)}
 
 /* Por dónde nos encontró: es un dato de la persona, no de cada visita. Al
@@ -5309,8 +5316,6 @@ function avisosDe(nombre,rActual){
   return out}
 
 function tarjetaDia(r){
-  var notaBtn='<button class="btn sec sm" onclick="notaRapida(\''+
-    esc(r.paciente||'').replace(/'/g,"\\'")+'\')" title="Dejar una nota sobre este paciente">📌 Nota</button>';
   var av=avisosDe(r.paciente,r);
   var grave=av.some(function(a){return a.t==='alergia'});
   var pend=esCitaPendiente(r);
@@ -5334,6 +5339,7 @@ function tarjetaDia(r){
         '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✖ No vino</button>'
       : '<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver atención</button>')+
     '<button class="btn sec sm" onclick="abrirFichaMed(\''+jss(r.paciente)+'\')">🩺 Ficha</button>'+
+    botonNota(r.paciente)+
     (r.celular?'<a class="btn sec sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r))+'">WhatsApp</a>':'');
   return '<div class="rem mi '+cls+'"><div><div class="who">'+esc(r.paciente)+'</div>'+
     '<div class="meta">'+cab+'</div>'+det+hecho+'</div>'+
