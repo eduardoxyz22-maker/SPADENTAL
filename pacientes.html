@@ -227,7 +227,15 @@ tbody tr.destaca td{background:#FBFCF5}
 .ov{position:fixed;inset:0;background:rgba(38,38,37,.55);display:none;align-items:flex-end;justify-content:center;z-index:60}
 .ov.on{display:flex}
 @media(min-width:640px){.ov{align-items:center;padding:20px}}
-.modal{background:#fff;width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px}
+.modal{background:#fff;width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px;position:relative}
+/* grande y separada del contenido: se toca con el dedo sin apuntar */
+.modal-x{position:sticky;top:-18px;float:right;margin:-8px -6px 0 8px;z-index:2;
+  width:40px;height:40px;border-radius:50%;border:1px solid var(--line);
+  background:#fff;color:var(--gray);font-size:19px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit}
+.modal-x:hover{background:var(--paper);color:var(--ink);border-color:var(--gray)}
+.modal-pie{clear:both;margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+  display:flex;justify-content:flex-end}
 @media(min-width:640px){.modal{border-radius:18px}}
 .modal h3{margin:0 0 2px;font-size:18px}
 .modal .mrow{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -3865,22 +3873,50 @@ function renderPanel(){
       var a=Object.keys(mens[k].nue).length, b=Object.keys(mens[k].rec).length;
       return {k:mesLabel(k),a:a,b:b,lbl:(a+b)+''}}));
 
-    /* conversión: pacientes cuya PRIMERA atención fue solo consulta,
-       y que después (alguna vez) se hicieron un tratamiento */
-    var primerAt={},hizoTrat={};
+    /* Quién pasó por una consulta en el periodo y quién terminó tratándose.
+
+       Este bloque contaba solo a los pacientes NUEVOS cuya primera visita de
+       toda su historia había sido una consulta: daba 12 mientras el KPI de
+       arriba decía 14, con rótulos casi iguales. Los dos estaban bien y no
+       había forma de saberlo mirando la pantalla. Ahora los dos parten de la
+       misma gente: los que este mes salieron con una consulta.
+
+       Y "se trató" exige un servicio de verdad en una visita que ocurrió:
+       soloConsulta() devuelve false cuando la atención no tiene servicios
+       cargados, así que una atención vacía daba por tratado al paciente. */
+    var seTrato={};
     DATA.forEach(function(r){
-      var k=(r.paciente||'').trim().toLowerCase(); if(!k||!r.fecha)return;
-      if(!primerAt[k]||r.fecha<primerAt[k].fecha)primerAt[k]={fecha:r.fecha,r:r};
-      if(!soloConsulta(r))hizoTrat[k]=1});
-    var base=Object.keys(nuevos).filter(function(k){return primerAt[k]&&soloConsulta(primerAt[k].r)});
-    var conv=base.filter(function(k){return hizoTrat[k]});
+      var k=keyPac(r.paciente); if(!k||!visitaReal(r))return;
+      if((r.servicios||[]).length&&!soloConsulta(r))seTrato[k]=1});
+
+    var pasoPorConsulta={};
+    rows.forEach(function(r){
+      var k=keyPac(r.paciente);
+      if(k&&visitaReal(r)&&soloConsulta(r))pasoPorConsulta[k]=1});
+    var base=Object.keys(pasoPorConsulta);
+    var conv=base.filter(function(k){return seTrato[k]});
     var pc=base.length?Math.round(conv.length/base.length*100):0;
+
+    /* de los que además eran nuevos: la consulta como puerta de entrada */
+    var baseNue=base.filter(function(k){return nuevos[k]});
+    var convNue=baseNue.filter(function(k){return seTrato[k]});
+
     $('#p-conversion').innerHTML=
       '<div class="kpis"><div class="kpi acc"><div class="k">Conversión</div><div class="v">'+pc+'%</div>'+
       '<div class="d">'+conv.length+' de '+base.length+' pasaron a tratarse</div></div>'+
-      '<div class="kpi"><div class="k">Se fueron sin tratarse</div><div class="v">'+(base.length-conv.length)+'</div>'+
-      '<div class="d">entraron por consulta y no volvieron a tratarse</div></div></div>'+
-      (base.length?'':'<p class="mini" style="margin-top:10px">En este periodo no hubo pacientes nuevos que entraran solo por consulta.</p>');
+      '<div class="kpi" style="cursor:pointer" onclick="verSinTratarse()" '+
+        'title="Ver quiénes son y escribirles">'+
+        '<div class="k">Solo consulta y se fueron sin tratarse</div>'+
+        '<div class="v">'+(base.length-conv.length)+'</div>'+
+        '<div class="d">el mismo número de arriba · <b>tocá para verlos</b></div></div>'+
+      (baseNue.length
+        ? '<div class="kpi"><div class="k">Entre los que eran nuevos</div><div class="v">'+
+          (baseNue.length?Math.round(convNue.length/baseNue.length*100):0)+'%</div>'+
+          '<div class="d">'+convNue.length+' de '+baseNue.length+
+          ' que vinieron por primera vez</div></div>'
+        : '')+
+      '</div>'+
+      (base.length?'':'<p class="mini" style="margin-top:10px">En este periodo nadie salió solo con una consulta.</p>');
 
     var buckets={'1 visita':0,'2 visitas':0,'3 a 5':0,'6 o más':0};
     Object.keys(visitasPorPac).forEach(function(k){
@@ -4749,7 +4785,19 @@ function ponerOjos(raiz){
         inp.focus()};
       wrap.appendChild(b)})}
 
-function openModal(html){$('#modal').innerHTML=html;$('#ov').classList.add('on');ponerOjos($('#modal'))}
+/* La X la pone openModal y no cada ventana: son más de cuarenta y a una
+   se le iba a olvidar. Se cierra igual con Esc o tocando afuera, pero eso
+   no lo sabe quien apenas usa la computadora. */
+function openModal(html){
+  $('#modal').innerHTML=
+    '<button type="button" class="modal-x" onclick="closeModal()" '+
+      'title="Cerrar" aria-label="Cerrar">✕</button>'+
+    html+
+    '<div class="modal-pie"><button type="button" class="btn sec" '+
+      'onclick="closeModal()">Cerrar</button></div>';
+  $('#ov').classList.add('on');
+  $('#modal').scrollTop=0;
+  ponerOjos($('#modal'))}
 function closeModal(){$('#ov').classList.remove('on')}
 
 function mrow(k,v){return '<div class="mrow"><span class="mk">'+k+'</span><b>'+v+'</b></div>'}
