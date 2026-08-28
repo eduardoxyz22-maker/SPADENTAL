@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe Agosto 2026 · Ezequiel Spadental</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#F4F4F1;color:#262625;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
+
+header{background:#262625;color:#fff;padding:44px 0 36px}
+header .wrap{padding-bottom:0}
+.eyebrow{font-size:11px;letter-spacing:3px;font-weight:700;text-transform:uppercase;color:#A8C21E;margin-bottom:10px}
+h1{font-size:38px;line-height:1.1;letter-spacing:-1px;font-weight:800;margin-bottom:10px}
+.sub{color:#B8B8B0;font-size:16px}
+.hero-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.hk{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:16px 18px}
+.hk .n{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1}
+.hk .n.g{color:#BEDC2F}
+.hk .l{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:#9A9A92;margin-top:7px;font-weight:600;line-height:1.4}
+
+.tabs{background:#fff;border-bottom:1px solid #E2E0DA;position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+.tabs .wrap{padding-bottom:0;display:flex;gap:2px;overflow-x:auto}
+.tab{padding:16px 20px;font-size:13.5px;font-weight:600;color:#7A7A72;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:.15s;background:none;border-top:0;border-left:0;border-right:0;font-family:inherit}
+.tab:hover{color:#262625;background:#FAFAF7}
+.tab.on{color:#262625;border-bottom-color:#A8C21E}
+
+.panel{display:none;padding-top:34px}
+.panel.on{display:block}
+h2{font-size:25px;font-weight:800;letter-spacing:-.6px;margin-bottom:6px}
+h3{font-size:16px;font-weight:700;margin:26px 0 10px}
+.desc{color:#66665E;font-size:14.5px;margin-bottom:20px;max-width:820px}
+
+.card{background:#fff;border:1px solid #E6E4DE;border-radius:12px;padding:22px 24px;margin-bottom:18px}
+.card.tight{padding:18px 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:900px){.grid2,.grid3,.grid4,.hero-kpis{grid-template-columns:1fr}}
+
+.rec{background:linear-gradient(135deg,#fff 0%,#F7FAF0 100%);border:1.5px solid #C5D96B;border-radius:12px;padding:20px}
+.rec.gold{background:linear-gradient(135deg,#fff 0%,#FDF9EE 100%);border-color:#DFC77A}
+.rec.red{background:linear-gradient(135deg,#fff 0%,#FDF4F2 100%);border-color:#E3B0A8}
+.rec .tag{display:inline-block;font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;background:#A8C21E;color:#262625;padding:3px 9px;border-radius:4px;margin-bottom:12px}
+.rec.gold .tag{background:#C9A227;color:#fff}
+.rec.red .tag{background:#C4453A;color:#fff}
+.rec .big{font-size:36px;font-weight:800;letter-spacing:-1.5px;line-height:1;color:#3D6B14}
+.rec.gold .big{color:#8A6A12}
+.rec.red .big{color:#A83232}
+.rec .where{font-size:13px;font-weight:700;margin-top:9px}
+.rec .why{font-size:12.5px;color:#66665E;margin-top:5px;line-height:1.5}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{background:#262625;color:#fff;text-align:left;padding:10px 12px;font-size:11.5px;font-weight:700;letter-spacing:.3px}
+th.n,td.n{text-align:right}
+td{padding:10px 12px;border-bottom:1px solid #EFEDE7;vertical-align:top}
+tbody tr:hover td{background:#FAFAF7}
+tfoot td{font-weight:800;background:#F4F4F1;border-top:2px solid #262625}
+.tblwrap{overflow-x:auto}
+.win{color:#3D7A1F;font-weight:700}
+.bad{color:#A83232;font-weight:700}
+.warn{color:#B8791A;font-weight:700}
+.muted{color:#9A9A92}
+.sm{font-size:12px;color:#7A7A72;display:block;margin-top:2px}
+
+.barrow{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+.barlbl{width:150px;font-size:12.5px;font-weight:600;flex-shrink:0;text-align:right}
+.bartrack{flex:1;height:26px;background:#F0EEE8;border-radius:5px;overflow:hidden}
+.barfill{height:100%;border-radius:5px;transition:width .9s cubic-bezier(.2,.8,.2,1);width:0}
+.barval{width:130px;font-size:12.5px;font-weight:700;flex-shrink:0}
+@media(max-width:700px){.barlbl{width:96px;font-size:11.5px}.barval{width:98px;font-size:11.5px}}
+
+.note{border-left:4px solid #A8C21E;background:#F4F8EA;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0}
+.note.gold{border-left-color:#C9A227;background:#FDF8EC}
+.note.red{border-left-color:#C4453A;background:#FDF2F0}
+.note.blue{border-left-color:#5A7A9A;background:#F1F4F8}
+.note b{display:block;font-size:14px;margin-bottom:4px}
+.note p{font-size:13px;color:#55554E}
+.note p+p{margin-top:8px}
+
+.act{display:flex;gap:16px;padding:18px 20px;background:#fff;border:1px solid #E6E4DE;border-left:4px solid #262625;border-radius:0 10px 10px 0;margin-bottom:12px}
+.act .num{font-size:26px;font-weight:800;color:#C8C6BE;line-height:1;flex-shrink:0;width:34px}
+.act .t{font-size:15px;font-weight:700;margin-bottom:4px}
+.act .d{font-size:13px;color:#66665E;line-height:1.55}
+.act .imp{display:inline-block;font-size:10px;letter-spacing:.8px;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:3px;margin-top:8px}
+.imp.hi{background:#E4EFC8;color:#3D6B14}
+.imp.md{background:#FBEFD0;color:#8A6A12}
+
+.src{font-size:11.5px;color:#9A9A92;font-style:italic;margin-top:10px;line-height:1.6}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.4px}
+.pill.ok{background:#E4EFC8;color:#3D6B14}
+.pill.no{background:#F7DDD8;color:#A83232}
+.pill.wa{background:#FBEFD0;color:#8A6A12}
+.pill.nu{background:#E1E9F5;color:#2E4A73}
+
+.kpi{background:#fff;border:1px solid #E6E4DE;border-radius:12px;padding:18px 20px}
+.kpi .n{font-size:27px;font-weight:800;letter-spacing:-1px;line-height:1}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#7A7A72;margin-top:7px;font-weight:600}
+.kpi .r{font-size:12px;color:#9A9A92;margin-top:6px}
+.kpi.good .n{color:#3D7A1F}
+.kpi.bad .n{color:#A83232}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Informe mensual de la clínica</div>
+    <h1>Agosto 2026</h1>
+    <div class="sub">Ezequiel Spadental &nbsp;·&nbsp; del 1 al 27 de agosto &nbsp;·&nbsp; 21 días laborales</div>
+    <div class="hero-kpis">
+      <div class="hk"><div class="n g">Bs 37.335</div><div class="l">Ingresos<br>registrados</div></div>
+      <div class="hk"><div class="n">127</div><div class="l">Atenciones<br>registradas</div></div>
+      <div class="hk"><div class="n">Bs 294</div><div class="l">Ticket promedio<br>por atención</div></div>
+      <div class="hk"><div class="n g">7,2%</div><div class="l">Publicidad sobre<br>los ingresos</div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="wrap">
+    <button class="tab on" data-p="p1">Resumen</button>
+    <button class="tab" data-p="p2">Producción</button>
+    <button class="tab" data-p="p3">Publicidad</button>
+    <button class="tab" data-p="p4">Retornos</button>
+    <button class="tab" data-p="p5">Qué hacer</button>
+    <button class="tab" data-p="p6">Pendientes</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ══════════════ 1 · RESUMEN ══════════════ -->
+<section class="panel on" id="p1">
+  <h2>El mes en una pantalla</h2>
+  <p class="desc">Agosto cerró con Bs 37.335 en 21 días laborales. La publicidad se llevó el 7,2% de
+    ese ingreso, dentro de lo sano. El problema del mes no fue traer gente: fue que de cada 100
+    que escribieron, solo llegaron 16 al sillón.</p>
+
+  <div class="grid4" style="margin-bottom:22px">
+    <div class="kpi"><div class="n">Bs 1.778</div><div class="l">Por día laboral</div>
+      <div class="r">37.335 ÷ 21 días</div></div>
+    <div class="kpi"><div class="n">6,0</div><div class="l">Pacientes por día</div>
+      <div class="r">127 atenciones ÷ 21</div></div>
+    <div class="kpi"><div class="n">192</div><div class="l">Procedimientos</div>
+      <div class="r">9,1 por día · 219 piezas</div></div>
+    <div class="kpi"><div class="n">Bs 294</div><div class="l">Ticket promedio</div>
+      <div class="r">por atención</div></div>
+  </div>
+
+  <h3>Los cuatro indicadores que importan</h3>
+  <div class="grid2">
+    <div class="card tight">
+      <div class="grid2">
+        <div class="kpi good" style="border:0;padding:0">
+          <div class="n">7,2%</div>
+          <div class="l">Publicidad sobre ingresos</div>
+          <div class="r">Referencia sana: 5% a 10% &nbsp;<span class="pill ok">en rango</span></div>
+        </div>
+        <div class="kpi bad" style="border:0;padding:0">
+          <div class="n">15,8%</div>
+          <div class="l">De WhatsApp al sillón</div>
+          <div class="r">Referencia sana: 30% a 40% &nbsp;<span class="pill no">a menos de la mitad</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card tight">
+      <div class="grid2">
+        <div class="kpi" style="border:0;padding:0">
+          <div class="n">Bs 208</div>
+          <div class="l">Costo por paciente captado</div>
+          <div class="r">Bs 2.698 ÷ 13 pacientes atribuibles</div>
+        </div>
+        <div class="kpi" style="border:0;padding:0">
+          <div class="n">Bs 2.800</div>
+          <div class="l">Dejaron esos 13</div>
+          <div class="r">1,04x lo invertido</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Lo que hay que leer de este mes</h3>
+
+  <div class="note">
+    <b>1 · La publicidad que funciona es la de limpieza</b>
+    <p>11 pacientes compraron la promo de Bs 180, que solo existe en la pauta de Meta. Costó
+      Bs 45,64 traer a cada uno. <b>Matiz importante:</b> de esos 11, cuatro figuran en el registro
+      como pacientes <i>antiguas</i> y solo una como nueva; los demás llegaron sin dato de canal.
+      El anuncio reactiva pacientes viejos —que es válido— pero no es captación pura.</p>
+  </div>
+
+  <div class="note red">
+    <b>2 · La promo de blanqueamiento costó Bs 820 y trajo un paciente</b>
+    <p>Generó 300 mensajes y una sola persona llegó (y el registro la marca como antigua).
+      Bs 820,30 invertidos contra Bs 300 de ingreso. El anuncio se retiró el 12/08 y su presupuesto
+      pasó a limpieza y placas acrílicas. El anuncio de PLACAS ya tiene su primer paciente
+      confirmado por WhatsApp.</p>
+  </div>
+
+  <div class="note gold">
+    <b>3 · El ingreso grande no viene de la pauta</b>
+    <p>La Dra. Kathe concentra el 46% del ingreso del mes con coronas, placas, endodoncias y
+      cirugía. Ese ingreso es mayormente de pacientes propios de la clínica. La publicidad llena
+      la agenda de arriba; el tratamiento de alto valor lo sostiene la cartera de siempre.</p>
+  </div>
+
+  <div class="note blue">
+    <b>4 · El cuello de botella es el cierre, no el alcance</b>
+    <p>805 conversaciones generadas, 127 atenciones. Solo ~16 de cada 100 que escriben llegan al
+      sillón, cuando lo sano es 30 a 40. Y de los 6 pacientes que pagaron solo los Bs 180 de la
+      promo, <b>ninguno volvió</b> dentro del mes.</p>
+  </div>
+
+  <div class="note gold">
+    <b>5 · Cambio de precio a mitad de mes</b>
+    <p>Desde el 17/08 la limpieza pasó de Bs 150 a Bs 230 (Bs 260 con consulta). El anuncio de la
+      promo Bs 180 se pausó ese mismo día para no publicitar un precio que ya no está vigente.
+      Cuatro pacientes pagaron al precio nuevo antes de fin de mes. <b>Queda pendiente definir el
+      copy nuevo con la clínica.</b></p>
+  </div>
+
+  <p class="src">Los ingresos provienen de los cuadernos de la clínica y cubren 21 días laborales:
+    01, 03, 04, 05, 08, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 24, 25, 26 y 27 de agosto.
+    El 02, 09, 16 y 23 fueron domingo; el 06 y el 07, feriado. Miriam Aduviri y Eliana Peña figuraban
+    en dos cuadernos con fechas distintas; el registro de recepción confirma el 10/08 como fecha real
+    y así se contaron, una sola vez. La inversión publicitaria corre también domingos y feriados, por
+    lo que ambos períodos no son comparables día a día. No todo el ingreso es atribuible a la
+    publicidad: varias atenciones son de pacientes en tratamiento iniciado antes del período.</p>
+</section>
+
+<!-- ══════════════ 2 · PRODUCCIÓN ══════════════ -->
+<section class="panel" id="p2">
+  <h2>Quién produjo y con qué</h2>
+  <p class="desc">Bs 37.335 repartidos entre cinco doctoras y 15 tipos de procedimiento.
+    Dos doctoras hicieron 44 atenciones cada una, pero una facturó Bs 6.000 más que la otra:
+    la diferencia está en el tipo de tratamiento, no en el volumen.</p>
+
+  <h3>Producción por doctora</h3>
+  <div class="card">
+    <div id="bars-doc"></div>
+  </div>
+
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Doctora</th><th class="n">Ingresos</th><th class="n">Atenciones</th>
+        <th class="n">Ticket promedio</th><th class="n">% del ingreso</th></tr></thead>
+      <tbody>
+        <tr><td><b>Dra. Kathe</b></td><td class="n win">Bs 17.255</td><td class="n">44</td>
+          <td class="n win">Bs 392</td><td class="n">46,2%</td></tr>
+        <tr><td><b>Dra. Ximena</b></td><td class="n">Bs 11.300</td><td class="n">44</td>
+          <td class="n">Bs 257</td><td class="n">30,3%</td></tr>
+        <tr><td><b>Dra. Shirley</b></td><td class="n">Bs 5.930</td><td class="n">22</td>
+          <td class="n">Bs 270</td><td class="n">15,9%</td></tr>
+        <tr><td><b>Dra. Brenda</b></td><td class="n">Bs 2.220</td><td class="n">15</td>
+          <td class="n">Bs 148</td><td class="n">5,9%</td></tr>
+        <tr><td><b>Dra. Yanaina</b></td><td class="n">Bs 630</td><td class="n">2</td>
+          <td class="n">Bs 315</td><td class="n">1,7%</td></tr>
+        <tr><td class="muted">Dra. Mirna</td><td class="n muted">Bs 0</td><td class="n muted">0</td>
+          <td class="n muted">—</td><td class="n muted">0%</td></tr>
+      </tbody>
+      <tfoot><tr><td>TOTAL</td><td class="n">Bs 37.335</td><td class="n">127</td>
+        <td class="n">Bs 294</td><td class="n">100%</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="note blue">
+    <b>Mismo volumen, distinto resultado</b>
+    <p>Kathe y Ximena hicieron 44 atenciones cada una. Kathe facturó Bs 17.255 y Ximena Bs 11.300:
+      Bs 5.955 de diferencia con la misma cantidad de pacientes. El ticket lo explica —Bs 392 contra
+      Bs 257— y el ticket lo explica el mix: Kathe concentró coronas, placas, endodoncias y cirugía.</p>
+  </div>
+
+  <h3>Qué se hizo en el mes</h3>
+  <p class="desc">192 procedimientos sobre 219 piezas. <i>Pacientes</i> es cuántas personas
+    recibieron ese procedimiento; <i>piezas</i>, cuántas veces se hizo en total (una extracción de
+    3 molares cuenta como 1 paciente y 3 piezas). Una visita puede incluir varios procedimientos,
+    por eso el total supera las 127 atenciones.</p>
+
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Procedimiento</th><th>Categoría</th><th class="n">Pacientes</th>
+        <th class="n">Piezas</th><th class="n">Ingresos</th><th class="n">% del ingreso</th></tr></thead>
+      <tbody id="tb-proc"></tbody>
+      <tfoot><tr><td>TOTAL</td><td></td><td class="n">192</td><td class="n">219</td>
+        <td class="n">Bs 37.335</td><td class="n">100%</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="grid3">
+    <div class="rec">
+      <div class="tag">Lo que más deja</div>
+      <div class="big">Bs 8.430</div>
+      <div class="where">Restauraciones</div>
+      <div class="why">25 pacientes, 45 piezas. Casi un cuarto del ingreso del mes.
+        Es el trabajo de volumen que sostiene la caja.</div>
+    </div>
+    <div class="rec gold">
+      <div class="tag">Lo que abre la puerta</div>
+      <div class="big">64</div>
+      <div class="where">Consultas</div>
+      <div class="why">Un tercio de los pacientes pasó por consulta, pero apenas Bs 1.920
+        (5,1% del ingreso). No es negocio en sí: es la puerta de entrada.</div>
+    </div>
+    <div class="rec">
+      <div class="tag">Alto valor</div>
+      <div class="big">Bs 8.320</div>
+      <div class="where">Placas, coronas, ortodoncia y cirugía</div>
+      <div class="why">Solo 12 pacientes, pero el 22% del ingreso. Doce personas
+        pesan lo mismo que las 64 consultas más las 34 limpiezas.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 3 · PUBLICIDAD ══════════════ -->
+<section class="panel" id="p3">
+  <h2>Qué hizo la publicidad</h2>
+  <p class="desc">Bs 2.697,80 invertidos en Meta Ads entre el 1 y el 27 de agosto, repartidos en
+    15 anuncios. Generaron 805 conversaciones de WhatsApp a un promedio de Bs 3,35 cada una.</p>
+
+  <div class="grid4" style="margin-bottom:22px">
+    <div class="kpi"><div class="n">Bs 2.698</div><div class="l">Invertido</div>
+      <div class="r">15 anuncios</div></div>
+    <div class="kpi"><div class="n">805</div><div class="l">Conversaciones</div>
+      <div class="r">de WhatsApp</div></div>
+    <div class="kpi good"><div class="n">Bs 3,35</div><div class="l">Costo por conversación</div>
+      <div class="r">promedio de la cuenta</div></div>
+    <div class="kpi good"><div class="n">Bs 2,21</div><div class="l">El mejor costo</div>
+      <div class="r">Blanqueamiento Video</div></div>
+  </div>
+
+  <h3>Los tres servicios que se pautaron</h3>
+  <p class="desc">Del 1 al 12 de agosto se puede atribuir con nombre y apellido. Esto es lo que
+    costó traer a una persona al sillón con cada uno:</p>
+
+  <div class="grid3">
+    <div class="rec">
+      <div class="tag">Funciona</div>
+      <div class="big">Bs 46</div>
+      <div class="where">Limpieza · promo Bs 180</div>
+      <div class="why">Bs 502 invertidos · 97 mensajes · <b>11 pacientes</b>.
+        Bs 45,64 por paciente al sillón.</div>
+    </div>
+    <div class="rec gold">
+      <div class="tag">Recién empieza</div>
+      <div class="big">Bs 70</div>
+      <div class="where">Placas acrílicas · desde 12/08</div>
+      <div class="why">Bs 70,37 invertidos · 110 mensajes · <b>1 paciente</b>.
+        Arrancó a mitad de mes, hay que dejarlo correr.</div>
+    </div>
+    <div class="rec red">
+      <div class="tag">No funciona</div>
+      <div class="big">Bs 820</div>
+      <div class="where">Blanqueamiento · promo Bs 300</div>
+      <div class="why">Bs 820,30 invertidos · 300 mensajes · <b>1 paciente</b>.
+        Retirado el 12/08. Costó 18 veces más que la limpieza.</div>
+    </div>
+  </div>
+
+  <div class="note red">
+    <b>300 mensajes y una sola persona en el sillón</b>
+    <p>El anuncio de blanqueamiento a Bs 300 fue el que más conversaciones generó y el que menos
+      pacientes trajo. La gente pregunta por el blanqueamiento —le interesa— pero no cierra al
+      precio publicado. La conversación es barata; el paciente, carísimo.</p>
+  </div>
+
+  <h3>Anuncio por anuncio</h3>
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Anuncio</th><th class="n">Inversión</th><th class="n">Conversaciones</th>
+        <th class="n">Costo por conv.</th><th>Estado</th></tr></thead>
+      <tbody id="tb-ads"></tbody>
+      <tfoot><tr><td>TOTAL</td><td class="n">Bs 2.697,80</td><td class="n">805</td>
+        <td class="n">Bs 3,35</td><td></td></tr></tfoot>
+    </table>
+    <p class="src">Fuente: Meta Ads, cuenta Ezequiel Spa Dental BOB (27625985473759051). Período
+      01/08 al 27/08/2026. Cifras consultadas directo a la API y cuadradas contra el total de cuenta
+      (Bs 2.697,80). <b>Blanqueamiento:</b> sus Bs 793,86 acumulan dos etapas, del 01 al 12/08 y desde
+      el 20/08 (reactivado en conjunto propio). <b>Placas:</b> corrió del 12 al 20/08 dentro del conjunto
+      de blanqueamiento (Bs 305,79 y 100 conversaciones) y desde el 20/08 en conjunto propio
+      (Bs 235,40 y 88 conversaciones a Bs 2,68). El 07/08 la entrega se interrumpió por desconexión
+      del WhatsApp, resuelto el 09/08.</p>
+  </div>
+
+  <h3>Los 22 pacientes de la promo</h3>
+  <p class="desc">Compraron la promo de consulta + limpieza que solo existe en la pauta.
+    Dejaron Bs 5.350 en total, de los cuales Bs 1.070 fueron trabajo extra sumado en la misma visita.
+    Solo 6 de 22 (27%) sumaron algo más que la promo.</p>
+
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Fecha</th><th>Paciente</th><th class="n">Pagó</th>
+        <th>Sumó en la misma visita</th><th class="n">Extra</th></tr></thead>
+      <tbody id="tb-promo"></tbody>
+      <tfoot><tr><td colspan="2">TOTAL · 22 pacientes</td><td class="n">Bs 5.350</td>
+        <td>6 sumaron algo (27%)</td><td class="n">Bs 1.070</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="note gold">
+    <b>El registro de recepción no distingue canal de estado</b>
+    <p>La columna se titula REDES SOCIALES (FB/TT/IG) pero recepción la usa para anotar el
+      <i>estado</i> del paciente: nuevo, antiguo, recomendado. Por eso hay 10 pacientes nuevos sin
+      canal: sabemos que son nuevos, no sabemos cómo llegaron.</p>
+    <p><b>Sugerencia:</b> separarla en dos columnas, ESTADO y CANAL. Sin eso, ningún mes va a poder
+      atribuirse bien.</p>
+  </div>
+
+  <div class="note blue">
+    <b>Lo que sí sabemos del canal</b>
+    <p>14 pacientes nuevos en el mes según el registro. Con canal explícito solo cuatro:
+      <b>Rolando Portella</b> y <b>Marielvise Otcamayo</b> por Facebook, <b>María Angélica Casio</b>
+      por Instagram y <b>Marisol Gutiérrez</b> confirmada por WhatsApp. Los otros 10 figuran como
+      "Paciente Nuevo" sin canal.</p>
+    <p>El paciente de Facebook más valioso del mes <b>no vino por promo</b>: Rolando Portella entró
+      el 03/08 con consulta + 2 restauraciones y volvió el 10/08 por 3 más. Bs 820 en total.
+      Y el ticket más alto del período —Jhonny Salbatierra, 2 endodoncias, Bs 1.500— llegó
+      por <b>recomendación</b>, no por pauta.</p>
+  </div>
+
+  <div class="note red">
+    <b>Dos pacientes de pauta sin cobro registrado</b>
+    <p><b>Marielvise Otcamayo</b> (13/08, canal Facebook): está en el registro, sin monto en los
+      cuadernos. Dra. Ximena, turno tarde, pago en efectivo. Falta pedir el monto.</p>
+    <p><b>Eliana Mercado Bazán</b> (17/08): el chat muestra que respondió un anuncio y consultó por
+      placas. Llegó a la clínica y <b>no figura en ningún cuaderno ni en el registro</b>.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 4 · RETORNOS ══════════════ -->
+<section class="panel" id="p4">
+  <h2>Quién volvió</h2>
+  <p class="desc">25 pacientes tuvieron más de una visita en el mes. Entre todos dejaron Bs 19.715
+    —el 53% del ingreso de agosto— y volvieron en promedio a los 7,9 días.
+    El retorno vale más que la captación.</p>
+
+  <div class="grid3" style="margin-bottom:22px">
+    <div class="kpi good"><div class="n">Bs 19.715</div><div class="l">Dejaron los que volvieron</div>
+      <div class="r">53% del ingreso del mes</div></div>
+    <div class="kpi"><div class="n">25</div><div class="l">Pacientes con 2+ visitas</div>
+      <div class="r">de 127 atenciones</div></div>
+    <div class="kpi"><div class="n">7,9</div><div class="l">Días entre visitas</div>
+      <div class="r">promedio</div></div>
+  </div>
+
+  <div class="note">
+    <b>El caso modelo: la consulta barata como puerta</b>
+    <p><b>Cristhian Patty</b> entró el 01/08 con una consulta de Bs 30 y volvió a los 7 días para una
+      extracción de 3 molares de Bs 500. <b>Raúl Arce</b> entró con una consulta al paso de Bs 30 el
+      30/07 y lleva Bs 2.340 en cinco visitas. <b>María Elena Rodríguez</b>, consulta al paso el 20/07,
+      lleva Bs 1.210 y sigue en tratamiento por etapas.</p>
+    <p>La consulta de Bs 30 no deja plata: deja diagnóstico. Convierte a semanas, si hay seguimiento.</p>
+  </div>
+
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Paciente</th><th>Con qué entró</th><th>Con qué volvió</th>
+        <th class="n">Días</th><th class="n">Total dejado</th></tr></thead>
+      <tbody id="tb-ret"></tbody>
+      <tfoot><tr><td colspan="3">TOTAL · 25 pacientes</td><td class="n">7,9</td>
+        <td class="n">Bs 19.715</td></tr></tfoot>
+    </table>
+  </div>
+
+  <h3>Los que no volvieron</h3>
+  <p class="desc">Pagaron una consulta y no regresaron. Son la lista de recuperación del mes.</p>
+
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Paciente</th><th>Qué hizo</th><th>Fecha</th><th class="n">Días sin volver</th></tr></thead>
+      <tbody>
+        <tr><td><b>Lian Patty</b></td><td>Consulta (Bs 30)</td><td>01/08/2026</td><td class="n bad">12</td></tr>
+        <tr><td><b>Sebastián Yuvori</b></td><td>Consulta (Bs 30)</td><td>04/08/2026</td><td class="n bad">9</td></tr>
+        <tr><td><b>Miriam Aduviri</b></td><td>Consulta + Rx (Bs 100)</td><td>10/08/2026</td><td class="n">3</td></tr>
+        <tr><td><b>Tatiana Loayza</b></td><td>Consulta + Rx (Bs 120)</td><td>12/08/2026</td><td class="n">1</td></tr>
+        <tr><td><b>Nicol Baldelomar</b></td><td>Consulta, quiere brackets (Bs 30)</td><td>13/08/2026</td><td class="n">0</td></tr>
+      </tbody>
+    </table>
+    <p class="src">Días contados al 15/08, que es cuando se armó esta lista.</p>
+  </div>
+
+  <div class="note red">
+    <b>Y los 6 de la promo pura</b>
+    <p>Seis pacientes pagaron exactamente los Bs 180 de la promo y no sumaron nada más.
+      <b>Ninguno volvió</b> dentro del mes. Entre esta lista y la de arriba hay
+      <b>10 pacientes para recuperar</b>.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 5 · QUÉ HACER ══════════════ -->
+<section class="panel" id="p5">
+  <h2>Qué hacer en septiembre</h2>
+  <p class="desc">Cinco cosas, ordenadas por lo que más mueve la aguja. Todas salen de algo
+    medido arriba, no de una opinión.</p>
+
+  <div class="act">
+    <div class="num">1</div>
+    <div>
+      <div class="t">Definir el copy nuevo de limpieza a Bs 230</div>
+      <div class="d">El anuncio que mejor funcionaba —11 pacientes a Bs 46 cada uno— está pausado
+        desde el 17/08 porque publicitaba un precio que ya no existe. Cada día que sigue pausado
+        es el mejor canal de captación apagado. Es lo primero.</div>
+      <div class="imp hi">Impacto alto · bloquea la captación</div>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">2</div>
+    <div>
+      <div class="t">Mensaje de seguimiento a los 15 días</div>
+      <div class="d">Hay 10 pacientes identificados que pagaron una consulta o la promo y no
+        volvieron. Cristhian Patty demuestra que un retorno vale Bs 500. Recuperar aunque sea
+        tres de esos diez paga la publicidad de un mes entero.</div>
+      <div class="imp hi">Impacto alto · Bs 0 de inversión</div>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">3</div>
+    <div>
+      <div class="t">Trabajar el cierre en WhatsApp, no el alcance</div>
+      <div class="d">805 conversaciones y 16% llegando al sillón, cuando lo sano es 30-40%.
+        Duplicar la conversión vale más que duplicar el presupuesto: con la misma inversión
+        serían el doble de pacientes. Vale la pena revisar qué se responde y en cuánto tiempo.</div>
+      <div class="imp hi">Impacto alto · sin gastar más</div>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">4</div>
+    <div>
+      <div class="t">Separar ESTADO y CANAL en el registro de recepción</div>
+      <div class="d">Hoy son la misma columna, y por eso 10 de los 14 pacientes nuevos del mes
+        no tienen canal. Sin ese dato ningún informe puede decir con certeza qué anuncio trae
+        qué paciente. Son dos columnas, no un sistema nuevo.</div>
+      <div class="imp md">Impacto medio · habilita todo lo demás</div>
+    </div>
+  </div>
+
+  <div class="act">
+    <div class="num">5</div>
+    <div>
+      <div class="t">Cobrar y anotar los dos pacientes de pauta que faltan</div>
+      <div class="d">Marielvise Otcamayo (13/08, Facebook) y Eliana Mercado Bazán (17/08).
+        Los dos llegaron por publicidad y ninguno figura con monto. Se pagó por traerlos y
+        no está registrado lo que dejaron.</div>
+      <div class="imp md">Impacto medio · datos y caja</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 6 · PENDIENTES ══════════════ -->
+<section class="panel" id="p6">
+  <h2>Para confirmar con Mirna</h2>
+  <p class="desc">Estos pacientes no figuran en el registro de ingreso de recepción. Se los
+    clasificó como <i>tratamiento continuo</i> porque llegaron directo a procedimientos avanzados
+    sin pasar por admisión. Hace falta que Mirna confirme si es correcto o corrija el origen real.</p>
+
+  <div class="tblwrap card">
+    <table>
+      <thead><tr><th>Paciente</th><th>Fecha</th><th>Qué se hizo</th><th>Clasificación inferida</th></tr></thead>
+      <tbody id="tb-conf"></tbody>
+    </table>
+  </div>
+
+  <div class="note gold">
+    <b>Diferencias entre hojas del archivo fuente</b>
+    <p>Al armar este informe se cruzaron los totales contra el detalle paciente por paciente.
+      El núcleo cuadra exacto: <b>127 atenciones y Bs 37.335</b>, y la producción por doctora
+      coincide al boliviano.</p>
+    <p>Tres etiquetas del Excel quedaron de una versión anterior y acá van corregidas:
+      la hoja de promo dice "TOTAL (27 pacientes)" cuando son <b>22</b>; la de retornos dice
+      "(27 pacientes)" y su pie habla de "9 pacientes" cuando son <b>25</b>; y la de procedimientos
+      menciona "43 atenciones" al pie cuando el mes cerró con 127. Los montos de las tres
+      —Bs 5.350, Bs 19.715 y Bs 37.335— sí están bien.</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+var PROC=[
+ ['Restauración','Tratamiento',25,45,8430,22.58],
+ ['Limpieza','Diagnóstico y prevención',34,34,5680,15.21],
+ ['Endodoncia','Tratamiento',10,12,4875,13.06],
+ ['Placa','Alto valor',5,5,3590,9.62],
+ ['Corona','Alto valor',3,6,2990,8.01],
+ ['Extracción','Tratamiento',8,10,2400,6.43],
+ ['Blanqueamiento','Estética',14,14,2070,5.54],
+ ['Consulta','Diagnóstico y prevención',64,64,1920,5.14],
+ ['Ortodoncia','Alto valor',3,3,1490,3.99],
+ ['Radiografía','Diagnóstico y prevención',13,13,1130,3.03],
+ ['Cementado','Tratamiento',8,8,1030,2.76],
+ ['Pago a cuenta','Abonos',1,1,850,2.28],
+ ['Provisorio','Tratamiento',2,2,400,1.07],
+ ['Cirugía','Alto valor',1,1,250,0.67],
+ ['Perno','Tratamiento',1,1,230,0.62]];
+
+var ADS=[
+ ['BLANQUEAMIENTO Video',793.86,359,2.21,'El mejor de la cuenta','ok'],
+ ['Limpieza v2 (precio viejo Bs 180)',500.50,77,6.50,'Archivado 17/08 por cambio de precio','wa'],
+ ['Blanqueamiento (error DCO, julio)',315.02,91,3.46,'Archivado 20/08, pasó a conjunto propio','wa'],
+ ['PLACAS en conj. de blanqueamiento',305.79,100,3.06,'Archivado 11/08','wa'],
+ ['LIMPIEZA 1 (roto por WhatsApp)',242.30,52,4.66,'Archivado 09/08','wa'],
+ ['PLACAS conjunto propio',235.40,88,2.68,'Pausado 22/08 por canibalizar blanqueamiento','ok'],
+ ['CONSULTA Bs 30 · TodoBien',156.50,31,5.05,'Activo desde 20/08 · Bs 2,70','ok'],
+ ['LIMPIEZA Bs 230 · A',50.28,2,25.14,'Pausado 21/08','no'],
+ ['Retarget NosViste',28.67,1,28.67,'Pausado 18/08','no'],
+ ['Retarget Limpieza-v2',27.15,1,27.15,'Archivado','no'],
+ ['Limpieza niños (julio)',18.50,2,9.25,'Archivado','wa'],
+ ['LIMPIEZA Bs 230 · B',10.55,0,0,'Pausado 21/08','no'],
+ ['CONSULTA Bs 30 · Cuadrado',7.87,1,7.87,'Pausado 21/08','wa'],
+ ['Retarget NoAdivines',3.31,0,0,'Pausado 18/08','no'],
+ ['CONSULTA Bs 30 · Adivinar',2.10,0,0,'Pausado 19/08 · CTR 0%','no']];
+
+var PROMO=[
+ ['01/08','José María Roca',180,'Nada, solo promo','s/d',0],
+ ['01/08','Jhonny Miserendino',180,'Nada, solo promo','s/d',0],
+ ['03/08','Shirley Baldomar',180,'Nada, solo promo','s/d',0],
+ ['03/08','Fermín Espinoza',180,'Nada, solo promo','s/d',0],
+ ['03/08','Leny Zurita',250,'Radiografía','antigua',70],
+ ['03/08','Vladimir Loayza',300,'Blanqueamiento','s/d',120],
+ ['04/08','Jorge Rosado',520,'2 Restauraciones','s/d',340],
+ ['05/08','Cinthia Ramos',180,'Nada, solo promo','antigua',0],
+ ['10/08','Paola Vitorez',290,'Radiografía','antigua',110],
+ ['10/08','Susy Justiniano',180,'Nada, solo promo','antigua',0],
+ ['12/08','Juanito Delgadillo',270,'Radiografía','nuevo',90],
+ ['12/08','María Angélica Casio',180,'Nada, solo promo','Instagram',0],
+ ['13/08','María Luisa Aremayo',180,'Nada, solo promo','s/d',0],
+ ['14/08','Raquel Mamani',520,'2 Restauraciones','hija de pac. antiguo',340],
+ ['15/08','Aracely Campos',180,'Nada, solo promo','antigua',0],
+ ['15/08','Braulio Antelo',180,'Nada, solo promo · pagó QR anticipado','s/d',0],
+ ['15/08','Karen Almanza',180,'Nada, solo promo','recordatorio de la clínica',0],
+ ['15/08','Katherin Cuéllar',180,'Nada, solo promo','s/d',0],
+ ['17/08','Lucía Rocha',260,'Precio nuevo · proforma 3 caries','s/d',0],
+ ['17/08','Kevin Paul Aré',260,'Precio nuevo','s/d',0],
+ ['17/08','Manoly Condori',260,'Precio nuevo','s/d',0],
+ ['17/08','Vanesa Flores',260,'Precio nuevo · al paso','nueva',0]];
+
+var RET=[
+ ['Cristhian Patty','Consulta (Bs 30) · 01/08','Extracción 3 molares (Bs 500) · 08/08',7,530],
+ ['Karina Salazar','Consulta + Rx (Bs 100) · 03/08','Limpieza (Bs 150) · 04/08',1,250],
+ ['Raúl Arce','Pago a cuenta con limpieza (Bs 1.000) · 03/08','3 Restauraciones (Bs 450) · 05/08',2,1450],
+ ['Rolando Portela <span class="pill nu">Facebook</span>','Consulta + 2 Restauraciones (Bs 370) · 03/08','3 Restauraciones (Bs 450) · 10/08',7,820],
+ ['Óscar Estévez','Endodoncia + Cons/Rx (Bs 345) · 04/08','Endodoncia (Bs 300) · 11/08',7,645],
+ ['Cristhian Antezana','Pago endodoncia (Bs 630) · 10/08','Rx + Limpieza (Bs 270) · 12/08',2,900],
+ ['Gloria Chuve','Endodoncia (Bs 550) · 04/08','Perno (Bs 230) · 13/08',9,780],
+ ['Noemí Hurtado','Consulta + Provisorio (Bs 230) · 12/08','Provisorio (Bs 200) · 13/08',1,430],
+ ['Raúl Arce <span class="pill wa">julio → agosto</span>','Consulta al paso (Bs 30) · 30/07','Pagos + 3 Rest + placa entregada (Bs 390 más) · 18/08',19,1840],
+ ['Sarah Jalil <span class="pill ok">recuperada</span>','Consulta sola (Bs 30) · 08/08','Corona, a cuenta Bs 500 · 15/08',7,530],
+ ['Raquel Mamani','Promo 180 + 2 Rest (Bs 520) · 14/08','2 Restauraciones más (Bs 340) · 15/08',1,860],
+ ['María Elena Rodríguez','Placa cromo (Bs 500) · 13/08','Bs 300 el 17/08 + Bs 200 el 20/08 · placa completa Bs 900',7,1000],
+ ['Marisol Gutiérrez <span class="pill nu">pauta</span>','Promo CLB Bs 300 · 12/08','Blanqueamiento (Bs 150) · 17/08',5,450],
+ ['Arminda Vaca','Extracción (Bs 100) · 11/08','Saldo extracción (Bs 100), agenda placa · 17/08',6,200],
+ ['Brandon Torrez <span class="pill ok">4 visitas</span>','Consulta + Cementado (Bs 180) · 17/08','Bs 440 el 18, Bs 390 el 19, Blanq. Bs 170 el 20',3,1180],
+ ['Lorena Gutiérrez','Endodoncia terminada (Bs 580) · 13/08','Cementado (Bs 150) · 18/08',5,730],
+ ['Mauricio Méndez','Blanqueamiento (Bs 150) · 03/08','2 Restauraciones (Bs 440) · 19/08',16,590],
+ ['Gabriel Daco','Restauración (Bs 100) · 05/08','2 Restauraciones a cuenta (Bs 300) · 19/08',14,400],
+ ['Roxana Gonzales','Consulta + Cementado (Bs 170) · 05/08','Recementado a Bs 50, se le volvió a salir · 21/08',16,220],
+ ['Viviana Ive','Blanqueamiento (Bs 150) · 01/08','Restauración, saldo (Bs 140) · 22/08',21,290],
+ ['Antonio Guardia','Consulta + Limp + 2 Rest (Bs 670) · 21/08','Extracción 3er molar con complicación (Bs 700) · 24/08',3,1370],
+ ['María Elena Rodríguez <span class="pill ok">4ta visita</span>','Placa cromo (Bs 500) · 13/08','Restauración Bs 210, tratamiento por etapas · 24/08',11,1210],
+ ['Raúl Arce <span class="pill ok">5 visitas</span>','Consulta al paso (Bs 30) · 30/07','Restauración Bs 500 · 24/08',25,2340],
+ ['Marilin Escobar','Consulta + Blanqueamiento (Bs 180) · 24/08','2da sesión de blanqueamiento (Bs 150) · 25/08',1,330],
+ ['Claudia Cárdenas','Consulta + Rx (Bs 120) · 24/08','Extracción simple (Bs 250) · 25/08',1,370]];
+
+var CONF=[
+ ['Raiza','01/08','Endodoncia Bs 700','Antigua, tratamiento continuo',''],
+ ['Maely Limpids','03/08','2 Endodoncias Bs 200','Antigua, tratamiento continuo',''],
+ ['Juan Carlos Arauz','03/08','4 Coronas Bs 1.990','Antiguo, tratamiento continuo',''],
+ ['Ana Hurtado','03/08','Endodoncia + Rx Bs 140 (pago parcial)','Antigua, tratamiento continuo',''],
+ ['Mauricio Méndez','03/08','Blanqueamiento Bs 150','Antiguo, tratamiento continuo',''],
+ ['Raúl Arce','03/08 y 05/08','Pago Bs 1.000 + 3 Rest Bs 450','Antiguo, tratamiento continuo',''],
+ ['Evelin Daza','03/08','Restauración Bs 170','Antigua, tratamiento continuo',''],
+ ['Jorge Rosado','04/08','Promo 180 + 2 Rest Bs 520','¿Antiguo? Compró promo pautada','wa'],
+ ['Gloria Chuve','04/08 y 13/08','Endo Bs 550 + Perno Bs 230','Antigua, tratamiento continuo',''],
+ ['Tatiana Ayllón','04/08','Ortodoncia Bs 350','Antigua, tratamiento continuo',''],
+ ['Miriam Méndez','04/08','Placa Bs 2.200','Antigua, tratamiento continuo',''],
+ ['Miguel Álvarez','04/08','Cirugía Bs 250','Antiguo, tratamiento continuo',''],
+ ['Gabriel Daco','05/08','Restauración Bs 100','Antiguo, tratamiento continuo',''],
+ ['Mauricio Vargas','05/08','Blanqueamiento Bs 150','Antiguo, tratamiento continuo',''],
+ ['Rudy Vargas','05/08','Extracción Bs 250','Antiguo, tratamiento continuo',''],
+ ['Cristhian Ambozana / Antezana','10/08 y 12/08','Endo Bs 630 + Rx/Limp Bs 270','Antiguo, tratamiento continuo',''],
+ ['Sarah Jalil','08/08','Consulta Bs 30','Incógnita real','wa'],
+ ['Arminda Vaca','11/08','Extracción Bs 100','Incógnita real','wa'],
+ ['Eva Hibarrón','11/08','Ext + Cementado Bs 350','Incógnita real','wa'],
+ ['Lorena Gutiérrez','13/08','Endodoncia terminada Bs 580','Incógnita real · PREGUNTAR','no'],
+ ['María Elena Rodríguez','13/08','Placa Bs 500','RESUELTO: paciente de julio (consulta 20/07). La placa NO es del anuncio','ok'],
+ ['Zara Elena Rojas Durán','04/08 (registro)','Sin monto en cuadernos','En registro como antigua · falta el cobro','no'],
+ ['Marielvise Otcamayo Miranda','13/08 (registro)','Sin monto · canal FACEBOOK','Paciente de pauta sin cobro. Dra. Ximena, turno tarde, efectivo. PEDIR MONTO','no'],
+ ['Eliana Mercado Bazán','17/08 (WhatsApp)','No figura en ningún cuaderno ni en el registro','Paciente de pauta (chat: respondió un anuncio, consultó por placas). LLEGÓ A LA CLÍNICA','no'],
+ ['Sandra Cañedo Taqueda','10/08 (registro)','Sin monto en cuadernos','En registro como antigua · falta el cobro','no'],
+ ['Noemí Hurtado Franco','12/08 y 13/08','Cons + Provisorio Bs 230 y Provisorio Bs 200','RESUELTO: antigua (registro), cobros ya cargados','ok'],
+ ['Luis Emmanuel Melgar','¿10/08 o 12/08?','3 Rest Bs 450, figura en fecha distinta en cada cuaderno','Contado UNA vez el 10/08 · confirmar fecha real','wa']];
+
+function bs(n){return 'Bs '+n.toLocaleString('es-BO',{maximumFractionDigits:0})}
+function bs2(n){return 'Bs '+n.toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+/* Producción por doctora: la barra deja ver de un vistazo que dos doctoras
+   con el mismo número de atenciones facturaron muy distinto. */
+var DOC=[['Dra. Kathe',17255,44,392],['Dra. Ximena',11300,44,257],
+         ['Dra. Shirley',5930,22,270],['Dra. Brenda',2220,15,148],
+         ['Dra. Yanaina',630,2,315]];
+document.getElementById('bars-doc').innerHTML=DOC.map(function(d,i){
+  return '<div class="barrow"><div class="barlbl">'+d[0]+'</div>'+
+    '<div class="bartrack"><div class="barfill" data-w="'+(d[1]/17255*100)+'" '+
+      'style="background:'+(i===0?'#A8C21E':'#C8D98A')+'"></div></div>'+
+    '<div class="barval">'+bs(d[1])+'<span class="sm">'+d[2]+' at · '+bs(d[3])+'</span></div></div>'}).join('');
+
+document.getElementById('tb-proc').innerHTML=PROC.map(function(p){
+  return '<tr><td><b>'+p[0]+'</b></td><td class="muted">'+p[1]+'</td>'+
+    '<td class="n">'+p[2]+'</td><td class="n">'+p[3]+'</td>'+
+    '<td class="n'+(p[4]>=4000?' win':'')+'">'+bs(p[4])+'</td>'+
+    '<td class="n">'+p[5].toLocaleString('es-BO',{minimumFractionDigits:1,maximumFractionDigits:1})+'%</td></tr>'}).join('');
+
+document.getElementById('tb-ads').innerHTML=ADS.map(function(a){
+  var c=a[3]===0?'muted':(a[3]<=3?'win':(a[3]>=9?'bad':'warn'));
+  return '<tr><td><b>'+esc(a[0])+'</b></td><td class="n">'+bs2(a[1])+'</td>'+
+    '<td class="n">'+a[2]+'</td>'+
+    '<td class="n '+c+'">'+(a[3]===0?'—':bs2(a[3]))+'</td>'+
+    '<td><span class="pill '+a[5]+'">'+esc(a[4])+'</span></td></tr>'}).join('');
+
+document.getElementById('tb-promo').innerHTML=PROMO.map(function(p){
+  return '<tr><td>'+p[0]+'</td><td><b>'+esc(p[1])+'</b>'+
+      (p[4]!=='s/d'?' <span class="pill wa">'+esc(p[4])+'</span>':'')+'</td>'+
+    '<td class="n">'+bs(p[2])+'</td><td>'+esc(p[3])+'</td>'+
+    '<td class="n'+(p[5]>0?' win':' muted')+'">'+(p[5]>0?bs(p[5]):'—')+'</td></tr>'}).join('');
+
+document.getElementById('tb-ret').innerHTML=RET.map(function(r){
+  return '<tr><td><b>'+r[0]+'</b></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td>'+
+    '<td class="n">'+r[3]+'</td><td class="n win">'+bs(r[4])+'</td></tr>'}).join('');
+
+document.getElementById('tb-conf').innerHTML=CONF.map(function(c){
+  return '<tr><td><b>'+esc(c[0])+'</b></td><td>'+esc(c[1])+'</td><td>'+esc(c[2])+'</td>'+
+    '<td>'+(c[4]?'<span class="pill '+c[4]+'">'+esc(c[3])+'</span>':esc(c[3]))+'</td></tr>'}).join('');
+
+/* Las barras arrancan en cero para que se vean crecer. Se les pone el ancho
+   apenas existen —no solo al abrir la pestaña— porque si eso falla quedan
+   planas y el gráfico miente: parecería que nadie produjo nada. */
+function animar(){
+  var b=document.querySelectorAll('.barfill');
+  for(var i=0;i<b.length;i++)b[i].style.width=b[i].getAttribute('data-w')+'%'}
+setTimeout(animar,80);
+
+var tabs=document.querySelectorAll('.tab');
+for(var i=0;i<tabs.length;i++)tabs[i].onclick=function(){
+  for(var j=0;j<tabs.length;j++)tabs[j].classList.remove('on');
+  this.classList.add('on');
+  var ps=document.querySelectorAll('.panel');
+  for(var k=0;k<ps.length;k++)ps[k].classList.remove('on');
+  document.getElementById(this.getAttribute('data-p')).classList.add('on');
+  window.scrollTo(0,0);
+  setTimeout(animar,60)};
+</script>
+</body>
+</html>
