@@ -305,6 +305,17 @@ input.fijo{background:var(--paper);color:var(--gray);cursor:not-allowed}
 /* "¿Qué pasó?": los desenlaces se leen como respuestas a una pregunta y no
    como el estado en el que está la cita. */
 .rot-marcar{font-size:12px;color:var(--gray);font-weight:600;align-self:center;margin-left:4px}
+.rep-par{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;background:#fff}
+.rep-razon{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
+  color:var(--gray);margin-bottom:10px}
+.rep-lados{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.rep-vs{font-size:12px;color:var(--gray);font-weight:600;text-align:center}
+.rep-lado{background:var(--paper);border-radius:10px;padding:10px 12px}
+.rep-nom{font-weight:800;font-size:15px;margin-bottom:4px}
+.rep-dato{font-size:12.5px;color:var(--gray);line-height:1.6}
+.rep-lado .btn{margin-top:8px}
+.rep-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+@media(max-width:700px){.rep-lados{grid-template-columns:1fr}.rep-vs{padding:2px 0}}
 .fila-tramo{cursor:pointer}
 .fila-tramo:hover td{background:var(--paper)}
 .chev{display:inline-block;width:12px;color:var(--gray);transition:transform .15s}
@@ -1096,6 +1107,15 @@ body.locked{overflow:hidden}
       <thead><tr><th>Paciente</th><th>Celular</th><th>Canal</th><th class="num">Visitas</th>
         <th class="num solo-admin">Facturado</th><th class="num">Saldo</th><th>Última</th><th>Próxima</th></tr></thead>
       <tbody id="pc-body"></tbody></table></div>
+  </div>
+
+  <div class="card solo-admin">
+    <h2>Pacientes repetidos</h2>
+    <p class="hint">El mismo paciente escrito de dos formas se cuenta dos veces y su
+      historia queda partida en dos fichas: la doctora abre una y no ve lo que le
+      hicieron en la otra. Acá están los nombres que podrían ser la misma persona.</p>
+    <div class="row-btn"><button class="btn sec sm" id="btn-buscar-rep">🔍 Buscar repetidos</button></div>
+    <div id="pc-rep"></div>
   </div>
 </section>
 
@@ -4404,6 +4424,85 @@ function agrupaPacientes(){
     if(r.prox&&r.prox>=hoy&&(!p.prox||r.prox<p.prox))p.prox=r.prox});
   return Object.keys(by).map(function(k){return by[k]})}
 
+function renderRepetidos(){
+  var zona=$('#pc-rep'); if(!zona)return;
+  if(!esAdmin()){zona.innerHTML='';return}
+  zona.innerHTML='<p class="mini" style="margin-top:12px">Buscando…</p>';
+  /* el navegador tiene que llegar a pintar el "buscando" antes de bloquearse
+     comparando mil nombres */
+  setTimeout(function(){
+    var pares=pacientesRepetidos();
+    if(!pares.length){
+      zona.innerHTML='<div class="empty" style="margin-top:12px">'+
+        'No hay nombres parecidos sin revisar ✅</div>'; return}
+    zona.innerHTML='<p class="mini" style="margin:12px 0 8px"><b>'+pares.length+
+        '</b> par'+(pares.length===1?'':'es')+' para revisar. '+
+        'Ojo: parecerse no es ser la misma persona — <i>Lucy Vargas</i> y '+
+        '<i>Rudy Vargas</i> se escriben casi igual y son dos.</p>'+
+      pares.map(function(p,i){return tarjetaRepetido(p,i)}).join('')},30)}
+
+function ladoRepetido(k,p,otro){
+  return '<div class="rep-lado">'+
+    '<div class="rep-nom">'+esc(p.nombre)+'</div>'+
+    '<div class="rep-dato">'+n0(p.n)+(p.n===1?' visita':' visitas')+' · '+bs(p.bs)+'</div>'+
+    '<div class="rep-dato">'+(p.desde?fmtFcorta(p.desde)+(p.hasta&&p.hasta!==p.desde?' → '+fmtFcorta(p.hasta):''):'sin fecha')+'</div>'+
+    '<div class="rep-dato">'+(Object.keys(p.cels).length?'📱 '+Object.keys(p.cels).join(' · '):'sin celular')+'</div>'+
+    '<button class="btn sec sm" onclick="verPaciente(\''+jss(p.nombre)+'\')">Ver su historia</button>'+
+    '</div>'}
+
+function tarjetaRepetido(p,i){
+  return '<div class="rep-par" id="rep-'+i+'">'+
+    '<div class="rep-razon">'+esc(p.razon)+'</div>'+
+    '<div class="rep-lados">'+ladoRepetido(p.a,p.pa)+
+      '<div class="rep-vs">¿la misma?</div>'+ladoRepetido(p.b,p.pb)+'</div>'+
+    '<div class="rep-acts">'+
+      '<button class="btn sm" onclick="unirPacientes(\''+jss(p.pa.nombre)+'\',\''+
+        jss(p.pb.nombre)+'\')">Es la misma · dejar «'+esc(p.pa.nombre)+'»</button>'+
+      '<button class="btn sm" onclick="unirPacientes(\''+jss(p.pb.nombre)+'\',\''+
+        jss(p.pa.nombre)+'\')">Es la misma · dejar «'+esc(p.pb.nombre)+'»</button>'+
+      '<button class="btn sec sm" onclick="sonDistintos(\''+jss(p.pa.nombre)+'\',\''+
+        jss(p.pb.nombre)+'\')">Son personas distintas</button>'+
+    '</div></div>'}
+
+/* Une la historia del segundo bajo el nombre del primero. Se avisa cuántas
+   atenciones se van a mover: es un cambio sobre datos reales. */
+function unirPacientes(queda,sale){
+  var kSale=keyPac(sale), kQueda=keyPac(queda);
+  var suyas=DATA.filter(function(r){return keyPac(r.paciente)===kSale});
+  if(!suyas.length){toast('No quedan atenciones de «'+sale+'»',1); renderRepetidos(); return}
+  if(!confirm('¿Unir las dos historias?\n\n'+
+      suyas.length+' atención'+(suyas.length===1?'':'es')+' de «'+sale+'» '+
+      'pasan a «'+queda+'».\n\nEsto no se deshace solo.'))return;
+
+  suyas.forEach(function(r){r.paciente=queda; r.ts=new Date().toISOString(); enviar('save',r)});
+
+  /* la ficha clínica también se une: lo que tenga una y la otra no, se suma */
+  var fQ=PAC[kQueda], fS=PAC[kSale];
+  if(fS){
+    var f=fQ||pacBlanco(queda);
+    f.nombre=queda;
+    if(!f.nac&&fS.nac)f.nac=fS.nac;
+    ['alergias','medicacion','notas'].forEach(function(c){
+      if(fS.med[c]&&f.med[c].indexOf(fS.med[c])<0)
+        f.med[c]=(f.med[c]?f.med[c]+' · ':'')+fS.med[c]});
+    (fS.med.antecedentes||[]).forEach(function(a){
+      if(f.med.antecedentes.indexOf(a)<0)f.med.antecedentes.push(a)});
+    if(!f.med.consent&&fS.med.consent){f.med.consent=true;f.med.consentTs=fS.med.consentTs}
+    (fS.planes||[]).forEach(function(pl){f.planes.push(pl)});
+    delete PAC[kSale];
+    savePac(f)}
+
+  saveLocal(); flushQueue();
+  toast('Unidos: '+suyas.length+' atención'+(suyas.length===1?'':'es')+' pasaron a «'+queda+'» ✅');
+  refreshAll(); renderRepetidos()}
+
+/* Marcar que NO son la misma, para que el par no vuelva a aparecer. */
+function sonDistintos(a,b){
+  CFG.noRepetidos=paresDescartados().concat([clavePar(a,b)]);
+  saveCfg();
+  toast('Anotado: son dos personas distintas');
+  renderRepetidos()}
+
 function renderPacientes(){
   var q=$('#pc-q').value.trim().toLowerCase(), ord=$('#pc-ord').value;
   var arr=agrupaPacientes().filter(function(p){
@@ -5318,6 +5417,84 @@ function filasDelDia(dia,prof){
     if(prof&&r.profesional!==prof&&r.profesional!=='Por definir')return false;
     return true})
     .sort(function(a,b){return (a.hora||'99:99').localeCompare(b.hora||'99:99')})}
+
+/* ---------------------------------------------------------------------
+   PACIENTES REPETIDOS
+   Cada nombre mal escrito parte al paciente en dos: se lo cuenta dos veces
+   como persona, aparece como "nuevo" cuando no lo es, y su historia clínica
+   queda repartida en dos fichas que nadie ve juntas.
+   --------------------------------------------------------------------- */
+
+/* Cuántas letras hay que cambiar para pasar de un nombre al otro. */
+function distNombre(a,b){
+  var m=a.length,nn=b.length,i,j;
+  if(!m)return nn; if(!nn)return m;
+  var fila=[]; for(j=0;j<=nn;j++)fila[j]=j;
+  for(i=1;i<=m;i++){
+    var ant=fila[0]; fila[0]=i;
+    for(j=1;j<=nn;j++){
+      var tmp=fila[j];
+      fila[j]=Math.min(fila[j]+1,fila[j-1]+1,ant+(a.charAt(i-1)===b.charAt(j-1)?0:1));
+      ant=tmp}}
+  return fila[nn]}
+
+function normNombre(x){
+  return String(x==null?'':x).toLowerCase().normalize?
+    String(x==null?'':x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()
+   : String(x==null?'':x).toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
+
+/* Los pares que alguien ya revisó y dijo que son personas distintas. */
+function paresDescartados(){return (CFG&&CFG.noRepetidos)||[]}
+function clavePar(a,b){var x=[keyPac(a),keyPac(b)].sort(); return x[0]+'|'+x[1]}
+
+function pacientesRepetidos(){
+  var por={};
+  DATA.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k)return;
+    if(!por[k])por[k]={nombre:(r.paciente||'').trim(),n:0,bs:0,desde:r.fecha,hasta:r.fecha,cels:{}};
+    var p=por[k];
+    p.n++; p.bs+=num(r.total);
+    if(r.fecha){if(!p.desde||r.fecha<p.desde)p.desde=r.fecha;
+                if(!p.hasta||r.fecha>p.hasta)p.hasta=r.fecha}
+    if(r.celular)p.cels[String(r.celular).replace(/\D/g,'')]=1});
+
+  var claves=Object.keys(por), pares=[], yaVisto={};
+  var descart={}; paresDescartados().forEach(function(c){descart[c]=1});
+
+  function sumar(a,b,razon){
+    if(a===b)return;
+    var c=clavePar(por[a].nombre,por[b].nombre);
+    if(yaVisto[c]||descart[c])return;
+    yaVisto[c]=1;
+    pares.push({a:a,b:b,razon:razon,pa:por[a],pb:por[b]})}
+
+  /* 1. nombres que se escriben casi igual */
+  var norm={}; claves.forEach(function(k){norm[k]=normNombre(por[k].nombre)});
+  for(var i=0;i<claves.length;i++){
+    var A=norm[claves[i]]; if(A.length<5)continue;
+    for(var j=i+1;j<claves.length;j++){
+      var B=norm[claves[j]];
+      if(B.length<5)continue;
+      if(Math.abs(A.length-B.length)>2)continue;      // poda: si no, son 450.000 comparaciones
+      if(A.charAt(0)!==B.charAt(0)&&A.slice(1,4)!==B.slice(1,4))continue;
+      if(distNombre(A,B)<=2)sumar(claves[i],claves[j],'se escriben casi igual')}}
+
+  /* 2. el mismo celular con dos nombres: la señal más fuerte que hay */
+  var porCel={};
+  claves.forEach(function(k){
+    Object.keys(por[k].cels).forEach(function(c){
+      if(c.length<7)return;
+      if(!porCel[c])porCel[c]=[];
+      porCel[c].push(k)})});
+  Object.keys(porCel).forEach(function(c){
+    var l=porCel[c]; if(l.length<2)return;
+    for(var i=0;i<l.length;i++)for(var j=i+1;j<l.length;j++)
+      sumar(l[i],l[j],'mismo celular: '+c)});
+
+  pares.sort(function(x,y){return (y.pa.n+y.pb.n)-(x.pa.n+x.pb.n)});
+  return pares}
+
 
 /* Quién es nuevo en este período.
 
@@ -6915,6 +7092,7 @@ function bind(){
     $('#wrap-l-mes').style.display=this.value==='mes'?'':'none'; renderLista()};
   ['#l-dia','#l-mes','#l-tipo'].forEach(function(s){$(s).onchange=renderLista});
   $('#l-q').oninput=renderLista;
+  $('#btn-buscar-rep').onclick=renderRepetidos;
   $('#btn-xls').onclick=function(){exportXlsx(filtrarLista(),'Ezequiel_Spadental_atenciones_'+hoyISO()+'.xlsx')};
   $('#btn-xls2').onclick=function(){exportXlsx(DATA,'Ezequiel_Spadental_atenciones_completo_'+hoyISO()+'.xlsx')};
   $('#btn-sync').onclick=function(){
