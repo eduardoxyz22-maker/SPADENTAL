@@ -229,6 +229,10 @@ tbody tr.destaca td{background:#FBFCF5}
 @media(min-width:640px){.ov{align-items:center;padding:20px}}
 .modal{background:#fff;width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px;position:relative}
 /* grande y separada del contenido: se toca con el dedo sin apuntar */
+.mom-c{font-weight:700;font-size:12.5px;white-space:nowrap}
+.mom-c.up{color:var(--ok)}
+.mom-c.down{color:var(--clay)}
+.mom-c.igual,.mom-c.nuevo{color:var(--gray);font-weight:600}
 .mom{font-size:11.5px;font-weight:700;margin-top:7px;letter-spacing:.2px}
 .mom.up{color:var(--ok)}
 .mom.down{color:var(--clay)}
@@ -3775,6 +3779,48 @@ function barras2(items){
     '<p class="mini" style="margin-top:9px"><span class="leg" style="background:var(--lime)"></span> nuevos &nbsp; '+
     '<span class="leg" style="background:var(--ink)"></span> ya eran pacientes</p>'}
 
+/* Todo lo que el Panel cuenta de un conjunto de atenciones. Es una función
+   y no código suelto dentro de renderPanel porque hace falta correr lo mismo
+   sobre el mes anterior: si se copiara, las dos mitades de una comparación
+   podrían terminar midiendo cosas distintas. */
+function acumularPanel(rows){
+    var pacs={},canal={},serv={},prof={},dow={},mens={},cat={},srvProf={},porDia={};
+    var tot=0,cobr=0,sal=0;
+    rows.forEach(function(r){
+      var k=(r.paciente||'').trim().toLowerCase();
+      if(k)pacs[k]=1;
+      tot+=num(r.total); cobr+=num(r.acuenta); sal+=num(r.saldo);
+      var c=r.canal||'Sin dato';
+      if(!canal[c])canal[c]={pac:{},n:0,bs:0};
+      if(k)canal[c].pac[k]=1; canal[c].n++; canal[c].bs+=num(r.total);
+      /* Los servicios de una cita agendada son lo que se PIENSA hacer, no lo
+         que se hizo: contarlos acá inflaba la sección Servicios por encima de
+         lo facturado. */
+      if(visitaReal(r))(r.servicios||[]).forEach(function(s){
+        if(!s.nom)return; var q=num(s.cant)||1, v=num(s.precio)*q;
+        var lb=labDe(s);
+        if(!serv[s.nom])serv[s.nom]={n:0,bs:0,lab:0,pac:{}};
+        serv[s.nom].n+=q; serv[s.nom].bs+=v; serv[s.nom].lab+=lb; if(k)serv[s.nom].pac[k]=1;
+        var ct=catDe(s.nom);
+        if(!cat[ct])cat[ct]={n:0,bs:0,lab:0}; cat[ct].n+=q; cat[ct].bs+=v; cat[ct].lab+=lb;
+        var pk=r.profesional||'Sin asignar';
+        if(!srvProf[pk])srvProf[pk]={};
+        if(!srvProf[pk][s.nom])srvProf[pk][s.nom]={n:0,bs:0};
+        srvProf[pk][s.nom].n+=q; srvProf[pk][s.nom].bs+=v});
+      var p=r.profesional||'Sin asignar';
+      if(!prof[p])prof[p]={n:0,bs:0,pac:{},falta:0};
+      prof[p].n++; prof[p].bs+=num(r.total); if(k)prof[p].pac[k]=1;
+      if(r.estado==='No asistió')prof[p].falta++;
+      if(r.fecha){
+        var d=DOW[parseISO(r.fecha).getDay()]; dow[d]=(dow[d]||0)+1;
+        if(!porDia[r.fecha])porDia[r.fecha]={n:0,bs:0}; porDia[r.fecha].n++; porDia[r.fecha].bs+=num(r.total);
+        var ym=r.fecha.slice(0,7);
+        if(!mens[ym])mens[ym]={n:0,bs:0,pac:{},nue:{},rec:{}};
+        mens[ym].n++; mens[ym].bs+=num(r.total); if(k)mens[ym].pac[k]=1}});
+
+  return {pacs:pacs,canal:canal,serv:serv,prof:prof,dow:dow,mens:mens,
+    cat:cat,srvProf:srvProf,porDia:porDia,tot:tot,cobr:cobr,sal:sal}}
+
 function renderPanel(){
   var rows=periodoRows(), todo=periodoRowsTodo(), hoy=hoyISO();
   var sec=getRadio('psec')||'pacientes';
@@ -3784,40 +3830,10 @@ function renderPanel(){
   if($('#p-aviso-resp'))$('#p-aviso-resp').innerHTML=avisoRespaldoHtml();
 
   /* ---------------- acumuladores ---------------- */
-  var pacs={},canal={},serv={},prof={},dow={},mens={},cat={},srvProf={},porDia={};
-  var tot=0,cobr=0,sal=0;
-  rows.forEach(function(r){
-    var k=(r.paciente||'').trim().toLowerCase();
-    if(k)pacs[k]=1;
-    tot+=num(r.total); cobr+=num(r.acuenta); sal+=num(r.saldo);
-    var c=r.canal||'Sin dato';
-    if(!canal[c])canal[c]={pac:{},n:0,bs:0};
-    if(k)canal[c].pac[k]=1; canal[c].n++; canal[c].bs+=num(r.total);
-    /* Los servicios de una cita agendada son lo que se PIENSA hacer, no lo
-       que se hizo: contarlos acá inflaba la sección Servicios por encima de
-       lo facturado. */
-    if(visitaReal(r))(r.servicios||[]).forEach(function(s){
-      if(!s.nom)return; var q=num(s.cant)||1, v=num(s.precio)*q;
-      var lb=labDe(s);
-      if(!serv[s.nom])serv[s.nom]={n:0,bs:0,lab:0,pac:{}};
-      serv[s.nom].n+=q; serv[s.nom].bs+=v; serv[s.nom].lab+=lb; if(k)serv[s.nom].pac[k]=1;
-      var ct=catDe(s.nom);
-      if(!cat[ct])cat[ct]={n:0,bs:0,lab:0}; cat[ct].n+=q; cat[ct].bs+=v; cat[ct].lab+=lb;
-      var pk=r.profesional||'Sin asignar';
-      if(!srvProf[pk])srvProf[pk]={};
-      if(!srvProf[pk][s.nom])srvProf[pk][s.nom]={n:0,bs:0};
-      srvProf[pk][s.nom].n+=q; srvProf[pk][s.nom].bs+=v});
-    var p=r.profesional||'Sin asignar';
-    if(!prof[p])prof[p]={n:0,bs:0,pac:{},falta:0};
-    prof[p].n++; prof[p].bs+=num(r.total); if(k)prof[p].pac[k]=1;
-    if(r.estado==='No asistió')prof[p].falta++;
-    if(r.fecha){
-      var d=DOW[parseISO(r.fecha).getDay()]; dow[d]=(dow[d]||0)+1;
-      if(!porDia[r.fecha])porDia[r.fecha]={n:0,bs:0}; porDia[r.fecha].n++; porDia[r.fecha].bs+=num(r.total);
-      var ym=r.fecha.slice(0,7);
-      if(!mens[ym])mens[ym]={n:0,bs:0,pac:{},nue:{},rec:{}};
-      mens[ym].n++; mens[ym].bs+=num(r.total); if(k)mens[ym].pac[k]=1}});
-
+  var ACU=acumularPanel(rows);
+  var pacs=ACU.pacs, canal=ACU.canal, serv=ACU.serv, prof=ACU.prof, dow=ACU.dow,
+      mens=ACU.mens, cat=ACU.cat, srvProf=ACU.srvProf, porDia=ACU.porDia;
+  var tot=ACU.tot, cobr=ACU.cobr, sal=ACU.sal;
   var primeraGlobal=primeraVisitaDe();
   var nuevos=nuevosDelPeriodo(rows), vuelven={};
   Object.keys(pacs).forEach(function(k){if(!nuevos[k])vuelven[k]=1});
@@ -3842,6 +3858,9 @@ function renderPanel(){
 
   /* ---------------- KPIs de arriba ---------------- */
   var prev=mesPrevio(), P=prev?prev.r:null, pm=prev?prev.nombre:null;
+  /* el nombre del mes se usa en los encabezados de Canales, Equipo y
+     Servicios: "julio 2026" no entra en una columna */
+  if(pm)pm=pm.replace(/\s+\d{4}$/,'');
   var MOM=function(a,b,bueno){return mom(a,P?b:null,pm,bueno!==false)};
   $('#p-kpis').innerHTML=
     '<div class="kpi acc"><div class="k">Pacientes atendidos</div><div class="v">'+n0(nPac)+'</div><div class="d">'+n0(atendidas)+' atenciones'+(noAsist?' · '+n0(noAsist)+' no vinieron':'')+'</div>'+MOM(nPac,P&&P.pac)+'</div>'+
@@ -4074,23 +4093,29 @@ function renderPanel(){
         Math.round(totalLab/(totalSrvBs||1)*100)+'% de lo facturado</div></div>'+
       '<div class="kpi acc"><div class="k">Margen del trabajo</div><div class="v" style="font-size:21px">'+bs(totalSrvBs-totalLab)+'</div><div class="d">facturado − laboratorio</div></div>':'');
 
+    /* la comparación va solo en la tabla sin laboratorio: con siete columnas
+       ya no entra en una pantalla y deja de servir para leer de un vistazo */
+    var ps=(prev&&!hayLab)?prev.acu.serv:null;
     $('#p-serv').innerHTML=tablaRank(
       hayLab
         ? [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',num:1},
            {t:'Laboratorio',num:1},{t:'Margen',barra:1},{t:'% margen',num:1}]
-        : [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},{t:'Precio prom.',num:1}],
+        : [{t:'Servicio'},{t:'Veces',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},
+           {t:'Precio prom.',num:1}].concat(ps?[{t:'Bs vs '+pm,num:1}]:[]),
       sArr.slice(0,40).map(function(s){
         return hayLab
           ? [esc(s.k),n0(s.n),n0(s.pac),n0(s.bs),
              s.lab?'<span style="color:var(--clay)">'+n0(s.lab)+'</span>':'—',
              {txt:n0(s.margen),v:Math.max(0,s.margen)},
              (s.bs?Math.round(s.margen/s.bs*100):0)+'%']
-          : [esc(s.k),n0(s.n),n0(s.pac),{txt:n0(s.bs),v:s.bs},n0(s.n?s.bs/s.n:0)]}),
-      hayLab?660:540)+
+          : [esc(s.k),n0(s.n),n0(s.pac),{txt:n0(s.bs),v:s.bs},n0(s.n?s.bs/s.n:0)]
+            .concat(ps?[momCelda(s.bs,(ps[s.k]||{}).bs||0)]:[])}),
+      hayLab?660:(ps?620:540))+
       (hayLab?'<p class="mini" style="margin-top:8px">Ordenado por <b>margen</b>, no por facturación: '+
         'lo que queda después de pagarle al laboratorio.</p>':
         '<p class="mini" style="margin-top:8px">Cargá el <b>costo de laboratorio</b> en Ajustes → Lista de precios '+
-        'y esta tabla pasa a ordenarse por lo que cada servicio deja de verdad.</p>');
+        'y esta tabla pasa a ordenarse por lo que cada servicio deja de verdad.'+
+        (ps?' La última columna compara con <b>'+esc(pm)+'</b>.':'')+'</p>');
 
     var cArr2=Object.keys(cat).map(function(k){return {k:k,v:cat[k].bs,n:cat[k].n}})
       .sort(function(a,b){return b.v-a.v});
@@ -4155,10 +4180,19 @@ function renderPanel(){
     var cArr=Object.keys(canal).map(function(k){
       return {k:k,pac:Object.keys(canal[k].pac).length,n:canal[k].n,bs:canal[k].bs}})
       .sort(function(a,b){return b.pac-a.pac||b.bs-a.bs});
+    var pc=prev?prev.acu.canal:null;
     $('#p-canal').innerHTML=tablaRank(
-      [{t:'Canal'},{t:'Pacientes',barra:1},{t:'Atenciones',num:1},{t:'Facturado',num:1},{t:'Bs / paciente',num:1}],
-      cArr.map(function(c){return ['<b>'+esc(c.k)+'</b>',{txt:n0(c.pac),v:c.pac},
-        n0(c.n),n0(c.bs),n0(c.pac?c.bs/c.pac:0)]}),480);
+      [{t:'Canal'},{t:'Pacientes',barra:1},{t:'Atenciones',num:1},{t:'Facturado',num:1},
+       {t:'Bs / paciente',num:1}].concat(pc?[{t:'Pac. vs '+pm,num:1},{t:'Bs vs '+pm,num:1}]:[]),
+      cArr.map(function(c){
+        var a=pc?pc[c.k]:null;
+        return ['<b>'+esc(c.k)+'</b>',{txt:n0(c.pac),v:c.pac},
+          n0(c.n),n0(c.bs),n0(c.pac?c.bs/c.pac:0)]
+          .concat(pc?[momCelda(c.pac,a?Object.keys(a.pac).length:0),
+                      momCelda(c.bs,a?a.bs:0)]:[])}),pc?640:480)+
+      (pc?'<p class="mini" style="margin-top:8px">Las dos últimas columnas comparan '+
+        'con <b>'+esc(pm)+'</b>. <i>nuevo</i> quiere decir que ese canal no trajo a nadie '+
+        'el mes pasado.</p>':'');
   }
 
   /* ================= SECCIÓN EQUIPO ================= */
@@ -4168,11 +4202,18 @@ function renderPanel(){
               pac:Object.keys(prof[k].pac).length,falta:prof[k].falta}})
       .sort(function(a,b){return b.v-a.v});
     $('#p-prof').innerHTML='';
+    var pp=prev?prev.acu.prof:null;
     $('#p-prof-tabla').innerHTML=tablaRank(
       [{t:'Profesional'},{t:'Atenciones',num:1},{t:'Pacientes',num:1},{t:'Facturado',barra:1},
-       {t:'Ticket prom.',num:1},{t:'No asistieron',num:1}],
-      pArr.map(function(p){return ['<b>'+esc(p.k)+'</b>',n0(p.n),n0(p.pac),{txt:n0(p.v),v:p.v},
-        n0(p.n?p.v/p.n:0),n0(p.falta)]}),560);
+       {t:'Ticket prom.',num:1},{t:'No asistieron',num:1}]
+       .concat(pp?[{t:'Atenc. vs '+pm,num:1},{t:'Bs vs '+pm,num:1}]:[]),
+      pArr.map(function(p){
+        var a=pp?pp[p.k]:null;
+        return ['<b>'+esc(p.k)+'</b>',n0(p.n),n0(p.pac),{txt:n0(p.v),v:p.v},
+          n0(p.n?p.v/p.n:0),n0(p.falta)]
+          .concat(pp?[momCelda(p.n,a?a.n:0),momCelda(p.v,a?a.bs:0)]:[])}),pp?720:560)+
+      (pp?'<p class="mini" style="margin-top:8px">Las dos últimas columnas comparan '+
+        'con <b>'+esc(pm)+'</b>. <i>nuevo</i> es alguien que no atendió el mes pasado.</p>':'');
   }
 
   /* ================= SECCIÓN TIEMPO ================= */
@@ -5890,7 +5931,20 @@ function mesPrevio(){
   var prev=a+'-'+(m<10?'0':'')+m;
   var filas=soloAtenciones(DATA.filter(function(x){return (x.fecha||'').slice(0,7)===prev}));
   if(!filas.length)return null;
-  return {ym:prev, nombre:mesLabel(prev), r:resumenMes(filas)}}
+  return {ym:prev, nombre:mesLabel(prev), r:resumenMes(filas), acu:acumularPanel(filas)}}
+
+/* La misma comparación, en una celda de tabla. Cuando algo no existía el
+   mes pasado se dice "nuevo" en vez de un porcentaje infinito. */
+function momCelda(actual,anterior,subirEsBueno){
+  if(anterior==null)return '<span class="muted">—</span>';
+  if(!anterior&&!actual)return '<span class="muted">—</span>';
+  if(!anterior)return '<span class="mom-c nuevo">nuevo</span>';
+  if(!actual)return '<span class="mom-c '+(subirEsBueno===false?'up':'down')+'">▼ 100%</span>';
+  var d=(actual-anterior)/anterior*100, pc=Math.abs(d);
+  if(pc<1)return '<span class="mom-c igual">=</span>';
+  var sube=d>0, bueno=(subirEsBueno===false)?!sube:sube;
+  return '<span class="mom-c '+(bueno?'up':'down')+'">'+(sube?'▲':'▼')+' '+
+    (pc>=10?Math.round(pc):pc.toFixed(1))+'%</span>'}
 
 /* La comparación contra el mes pasado. En "por cobrar", "no asistieron" y
    "se fueron sin tratarse" subir es malo: el color va al revés. */
