@@ -305,6 +305,22 @@ input.fijo{background:var(--paper);color:var(--gray);cursor:not-allowed}
 /* "¿Qué pasó?": los desenlaces se leen como respuestas a una pregunta y no
    como el estado en el que está la cita. */
 .rot-marcar{font-size:12px;color:var(--gray);font-weight:600;align-self:center;margin-left:4px}
+.fila-tramo{cursor:pointer}
+.fila-tramo:hover td{background:var(--paper)}
+.chev{display:inline-block;width:12px;color:var(--gray);transition:transform .15s}
+.chev.abierto{transform:rotate(90deg)}
+.detalle-tramo{display:none}
+.detalle-tramo.abierto{display:table-row}
+.detalle-tramo>td{background:var(--paper);padding:10px 12px}
+.deudores{display:flex;flex-direction:column;gap:6px}
+.deudor{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;
+  background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px;cursor:pointer}
+.deudor:hover{border-color:var(--lime);background:#FCFDF7}
+.deudor .dn{font-weight:700;font-size:14px;grid-column:1;grid-row:1}
+.deudor .dm{font-size:12px;color:var(--gray);grid-column:1;grid-row:2}
+.deudor .db{font-weight:800;font-size:15px;color:var(--clay);grid-row:1/3}
+@media(max-width:640px){.deudor{grid-template-columns:1fr auto}
+  .deudor a.btn,.deudor .mini{grid-column:1/-1;justify-self:start}}
 .btn.sec.marcar:hover{background:#EFF4E0;border-color:var(--lime-dk);color:var(--lime-dk)}
 
 /* El mes: un calendario clásico, denso pero legible. */
@@ -3725,20 +3741,8 @@ function renderPanel(){
     var k=(r.paciente||'').trim().toLowerCase(); if(!k||!r.fecha)return;
     if(!primeraGlobal[k]||r.fecha<primeraGlobal[k]){
       primeraGlobal[k]=r.fecha; altaTipo[k]=r.tipo||''}});
-  /* Nuevo o recurrente: manda lo que anotó recepción en la atención (campo
-     `tipo`). Solo si no está anotado se deduce comparando con la primera
-     visita registrada — deducirlo siempre daría de más, porque los cuadernos
-     viejos están incompletos y medio consultorio parecería "nuevo". */
-  var nuevos={},vuelven={};
-  Object.keys(pacs).forEach(function(k){
-    var suyas=rows.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k})
-      .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')});
-    if(!suyas.length)return;
-    var primera=suyas[0];
-    var esNuevo = primera.tipo
-      ? (primera.tipo==='Nuevo')
-      : (primeraGlobal[k]===primera.fecha);
-    if(esNuevo)nuevos[k]=1; else vuelven[k]=1});
+  var nuevos=nuevosDelPeriodo(rows), vuelven={};
+  Object.keys(pacs).forEach(function(k){if(!nuevos[k])vuelven[k]=1});
   /* Un paciente es nuevo SOLO en el mes en que llegó por primera vez. Antes
      se lo contaba como nuevo en cada mes que aparecía, y agosto mostraba 49
      altas cuando habían sido 29. */
@@ -4170,6 +4174,16 @@ function cajaRows(){
   else if(r==='anio'){var a=$('#c-anio').value; out=out.filter(function(x){return (x.fecha||'').slice(0,4)===a})}
   return out.sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})}
 
+/* Un tramo abierto por vez: la lista es larga y con dos abiertos hay que
+   hacer scroll para encontrar el que se estaba mirando. */
+function abrirTramo(i){
+  var det=$('#det-'+i), chev=$('#chev-'+i);
+  if(!det)return;
+  var estaba=det.classList.contains('abierto');
+  $$('.detalle-tramo').forEach(function(d){d.classList.remove('abierto')});
+  $$('.chev').forEach(function(c){c.classList.remove('abierto')});
+  if(!estaba){det.classList.add('abierto'); if(chev)chev.classList.add('abierto')}}
+
 function renderCaja(){
   var rows=cajaRows(), egrs=egresosRango();
   var egr=egrs.reduce(function(a,x){return a+num(x.monto)},0);
@@ -4297,15 +4311,51 @@ function renderCaja(){
     if(!t)return;
     if(!deuda[t[0]])deuda[t[0]]={bs:0,n:0,pac:{}};
     deuda[t[0]].bs+=num(r.saldo); deuda[t[0]].n++;
-    deuda[t[0]].pac[(r.paciente||'').trim()]=1; totalDeuda+=num(r.saldo)});
+    var quien=(r.paciente||'').trim();
+    /* quién debe, no solo cuántos: sin el nombre hay que ir a buscarlo a otra
+       pantalla, y entonces la tabla no sirve para cobrar */
+    if(!deuda[t[0]].pac[quien])deuda[t[0]].pac[quien]={bs:0,n:0,desde:r.fecha,cel:r.celular||''};
+    var q=deuda[t[0]].pac[quien];
+    q.bs+=num(r.saldo); q.n++;
+    if(r.fecha<q.desde)q.desde=r.fecha;
+    if(!q.cel&&r.celular)q.cel=r.celular;
+    totalDeuda+=num(r.saldo)});
+  var conDeuda=tramos.filter(function(t){return deuda[t[0]]});
   $('#cj-deuda').innerHTML=(totalDeuda>0
-    ? barras(tramos.filter(function(t){return deuda[t[0]]}).map(function(t){
+    ? barras(conDeuda.map(function(t){
         return {k:t[0],v:deuda[t[0]].bs,lbl:bs(deuda[t[0]].bs)}}))+
-      tabla([{t:'Antigüedad'},{t:'Atenciones',num:1},{t:'Pacientes',num:1},{t:'Saldo',num:1},{t:'% del total',num:1}],
-        tramos.filter(function(t){return deuda[t[0]]}).map(function(t){
-          var d=deuda[t[0]];
-          return [t[0],n0(d.n),n0(Object.keys(d.pac).length),n0(d.bs),Math.round(d.bs/totalDeuda*100)+'%']})
-          .concat([['<b>TOTAL POR COBRAR</b>','','','<b>'+n0(totalDeuda)+'</b>','100%']]),480)+
+      '<div class="tw" style="margin-top:14px"><table style="min-width:480px"><thead><tr>'+
+        '<th>Antigüedad</th><th class="num">Atenciones</th><th class="num">Pacientes</th>'+
+        '<th class="num">Saldo</th><th class="num">% del total</th></tr></thead><tbody>'+
+      conDeuda.map(function(t,i){
+        var d=deuda[t[0]];
+        var quienes=Object.keys(d.pac).map(function(nom){
+          var q=d.pac[nom];
+          return {nom:nom,bs:q.bs,n:q.n,desde:q.desde,cel:q.cel,dias:diasEntre(q.desde,hoy)}})
+          .sort(function(a,b){return b.bs-a.bs});
+        return '<tr class="fila-tramo" onclick="abrirTramo('+i+')" '+
+            'title="Tocá para ver quién debe">'+
+          '<td><span class="chev" id="chev-'+i+'">▸</span> '+esc(t[0])+'</td>'+
+          '<td class="num">'+n0(d.n)+'</td><td class="num">'+n0(quienes.length)+'</td>'+
+          '<td class="num">'+n0(d.bs)+'</td>'+
+          '<td class="num">'+Math.round(d.bs/totalDeuda*100)+'%</td></tr>'+
+        '<tr class="detalle-tramo" id="det-'+i+'"><td colspan="5">'+
+          '<div class="deudores">'+quienes.map(function(q){
+            return '<div class="deudor" onclick="verPaciente(\''+jss(q.nom)+'\')" '+
+                'title="Abrir la ficha de '+esc(q.nom)+'">'+
+              '<div class="dn">'+esc(q.nom||'(sin nombre)')+'</div>'+
+              '<div class="dm">'+n0(q.n)+(q.n===1?' atención':' atenciones')+' · desde el '+
+                fmtFcorta(q.desde)+' · '+q.dias+' día'+(q.dias===1?'':'s')+'</div>'+
+              '<div class="db">'+bs(q.bs)+'</div>'+
+              (q.cel?'<a class="btn sec sm" target="_blank" rel="noopener" onclick="event.stopPropagation()" '+
+                'href="'+waLink(q.cel,txtSaldo({paciente:q.nom,saldo:q.bs,ultima:q.desde}))+
+                '">WhatsApp</a>':'<span class="mini">sin celular</span>')+
+              '</div>'}).join('')+'</div></td></tr>'}).join('')+
+      '<tr><td><b>TOTAL POR COBRAR</b></td><td></td><td></td>'+
+        '<td class="num"><b>'+n0(totalDeuda)+'</b></td><td class="num">100%</td></tr>'+
+      '</tbody></table></div>'+
+      '<p class="mini" style="margin-top:8px">Tocá un tramo para ver quién debe; '+
+        'tocá un nombre para abrir su ficha.</p>'+
       '<p class="mini" style="margin-top:10px">Esto mira <b>toda</b> la historia, no solo el periodo elegido: una deuda vieja sigue siendo deuda. El detalle con el WhatsApp está en <b>🔔 Recordatorios → 💰 Saldos</b>.</p>'
     : '<div class="empty">No hay saldos pendientes 🎉</div>');
 
@@ -5269,6 +5319,39 @@ function filasDelDia(dia,prof){
     return true})
     .sort(function(a,b){return (a.hora||'99:99').localeCompare(b.hora||'99:99')})}
 
+/* Quién es nuevo en este período.
+
+   Manda lo que anotó recepción en la atención (campo `tipo`). Solo cuando
+   nadie lo anotó se deduce, comparando con la primera visita registrada de
+   toda su historia. Deducir siempre daría de más: los cuadernos viejos
+   están incompletos y medio consultorio parecería recién llegado.
+
+   Vive en un solo lugar a propósito. El Panel deducía y el informe del mes
+   no, así que agosto salía con 55 nuevos en una pantalla y 34 en la otra,
+   con los mismos datos. */
+function nuevosDelPeriodo(rows){
+  /* Solo cuentan las visitas que ocurrieron: al que canceló o no vino nadie
+     lo dio de alta, y contarlo como paciente nuevo del mes infla las altas
+     con gente que nunca se sentó en el sillón. */
+  var vino=function(r){return r.estado==='Atendido'};
+
+  var primeraGlobal={};
+  DATA.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||!r.fecha||!vino(r))return;
+    if(!primeraGlobal[k]||r.fecha<primeraGlobal[k])primeraGlobal[k]=r.fecha});
+
+  var suyas={};
+  rows.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||!r.fecha||!vino(r))return;
+    if(!suyas[k]||r.fecha<suyas[k].fecha)suyas[k]={fecha:r.fecha,tipo:r.tipo||''}});
+
+  var nuevos={};
+  Object.keys(suyas).forEach(function(k){
+    var p=suyas[k];
+    var esNuevo = p.tipo ? (p.tipo==='Nuevo') : (primeraGlobal[k]===p.fecha);
+    if(esNuevo)nuevos[k]=1});
+  return nuevos}
+
 /* Lo que la doctora necesita saber de este paciente antes de atenderlo. */
 function avisosDe(nombre,rActual){
   var fi=pacDe(nombre), out=[];
@@ -5837,9 +5920,9 @@ function imprimirInforme(){
   var fact=rows.reduce(function(a,r){return a+num(r.total)},0);
   var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0);
   var sal=rows.reduce(function(a,r){return a+num(r.saldo)},0);
-  var pacs={},nuevos={};
-  rows.forEach(function(r){var k=keyPac(r.paciente); if(!k)return;
-    pacs[k]=1; if(r.tipo==='Nuevo')nuevos[k]=1});
+  var pacs={};
+  rows.forEach(function(r){var k=keyPac(r.paciente); if(k)pacs[k]=1});
+  var nuevos=nuevosDelPeriodo(rows);
 
   /* por doctora: solo lo atendido — un "no asistió" no es trabajo hecho */
   var prof={};
@@ -5858,10 +5941,14 @@ function imprimirInforme(){
   var fServ=Object.keys(serv).sort(function(a,b){return serv[b].bs-serv[a].bs}).slice(0,10)
     .map(function(k){return [esc(k),n0(serv[k].n),n0(serv[k].bs)]});
 
-  /* canales de los nuevos */
-  var canal={};
-  rows.forEach(function(r){if(r.tipo!=='Nuevo')return;
-    var c=r.canal||'Sin anotar'; canal[c]=(canal[c]||0)+1});
+  /* De dónde llegaron esos mismos nuevos: se cuenta un paciente una vez,
+     por su primera atención del período, no una vez por cada visita. */
+  var canal={},primeraDe={};
+  rows.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||!nuevos[k])return;
+    if(!primeraDe[k]||r.fecha<primeraDe[k].fecha)primeraDe[k]=r});
+  Object.keys(primeraDe).forEach(function(k){
+    var c=primeraDe[k].canal||'Sin anotar'; canal[c]=(canal[c]||0)+1});
   var fCanal=Object.keys(canal).sort(function(a,b){return canal[b]-canal[a]})
     .map(function(c){return [esc(c),n0(canal[c])]});
 
@@ -6392,9 +6479,9 @@ function exportXlsx(rows,nombre){
   if(!rows.length){toast('No hay datos para exportar',1);return}
 
   var atendidas=rows.filter(function(r){return r.estado==='Atendido'});
-  var pacs={},nuevos={};
-  rows.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase();
-    if(k){pacs[k]=1; if(r.tipo==='Nuevo')nuevos[k]=1}});
+  var pacs={};
+  rows.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)pacs[k]=1});
+  var nuevos=nuevosDelPeriodo(rows);
   var tot=rows.reduce(function(a,r){return a+num(r.total)},0);
   var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0);
   var sal=rows.reduce(function(a,r){return a+num(r.saldo)},0);
