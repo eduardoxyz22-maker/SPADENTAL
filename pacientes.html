@@ -244,6 +244,7 @@ tbody tr.destaca td{background:#FBFCF5}
 .banner{border-radius:11px;padding:10px 13px;font-size:13px;font-weight:600;margin-top:14px}
 .banner.local{background:#FDF3DC;border:1px solid #F0DCA8;color:#8A6108}
 .banner.conn{background:#E9F4EE;border:1px solid #BFE0CD;color:var(--ok)}
+input.fijo{background:var(--paper);color:var(--gray);cursor:not-allowed}
 .ojo-wrap{position:relative}
 .ojo-wrap input{width:100%;padding-right:46px}
 .btn-ojo{position:absolute;right:5px;top:50%;transform:translateY(-50%);
@@ -300,6 +301,11 @@ tbody tr.destaca td{background:#FBFCF5}
 .sem-add{border:1px dashed var(--line);background:none;border-radius:8px;color:var(--gray);
   cursor:pointer;font-size:14px;padding:2px 0;margin-top:auto}
 .sem-add:hover{border-color:var(--lime-dk);color:var(--lime-dk)}
+
+/* "¿Qué pasó?": los desenlaces se leen como respuestas a una pregunta y no
+   como el estado en el que está la cita. */
+.rot-marcar{font-size:12px;color:var(--gray);font-weight:600;align-self:center;margin-left:4px}
+.btn.sec.marcar:hover{background:#EFF4E0;border-color:var(--lime-dk);color:var(--lime-dk)}
 
 /* El mes: un calendario clásico, denso pero legible. */
 .mes-sem{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px;
@@ -860,11 +866,11 @@ body.locked{overflow:hidden}
       <div class="kpi acc" id="k-l-pac"></div><div class="kpi" id="k-l-cobr"></div>
       <div class="kpi" id="k-l-saldo"></div><div class="kpi" id="k-l-tkt"></div></div>
     <div class="tw"><table>
-      <thead><tr><th>N°</th><th>Fecha</th><th>Paciente</th><th>Canal</th><th>Servicios</th>
+      <thead><tr><th>N°</th><th>Fecha</th><th>Paciente</th><th>Doctora</th><th>Canal</th><th>Servicios</th>
         <th class="num">Total</th><th class="num">A cuenta</th><th class="num">Saldo</th><th>Estado</th><th>Próx.</th></tr></thead>
       <tbody id="l-body"></tbody></table></div>
     <div class="row-btn">
-      <button class="btn dark sm" id="btn-xls">⬇ Descargar Excel</button>
+      <button class="btn dark sm solo-admin" id="btn-xls">⬇ Descargar Excel</button>
       <button class="btn sec sm" id="btn-sync">🔄 Actualizar</button>
     </div>
   </div>
@@ -1065,12 +1071,12 @@ body.locked{overflow:hidden}
       <div><label>Buscar</label><input id="pc-q" placeholder="Nombre o celular"></div>
       <div><label>Ordenar por</label>
         <select id="pc-ord"><option value="ult">Última visita</option><option value="saldo">Saldo pendiente</option>
-        <option value="gasto">Total facturado</option><option value="visitas">N° de visitas</option>
+        <option value="gasto" class="solo-admin">Total facturado</option><option value="visitas">N° de visitas</option>
         <option value="nombre">Nombre</option></select></div>
     </div>
     <div class="tw" style="margin-top:12px"><table>
       <thead><tr><th>Paciente</th><th>Celular</th><th>Canal</th><th class="num">Visitas</th>
-        <th class="num">Facturado</th><th class="num">Saldo</th><th>Última</th><th>Próxima</th></tr></thead>
+        <th class="num solo-admin">Facturado</th><th class="num">Saldo</th><th>Última</th><th>Próxima</th></tr></thead>
       <tbody id="pc-body"></tbody></table></div>
   </div>
 </section>
@@ -1386,6 +1392,13 @@ function aplicarRol(){
 /* En modo doctora, los selectores de doctora quedan clavados en ella:
    elegir a otra es justamente lo que no se puede. */
 function fijarSelectoresProf(){
+  /* El campo del formulario de atención es un input libre: en modo doctora se
+     fija y se bloquea, si no una doctora podría cargar una atención a nombre
+     de otra y romper el aislamiento en el que se apoya todo lo demás. */
+  var fp=$('#f-prof');
+  if(fp){
+    if(esDoctora()){fp.value=PROF_ACTUAL; fp.readOnly=true; fp.classList.add('fijo')}
+    else{fp.readOnly=false; fp.classList.remove('fijo')}}
   ['#m-prof','#rem-prof','#q-filtro-prof'].forEach(function(id){
     var sel=$(id); if(!sel)return;
     if(esDoctora()){
@@ -1418,7 +1431,9 @@ function pedirModoDuena(){
 function salirModoDuena(){
   ROL='equipo';
   try{sessionStorage.setItem(K_UNLOCK,passHash())}catch(e){}
-  closeModal(); aplicarRol(); toast('Volviste al modo equipo')}
+  closeModal(); aplicarRol();
+  try{refreshAll()}catch(e){}      // si no, los montos quedan pintados en pantalla
+  toast('Volviste al modo equipo')}
 
 /* Para la compu compartida: cierra la sesión y deja la pantalla de clave
    lista para que entre la siguiente con la suya. */
@@ -1445,7 +1460,11 @@ function desbloquear(){
   }catch(e){}
   document.body.classList.remove('locked');
   $('#gate').classList.add('off');
-  aplicarRol()}
+  aplicarRol();
+  /* Repintar SIEMPRE al entrar: en la compu compartida, la pantalla se quedaba
+     con los montos de quien acababa de salir hasta que alguien tocara otra
+     pestaña. */
+  try{refreshAll()}catch(e){}}
 function bloquear(){
   ROL='equipo'; PROF_ACTUAL='';
   try{sessionStorage.removeItem(K_UNLOCK);localStorage.removeItem(K_UNLOCK)}catch(e){}
@@ -1609,11 +1628,42 @@ function saveCfgObj(c){try{localStorage.setItem(K_CFG,JSON.stringify(c))}catch(e
 /* La configuración (precios, canales, profesionales, clave) también viaja al
    servidor, si no cada equipo termina con precios distintos sin enterarse.
    Gana la última que se guardó: cada cambio lleva su marca de tiempo. */
+/* Lo que un equipo NO conoce no lo puede borrar.
+   Antes cada guardado subía la foto entera de ese equipo: si la dueña acababa
+   de asignar las claves de las doctoras y otro equipo (con la config de hace
+   media hora) tocaba "Guardar recordatorios", esa foto vieja pisaba el
+   servidor y las claves desaparecían de todos lados sin un solo aviso.
+   Ahora se baja lo que hay, se fusiona sobre eso y recién ahí se sube. */
+var CLAVES_DELICADAS=['clavesProf','adminHash','passHash'];
+
+function fusionarCfg(base,mia){
+  var out={};
+  var k;
+  for(k in base)if(Object.prototype.hasOwnProperty.call(base,k))out[k]=base[k];
+  for(k in mia)if(Object.prototype.hasOwnProperty.call(mia,k))out[k]=mia[k];
+  /* Las claves de acceso solo se tocan desde el equipo que las cambió: nunca
+     se borran por venir ausentes en la foto de otro. */
+  CLAVES_DELICADAS.forEach(function(c){
+    if(mia[c]==null&&base[c]!=null)out[c]=base[c];
+    if(c==='clavesProf'&&base.clavesProf&&mia.clavesProf){
+      var u={},p;
+      for(p in base.clavesProf)u[p]=base.clavesProf[p];
+      for(p in mia.clavesProf)u[p]=mia.clavesProf[p];
+      out.clavesProf=u}});
+  return out}
+
 function saveCfg(guardarEnServidor){
   CFG.ts=new Date().toISOString();
   saveCfgObj(CFG);
-  if(guardarEnServidor!==false&&CONNECTED){
-    enviar('cfg',CFG,CFG)}}
+  if(guardarEnServidor===false||!CONNECTED)return;
+  /* pull → merge → push: si el servidor no contesta, se encola lo nuestro */
+  api('cfgGet').then(function(r){
+    if(r&&r.ok&&r.cfg&&cfgSana(r.cfg)){
+      CFG=fusionarCfg(r.cfg,CFG);
+      CFG.ts=new Date().toISOString();
+      saveCfgObj(CFG)}
+    return enviar('cfg',CFG,CFG)
+  }).catch(function(){enviar('cfg',CFG,CFG)})}
 
 /* Un hash de clave válido es SHA-256: 64 caracteres hexadecimales. Cualquier
    otra cosa dejaría a todo el consultorio afuera sin forma de entrar, así que
@@ -1637,7 +1687,9 @@ function aplicarCfgServidor(remota){
   if(remota.clavesProf){
     for(var kk in remota.clavesProf)
       if(!hashValido(remota.clavesProf[kk]))delete remota.clavesProf[kk]}
-  CFG=migrarCfg(remota);
+  /* fusionar en vez de reemplazar: una config remota vieja no puede llevarse
+     puestas las claves que este equipo acaba de crear */
+  CFG=migrarCfg(fusionarCfg(CFG,remota));
   var d=cfgDefault(); for(var k in d){if(CFG[k]==null)CFG[k]=d[k]}
   saveCfgObj(CFG);
   if(CFG.passHash&&CFG.passHash!==claveVieja){
@@ -1669,14 +1721,34 @@ function queue(action,rec){
    servidor todavía no conocía se perdía en silencio. */
 function enviar(action,rec,cfg){
   if(!CONNECTED){queue(action,rec);return Promise.resolve(null)}
+  /* Se encola PRIMERO y se saca al confirmar: si cierran la pestaña o la
+     tablet se bloquea mientras el pedido está en vuelo, ni el .then ni el
+     .catch llegan a correr, y antes el dato no quedaba en ningún lado. */
+  queue(action,rec);
   return api(action,rec,cfg).then(function(r){
-    if(r&&r.ok)return r;
-    queue(action,rec); return null
-  }).catch(function(){queue(action,rec); return null})}
+    if(r&&r.ok){desencolar(action,rec); return r}
+    return null
+  }).catch(function(){return null})}
+
+function desencolar(action,rec){
+  var q=pend(), fuera=false;
+  setPend(q.filter(function(x){
+    if(!fuera&&x.action===action&&JSON.stringify(x.rec)===JSON.stringify(rec)){
+      fuera=true; return false}
+    return true}));
+  if(window.banner)banner()}
 function flushQueue(){
   if(!CONNECTED)return Promise.resolve();
   var q=pend(); if(!q.length)return Promise.resolve();
-  setPend([]);
+  /* La cola NO se vacía de entrada: cada envío tarda segundos y si la tablet
+     se duerme o cierran la pestaña a mitad de camino, lo que faltaba se
+     perdía para siempre. Cada item se saca recién cuando el servidor confirma. */
+  var sacarDeLaCola=function(item){
+    var q2=pend(), fuera=false;
+    setPend(q2.filter(function(x){
+      if(!fuera&&x.action===item.action&&JSON.stringify(x.rec)===JSON.stringify(item.rec)){
+        fuera=true; return false}
+      return true}))};
   /* al terminar, el banner tiene que reflejar lo que de verdad quedó */
   setTimeout(function(){if(window.banner)banner()},0);
   return q.reduce(function(p,item){return p.then(function(){
@@ -1684,8 +1756,8 @@ function flushQueue(){
        reenviar la foto vieja pisaría cambios más nuevos en el servidor */
     var llamada=item.action==='cfg'?api('cfg',null,CFG):api(item.action,item.rec);
     return llamada.then(function(r){
-      if(!(r&&r.ok))queue(item.action,item.rec)
-    }).catch(function(){queue(item.action,item.rec)})})},Promise.resolve())
+      if(r&&r.ok)sacarDeLaCola(item)      // solo lo confirmado sale de la cola
+    }).catch(function(){})})},Promise.resolve())
 }
 /* Trae SOLO la config: no arrastra las miles de atenciones, asi que llega en
    un segundo en vez de en catorce. Si el servidor todavia no conoce la accion
@@ -2647,6 +2719,7 @@ function citaCard(r,d){
       return (x.hora||'')+' '+(x.paciente||'')}).join(' · '))+'">⚠ choca con '+
       esc(ch[0].paciente||'otra cita')+(ch.length>1?' +'+(ch.length-1):'')+'</span>':'')+
     (r.proxMotivo?' · '+esc(r.proxMotivo):'')+
+    ' · <span class="pill warn">⏳ falta marcar si vino</span>'+
     (r.contactado?' · <span class="pill ok">✓ ya le avisamos</span>':'')+
     (deuda>0?' · <span class="pill warn">debe '+bs(deuda)+'</span>':'')+
     (function(){var rec=presuPendDe(r.paciente);
@@ -2657,9 +2730,13 @@ function citaCard(r,d){
     '📱 '+esc(r.celular||'sin celular')+
     (r.profesional?' · '+esc(r.profesional):'')+
     (r.tipo==='Nuevo'?' · <span class="pill lime">paciente nuevo</span>':'');
+  /* Los cuatro botones al mismo peso visual: el verde del botón principal
+     hacía creer que la cita YA estaba marcada como "Vino". El estado va
+     escrito, no insinuado por un color. */
   var acts='<a class="btn sec sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r))+
       '" onclick="marcarContactado(\''+r.id+'\')">WhatsApp</a>'+
-    '<button class="btn sm" onclick="resolverCita(\''+r.id+'\',\'Atendido\')">✅ Vino</button>'+
+    '<span class="rot-marcar">¿Qué pasó?</span>'+
+    '<button class="btn sec sm marcar" onclick="resolverCita(\''+r.id+'\',\'Atendido\')">✅ Vino</button>'+
     '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✖ No vino</button>'+
     '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'Canceló\')">🚫 Canceló</button>'+
     '<button class="btn sec sm" onclick="reagendar(\''+r.id+'\')">🔁 Reprogramar</button>';
@@ -3214,8 +3291,10 @@ function renderRem(){
   var ctlVenc=ctl.filter(function(c){return c.dias<=0}).length;
   $('#k-ctrl').innerHTML='<div class="k">Controles que tocan</div><div class="v">'+ctl.length+'</div><div class="d">'+
     (ctlVenc?ctlVenc+' ya vencidos':'ninguno vencido')+'</div>';
+  var verBs=esAdmin()||(esDoctora()&&rprof===PROF_ACTUAL);
   $('#k-frenado').innerHTML='<div class="k">Planes frenados</div><div class="v">'+fre.length+'</div><div class="d">'+
-    (fre.length?bs(fre.reduce(function(a,x){return a+x.saldo},0))+' sin cobrar':'ninguno a medio hacer')+'</div>';
+    (fre.length?(verBs?bs(fre.reduce(function(a,x){return a+x.saldo},0))+' sin cobrar':'a medio hacer')
+      :'ninguno a medio hacer')+'</div>';
 
   var h='';
   if(f==='citas'||f==='todos'){
@@ -3250,7 +3329,7 @@ function renderRem(){
   if(f==='cuotas'||f==='todos'){
     var totCuo=cuo.reduce(function(a,x){return a+x.monto},0);
     h+='<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 8px">💳 Cuotas vencidas · '+cuo.length+
-      (totCuo?' · '+bs(totCuo):'')+'</h3>';
+      ((totCuo&&(esAdmin()||(esDoctora()&&rprof===PROF_ACTUAL)))?' · '+bs(totCuo):'')+'</h3>';
     if(!cuo.length)h+='<div class="empty">Ninguna cuota vencida 🎉</div>';
     cuo.forEach(function(x){
       var meta='<b>'+esc(x.plan.nombre)+'</b> · '+x.cuotas.length+' cuota'+(x.cuotas.length===1?'':'s')+
@@ -3303,7 +3382,9 @@ function renderRem(){
   var pp=ppTodos.filter(function(x){return !citaFuturaDe(x.paciente)});
   var yaCita=ppTodos.length-pp.length;
   $('#k-presu').innerHTML='<div class="k">Recomendados</div><div class="v">'+pp.length+'</div>'+
-    '<div class="d">'+(pp.length?bs(pp.reduce(function(a,x){return a+num(x.p.monto)},0))+' sin decidir':'todo respondido')+
+    '<div class="d">'+(pp.length?((esAdmin()||(esDoctora()&&rprof===PROF_ACTUAL))
+      ? bs(pp.reduce(function(a,x){return a+num(x.p.monto)},0))+' sin decidir'
+      : 'sin decidir'):'todo respondido')+
     (yaCita?' · '+yaCita+' ya con cita':'')+'</div>';
   updateNavRem()}
 
@@ -3377,6 +3458,10 @@ function filtrarLista(){
   var rango=$('#l-rango').value, q=$('#l-q').value.trim().toLowerCase();
   var tipo=$('#l-tipo')?$('#l-tipo').value:'atenciones';
   var out=DATA.slice();
+  /* una doctora ve su propia lista: sumando la columna a ojo, la de todas
+     sería el facturado del consultorio */
+  if(esDoctora())out=out.filter(function(r){
+    return r.profesional===PROF_ACTUAL||r.profesional==='Por definir'});
   if(tipo==='atenciones')out=out.filter(esAtencion);
   else if(tipo==='citas')out=out.filter(esCitaPendiente);
   if(rango==='dia'){var d=$('#l-dia').value; out=out.filter(function(r){return r.fecha===d})}
@@ -3420,7 +3505,8 @@ function renderLista(){
   $('#k-l-pac').innerHTML='<div class="k">Atenciones</div><div class="v">'+rows.length+'</div><div class="d">'+Object.keys(pacs).length+' pacientes · '+nAt+' atendidos</div>';
   /* los totales de plata del consultorio son de la dueña */
   ['#k-l-cobr','#k-l-saldo','#k-l-tkt'].forEach(function(id){
-    $(id).style.display=esAdmin()?'':'none'});
+    $(id).style.display=esAdmin()?'':'none';
+    if(!esAdmin())$(id).innerHTML=''});      // ocultar no alcanza: se lee en el DOM
   if(esAdmin()){
     $('#k-l-cobr').innerHTML='<div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">de '+bs(tot)+' facturado</div>';
     $('#k-l-saldo').innerHTML='<div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(saldo)+'</div><div class="d">saldo pendiente</div>';
@@ -3431,6 +3517,7 @@ function renderLista(){
       '<td>'+(r.nroDia?'#'+r.nroDia:'—')+'</td>'+
       '<td>'+fmtFcorta(r.fecha)+'<div class="mini">'+esc(r.hora||'')+'</div></td>'+
       '<td><b>'+esc(r.paciente||'—')+'</b><div class="mini">'+esc(r.celular||'')+(r.tipo==='Nuevo'?' · <span class="pill lime">nuevo</span>':'')+'</div></td>'+
+      '<td>'+(r.profesional?esc(r.profesional.replace(/^Dra\.?\s*/i,'')):'—')+'</td>'+
       '<td>'+esc(r.canal||'—')+'</td>'+
       '<td style="max-width:230px">'+esc(srvText(r)||'—')+'</td>'+
       '<td class="num">'+n0(r.total)+'</td>'+
@@ -4220,10 +4307,11 @@ function renderPacientes(){
   $('#pc-body').innerHTML=arr.length?arr.map(function(p){
     return '<tr onclick="verPaciente(\''+jss(p.paciente)+'\')">'+
       '<td><b>'+esc(p.paciente)+'</b></td><td>'+esc(p.celular||'—')+'</td><td>'+esc(p.canal||'—')+'</td>'+
-      '<td class="num">'+p.visitas+'</td><td class="num">'+n0(p.gasto)+'</td>'+
+      '<td class="num">'+p.visitas+'</td>'+
+      (esAdmin()?'<td class="num">'+n0(p.gasto)+'</td>':'')+
       '<td class="num"'+(p.saldo>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(p.saldo)+'</td>'+
       '<td>'+fmtFcorta(p.ult)+'</td><td>'+(p.prox?fmtFcorta(p.prox):'—')+'</td></tr>'
-  }).join(''):'<tr><td colspan="8" class="empty">Sin pacientes todavía.</td></tr>'}
+  }).join(''):'<tr><td colspan="'+(esAdmin()?8:7)+'" class="empty">Sin pacientes todavía.</td></tr>'}
 
 /* ============================ MODALES ============================ */
 /* A todo campo de clave le cuelga un 👁 para ver lo que se escribió.
@@ -4393,7 +4481,7 @@ function verPaciente(nombre){
     hMed+
     '<div class="kpis" style="margin:12px 0">'+
       '<div class="kpi"><div class="k">Visitas</div><div class="v">'+rs.length+'</div></div>'+
-      '<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:19px">'+bs(tot)+'</div></div>'+
+      (esAdmin()?'<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:19px">'+bs(tot)+'</div></div>':'')+
       '<div class="kpi"><div class="k">Saldo</div><div class="v" style="font-size:19px;color:'+
         (sal>0?'var(--clay)':'var(--ok)')+'">'+bs(sal)+'</div></div>'+
     '</div>'+
@@ -4409,9 +4497,10 @@ function verPaciente(nombre){
         'al elegir las piezas de cada servicio en la atención.</p>')+
     odontogramaHtml(mapa,null,nPiezas?'verDientePac':'',conTemp)+
     '<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Visitas</h4>'+
-    (rs.length?'<div class="tw" style="margin:0"><table style="min-width:0"><thead><tr><th>Fecha</th><th>Servicios</th>'+
+    (rs.length?'<div class="tw" style="margin:0"><table style="min-width:0"><thead><tr><th>Fecha</th><th>Doctora</th><th>Servicios</th>'+
       '<th class="num">Total</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody>'+
       rs.map(function(r){return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
+        '<td>'+(r.profesional?esc(r.profesional.replace(/^Dra\.?\s*/i,'')):'—')+'</td>'+
         '<td style="max-width:190px">'+esc(srvText(r)||'—')+'</td><td class="num">'+n0(r.total)+'</td>'+
         '<td class="num">'+n0(r.saldo)+'</td><td>'+estadoPill(r.estado)+'</td></tr>'}).join('')+
       '</tbody></table></div>':'<div class="empty">Todavía no tiene visitas cargadas.</div>')+
@@ -4990,8 +5079,11 @@ function presuRemHtml(rprof){
     '<br><span class="mini">Cuando anoten un tratamiento recomendado en la atención, aparece acá.</span></div>';
   if(!ps.length)h+='<div class="empty">Nadie por contactar: los que faltan ya tienen cita 👇</div>';
   var bs_=ps.reduce(function(a,x){return a+num(x.p.monto)},0);
-  if(ps.length)h+='<p class="mini" style="margin:0 0 12px">Son <b>'+bs(bs_)+'</b> en tratamientos que ya se recomendaron '+
-     'y todavía no se hicieron. Si el paciente vuelve y se lo hace, se cierra solo.</p>';
+  var verTot=esAdmin()||(esDoctora()&&rprof===PROF_ACTUAL);
+  if(ps.length)h+='<p class="mini" style="margin:0 0 12px">'+(verTot
+      ? 'Son <b>'+bs(bs_)+'</b> en tratamientos que ya se recomendaron y todavía no se hicieron.'
+      : 'Tratamientos que ya se recomendaron y todavía no se hicieron.')+
+     ' Si el paciente vuelve y se lo hace, se cierra solo.</p>';
   ps.slice(0,120).forEach(function(x){
     var meta='<b>'+esc(x.p.nom)+'</b>'+(num(x.p.monto)>0?' · '+bs(x.p.monto):'')+
       ' · se lo dijeron hace <b>'+x.dias+' días</b> ('+fmtF(x.fecha)+')'+
@@ -5672,6 +5764,7 @@ function tablaHC(cab,filas,tot){
       return '<td'+(i>0?' class="hc-num"':'')+'>'+v+'</td>'}).join('')+'</tr></tfoot>':'')+'</table>'}
 
 function imprimirInforme(){
+  if(!esAdmin()){toast('El informe es del modo dueña 👑',1);return}
   var ym=$('#p-mes').value||hoyISO().slice(0,7);
   var rows=soloAtenciones(DATA).filter(function(r){return (r.fecha||'').slice(0,7)===ym});
   var todos=DATA.filter(function(r){return (r.fecha||'').slice(0,7)===ym});
@@ -6229,6 +6322,9 @@ function periodoTexto(rows){
 
 /* ------------------------------ INFORME DE ATENCIONES ------------------------------ */
 function exportXlsx(rows,nombre){
+  /* Este libro trae produccion por doctora, por canal y mes a mes: es la foto
+     del negocio. Solo la dueña. */
+  if(!esAdmin()){toast('Ese Excel es del modo dueña 👑',1);return}
   if(!rows.length){toast('No hay datos para exportar',1);return}
 
   var atendidas=rows.filter(function(r){return r.estado==='Atendido'});
@@ -6362,6 +6458,7 @@ function exportXlsx(rows,nombre){
 
 /* ------------------------------ INFORME DE CAJA ------------------------------ */
 function exportCaja(rows,nombre){
+  if(!esAdmin()){toast('La caja es del modo dueña 👑',1);return}
   if(!rows.length){toast('No hay movimientos para exportar',1);return}
 
   var porMetodo={},porDia={},cobrTot=0,totTot=0,salTot=0,sinId=[];
@@ -6814,7 +6911,10 @@ function bind(){
         if(!confirm('Se van a agregar '+arr.length+' registros a los que ya hay. ¿Seguir?'))return;
         var ids={}; DATA.forEach(function(r){ids[r.id]=1});
         arr.map(normalize).forEach(function(r){if(!ids[r.id])DATA.push(r)});
-        if(j.cfg&&j.cfg.precios){CFG=j.cfg;saveCfg()}
+        /* La config del archivo NO se aplica: un respaldo de hace dos meses
+       resetearía las claves y los precios de todo el consultorio. Los datos
+       sí se restauran; los ajustes se cambian en Ajustes. */
+    if(j.cfg&&j.cfg.precios)toast('Los ajustes del archivo no se aplicaron (se restauran los datos, no la configuración)',1);
         if(Array.isArray(j.egresos)){
           var ids={}; EGR.forEach(function(x){ids[x.id]=1});
           j.egresos.map(egrNormalize).forEach(function(x){if(!ids[x.id])EGR.push(x)});
@@ -6824,7 +6924,15 @@ function bind(){
             var n=pacNormalize(j.pacientes[k]), kk=keyPac(n.nombre)||k;
             if(!PAC[kk])PAC[kk]=n});
           savePacLocal()}
-        saveLocal(); refreshAll(); toast('Respaldo restaurado ✅')
+        saveLocal();
+        /* lo restaurado tiene que llegar al servidor: si no, el próximo
+           refresco lo reemplaza con lo de la nube y se evapora en silencio */
+        if(CONNECTED){
+          DATA.forEach(function(r){queue('save',r)});
+          EGR.forEach(function(e){queue('egreso',e)});
+          Object.keys(PAC).forEach(function(k){if(!pacVacia(PAC[k]))queue('pac',PAC[k])});
+          flushQueue()}
+        refreshAll(); toast('Respaldo restaurado ✅'+(CONNECTED?' · subiendo a la nube…':''))
       }catch(err){toast('Archivo inválido',1)}
       e.target.value=''};
     rd.readAsText(f)}}
