@@ -2673,8 +2673,9 @@ function renderCitasProximas(){
     return (r.fecha||'').slice(0,7)===ym&&(!prof||r.profesional===prof)});
   var pacMes={}; delMes.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)pacMes[k]=1});
   var bsMes=delMes.reduce(function(a,r){return a+num(r.total)},0);
-  var nuevosMes={}; delMes.forEach(function(r){
-    var k=(r.paciente||'').trim().toLowerCase(); if(k&&r.tipo==='Nuevo')nuevosMes[k]=1});
+  /* el mismo criterio que el Panel: acá se contaba solo lo que recepción
+     marcó, y el mes salía con menos altas de las que hubo */
+  var nuevosMes=nuevosDelPeriodo(delMes);
   var deudaMes=DATA.filter(function(r){return esAtencion(r)&&(!prof||r.profesional===prof)})
     .reduce(function(a,r){return a+num(r.saldo)},0);
 
@@ -3753,25 +3754,23 @@ function renderPanel(){
       if(!mens[ym])mens[ym]={n:0,bs:0,pac:{},nue:{},rec:{}};
       mens[ym].n++; mens[ym].bs+=num(r.total); if(k)mens[ym].pac[k]=1}});
 
-  /* pacientes nuevos: primera visita de TODA su historia dentro del periodo */
-  /* La primera atención de cada paciente en TODA su historia, con lo que
-     recepción anotó ese día. Sirve para saber en qué mes se dio de alta. */
-  var primeraGlobal={},altaTipo={};
-  DATA.forEach(function(r){
-    var k=(r.paciente||'').trim().toLowerCase(); if(!k||!r.fecha)return;
-    if(!primeraGlobal[k]||r.fecha<primeraGlobal[k]){
-      primeraGlobal[k]=r.fecha; altaTipo[k]=r.tipo||''}});
+  var primeraGlobal=primeraVisitaDe();
   var nuevos=nuevosDelPeriodo(rows), vuelven={};
   Object.keys(pacs).forEach(function(k){if(!nuevos[k])vuelven[k]=1});
-  /* Un paciente es nuevo SOLO en el mes en que llegó por primera vez. Antes
-     se lo contaba como nuevo en cada mes que aparecía, y agosto mostraba 49
-     altas cuando habían sido 29. */
+
+  /* El gráfico mes a mes se arma con la MISMA cuenta que el KPI de arriba:
+     se le pregunta por cada mes por separado. Si el gráfico usara su propia
+     fórmula, la barra de agosto no coincidiría con el número de agosto. */
+  var porMesRows={};
   rows.forEach(function(r){
-    var k=(r.paciente||'').trim().toLowerCase(); if(!k||!r.fecha)return;
-    var ym=r.fecha.slice(0,7); if(!mens[ym])return;
-    var mesDeAlta=(primeraGlobal[k]||'').slice(0,7);
-    var altaFueNueva = altaTipo[k] ? (altaTipo[k]==='Nuevo') : true;
-    ((altaFueNueva&&ym===mesDeAlta)?mens[ym].nue:mens[ym].rec)[k]=1});
+    var ym=(r.fecha||'').slice(0,7); if(!mens[ym])return;
+    (porMesRows[ym]=porMesRows[ym]||[]).push(r)});
+  Object.keys(mens).forEach(function(ym){
+    var filas=porMesRows[ym]||[];
+    var nuevosMes=nuevosDelPeriodo(filas);
+    filas.forEach(function(r){
+      var k=keyPac(r.paciente); if(!k)return;
+      (nuevosMes[k]?mens[ym].nue:mens[ym].rec)[k]=1})});
 
   var nPac=Object.keys(pacs).length, nNue=Object.keys(nuevos).length, nVue=Object.keys(vuelven).length;
   var noAsist=rows.filter(function(r){return r.estado==='No asistió'}).length;
@@ -3790,9 +3789,10 @@ function renderPanel(){
   if(sec==='pacientes'){
     var visitasPorPac={};
     rows.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)visitasPorPac[k]=(visitasPorPac[k]||0)+1});
+    /* una reconsulta es una visita que no es la primera de ese paciente */
     var reconsultas=rows.filter(function(r){
-      var k=(r.paciente||'').trim().toLowerCase();
-      return k&&r.fecha&&primeraGlobal[k]!==r.fecha}).length;
+      var k=keyPac(r.paciente);
+      return k&&r.fecha&&visitaReal(r)&&primeraGlobal[k]!==r.fecha}).length;
     var soloCons=rows.filter(soloConsulta).length;
     var visProm=nPac?(rows.length/nPac):0;
 
@@ -5506,16 +5506,24 @@ function pacientesRepetidos(){
    Vive en un solo lugar a propósito. El Panel deducía y el informe del mes
    no, así que agosto salía con 55 nuevos en una pantalla y 34 en la otra,
    con los mismos datos. */
-function nuevosDelPeriodo(rows){
-  /* Solo cuentan las visitas que ocurrieron: al que canceló o no vino nadie
-     lo dio de alta, y contarlo como paciente nuevo del mes infla las altas
-     con gente que nunca se sentó en el sillón. */
-  var vino=function(r){return r.estado==='Atendido'};
+/* Solo cuentan las visitas que ocurrieron: al que canceló o no vino nadie
+   lo dio de alta, y contarlo como paciente nuevo infla las altas con gente
+   que nunca se sentó en el sillón. */
+function visitaReal(r){return r.estado==='Atendido'}
 
-  var primeraGlobal={};
+/* La fecha en que cada paciente pisó el consultorio por primera vez, en
+   toda su historia. La usan el Panel, el informe y los Excel: si cada uno
+   la calcula a su manera, cada pantalla da un número distinto. */
+function primeraVisitaDe(){
+  var pv={};
   DATA.forEach(function(r){
-    var k=keyPac(r.paciente); if(!k||!r.fecha||!vino(r))return;
-    if(!primeraGlobal[k]||r.fecha<primeraGlobal[k])primeraGlobal[k]=r.fecha});
+    var k=keyPac(r.paciente); if(!k||!r.fecha||!visitaReal(r))return;
+    if(!pv[k]||r.fecha<pv[k])pv[k]=r.fecha});
+  return pv}
+
+function nuevosDelPeriodo(rows){
+  var vino=visitaReal;
+  var primeraGlobal=primeraVisitaDe();
 
   var suyas={};
   rows.forEach(function(r){
