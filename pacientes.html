@@ -229,6 +229,10 @@ tbody tr.destaca td{background:#FBFCF5}
 @media(min-width:640px){.ov{align-items:center;padding:20px}}
 .modal{background:#fff;width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px;position:relative}
 /* grande y separada del contenido: se toca con el dedo sin apuntar */
+.mom{font-size:11.5px;font-weight:700;margin-top:7px;letter-spacing:.2px}
+.mom.up{color:var(--ok)}
+.mom.down{color:var(--clay)}
+.mom.igual,.mom.nuevo{color:var(--gray);font-weight:600}
 .aviso-canal{text-align:center;padding:6px 4px 0}
 .aviso-canal .ac-cara{font-size:64px;line-height:1}
 .aviso-canal .ac-cara img{max-width:230px;width:100%;border-radius:12px;display:block;margin:0 auto}
@@ -3831,13 +3835,15 @@ function renderPanel(){
   var atendidas=rows.filter(function(r){return r.estado==='Atendido'}).length;
 
   /* ---------------- KPIs de arriba ---------------- */
+  var prev=mesPrevio(), P=prev?prev.r:null, pm=prev?prev.nombre:null;
+  var MOM=function(a,b,bueno){return mom(a,P?b:null,pm,bueno!==false)};
   $('#p-kpis').innerHTML=
-    '<div class="kpi acc"><div class="k">Pacientes atendidos</div><div class="v">'+n0(nPac)+'</div><div class="d">'+n0(atendidas)+' atenciones'+(noAsist?' · '+n0(noAsist)+' no vinieron':'')+'</div></div>'+
-    '<div class="kpi"><div class="k">Pacientes nuevos</div><div class="v">'+n0(nNue)+'</div><div class="d">'+(nPac?Math.round(nNue/nPac*100):0)+'% del total</div></div>'+
-    '<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:21px">'+bs(tot)+'</div><div class="d">ticket '+bs(atendidas?tot/atendidas:0)+'</div></div>'+
-    '<div class="kpi"><div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">'+(tot?Math.round(cobr/tot*100):0)+'% de lo facturado</div></div>'+
-    '<div class="kpi"><div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(sal)+'</div><div class="d">saldo del periodo</div></div>'+
-    '<div class="kpi"><div class="k">No asistieron</div><div class="v">'+n0(noAsist)+'</div><div class="d">'+(rows.length?Math.round(noAsist/rows.length*100):0)+'% de las citas</div></div>';
+    '<div class="kpi acc"><div class="k">Pacientes atendidos</div><div class="v">'+n0(nPac)+'</div><div class="d">'+n0(atendidas)+' atenciones'+(noAsist?' · '+n0(noAsist)+' no vinieron':'')+'</div>'+MOM(nPac,P&&P.pac)+'</div>'+
+    '<div class="kpi"><div class="k">Pacientes nuevos</div><div class="v">'+n0(nNue)+'</div><div class="d">'+(nPac?Math.round(nNue/nPac*100):0)+'% del total</div>'+MOM(nNue,P&&P.nue)+'</div>'+
+    '<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:21px">'+bs(tot)+'</div><div class="d">ticket '+bs(atendidas?tot/atendidas:0)+'</div>'+MOM(tot,P&&P.tot)+'</div>'+
+    '<div class="kpi"><div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">'+(tot?Math.round(cobr/tot*100):0)+'% de lo facturado</div>'+MOM(cobr,P&&P.cobr)+'</div>'+
+    '<div class="kpi"><div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(sal)+'</div><div class="d">saldo del periodo</div>'+MOM(sal,P&&P.sal,false)+'</div>'+
+    '<div class="kpi"><div class="k">No asistieron</div><div class="v">'+n0(noAsist)+'</div><div class="d">'+(rows.length?Math.round(noAsist/rows.length*100):0)+'% de las citas</div>'+MOM(noAsist,P&&P.noAsist,false)+'</div>';
 
   /* ================= SECCIÓN PACIENTES ================= */
   if(sec==='pacientes'){
@@ -3856,28 +3862,28 @@ function renderPanel(){
     $('#p-pac-kpis').innerHTML=
       '<div class="kpi" style="cursor:pointer" onclick="verNuevosDelPanel()" '+
         'title="Ver quiénes son"><div class="k">Nuevos</div><div class="v">'+n0(nNue)+'</div>'+
-        '<div class="d">primera vez en el consultorio · <b>tocá para verlos</b></div></div>'+
+        '<div class="d">primera vez en el consultorio · <b>tocá para verlos</b></div>'+MOM(nNue,P&&P.nue)+'</div>'+
       '<div class="kpi" style="cursor:pointer" onclick="verYaEranPacientes()" '+
         'title="Ver quiénes son"><div class="k">Ya eran pacientes</div><div class="v">'+n0(nVue)+'</div>'+
         '<div class="d">'+(nPac?Math.round(nVue/nPac*100):0)+
-        '% de los atendidos · <b>tocá para verlos</b></div></div>'+
+        '% de los atendidos · <b>tocá para verlos</b></div>'+MOM(nVue,P&&P.vue)+'</div>'+
       '<div class="kpi" style="cursor:pointer" onclick="verReconsultas()" '+
         'title="Ver cuáles son"><div class="k">Reconsultas</div><div class="v">'+n0(reconsultas)+'</div>'+
-        '<div class="d">atenciones de pacientes que ya venían · <b>tocá para verlas</b></div></div>'+
+        '<div class="d">atenciones de pacientes que ya venían · <b>tocá para verlas</b></div>'+MOM(reconsultas,P&&P.recon)+'</div>'+
       '<div class="kpi acc" style="cursor:pointer" onclick="verSinTratarse()" '+
         'title="Ver quiénes son y escribirles">'+
         '<div class="k">Solo consulta y se fueron sin tratarse</div>'+
         '<div class="v">'+n0(sinTratar.length)+'</div>'+
         '<div class="d">'+(nPac?Math.round(sinTratar.length/nPac*100):0)+
-        '% de los atendidos · <b>tocá para verlos</b></div></div>'+
-      '<div class="kpi"><div class="k">Visitas por paciente</div><div class="v">'+visProm.toFixed(1)+'</div><div class="d">promedio del periodo</div></div>'+
+        '% de los atendidos · <b>tocá para verlos</b></div>'+MOM(sinTratar.length,P&&P.sinTratar,false)+'</div>'+
+      '<div class="kpi"><div class="k">Visitas por paciente</div><div class="v">'+visProm.toFixed(1)+'</div><div class="d">promedio del periodo</div>'+MOM(visProm,P&&P.visitas)+'</div>'+
       /* cien pacientes no son cien atenciones: uno vuelve tres veces y son tres */
       '<div class="kpi"><div class="k">Atenciones</div><div class="v">'+n0(rows.length)+'</div>'+
-        '<div class="d">en '+n0(diasConAtencion)+' día'+(diasConAtencion===1?'':'s')+' de consultorio</div></div>'+
+        '<div class="d">en '+n0(diasConAtencion)+' día'+(diasConAtencion===1?'':'s')+' de consultorio</div>'+MOM(rows.length,P&&P.at)+'</div>'+
       '<div class="kpi"><div class="k">Atenciones por día</div><div class="v">'+
-        (rows.length/diasConAtencion).toFixed(1)+'</div><div class="d">promedio de los días abiertos</div></div>'+
+        (rows.length/diasConAtencion).toFixed(1)+'</div><div class="d">promedio de los días abiertos</div>'+MOM(rows.length/diasConAtencion,P&&P.atDia)+'</div>'+
       '<div class="kpi"><div class="k">Pacientes por día</div><div class="v">'+
-        (nPac/diasConAtencion).toFixed(1)+'</div><div class="d">personas distintas por día</div></div>';
+        (nPac/diasConAtencion).toFixed(1)+'</div><div class="d">personas distintas por día</div>'+MOM(nPac/diasConAtencion,P&&P.pacDia)+'</div>';
 
     var mk=Object.keys(mens).sort();
     $('#p-pac-mes').innerHTML=barras2(mk.map(function(k){
@@ -5816,6 +5822,62 @@ function pacientesSinTratarse(rows){
         prof:r.profesional||'', cel:r.celular||'',
         cotizado:cot, bs:num(r.total)}})
     .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})}
+
+/* Los números de un mes, en un solo lugar: se usa para el mes que se está
+   mirando y para el anterior. Si cada uno se calculara aparte, la
+   comparación podría estar midiendo dos cosas distintas. */
+function resumenMes(rows){
+  var pacs={}, dias={}, tot=0, cobr=0, sal=0, noAsist=0, at=0;
+  rows.forEach(function(r){
+    var k=keyPac(r.paciente); if(k)pacs[k]=1;
+    tot+=num(r.total); cobr+=num(r.acuenta); sal+=num(r.saldo);
+    if(r.estado==='No asistió')noAsist++;
+    if(r.estado==='Atendido')at++;
+    if(r.fecha&&visitaReal(r))dias[r.fecha]=1});
+  var nuevos=nuevosDelPeriodo(rows);
+  var nPac=Object.keys(pacs).length, nDias=Object.keys(dias).length||1;
+  var pv=primeraVisitaDe();
+  return {
+    pac:nPac,
+    nue:Object.keys(nuevos).length,
+    vue:nPac-Object.keys(nuevos).length,
+    at:rows.length,
+    atendidas:at,
+    tot:tot, cobr:cobr, sal:sal, noAsist:noAsist,
+    ticket:at?tot/at:0,
+    recon:rows.filter(function(r){
+      var k=keyPac(r.paciente);
+      return k&&r.fecha&&visitaReal(r)&&pv[k]!==r.fecha}).length,
+    sinTratar:pacientesSinTratarse(rows).length,
+    visitas:nPac?rows.length/nPac:0,
+    dias:nDias,
+    atDia:rows.length/nDias,
+    pacDia:nPac/nDias}}
+
+/* El mes anterior al que se está mirando, si el periodo elegido es un mes. */
+function mesPrevio(){
+  var r=$('#p-rango')?$('#p-rango').value:'';
+  if(r!=='mes')return null;
+  var ym=$('#p-mes').value; if(!/^\d{4}-\d\d$/.test(ym))return null;
+  var a=+ym.slice(0,4), m=+ym.slice(5,7)-1;
+  if(m<1){a--; m=12}
+  var prev=a+'-'+(m<10?'0':'')+m;
+  var filas=soloAtenciones(DATA.filter(function(x){return (x.fecha||'').slice(0,7)===prev}));
+  if(!filas.length)return null;
+  return {ym:prev, nombre:mesLabel(prev), r:resumenMes(filas)}}
+
+/* La comparación contra el mes pasado. En "por cobrar", "no asistieron" y
+   "se fueron sin tratarse" subir es malo: el color va al revés. */
+function mom(actual,anterior,nombreMes,subirEsBueno){
+  if(anterior==null||nombreMes==null)return '';
+  if(!anterior&&!actual)return '';
+  if(!anterior)return '<div class="mom nuevo">no hubo en '+esc(nombreMes)+'</div>';
+  var d=(actual-anterior)/anterior*100;
+  var pc=Math.abs(d);
+  if(pc<1)return '<div class="mom igual">igual que '+esc(nombreMes)+'</div>';
+  var sube=d>0, bueno=subirEsBueno?sube:!sube;
+  return '<div class="mom '+(bueno?'up':'down')+'">'+(sube?'▲':'▼')+' '+
+    (pc>=10?Math.round(pc):pc.toFixed(1))+'% vs '+esc(nombreMes)+'</div>'}
 
 /* Quién es nuevo en este período.
 
