@@ -305,6 +305,11 @@ input.fijo{background:var(--paper);color:var(--gray);cursor:not-allowed}
 /* "¿Qué pasó?": los desenlaces se leen como respuestas a una pregunta y no
    como el estado en el que está la cita. */
 .rot-marcar{font-size:12px;color:var(--gray);font-weight:600;align-self:center;margin-left:4px}
+.sintratar{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:60vh;overflow-y:auto}
+.st-fila{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+.st-cab{font-size:14px}
+.st-cot{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+.st-acts{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
 .rep-par{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;background:#fff}
 .rep-razon{font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
   color:var(--gray);margin-bottom:10px}
@@ -3793,16 +3798,30 @@ function renderPanel(){
     var reconsultas=rows.filter(function(r){
       var k=keyPac(r.paciente);
       return k&&r.fecha&&visitaReal(r)&&primeraGlobal[k]!==r.fecha}).length;
-    var soloCons=rows.filter(soloConsulta).length;
+    var sinTratar=pacientesSinTratarse(rows);
     var visProm=nPac?(rows.length/nPac):0;
+    /* días con consultorio abierto de verdad: dividir por los 31 del mes
+       daría un promedio falso, porque no se atiende domingos ni feriados */
+    var diasConAtencion=Object.keys(porDia).length||1;
 
     $('#p-pac-kpis').innerHTML=
       '<div class="kpi"><div class="k">Nuevos</div><div class="v">'+n0(nNue)+'</div><div class="d">primera vez en el consultorio</div></div>'+
       '<div class="kpi"><div class="k">Ya eran pacientes</div><div class="v">'+n0(nVue)+'</div><div class="d">'+(nPac?Math.round(nVue/nPac*100):0)+'% de los atendidos</div></div>'+
       '<div class="kpi"><div class="k">Reconsultas</div><div class="v">'+n0(reconsultas)+'</div><div class="d">atenciones de pacientes que ya venían</div></div>'+
-      '<div class="kpi"><div class="k">Solo consulta</div><div class="v">'+n0(soloCons)+'</div><div class="d">'+(rows.length?Math.round(soloCons/rows.length*100):0)+'% salió sin tratamiento</div></div>'+
+      '<div class="kpi acc" style="cursor:pointer" onclick="verSinTratarse()" '+
+        'title="Ver quiénes son y escribirles">'+
+        '<div class="k">Se fueron sin tratarse</div><div class="v">'+n0(sinTratar.length)+'</div>'+
+        '<div class="d">'+(nPac?Math.round(sinTratar.length/nPac*100):0)+
+        '% de los atendidos · <b>tocá para verlos</b></div></div>'+
       '<div class="kpi"><div class="k">Visitas por paciente</div><div class="v">'+visProm.toFixed(1)+'</div><div class="d">promedio del periodo</div></div>'+
-      '<div class="kpi"><div class="k">Gasto por paciente</div><div class="v" style="font-size:21px">'+bs(nPac?tot/nPac:0)+'</div><div class="d">facturado / paciente</div></div>';
+      '<div class="kpi"><div class="k">Gasto por paciente</div><div class="v" style="font-size:21px">'+bs(nPac?tot/nPac:0)+'</div><div class="d">facturado / paciente</div></div>'+
+      /* cien pacientes no son cien atenciones: uno vuelve tres veces y son tres */
+      '<div class="kpi"><div class="k">Atenciones</div><div class="v">'+n0(rows.length)+'</div>'+
+        '<div class="d">en '+n0(diasConAtencion)+' día'+(diasConAtencion===1?'':'s')+' de consultorio</div></div>'+
+      '<div class="kpi"><div class="k">Atenciones por día</div><div class="v">'+
+        (rows.length/diasConAtencion).toFixed(1)+'</div><div class="d">promedio de los días abiertos</div></div>'+
+      '<div class="kpi"><div class="k">Pacientes por día</div><div class="v">'+
+        (nPac/diasConAtencion).toFixed(1)+'</div><div class="d">personas distintas por día</div></div>';
 
     var mk=Object.keys(mens).sort();
     $('#p-pac-mes').innerHTML=barras2(mk.map(function(k){
@@ -4423,6 +4442,55 @@ function agrupaPacientes(){
     if(!p.canal&&r.canal)p.canal=r.canal;
     if(r.prox&&r.prox>=hoy&&(!p.prox||r.prox<p.prox))p.prox=r.prox});
   return Object.keys(by).map(function(k){return by[k]})}
+
+/* La lista de los que se fueron sin tratarse, para llamarlos uno por uno. */
+function verSinTratarse(){
+  var l=pacientesSinTratarse(periodoRows());
+  if(!l.length){toast('Nadie se fue sin tratarse en este periodo 🎉');return}
+  var conCot=l.filter(function(x){return x.cotizado.length}).length;
+  openModal('<h3>Se fueron sin tratarse</h3>'+
+    '<p class="hint">Pagaron una consulta y todavía no se hicieron nada, '+
+      'ni en este periodo ni después. Ya llegaron al sillón una vez: '+
+      'traerlos de vuelta cuesta menos que conseguir un paciente nuevo.'+
+      (conCot?' A <b>'+conCot+'</b> de ellos se les dejó una cotización.':'')+'</p>'+
+    '<div class="sintratar">'+l.map(function(x){
+      var cot=x.cotizado.map(function(p){
+        return '<span class="pill info">💬 '+esc(p.nom)+
+          (num(p.monto)>0?' · '+bs(p.monto):'')+'</span>'}).join(' ');
+      return '<div class="st-fila">'+
+        '<div class="st-cab"><b>'+esc(x.nombre)+'</b>'+
+          '<span class="mini"> · '+(x.fecha?fmtFcorta(x.fecha):'sin fecha')+
+          ' · hace '+n0(x.dias)+' día'+(x.dias===1?'':'s')+
+          (x.prof?' · '+esc(x.prof):'')+'</span></div>'+
+        (cot?'<div class="st-cot">'+cot+'</div>'
+            :'<div class="st-cot mini">No se le dejó ninguna cotización anotada</div>')+
+        '<div class="st-acts">'+
+          (x.cel
+            ? '<a class="btn sec sm" target="_blank" rel="noopener" href="'+
+                waLink(x.cel,txtRecuperar(x))+'">WhatsApp</a>'
+            : '<span class="mini">sin celular</span>')+
+          '<button class="btn sec sm" onclick="closeModal();verPaciente(\''+jss(x.nombre)+
+            '\')">Ver su ficha</button>'+
+        '</div></div>'}).join('')+'</div>');
+}
+
+/* El mensaje cambia según si se le dejó una cotización o solo la consulta:
+   escribirle "por el tratamiento que hablamos" a alguien a quien no se le
+   dijo nada queda raro. */
+function txtRecuperar(x){
+  var quien=(x.nombre||'').split(' ')[0];
+  var t='Hola '+quien+'! 👋 Le escribimos de *'+clinica()+'*.\n\n';
+  if(x.cotizado.length){
+    var p=x.cotizado[0];
+    t+='Cuando vino el '+fmtF(x.fecha)+' le comentamos que necesitaba *'+p.nom+'*'+
+       (num(p.monto)>0?' ('+bs(p.monto)+')':'')+'.\n\n'+
+       '¿Le gustaría que le reservemos un turno para empezar? Cualquier duda sobre el '+
+       'tratamiento o las formas de pago, con gusto se la resolvemos 🦷'}
+  else{
+    t+='Vino a consulta el '+fmtF(x.fecha)+' y queríamos saber cómo sigue.\n\n'+
+       '¿Le agendamos un turno para continuar? Con gusto le explicamos las opciones '+
+       'y las formas de pago 🦷'}
+  return t}
 
 function renderRepetidos(){
   var zona=$('#pc-rep'); if(!zona)return;
@@ -5495,6 +5563,32 @@ function pacientesRepetidos(){
   pares.sort(function(x,y){return (y.pa.n+y.pb.n)-(x.pa.n+x.pb.n)});
   return pares}
 
+
+/* Los que llegaron al sillón, pagaron una consulta y todavía no se hicieron
+   nada. Ya vinieron una vez: recuperarlos cuesta menos que traer a uno nuevo.
+   Se mira TODA su historia, no solo el período: si se trató en otro mes ya
+   no hay nada que recuperar. */
+function pacientesSinTratarse(rows){
+  var seTrato={}, hoy=hoyISO();
+  DATA.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||!visitaReal(r))return;
+    if((r.servicios||[]).length&&!soloConsulta(r))seTrato[k]=1});
+
+  var cand={};
+  rows.forEach(function(r){
+    var k=keyPac(r.paciente); if(!k||!visitaReal(r)||!soloConsulta(r))return;
+    if(!cand[k]||(r.fecha||'')>cand[k].fecha)cand[k]={fecha:r.fecha||'',r:r}});
+
+  return Object.keys(cand).filter(function(k){return !seTrato[k]})
+    .map(function(k){
+      var c=cand[k], r=c.r;
+      /* lo que se le recomendó ese día y no contestó */
+      var cot=(r.presu||[]).filter(function(p){return p.nom});
+      return {nombre:(r.paciente||'').trim(), fecha:c.fecha, r:r,
+        dias:c.fecha?diasEntre(c.fecha,hoy):0,
+        prof:r.profesional||'', cel:r.celular||'',
+        cotizado:cot, bs:num(r.total)}})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})}
 
 /* Quién es nuevo en este período.
 
