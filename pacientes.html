@@ -1760,8 +1760,28 @@ function initRefresco(){
   document.addEventListener('visibilitychange',function(){
     if(!document.hidden)refrescarSiCorresponde(false)});
   window.addEventListener('online',function(){refrescarSiCorresponde(false)})}
+/* Google Sheets guarda una hora como la fecha 1899-12-30 más esa hora, así que
+   al leerla vuelve como "1899-12-30T13:02:36.000Z" y la agenda mostraba ese
+   bodrio en lugar de "08:30". Se traduce a la hora DEL CONSULTORIO (La Paz),
+   no a la del navegador: si no, la misma cita cambiaría de hora según dónde
+   esté abierta. */
+function horaLimpia(v){
+  var t=String(v==null?'':v).trim();
+  if(!t)return '';
+  if(/^\d{1,2}:\d{2}$/.test(t))return t.length===4?('0'+t):t;
+  if(!/^\d{4}-\d{2}-\d{2}T/.test(t))return t;
+  var d=new Date(t);
+  if(isNaN(d.getTime()))return t;
+  try{
+    var h=d.toLocaleTimeString('es-BO',{timeZone:'America/La_Paz',
+      hour:'2-digit',minute:'2-digit',hour12:false});
+    return /^\d{1,2}:\d{2}$/.test(h)?(h.length===4?('0'+h):h):t
+  }catch(e){return t}}
+
 function normalize(r){
   r=r||{};
+  r.hora=horaLimpia(r.hora);
+  r.proxHora=horaLimpia(r.proxHora);
   if(typeof r.servicios==='string'){try{r.servicios=JSON.parse(r.servicios)}catch(e){r.servicios=[]}}
   if(!Array.isArray(r.servicios))r.servicios=[];
   if(typeof r.pagos==='string'){try{r.pagos=JSON.parse(r.pagos)}catch(e){r.pagos=[]}}

@@ -304,12 +304,12 @@ function registroDeFila(f) {
   try { servicios = JSON.parse(f[24] || '[]'); } catch (e) { servicios = []; }
   try { pagos = JSON.parse(f[29] || '[]'); } catch (e) { pagos = []; }
   var base = {
-    id: f[0], ts: f[1], fecha: formatoFecha(f[2]), hora: f[3], nroDia: f[4],
+    id: f[0], ts: f[1], fecha: formatoFecha(f[2]), hora: formatoHora(f[3]), nroDia: f[4],
     profesional: f[5], paciente: f[6], celular: String(f[7] || ''), ci: String(f[8] || ''),
     edad: String(f[9] || ''), tipo: f[10], canal: f[11], canalDetalle: f[12],
     servicios: servicios,
     total: Number(f[14]) || 0, acuenta: Number(f[15]) || 0, saldo: Number(f[16]) || 0,
-    metodo: f[17], estado: f[18], prox: formatoFecha(f[19]), proxHora: f[20],
+    metodo: f[17], estado: f[18], prox: formatoFecha(f[19]), proxHora: formatoHora(f[20]),
     proxMotivo: f[21], contactado: String(f[22]).toUpperCase() === 'SÍ' || String(f[22]).toUpperCase() === 'SI',
     obs: f[23], pagos: pagos,
     origen: f[30] || '', agendaPor: f[31] || '', citaDe: f[32] || '', resueltaTs: f[33] || '',
@@ -324,6 +324,16 @@ function registroDeFila(f) {
     base[k] = extra[k];
   }
   return base;
+}
+
+/* Una hora en Sheets es la fecha 1899-12-30 más esa hora: si vuelve como Date,
+   se formatea en la zona del consultorio para que el panel reciba "08:30". */
+function formatoHora(v) {
+  if (!v) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm');
+  }
+  return String(v);
 }
 
 /* Google a veces devuelve las fechas como objeto Date: las volvemos YYYY-MM-DD */
