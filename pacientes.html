@@ -1630,6 +1630,13 @@ var PRECIOS_BASE = [
  ['Placas','Placa de contención',500],
  ['Placas','Placa de contención en laboratorio',700],
  ['Placas','Reparación de placa',150],
+ /* la clínica los hace —hay atenciones de "control de implante" y "placa
+    sobre implante"— y no estaban en la lista. El precio va en 0 porque
+    depende de la marca: se carga en Ajustes, como la consulta. */
+ ['Implantes','Implante (c/u)',0],
+ ['Implantes','Corona sobre implante',0],
+ ['Implantes','Pilar / aditamento',0],
+ ['Implantes','Control de implante',0],
  ['Estético','Bichectomía',1500],
  ['Estético','Plasma capilar · 1 sesión',250],
  ['Estético','Plasma capilar · 4 sesiones',750],
@@ -3667,7 +3674,7 @@ function renderLista(){
   if(esAdmin()){
     $('#k-l-cobr').innerHTML='<div class="k">Cobrado</div><div class="v" style="font-size:21px">'+bs(cobr)+'</div><div class="d">de '+bs(tot)+' facturado</div>';
     $('#k-l-saldo').innerHTML='<div class="k">Por cobrar</div><div class="v" style="font-size:21px">'+bs(saldo)+'</div><div class="d">saldo pendiente</div>';
-    $('#k-l-tkt').innerHTML='<div class="k">Ticket promedio</div><div class="v" style="font-size:21px">'+bs(nAt?tot/nAt:0)+'</div><div class="d">por paciente atendido</div>'}
+    $('#k-l-tkt').innerHTML='<div class="k">Ticket promedio</div><div class="v" style="font-size:21px">'+bs(nAt?tot/nAt:0)+'</div><div class="d">por atención · '+n0(nAt)+' atenciones</div>'}
 
   $('#l-body').innerHTML=rows.length?rows.map(function(r){
     return '<tr class="'+estadoCls(r.estado)+'" onclick="verFicha(\''+r.id+'\')">'+
@@ -3717,6 +3724,9 @@ function catDe(nom){
   var p=CFG.precios.filter(function(x){return x.nom===nom})[0];
   if(p)return p.cat;
   var n=(nom||'').toLowerCase();
+  /* antes que corona: "corona sobre implante" es parte del implante, no
+     una corona común */
+  if(n.indexOf('implante')>=0)return 'Implantes';
   if(n.indexOf('corona')>=0)return 'Coronas';
   if(n.indexOf('carilla')>=0||n.indexOf('lente')>=0)return 'Carillas';
   if(n.indexOf('placa')>=0||n.indexOf('protesis')>=0||n.indexOf('prótesis')>=0)return 'Placas';
@@ -4130,7 +4140,10 @@ function renderPanel(){
       '<div class="kpi acc"><div class="k">Servicios distintos</div><div class="v">'+n0(sArr.length)+'</div><div class="d">'+n0(totalSrvN)+' procedimientos</div></div>'+
       '<div class="kpi"><div class="k">El que más deja</div><div class="v" style="font-size:17px">'+esc(top.k)+'</div><div class="d">'+
         (hayLab?bs(top.margen)+' de margen':bs(top.bs))+'</div></div>'+
-      '<div class="kpi"><div class="k">Precio promedio</div><div class="v" style="font-size:21px">'+bs(totalSrvN?totalSrvBs/totalSrvN:0)+'</div><div class="d">por procedimiento</div></div>'+
+      /* No es el ticket: el ticket divide por atenciones y este por
+         procedimientos. Una visita con dos cosas cuenta como una atención y
+         como dos procedimientos, y por eso el precio promedio da más bajo. */
+      '<div class="kpi"><div class="k">Precio promedio</div><div class="v" style="font-size:21px">'+bs(totalSrvN?totalSrvBs/totalSrvN:0)+'</div><div class="d">por procedimiento · el ticket divide por atención</div></div>'+
       '<div class="kpi"><div class="k">Servicios por atención</div><div class="v">'+(rows.length?(totalSrvN/rows.length).toFixed(1):'0')+'</div><div class="d">promedio</div></div>'+
       (hayLab?'<div class="kpi"><div class="k">🧪 Laboratorio</div><div class="v" style="font-size:21px;color:var(--clay)">'+bs(totalLab)+'</div><div class="d">'+
         Math.round(totalLab/(totalSrvBs||1)*100)+'% de lo facturado</div></div>'+
