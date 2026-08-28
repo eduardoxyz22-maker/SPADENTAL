@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>Spadental · Control de pacientes</title>
+<title>Ezequiel Spadental · Control de pacientes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -510,7 +510,7 @@ body.locked{overflow:hidden}
   <div class="hd">
     <svg class="mark" viewBox="0 0 120 92" aria-hidden="true"><use href="#corona"/></svg>
     <div class="mast">
-      <div class="kicker">Spadental · Clínica Dental</div>
+      <div class="kicker" id="hd-kicker">Ezequiel Spadental · Clínica Dental</div>
       <div class="logo">Dra. Mirna Veizaga</div>
     </div>
     <div class="sub"><span id="hd-hoy"></span></div>
@@ -1118,6 +1118,12 @@ body.locked{overflow:hidden}
         title="Se usa para avisar cuando dos pacientes caen a la misma hora con la misma doctora"></div>
     </div>
     <div class="solo-admin">
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Nombre de la clínica</h3>
+    <p class="hint" style="margin-top:0">Es el nombre con el que la clínica se presenta: encabeza cada mensaje
+      de WhatsApp que se le manda al paciente y cada documento impreso.</p>
+    <div class="grid g3" style="margin-bottom:6px">
+      <div><label>Nombre</label><input id="c-clinica" placeholder="Ezequiel Spadental"></div>
+    </div>
     <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">Meta del mes</h3>
     <p class="hint" style="margin-top:0">Lo que el consultorio se propone facturar cada mes. El Panel muestra
       el avance, lo que falta y el ritmo diario necesario. En 0, no se muestra nada.</p>
@@ -1333,6 +1339,12 @@ function esDoctora(){return ROL==='doctora'}
 
 /* La clave personal de cada doctora, guardada como hash en la config
    compartida. Se asignan en modo dueña. */
+/* El nombre con el que la clínica se presenta al paciente: encabeza cada
+   WhatsApp y cada documento impreso. Editable en Ajustes. */
+function clinica(){
+  var c=CFG&&CFG.clinica;
+  return (typeof c==='string'&&c.trim())?c.trim():'Ezequiel Spadental'}
+
 function clavesProf(){return (CFG&&CFG.clavesProf)||{}}
 function cssId(t){return String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-')}
 
@@ -1376,6 +1388,10 @@ function rolGuardado(){
     if(p){PROF_ACTUAL=p;return 'doctora'}
     return null
   }catch(e){return null}}
+
+function pintarNombreClinica(){
+  var k=$('#hd-kicker');
+  if(k)k.textContent=clinica()+' · Clínica Dental';}
 
 function aplicarRol(){
   document.body.classList.toggle('rol-equipo',!esAdmin());
@@ -1599,6 +1615,7 @@ function cfgDefault(){return {v:4,prof:PROF_BASE.slice(),canales:CANALES_BASE.sl
   diasProx:3,diasDorm:120,
   diasCumple:7,ctrlAuto:true,ctrlLimpiezaMeses:6,ctrlOrtoDias:30,diasCtrlAviso:7,
   diasPlanFrenado:21,minCita:30,metaMes:0,diasRespaldo:30,ultimoRespaldo:'',
+  clinica:'Ezequiel Spadental',
   comision:{},comisionDefault:0,comisionDescuentaLab:false}}
 function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.precios&&c.canales){
     migrarCfg(c);                       // OJO: antes de rellenar defaults, que si no
@@ -1678,6 +1695,7 @@ function cfgSana(c){
 function aplicarCfgServidor(remota){
   if(!cfgSana(remota))return false;
   CFG_DEL_SERVIDOR=true;
+  setTimeout(pintarNombreClinica,0);
   // solo se pisa lo local si lo del servidor es más nuevo
   if(CFG.ts&&remota.ts&&remota.ts<=CFG.ts)return false;
   var claveVieja=CFG.passHash;
@@ -2566,7 +2584,7 @@ function guardarCita(){
   mostrarWaCita(rec)}
 
 function mostrarWaCita(r){
-  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Le confirmamos su cita en *Spadental*.\n\n'+
+  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Le confirmamos su cita en *'+clinica()+'*.\n\n'+
     '📅 '+fmtF(r.fecha)+(r.hora?' a las '+r.hora:'')+'\n'+
     (r.proxMotivo?'🦷 '+r.proxMotivo+'\n':'')+
     (r.profesional?'👩‍⚕️ '+r.profesional+'\n':'')+
@@ -3102,7 +3120,7 @@ function cuotasVencidas(){
   return out.sort(function(a,b){return b.dias-a.dias})}
 
 function txtCuota(x){
-  var t='Hola '+(x.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n';
+  var t='Hola '+(x.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\n';
   if(x.cuotas.length===1){
     t+='Le recordamos la cuota '+x.cuotas[0].n+' de su tratamiento *'+x.plan.nombre+'*, de *'+
       bs(x.cuotas[0].monto-x.cuotas[0].cubierto)+'*, que venció el '+fmtF(x.cuotas[0].fecha)+'.\n'}
@@ -3208,7 +3226,7 @@ function waLink(cel,txt){var d=telWa(cel);
 function txtCita(r){
   // en las citas la fecha es la del propio registro; en atenciones viejas, prox
   var f=esCitaPendiente(r)?r.fecha:(r.prox||r.fecha), hh=esCitaPendiente(r)?r.hora:r.proxHora;
-  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n';
+  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\n';
   var d=diasEntre(hoyISO(),f);
   if(d<0)t+='Teníamos su cita para el '+fmtF(f)+' y no llegamos a verla. ¿La reprogramamos?';
   else if(d===0)t+='Le recordamos su cita de *hoy*'+(hh?' a las '+hh:'')+'.';
@@ -3219,19 +3237,19 @@ function txtCita(r){
   t+='\n\n¿Nos confirma por favor? 🦷';
   return t}
 function txtSaldo(p){
-  return 'Hola '+(p.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n'+
+  return 'Hola '+(p.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\n'+
     'Le recordamos que queda un saldo pendiente de *'+bs(p.saldo)+'* de su tratamiento.\n'+
     '¿Coordinamos el pago o le agendamos su próxima sesión? 🦷'}
 function txtCumple(c){
   var quien=(c.paciente||'').split(' ')[0];
   var t='¡Feliz cumpleaños '+quien+'! 🎂🎉\n';
-  t+=(c.dias===0?'Todo el equipo de *Spadental* le desea un lindo día.'
-                :'Le deseamos por adelantado un lindo día de parte de todo el equipo de *Spadental*.');
+  t+=(c.dias===0?'Todo el equipo de *'+clinica()+'* le desea un lindo día.'
+                :'Le deseamos por adelantado un lindo día de parte de todo el equipo de *'+clinica()+'*.');
   t+='\n\nQue lo disfrute mucho 🦷✨';
   return t}
 
 function txtFrenado(f){
-  var t='Hola '+(f.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n';
+  var t='Hola '+(f.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\n';
   t+='Le quedó pendiente su tratamiento *'+f.plan.nombre+'*';
   if(f.ult)t+=' — la última sesión fue el '+fmtF(f.ult);
   t+='.\n';
@@ -3242,14 +3260,14 @@ function txtFrenado(f){
 
 function txtControl(c){
   var quien=(c.paciente||'').split(' ')[0];
-  var t='Hola '+quien+'! 👋 Le escribimos de *Spadental*.\n';
+  var t='Hola '+quien+'! 👋 Le escribimos de *'+clinica()+'*.\n';
   t+='Su última '+(c.regla.id==='limpieza'?'limpieza':'sesión de ortodoncia')+' fue el '+fmtF(c.desde)+
      ', así que ya toca '+c.regla.motivo+'.\n';
   t+='¿Le agendamos esta semana? 🦷';
   return t}
 
 function txtDormido(p){
-  return 'Hola '+(p.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n'+
+  return 'Hola '+(p.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\n'+
     'Vimos que su última visita fue el '+fmtF(p.ult)+'. ¿Le agendamos un control o una limpieza? 🦷\n'+
     'Tenemos horarios disponibles esta semana.'}
 
@@ -4527,7 +4545,7 @@ function nuevaParaPaciente(nombre){
   setRadio('tipo','Recurrente'); refrescarFichaForm(''); show('atencion'); refreshNro()}
 
 function showWhatsappModal(r,cita){
-  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Gracias por su visita a *Spadental*.\n\n';
+  var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Gracias por su visita a *'+clinica()+'*.\n\n';
   t+='📅 '+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+'\n';
   if((r.servicios||[]).length)t+='🦷 '+srvText(r)+'\n';
   if(num(r.total)>0){t+='💵 Total: '+bs(r.total)+'\n';
@@ -4647,7 +4665,7 @@ function indicacionesDe(rec){
 
 function txtIndicaciones(rec){
   var gs=indicacionesDe(rec); if(!gs.length)return '';
-  var t='Hola '+(rec.paciente||'').split(' ')[0]+'! 👋 Le dejamos por escrito los cuidados de hoy, de *Spadental*.\n\n';
+  var t='Hola '+(rec.paciente||'').split(' ')[0]+'! 👋 Le dejamos por escrito los cuidados de hoy, de *'+clinica()+'*.\n\n';
   t+=gs.map(indTexto).join('\n\n');
   t+='\n\nCualquier duda escribinos por acá 🦷';
   return t}
@@ -4763,7 +4781,7 @@ function planCardHtml(nombre,p){
    el tratamiento, así que va en su idioma, no en el nuestro. */
 function txtPresupuesto(nombre,plan){
   var a=avancePlan(plan), cob=cobradoPlan(plan), sal=saldoPlan(plan);
-  var t='Hola '+String(nombre||'').split(' ')[0]+'! 👋 Le pasamos el presupuesto de su tratamiento en *Spadental*.\n\n';
+  var t='Hola '+String(nombre||'').split(' ')[0]+'! 👋 Le pasamos el presupuesto de su tratamiento en *'+clinica()+'*.\n\n';
   t+='🦷 *'+plan.nombre+'*\n';
   (plan.sesiones||[]).forEach(function(ses){
     t+=ses.n+'. '+(ses.desc||('Sesión '+ses.n))+(ses.hecha?' ✅':'')+'\n'});
@@ -5048,7 +5066,7 @@ function reabrirPresu(idAtencion,idPre){
   persist(r); renderRem(); toast('Vuelve a quedar pendiente')}
 
 function txtPresu(x){
-  return 'Hola '+(x.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *Spadental*.\n\n'+
+  return 'Hola '+(x.paciente||'').split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\n\n'+
     'Cuando vino el '+fmtF(x.fecha)+' le comentamos que necesitaba *'+x.p.nom+'*'+
     (num(x.p.monto)>0?' ('+bs(x.p.monto)+')':'')+'.\n\n'+
     '¿Le gustaría que le reservemos un turno para empezar? Cualquier duda sobre el '+
@@ -5479,7 +5497,7 @@ function htmlHistoria(nombre){
     (m.consent?'<p class="hc-pie-nota">✍ Consentimiento informado firmado'+
       (m.consentTs?' el '+fmtF(String(m.consentTs).slice(0,10)):'')+'.</p>':'')+
     '<div class="hc-firma"><div><div class="hc-linea"></div>Firma y sello del profesional</div></div>'+
-    '<div class="hc-pie">Spadental · documento generado el '+fmtF(hoy)+
+    '<div class="hc-pie">'+esc(clinica())+' · documento generado el '+fmtF(hoy)+
       ' desde el sistema del consultorio. Contiene información de salud: entregar únicamente '+
       'al paciente o a quien él autorice.</div>'}
 
@@ -5650,7 +5668,7 @@ function txtResumenDia(fecha,prof){
   var pend=rows.filter(esCitaPendiente);
   var ICONO={'Efectivo':'💵','QR':'📱','Tarjeta':'💳','Transferencia':'🏦'};
 
-  var t='🦷 *Spadental · '+fmtF(fecha)+'*'+(prof?' · '+prof:'')+'\n\n';
+  var t='🦷 *'+clinica()+' · '+fmtF(fecha)+'*'+(prof?' · '+prof:'')+'\n\n';
   t+='👥 Atendidos: *'+at.length+'*\n';
   t+='🧾 Facturado: *'+bs(fact)+'*\n';
   t+='💰 Cobrado: *'+bs(cobr)+'*\n';
@@ -5742,7 +5760,7 @@ function imprimirReceta(nombre){
     '</table>'+
     '<div class="rc-cuerpo">'+esc(tx).replace(/\n/g,'<br>')+'</div>'+
     '<div class="hc-firma"><div><div class="hc-linea"></div>'+esc(prof||'Firma y sello')+'</div></div>'+
-    '<div class="hc-pie">Spadental · '+fmtF(hoyISO())+' · ante cualquier molestia fuera de lo indicado, comuníquese con el consultorio.</div>';
+    '<div class="hc-pie">'+esc(clinica())+' · '+fmtF(hoyISO())+' · ante cualquier molestia fuera de lo indicado, comuníquese con el consultorio.</div>';
   document.body.classList.add('imprimiendo');
   closeModal(); window.print();
   setTimeout(function(){document.body.classList.remove('imprimiendo')},600)}
@@ -5878,7 +5896,7 @@ function imprimirInforme(){
       ' · tasa de cierre '+Math.round(pAc/pres.length*100)+'%.</p>':'')+
 
     '<div class="hc-firma"><div><div class="hc-linea"></div>Dra. Mirna Veizaga</div></div>'+
-    '<div class="hc-pie">Spadental · informe generado el '+fmtF(hoyISO())+
+    '<div class="hc-pie">'+esc(clinica())+' · informe generado el '+fmtF(hoyISO())+
       ' desde el sistema del consultorio.</div>';
 
   document.body.classList.add('imprimiendo');
@@ -5933,7 +5951,7 @@ function exportHistorias(){
   var hoy=hoyISO(), hojas=[];
 
   /* --- pacientes --- */
-  var f=hojaPortada('Spadental · Historias clínicas','Generado el '+fmtF(hoy)+
+  var f=hojaPortada(clinica()+' · Historias clínicas','Generado el '+fmtF(hoy)+
     ' · '+pacs.length+' pacientes · CONTIENE DATOS DE SALUD',7);
   f.push(filaEncabezado(['Paciente','Celular','CI','Nacimiento','Edad','Canal',
     'Primera visita','Última visita','Visitas','Facturado Bs','Cobrado Bs','Saldo Bs']));
@@ -6012,7 +6030,7 @@ function exportHistorias(){
   if(!lista.length)pr.push(['(todavía no se anotó ningún tratamiento recomendado)']);
   hojas.push({name:'Recomendados',rows:pr,congelar:4,widths:[30,26,15,13,17,16,26]});
 
-  descargar(buildXlsx(hojas),'Spadental_historias_clinicas_'+hoy+'.xlsx');
+  descargar(buildXlsx(hojas),'Ezequiel_Spadental_historias_clinicas_'+hoy+'.xlsx');
   marcarRespaldo();
   toast('Respaldo descargado · guardalo fuera de esta computadora 💾')}
 
@@ -6092,6 +6110,7 @@ function renderConfig(){
   $('#c-canal').value=CFG.canales.join('\n');
   $('#c-dias-prox').value=CFG.diasProx;
   $('#c-meta-mes').value=CFG.metaMes||'';
+  $('#c-clinica').value=clinica();
   $('#c-dias-respaldo').value=CFG.diasRespaldo||30;
   pintarEstadoRespaldo();
   pintarClavesProf();
@@ -6357,7 +6376,7 @@ function exportXlsx(rows,nombre){
 
   /* ---------- 1. PORTADA ---------- */
   var P=[];
-  P.push([celda('Spadental · Informe de atenciones','titulo')]);
+  P.push([celda(clinica()+' · Informe de atenciones','titulo')]);
   P.push([celda('Dra. Mirna Veizaga · '+periodoTexto(rows),'subtitulo')]);
   P.push([celda('Generado el '+fmtF(hoyISO()),'nota')]);
   P.push([]);
@@ -6453,7 +6472,7 @@ function exportXlsx(rows,nombre){
     {name:'Detalle',rows:D,widths:[11,7,7,26,13,11,13,14,15,17,40,12,12,12,20,12,12,20,34],congelar:1},
     {name:'Servicios',rows:S,widths:[38,9,11,13,15,12],congelar:4,merges:['A1:F1','A2:F2']},
     {name:'Pacientes',rows:G,widths:[28,13,17,9,13,13,12,13,13],congelar:4,merges:['A1:I1','A2:I2']}
-  ]),nombre||('Spadental_informe_atenciones_'+hoyISO()+'.xlsx'));
+  ]),nombre||('Ezequiel_Spadental_informe_atenciones_'+hoyISO()+'.xlsx'));
   toast('Informe descargado ✅')}
 
 /* ------------------------------ INFORME DE CAJA ------------------------------ */
@@ -6489,7 +6508,7 @@ function exportCaja(rows,nombre){
 
   /* ---------- 1. PORTADA ---------- */
   var P=[];
-  P.push([celda('Spadental · Informe de caja','titulo')]);
+  P.push([celda(clinica()+' · Informe de caja','titulo')]);
   P.push([celda('Dra. Mirna Veizaga · '+periodoTexto(rows),'subtitulo')]);
   P.push([celda('Generado el '+fmtF(hoyISO()),'nota')]);
   P.push([]);
@@ -6641,7 +6660,7 @@ function exportCaja(rows,nombre){
     {name:'Arqueo diario',rows:A,widths:[12,11,13,11,11,15,15,15,15,17],congelar:4,merges:['A1:J1','A2:J2']},
     {name:'Egresos',rows:E,widths:[11,24,32,22,15,13],congelar:4,merges:['A1:F1','A2:F2']},
     {name:'Saldos pendientes',rows:S,widths:[11,26,13,12,12,12,8,16],congelar:4,merges:['A1:H1','A2:H2']}
-  ]),nombre||('Spadental_informe_caja_'+hoyISO()+'.xlsx'));
+  ]),nombre||('Ezequiel_Spadental_informe_caja_'+hoyISO()+'.xlsx'));
   toast('Informe de caja descargado ✅')}
 
 /* ============================ INIT ============================ */
@@ -6764,8 +6783,8 @@ function bind(){
     $('#wrap-l-mes').style.display=this.value==='mes'?'':'none'; renderLista()};
   ['#l-dia','#l-mes','#l-tipo'].forEach(function(s){$(s).onchange=renderLista});
   $('#l-q').oninput=renderLista;
-  $('#btn-xls').onclick=function(){exportXlsx(filtrarLista(),'Spadental_atenciones_'+hoyISO()+'.xlsx')};
-  $('#btn-xls2').onclick=function(){exportXlsx(DATA,'Spadental_atenciones_completo_'+hoyISO()+'.xlsx')};
+  $('#btn-xls').onclick=function(){exportXlsx(filtrarLista(),'Ezequiel_Spadental_atenciones_'+hoyISO()+'.xlsx')};
+  $('#btn-xls2').onclick=function(){exportXlsx(DATA,'Ezequiel_Spadental_atenciones_completo_'+hoyISO()+'.xlsx')};
   $('#btn-sync').onclick=function(){
     if(!CONNECTED){toast('Modo local: no hay servidor configurado',1);return}
     toast('Actualizando…');
@@ -6894,11 +6913,14 @@ function bind(){
     CFG.ctrlOrtoDias=Math.max(1,num($('#c-ctrl-orto').value)||30);
     CFG.diasCtrlAviso=Math.max(0,num($('#c-ctrl-aviso').value)||7);
     CFG.metaMes=Math.max(0,num($('#c-meta-mes').value));
-    saveCfg(); updateNavRem(); toast('Recordatorios actualizados')};
+    var nom=$('#c-clinica').value.trim();
+    if(nom)CFG.clinica=nom;
+    pintarNombreClinica();
+    saveCfg(); updateNavRem(); toast('Ajustes guardados ✅')};
 
   $('#btn-json').onclick=function(){
     descargar(new Blob([JSON.stringify({data:DATA,cfg:CFG,pacientes:PAC,egresos:EGR},null,1)],{type:'application/json'}),
-      'Spadental_respaldo_'+hoyISO()+'.json'); toast('Respaldo descargado')};
+      'Ezequiel_Spadental_respaldo_'+hoyISO()+'.json'); toast('Respaldo descargado')};
   $('#btn-import').onclick=function(){$('#file-json').click()};
   $('#btn-subir').onclick=subirLocal;
   $('#file-json').onchange=function(e){
@@ -6961,7 +6983,7 @@ function reintentarCola(){
 (function init(){
   CFG=loadCfg(); DATA=loadLocal().map(normalize); PAC=loadPacLocal(); EGR=loadEgr();
   initGate();
-  initFechas(); banner(); renderCanales(); renderAgendaPor(); bind();
+  initFechas(); banner(); pintarNombreClinica(); renderCanales(); renderAgendaPor(); bind();
   clearForm(); clearCita(); fillDatalists(); updateNavRem();
   if(CONNECTED){
     flushQueue().then(pullServer).then(function(ok){ultimoPull=+new Date(); if(ok)refreshAll()});
