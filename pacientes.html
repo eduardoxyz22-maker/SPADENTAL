@@ -1079,10 +1079,14 @@ body.locked{overflow:hidden}
     <p class="hint">Qué entró, qué salió, en qué forma de pago y qué queda por cobrar.</p>
     <div class="grid g3" style="margin-top:10px">
       <div><label>Periodo</label>
-        <select id="c-rango"><option value="dia">Un día</option><option value="mes" selected>Un mes</option>
+        <select id="c-rango"><option value="dia">Un día</option><option value="quincena">Una quincena</option>
+        <option value="mes" selected>Un mes</option>
         <option value="anio">Un año</option><option value="todo">Todo</option></select></div>
       <div id="wrap-c-dia" style="display:none"><label>Día</label><input type="date" id="c-dia"></div>
       <div id="wrap-c-mes"><label>Mes</label><input type="month" id="c-mes"></div>
+      <div id="wrap-c-quin" style="display:none"><label>Quincena</label>
+        <select id="c-quin"><option value="1">1ª — del 1 al 15</option>
+        <option value="2">2ª — del 16 a fin de mes</option></select></div>
       <div id="wrap-c-anio" style="display:none"><label>Año</label><input id="c-anio" inputmode="numeric"></div>
     </div>
   </div>
@@ -1108,7 +1112,8 @@ body.locked{overflow:hidden}
   <div class="card"><h2>Liquidación de las doctoras</h2>
     <p class="hint">Se calcula sobre lo <b>facturado</b> del periodo. El porcentaje de cada una se
       define en <b>Ajustes → Comisiones</b>.</p>
-    <div id="cj-liq"></div></div>
+    <div id="cj-liq"></div>
+    <div id="cj-quin"></div></div>
 
   <div class="card"><h2>Cuentas por cobrar</h2>
     <p class="hint">Saldos pendientes agrupados por antigüedad. Los de más de 90 días son los difíciles.</p>
@@ -1683,6 +1688,15 @@ function fmtFcorta(s){if(!s)return '—';var p=String(s).split('-');return p[2]+
 var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 var DOW=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 function mesLabel(ym){var p=String(ym||'').split('-');return (MESES[(+p[1]||1)-1]||'')+' '+p[0]}
+/* Quincenas: del 1 al 15 y del 16 a fin de mes. Mirna paga el 16 lo de la
+   primera y el 1 lo de la segunda, así que el corte es por día del mes,
+   no cada 15 días corridos. */
+function enQuincena(f,ym,q){
+  if(!f||String(f).slice(0,7)!==String(ym))return false;
+  var d=+String(f).slice(8,10);
+  return String(q)==='1' ? (d>=1&&d<=15) : (d>=16)}
+function quincenaLabel(ym,q){
+  return (String(q)==='1'?'1ª quincena (1 al 15) de ':'2ª quincena (16 a fin) de ')+mesLabel(ym)}
 function toast(m,err){var t=$('#toast');t.textContent=m;t.className='on'+(err?' err':'');
   clearTimeout(toast._t);toast._t=setTimeout(function(){t.className=''},2600)}
 function telWa(c){var d=String(c||'').replace(/\D/g,'');if(!d)return '';
@@ -4345,6 +4359,8 @@ function catsEgreso(){
 function egresosRango(){
   var r=$('#c-rango').value, out=EGR.slice();
   if(r==='dia'){var d=$('#c-dia').value; out=out.filter(function(x){return x.fecha===d})}
+  else if(r==='quincena'){var mq=$('#c-mes').value, q=$('#c-quin').value;
+    out=out.filter(function(x){return enQuincena(x.fecha,mq,q)})}
   else if(r==='mes'){var m=$('#c-mes').value; out=out.filter(function(x){return (x.fecha||'').slice(0,7)===m})}
   else if(r==='anio'){var a=$('#c-anio').value; out=out.filter(function(x){return (x.fecha||'').slice(0,4)===a})}
   return out.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})}
@@ -4421,6 +4437,8 @@ function pagarComision(prof,monto,periodo){
 function cajaRows(){
   var r=$('#c-rango').value, out=soloAtenciones(DATA);
   if(r==='dia'){var d=$('#c-dia').value; out=out.filter(function(x){return x.fecha===d})}
+  else if(r==='quincena'){var mq=$('#c-mes').value, q=$('#c-quin').value;
+    out=out.filter(function(x){return enQuincena(x.fecha,mq,q)})}
   else if(r==='mes'){var m=$('#c-mes').value; out=out.filter(function(x){return (x.fecha||'').slice(0,7)===m})}
   else if(r==='anio'){var a=$('#c-anio').value; out=out.filter(function(x){return (x.fecha||'').slice(0,4)===a})}
   return out.sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})}
@@ -4509,9 +4527,11 @@ function renderCaja(){
   var totFact=liq.reduce(function(a,x){return a+x.facturado},0);
   var totCobr=liq.reduce(function(a,x){return a+x.cobrado},0);
   var hayPct=liq.some(function(x){return x.pct>0});
-  var periodo=($('#c-rango').value==='mes')?mesLabel($('#c-mes').value)
-    :($('#c-rango').value==='dia'?fmtF($('#c-dia').value)
-    :($('#c-rango').value==='anio'?$('#c-anio').value:'todo'));
+  var rg=$('#c-rango').value;
+  var periodo=(rg==='mes')?mesLabel($('#c-mes').value)
+    :(rg==='quincena'?quincenaLabel($('#c-mes').value,$('#c-quin').value)
+    :(rg==='dia'?fmtF($('#c-dia').value)
+    :(rg==='anio'?$('#c-anio').value:'todo')));
   $('#cj-liq').innerHTML=liq.length
     /* A pagar va segundo a propósito: en el celular la tabla se scrollea, y
        ese es el número por el que se abre esta pantalla. */
@@ -4537,6 +4557,43 @@ function renderCaja(){
         : '<p class="mini" style="margin-top:8px">Cargá el porcentaje de cada doctora en '+
           '<b>Ajustes → Comisiones</b> y esta tabla calcula sola cuánto pagarle a cada una.</p>')
     : '<div class="empty">No hay atenciones en este periodo.</div>';
+
+  /* ---- corte quincenal ----
+     Se paga el 16 lo del 1 al 15, y el 1 lo del 16 a fin de mes. Cuando se
+     esta mirando el mes entero, abajo va el mismo calculo partido en dos,
+     con su propio boton de pago: asi no hay que cambiar el periodo arriba
+     ni sacar cuentas a mano. */
+  var qHtml='';
+  if(rg==='mes'&&liq.length&&hayPct){
+    var ymQ=$('#c-mes').value;
+    var porQ=function(q){
+      var idx={};
+      liquidacion(rows.filter(function(r){return enQuincena(r.fecha,ymQ,q)}))
+        .forEach(function(x){idx[x.prof]=x});
+      return idx};
+    var q1=porQ('1'), q2=porQ('2');
+    var celdaQ=function(x,q,prof){
+      if(!x||x.pagar<=0)return ['—','—',''];
+      return [n0(x.facturado),'<b>'+n0(x.pagar)+'</b>',
+        '<button class="btn sec sm" onclick="pagarComision(\''+jss(prof)+'\','+x.pagar+
+        ',\''+jss(quincenaLabel(ymQ,q))+'\')">Pagar</button>']};
+    var sum=function(idx){var t=0;Object.keys(idx).forEach(function(k){t+=idx[k].pagar});return t};
+    var t1=sum(q1), t2=sum(q2);
+    qHtml='<h3 style="margin:22px 0 4px;font-size:1.05rem">🗓️ Corte por quincena · '+
+      esc(mesLabel(ymQ))+'</h3>'+
+      '<p class="mini" style="margin:0 0 10px">El <b>16</b> se paga lo del <b>1 al 15</b>, y el '+
+      '<b>1º del mes siguiente</b> lo del <b>16 a fin de mes</b>. Las dos columnas suman lo mismo '+
+      'que la tabla de arriba.</p>'+
+      tabla([{t:'Profesional'},{t:'1ª · facturó (1–15)',num:1},{t:'1ª · a pagar el 16',num:1},{t:''},
+             {t:'2ª · facturó (16–fin)',num:1},{t:'2ª · a pagar el 1º',num:1},{t:''}],
+        liq.map(function(x){
+          return ['<b>'+esc(x.prof)+'</b>']
+            .concat(celdaQ(q1[x.prof],'1',x.prof))
+            .concat(celdaQ(q2[x.prof],'2',x.prof))})
+          .concat([['<b>TOTAL</b>','','<b>'+n0(t1)+'</b>','','','<b>'+n0(t2)+'</b>','']]),880)+
+      '<p class="mini" style="margin-top:8px">1ª quincena <b>'+bs(t1)+'</b> + 2ª quincena <b>'+
+      bs(t2)+'</b> = <b>'+bs(t1+t2)+'</b> del mes.</p>'}
+  $('#cj-quin').innerHTML=qHtml;
 
   var cats=Object.keys(egrCat).sort(function(a,b){return egrCat[b]-egrCat[a]});
   $('#cj-egresos').innerHTML=egrs.length
@@ -7509,6 +7566,8 @@ function initFechas(){
   var h=hoyISO(),ym=h.slice(0,7);
   $('#l-dia').value=h; $('#l-mes').value=ym; $('#p-mes').value=ym; $('#p-anio').value=h.slice(0,4);
   $('#c-dia').value=h; $('#c-mes').value=ym; $('#c-anio').value=h.slice(0,4);
+  /* arranca en la quincena que se esta viviendo, no en la primera siempre */
+  $('#c-quin').value=(+h.slice(8,10)<=15)?'1':'2';
   var d=new Date();
   $('#hd-hoy').textContent=DOW[d.getDay()]+' '+fmtF(h)}
 
@@ -7636,9 +7695,12 @@ function bind(){
 
   $('#c-rango').onchange=function(){
     $('#wrap-c-dia').style.display=this.value==='dia'?'':'none';
-    $('#wrap-c-mes').style.display=this.value==='mes'?'':'none';
+    /* la quincena tambien necesita el mes: se eligen juntos */
+    $('#wrap-c-mes').style.display=(this.value==='mes'||this.value==='quincena')?'':'none';
+    $('#wrap-c-quin').style.display=this.value==='quincena'?'':'none';
     $('#wrap-c-anio').style.display=this.value==='anio'?'':'none'; renderCaja()};
   ['#c-dia','#c-mes','#c-anio'].forEach(function(s){$(s).oninput=renderCaja});
+  $('#c-quin').onchange=renderCaja;
   $('#btn-xls-caja').onclick=function(){exportCaja(cajaRows())};
 
   $$('#seg-metodo input').forEach(function(i){i.onchange=recalcSaldo});
