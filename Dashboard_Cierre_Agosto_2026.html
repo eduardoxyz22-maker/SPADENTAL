@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.className+=" js";</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spadental · Cierre de agosto 2026 · AKME Estudio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --blanco:#FFFFFF; --papel:#FAFAF8; --tinta:#0A0A0A; --gris:#5B5B5B; --gris2:#9A9A96; --linea:#E7E7E3;
+  --lima:#AFCE0E; --lima-tinta:#66801B; --lima-suave:#F3F7DC;
+  --oro:#CBA135; --oro-tinta:#8F701C; --oro-suave:#F8F3E4;
+  --rojo:#C43D3D; --rojo-suave:#FAEDED;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--blanco);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--lima-tinta)}
+::selection{background:var(--lima);color:var(--tinta)}
+
+.topbar{position:fixed;inset:0 0 auto 0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--linea);z-index:100}
+.topbar .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:12px 22px;overflow-x:auto}
+.logo{font-weight:900;letter-spacing:.5px;font-size:14px;white-space:nowrap}
+.logo i{display:inline-block;width:9px;height:9px;background:var(--lima);border-radius:2px;margin-right:7px;transform:rotate(45deg)}
+.nav{display:flex;gap:2px;margin-left:auto}
+.nav a{font-size:12.5px;font-weight:600;color:var(--gris);text-decoration:none;padding:7px 11px;border-radius:8px;white-space:nowrap}
+.nav a:hover{color:var(--tinta);background:var(--papel)}
+.nav a.on{color:var(--tinta);background:var(--lima-suave);box-shadow:inset 0 -2px 0 var(--lima)}
+.prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--lima);width:0}
+
+.hero{position:relative;padding:120px 22px 70px;overflow:hidden}
+.hero .band{position:absolute;top:0;right:-12%;width:52%;height:100%;background:linear-gradient(115deg,transparent 0 12%,var(--lima-suave) 12% 100%);transform:skewX(-10deg);z-index:-1}
+.hero .in{max-width:1180px;margin:0 auto}
+.kicker{font-size:13px;font-weight:700;color:var(--lima-tinta);margin-bottom:14px}html.js .kicker{opacity:0;animation:up .6s .1s forwards}
+.hero h1{font-size:clamp(34px,5.4vw,64px);font-weight:900;line-height:1.04;letter-spacing:-.03em;max-width:840px}html.js .hero h1{opacity:0;animation:up .6s .25s forwards}
+.hero h1 em{font-style:normal;box-shadow:inset 0 -0.28em 0 var(--lima)}
+.hero .lead{max-width:640px;color:var(--gris);font-size:17px;margin-top:18px}html.js .hero .lead{opacity:0;animation:up .6s .4s forwards}
+.heronums{display:flex;flex-wrap:wrap;gap:34px;margin-top:38px}html.js .heronums{opacity:0;animation:up .6s .55s forwards}
+.hn .v{font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.02em}
+.hn .l{font-size:12.5px;color:var(--gris);margin-top:2px}
+.hn .d{font-size:12px;font-weight:700;margin-top:3px}
+.d.up{color:var(--lima-tinta)} .d.down{color:var(--rojo)}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.sec{max-width:1180px;margin:0 auto;padding:58px 22px 6px}
+.shead{display:flex;align-items:baseline;gap:14px;border-top:2px solid var(--tinta);padding-top:14px;margin-bottom:6px}
+.shead .n{font-weight:900;font-size:13px;color:var(--lima-tinta)}
+.shead h2{font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-.02em}
+.shead .mini{margin-left:auto;font-size:12.5px;color:var(--gris);text-align:right;max-width:320px}
+.sintro{color:var(--gris);max-width:760px;margin:6px 0 22px;font-size:15.5px}
+.sintro b{color:var(--tinta)}
+
+.grid{display:grid;gap:16px;margin:14px 0}
+.g2{grid-template-columns:1.2fr 1fr}.g2e{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:920px){.g2,.g2e,.g3{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr}.shead .mini{display:none}}
+
+.card{background:var(--blanco);border:1px solid var(--linea);border-radius:14px;padding:18px 20px}
+.card.papel{background:var(--papel)}
+.card h3{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.card .hint{font-size:12.5px;color:var(--gris);margin:3px 0 12px}
+.chart{position:relative;height:300px}.chart.alto{height:350px}.chart.bajo{height:240px}
+
+.kchip{border:1px solid var(--linea);border-radius:14px;padding:16px 18px;background:var(--blanco)}
+.kchip .l{font-size:12px;font-weight:600;color:var(--gris)}
+.kchip .v{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:2px 0}
+.kchip .s{font-size:12px;color:var(--gris)}
+.kchip .tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 8px;margin-top:8px}
+.tag.up{color:var(--lima-tinta);background:var(--lima-suave)}
+.tag.down{color:var(--rojo);background:var(--rojo-suave)}
+.spark{display:block;margin-top:10px;width:100%;height:34px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-size:11.5px;font-weight:700;color:var(--gris);text-align:left;padding:9px 8px;border-bottom:2px solid var(--tinta);cursor:pointer;user-select:none;white-space:nowrap}
+th.n,td.n{text-align:right}
+td{padding:8px;border-bottom:1px solid var(--linea);vertical-align:top}
+tr:hover td{background:var(--lima-suave)}
+tr.tot td{font-weight:800;border-top:2px solid var(--tinta);border-bottom:none;background:var(--papel)}
+.ibar{position:relative;display:block;height:6px;border-radius:3px;background:var(--papel);margin-top:6px;overflow:hidden}
+.ibar i{position:absolute;inset:0;border-radius:3px;background:var(--lima);transition:width 1s cubic-bezier(.2,.7,.2,1)}html.js .ibar i{width:0}
+.ibar.oro i{background:var(--oro)} .ibar.gris i{background:var(--gris2)}
+.pill{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.pill.ok{color:var(--lima-tinta);background:var(--lima-suave)}
+.pill.off{color:var(--gris);background:var(--papel)}
+.pill.bad{color:var(--rojo);background:var(--rojo-suave)}
+
+.nota{border-left:4px solid var(--lima);background:var(--lima-suave);border-radius:0 12px 12px 0;padding:13px 16px;margin:14px 0;font-size:14px}
+.nota.oro{border-left-color:var(--oro);background:var(--oro-suave)}
+.nota.roja{border-left-color:var(--rojo);background:var(--rojo-suave)}
+.nota.grisn{border-left-color:var(--gris2);background:var(--papel)}
+.nota b.t{display:block;margin-bottom:2px}
+
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.cal .dh{font-size:11px;font-weight:700;color:var(--gris);text-align:center;padding-bottom:2px}
+.cal .d{border-radius:8px;padding:7px 6px;min-height:52px;background:var(--papel);border:1px solid var(--linea);font-size:11px;color:var(--gris)}
+.cal .d b{display:block;font-size:12px;color:var(--tinta)}
+.cal .d span{display:block;font-weight:700;font-size:11.5px;margin-top:2px}
+.cal .d.x{background:var(--blanco);border-style:dashed;color:var(--gris2)}
+.leyenda{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--gris)}
+.leyenda i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.funnel{display:grid;gap:8px;margin-top:6px}
+.fstep{display:grid;grid-template-columns:190px 1fr;gap:14px;align-items:center}
+.fstep .fl{font-size:13px;font-weight:700}
+.fstep .fl small{display:block;font-weight:500;color:var(--gris);font-size:11.5px}
+.fbar{height:44px;border-radius:9px;background:var(--lima);display:flex;align-items:center;padding:0 14px;font-weight:800;color:var(--tinta);min-width:130px;transition:width 1.1s cubic-bezier(.2,.7,.2,1);white-space:nowrap;overflow:hidden}
+.fbar.gris{background:var(--papel);border:1.5px dashed var(--gris2);color:var(--gris)}
+.fbar.tinta{background:var(--tinta);color:var(--blanco)}
+.fbar.oro{background:var(--oro)}
+html.js .fbar{width:0}
+@media(max-width:640px){.fstep{grid-template-columns:1fr}.fbar{min-width:0}}
+
+html.js .reveal{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease}
+html.js .reveal.vis{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+
+.foot{max-width:1180px;margin:50px auto 0;padding:18px 22px 60px;border-top:2px solid var(--tinta);color:var(--gris);font-size:12.5px}
+.foot .marca{font-weight:900;color:var(--tinta)}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="in">
+  <div class="logo"><i></i>AKME ESTUDIO</div>
+  <nav class="nav">
+    <a href="#cierre">Cierre</a><a href="#anio">El año</a><a href="#doctoras">Doctoras</a><a href="#pauta">Pauta</a><a href="#cohorte">Cohorte</a><a href="#sept">Septiembre</a><a href="#salv">Salvedades</a>
+  </nav>
+  <div class="prog" id="prog"></div>
+</div></div>
+
+<section class="hero"><div class="band"></div><div class="in">
+  <div class="kicker">Ezequiel Spadental — informe mensual de AKME Estudio · agosto 2026</div>
+  <h1>Agosto cortó seis meses de caída: <em>la clínica facturó <span class="num" data-count="44" data-suf="%">44%</span> más</em> que julio con las mismas atenciones.</h1>
+  <p class="lead">No entró más gente: cada atención valió más. Y una de cada tres unidades de ingreso vino de pacientes captados el mes anterior. Este informe muestra de dónde salió la plata, qué hizo la publicidad, y qué se juega septiembre.</p>
+  <div class="heronums">
+    <div class="hn"><div class="v num" data-count="41095" data-pre="Bs ">Bs 41.095</div><div class="l">facturación de doctoras</div><div class="d up">▲ 44% vs julio</div></div>
+    <div class="hn"><div class="v num" data-count="144">144</div><div class="l">atenciones en 24 días</div><div class="d up">▲ 1%</div></div>
+    <div class="hn"><div class="v num" data-count="285" data-pre="Bs ">Bs 285</div><div class="l">ticket por atención</div><div class="d up">▲ 42%</div></div>
+    <div class="hn"><div class="v num" data-count="1634">1.634</div><div class="l">leads de WhatsApp, 2 clínicas</div><div class="d up">▲ 83%</div></div>
+    <div class="hn"><div class="v">Bs 3,98</div><div class="l">costo por lead</div><div class="d up">▼ 37%</div></div>
+  </div>
+</div></section>
+
+<section class="sec" id="cierre">
+  <div class="shead"><span class="n">01</span><h2>El cierre, en una pantalla</h2><div class="mini">Fuentes: cuadernos + registro de recepción, base de la app, API de Meta. Nada estimado.</div></div>
+  <p class="sintro">Julio fue el peor mes del año en valor por atención (Bs 201). Agosto lo revirtió: <b>Bs 41.095 en 144 atenciones</b>, ticket Bs 285. La comparación honesta: julio sale de la base de la app y agosto de los cuadernos, así que el crecimiento real está <b>entre +36% y +44%</b>.</p>
+  <div class="grid g4">
+    <div class="kchip reveal"><div class="l">Ingreso por día laboral</div><div class="v num">Bs 1.712</div><div class="s">Julio: Bs 1.059 en 27 días con atención</div><span class="tag up">▲ 62% por día</span><svg class="spark" data-spark="1059,1712" data-c="lima"></svg></div>
+    <div class="kchip reveal"><div class="l">Pacientes únicos</div><div class="v num">109</div><div class="s">39 nuevos + 41 reactivados + 29 conocidos</div><span class="tag up">80 no pisaban la clínica este año</span><svg class="spark" data-spark="10810,13445,16840" data-c="lima" data-bars="1"></svg></div>
+    <div class="kchip reveal"><div class="l">Retornos dentro del mes</div><div class="v num">24 pacientes</div><div class="s">Dejaron Bs 19.495</div><span class="tag up">47% de la facturación</span><svg class="spark" data-spark="19495,21600" data-c="lima" data-bars="1"></svg></div>
+    <div class="kchip reveal"><div class="l">Segunda quincena</div><div class="v num">−46%</div><div class="s">Bs por día vs la primera (13 días vs 11)</div><span class="tag down">▼ el problema a resolver</span><svg class="spark" data-spark="2283,1229" data-c="rojo" data-bars="1"></svg></div>
+  </div>
+  <div class="grid g3">
+    <div class="nota reveal"><b class="t">Volvió lo de julio</b>15 pacientes captados en julio pagaron <b>Bs 12.620</b> de este mes — el 31%. El que vuelve vale Bs 1.274 a 60 días; el que no, dejó Bs 227.</div>
+    <div class="nota oro reveal"><b class="t">Cosmetic partió su costo a la mitad</b>De Bs 9,36 a <b>Bs 4,89 por lead</b>, con casi 4 veces los leads de julio. La migración a video rindió el mes completo.</div>
+    <div class="nota grisn reveal"><b class="t">"Ganamos menos" — sí y no</b>Contra junio-julio, facturaron más. Contra enero-mayo (Bs 42-82 mil), todavía no. Y la 2ª quincena fue floja de verdad: si la liquidación es quincenal, ahí nació la sensación.</div>
+  </div>
+</section>
+
+<section class="sec" id="anio">
+  <div class="shead"><span class="n">02</span><h2>El año completo, para no leer agosto solo</h2></div>
+  <p class="sintro">La facturación de doctoras venía cayendo desde enero (Bs 82.408) hasta julio (Bs 28.593): <b>−65% en seis meses</b>. Agosto es el primer mes que sube desde mayo y el mejor desde mayo. La recuperación vino por el ticket, no por el volumen: la clínica atiende a menos gente que a principios de año y le vende más a cada una.</p>
+  <div class="grid g2">
+    <div class="card reveal">
+      <h3>Facturación y ticket, enero a agosto</h3>
+      <div class="hint">Barras: facturación (agosto en lima). Línea: ticket por atención.</div>
+      <div class="chart alto"><canvas id="chYear"></canvas></div>
+    </div>
+    <div class="card papel reveal">
+      <h3>Mes a mes</h3>
+      <table id="tYear">
+        <thead><tr><th>Mes</th><th class="n">Bs</th><th class="n">Atenc.</th><th class="n">Ticket</th><th class="n">MoM</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="doctoras">
+  <div class="shead"><span class="n">03</span><h2>Doctoras: quién hizo el mes y cuándo</h2><div class="mini">Kathe concentra el 46% del mes — fortaleza y riesgo a la vez.</div></div>
+  <p class="sintro">Tres de las cuatro principales subieron contra julio. El gráfico semanal muestra el problema con precisión: <b>las semanas 1 y 2 llevaron los tratamientos grandes; las semanas 4 y 5 quedaron en consultas y controles.</b> Kathe pasó de Bs 6.515 en la primera semana a Bs 700 en la última.</p>
+  <div class="grid g2">
+    <div class="card reveal">
+      <h3>Producción semanal por doctora</h3>
+      <div class="hint">Apilado por semana de agosto. La caída de la derecha es la segunda quincena.</div>
+      <div class="chart alto"><canvas id="chSem"></canvas></div>
+    </div>
+    <div class="card reveal">
+      <h3>Julio vs agosto, y el detalle</h3>
+      <table id="tDocs">
+        <thead><tr><th>Doctora</th><th class="n">Julio</th><th class="n">Agosto</th><th class="n">MoM</th><th class="n">Ticket</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="nota grisn" style="margin-bottom:0"><b class="t">Para Mirna, antes de hablar con el equipo</b>La hoja de Kathe traía un cálculo de "5.260 × 30%" que no sale de ningún tramo de su cuaderno: la base de liquidación y la de producción no son la misma. Alinearlas primero.</div>
+    </div>
+  </div>
+  <div class="grid g2e">
+    <div class="card reveal">
+      <h3>Qué se vendió</h3>
+      <div class="hint">La consulta es la puerta (74 unidades, 5% del ingreso). El negocio: restauraciones, endodoncias, placas y coronas — 53% del mes.</div>
+      <table id="tProc"><thead><tr><th>Procedimiento</th><th class="n">Cant.</th><th class="n">Bs</th><th class="n">%</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card reveal">
+      <h3>Lo que quedó abierto y vale plata</h3>
+      <div class="hint">Presupuestos registrados en la app desde el 24/08, más proformas del cuaderno sin monto.</div>
+      <table>
+        <thead><tr><th>Paciente</th><th>Presupuesto</th><th class="n">Bs</th></tr></thead>
+        <tbody>
+          <tr><td>C. G.</td><td>Presupuesto mayor (sin detalle en la app)</td><td class="n num">13.800</td></tr>
+          <tr><td>A. M. S.</td><td>Ortodoncia — cuota inicial</td><td class="n num">1.500</td></tr>
+          <tr><td>R. A.</td><td>Endodoncia</td><td class="n num">750</td></tr>
+          <tr><td>E. P.</td><td>Endodoncia + extracción</td><td class="n num">1.010</td></tr>
+          <tr><td>C. G.</td><td>Limpieza + restauración</td><td class="n num">450</td></tr>
+          <tr><td>D. A. · A. M. · B. G. · C. Gz.</td><td>4 proformas del cuaderno sin monto (rehabilitaciones, endo + restauraciones, estudio de ortodoncia)</td><td class="n">s/d</td></tr>
+          <tr class="tot"><td colspan="2">Pipeline identificado</td><td class="n num">Bs 17.510 +</td></tr>
+        </tbody>
+      </table>
+      <div class="nota" style="margin-bottom:0"><b class="t">Cerrar el 30% de esto recupera la segunda quincena.</b>Llama la doctora que atendió, no recepción.</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="pauta">
+  <div class="shead"><span class="n">04</span><h2>La publicidad, cuenta por cuenta</h2><div class="mini">Un lead = una conversación de WhatsApp iniciada desde un anuncio.</div></div>
+  <p class="sintro">Las dos cuentas juntas: <b>Bs 6.507 para 1.634 leads (Bs 3,98)</b> contra Bs 5.655 para 891 en julio. Casi el doble de leads con 15% más de inversión. La causa tiene nombre: video. Cada vez que un anuncio de imagen se reemplazó por un video corto con el servicio y el precio explicados, el costo se partió a la mitad o mejor — tres veces seguidas.</p>
+
+  <div class="grid g2e">
+    <div class="card reveal">
+      <h3>Costo por lead, julio contra agosto</h3>
+      <div class="chart bajo"><canvas id="chCpl"></canvas></div>
+    </div>
+    <div class="card reveal">
+      <h3>Leads por clínica</h3>
+      <div class="chart bajo"><canvas id="chLeads"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card reveal" style="margin:16px 0">
+    <h3>Spadental, día por día: dónde se perdió entrega</h3>
+    <div class="hint">Gasto diario de la cuenta en agosto (API). Dos incidentes marcados: la desconexión de WhatsApp del 7 y el bloqueo por falta de pago del 27-28. Aun así, el mes cerró arriba.</div>
+    <div class="cal" id="cal"></div>
+    <div class="leyenda"><span><i style="background:var(--lima)"></i>día normal (intensidad = gasto)</span><span><i style="background:var(--rojo)"></i>incidente (7: WhatsApp caído · 27-28: cuenta bloqueada)</span></div>
+  </div>
+
+  <div class="grid g2e">
+    <div class="card reveal">
+      <h3><span style="color:var(--lima-tinta)">■</span> Spadental — Bs 3.024 · 922 leads · Bs 3,28</h3>
+      <div class="hint">Julio: Bs 3.867 / 700 / Bs 5,52. Gastó 22% menos, trajo 32% más.</div>
+      <table id="tSpa"><thead><tr><th>Anuncio</th><th class="n">Bs</th><th class="n">Leads</th><th class="n">Bs/lead</th><th>Estado</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card reveal">
+      <h3><span style="color:var(--oro-tinta)">■</span> Cosmetic — Bs 3.483 · 712 leads · Bs 4,89</h3>
+      <div class="hint">Julio: Bs 1.787 / 191 / Bs 9,36. Duplicó inversión, casi cuadruplicó leads.</div>
+      <table id="tCos"><thead><tr><th>Conjunto</th><th class="n">Bs</th><th class="n">Leads</th><th class="n">Bs/lead</th><th class="n">CPM</th><th>Estado</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card reveal">
+      <h3>El embudo de Spadental, con honestidad</h3>
+      <div class="hint">La etapa punteada no se mide todavía. Es el hueco que septiembre cierra.</div>
+      <div class="funnel">
+        <div class="fstep"><div class="fl">Leads de WhatsApp<small>medido por Meta</small></div><div class="fbar" data-w="100">922 conversaciones</div></div>
+        <div class="fstep"><div class="fl">Citas agendadas<small>no se cuenta — desde el 1/09 se mide a diario</small></div><div class="fbar gris" data-w="62">sin dato</div></div>
+        <div class="fstep"><div class="fl">Pacientes en sillón<small>atribuibles con criterio verificable</small></div><div class="fbar tinta" data-w="30">27 pacientes · Bs 112 c/u</div></div>
+        <div class="fstep"><div class="fl">Ingreso en el mes<small>solo lo que ya pagaron en agosto</small></div><div class="fbar oro" data-w="44">Bs 7.050 · 2,3× la inversión</div></div>
+      </div>
+      <div class="nota" style="margin-bottom:0"><b class="t">La pauta no es el problema.</b>Bs 3,28 por lead es un costo excelente. La fuga está entre la conversación y el sillón — y no se arregla lo que no se mide.</div>
+    </div>
+    <div class="card reveal">
+      <h3>Canal registrado de los 39 pacientes nuevos</h3>
+      <div class="hint">Recepción dejó 26 sin canal — y al menos 5 de esos pagaron el precio de promo que solo existe en los anuncios. El registro completo es meta de septiembre.</div>
+      <table>
+        <thead><tr><th>Canal</th><th class="n">Pacientes</th><th class="n">Dejaron</th></tr></thead>
+        <tbody>
+          <tr><td>Sin canal anotado<span class="ibar gris"><i data-w="100"></i></span></td><td class="n">26</td><td class="n num">Bs 7.800</td></tr>
+          <tr><td>Facebook<span class="ibar"><i data-w="17"></i></span></td><td class="n">4</td><td class="n num">Bs 1.330</td></tr>
+          <tr><td>Pasó por el local<span class="ibar"><i data-w="15"></i></span></td><td class="n">5</td><td class="n num">Bs 1.190</td></tr>
+          <tr><td>TikTok<span class="ibar"><i data-w="4"></i></span></td><td class="n">2</td><td class="n num">Bs 280</td></tr>
+          <tr><td>Instagram<span class="ibar"><i data-w="2"></i></span></td><td class="n">1</td><td class="n num">Bs 180</td></tr>
+          <tr><td>Recomendación<span class="ibar"><i data-w="1"></i></span></td><td class="n">1</td><td class="n num">Bs 30</td></tr>
+        </tbody>
+      </table>
+      <div class="nota grisn" style="margin-bottom:0"><b class="t">Cuadre entre clínicas</b>J. S. (20/08, Bs 380) se atendió en Cosmetic pero es paciente de Ezequiel: cuenta acá, no en Cosmetic.</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="cohorte">
+  <div class="shead"><span class="n">05</span><h2>La cohorte: qué volvió de julio</h2><div class="mini">Pacientes con iniciales por privacidad — el detalle nominal vive en el Excel interno.</div></div>
+  <p class="sintro">De los 113 pacientes de julio, <b>15 volvieron en agosto (13,3%)</b> — el mes anterior había vuelto el 8,4%. Dejaron Bs 6.497 en julio y <b>Bs 12.620 en agosto</b>. Tres consultas de Bs 30 se convirtieron en Bs 3.810. Por eso el ingreso del primer día es el piso del paciente, nunca su valor.</p>
+  <div class="grid g2">
+    <div class="card reveal">
+      <h3>Los 15, uno por uno</h3>
+      <table id="tCoh"><thead><tr><th>Paciente</th><th>Era</th><th class="n">Julio</th><th class="n">Agosto</th><th class="n">60 días</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div>
+      <div class="card reveal">
+        <h3>Primer mes vs 60 días</h3>
+        <div class="chart bajo"><canvas id="chLtv"></canvas></div>
+      </div>
+      <div class="nota roja reveal"><b class="t">La palanca más grande no es un anuncio</b>Hay <b>98 de julio y 66 de agosto que no volvieron</b>. Pasar del 13% al 20% de retorno ≈ 8 pacientes más al mes ≈ <b>Bs 10.000 sin gastar en pauta</b> (orden de magnitud, muestra de 15) — más que todo lo que dejó la pauta en agosto. El plan: 3 mensajes de WhatsApp, primero los 17 con proforma abierta, enviados por la doctora que atendió, sin descuento. Regla de corte: si de los primeros 80 responden menos de 10, se rehace el guion.</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="sept">
+  <div class="shead"><span class="n">06</span><h2>Septiembre: plan y proyección</h2><div class="mini">Proyección declarada como proyección — el cálculo está a la vista.</div></div>
+  <p class="sintro">Misma inversión que agosto (<b>Bs 6.480</b>). El piso es repetir agosto. El escenario esperado depende de una sola cosa: <b>una mañana de grabación, 4 videos en total</b> (carillas y capilar para Cosmetic; limpieza Bs 230 y valoración para Spadental), con la doctora que se defina para cámara. A los conjuntos nuevos se les asume un costo peor que el que lograron los videos anteriores.</p>
+  <div class="grid g2">
+    <div class="card reveal">
+      <h3>Leads: real y proyectado</h3>
+      <div class="chart"><canvas id="chProy"></canvas></div>
+    </div>
+    <div class="card reveal">
+      <h3>Las metas con las que se leerá el mes</h3>
+      <table>
+        <thead><tr><th>Indicador</th><th class="n">Agosto</th><th class="n">Meta</th></tr></thead>
+        <tbody>
+          <tr><td>Retorno de pacientes del mes anterior</td><td class="n">13%</td><td class="n">≥ 20%</td></tr>
+          <tr><td>Facturación (sin aguinaldo, sostener es crecer)</td><td class="n num">Bs 41.095</td><td class="n num">≥ Bs 41.000</td></tr>
+          <tr><td>Ticket por atención</td><td class="n num">Bs 285</td><td class="n num">≥ Bs 285</td></tr>
+          <tr><td>2ª quincena vs 1ª</td><td class="n">−36%</td><td class="n">≥ −15%</td></tr>
+          <tr><td>Costo por lead Spa / Cosmetic</td><td class="n">3,28 / 4,89</td><td class="n">≤ 3,50 / ≤ 4,50</td></tr>
+          <tr><td>Pacientes atribuibles a pauta</td><td class="n">27</td><td class="n">≥ 30</td></tr>
+          <tr><td>Proformas cerradas</td><td class="n">—</td><td class="n">≥ 30% de Bs 17.510</td></tr>
+          <tr><td>Conversación a cita agendada</td><td class="n">no medido</td><td class="n">medido a diario</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid g3">
+    <div class="card papel reveal"><h3 style="color:var(--lima-tinta)">Spadental</h3><div class="hint">Bs 100/día</div><p style="font-size:13.5px">Blanqueamiento (40) y placas (30) intactos. Limpieza y valoración vuelven solo con video (30 guardados hasta entonces). Cero retargeting, cero descuentos. Tarjeta con saldo el día 25.</p></div>
+    <div class="card papel reveal"><h3 style="color:var(--oro-tinta)">Cosmetic</h3><div class="hint">~Bs 115/día</div><p style="font-size:13.5px">Implantes y 3 Luces intactos. Video de carillas primero, capilar después — capilar no se reenciende sin video nuevo. Urubó se queda. Píxel de agendamiento antes de CBO. Pedido: libro de pacientes cruzado.</p></div>
+    <div class="card papel reveal"><h3>Fuera de la pauta</h3><div class="hint">costo Bs 0</div><p style="font-size:13.5px">Reactivación WhatsApp a los 164. Citas y asistencia contadas a diario. Canal registrado en el 100% de nuevos. Cargar en la app las 9 atenciones que faltan de agosto.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="salv">
+  <div class="shead"><span class="n">07</span><h2>Salvedades — la parte que igual se dice</h2></div>
+  <div class="grid g2e">
+    <div class="card reveal"><ul style="margin-left:18px;font-size:14px;line-height:1.7">
+      <li><b>+44% es un rango de +36% a +44%:</b> julio viene de la app, agosto de los cuadernos, y la app registra ~6% menos.</li>
+      <li><b>Retención 8% → 13%:</b> dirección correcta, muestra de 15. Dos pacientes mueven el número.</li>
+      <li><b>Bs 1.274 por paciente que vuelve</b> describe a los que volvieron; no es lo que dejará cualquier reactivado.</li>
+      <li><b>Los leads maduran 7 días:</b> agosto (922 + 712) va a subir unos puntos; a julio le pasó (656 → 700). Cierre fechado 01/09.</li>
+    </ul></div>
+    <div class="card reveal"><ul style="margin-left:18px;font-size:14px;line-height:1.7">
+      <li><b>Cosmetic se mide por mensajes, no por sillón:</b> falta el libro de pacientes cruzado.</li>
+      <li><b>27 atribuibles es criterio, no censo:</b> 22 por precio de promo + 5 con canal anotado. Excluyendo las 4 marcadas antiguas, el costo sube a Bs 131 y la conclusión no cambia.</li>
+      <li><b>Es facturación de doctoras, no margen:</b> no incluye lo de la Dra. Mirna ni laboratorio.</li>
+      <li><b>Privacidad:</b> esta versión pública usa iniciales; los nombres completos viven en el Excel interno.</li>
+    </ul></div>
+  </div>
+</section>
+
+<div class="foot">
+  <span class="marca">AKME ESTUDIO</span> · Eduardo Añez × Gabriela Parada · Santa Cruz de la Sierra · 1 de septiembre de 2026<br>
+  Fuentes: Informe_Spadental_Agosto_v51.xlsx (cuadernos + registro de recepción) · base "Spadental · Pacientes" de la app (historial enero-julio) · API de Meta, cuentas de Spadental y Cosmetic, consultas del 31/08 y 01/09. Las proyecciones se declaran como proyecciones con el cálculo a la vista.
+</div>
+
+<script>
+const $=q=>document.querySelector(q), $$=q=>[...document.querySelectorAll(q)];
+const LIMA='#AFCE0E', ORO='#CBA135', GRIS='#5B5B5B', GRIS2='rgba(91,91,91,.28)', ROJO='#C43D3D', TINTA='#0A0A0A';
+if(window.Chart){Chart.defaults.color=GRIS; Chart.defaults.font.family='Inter'; Chart.defaults.borderColor='rgba(231,231,227,.9)';}
+const bs=n=>'Bs '+Math.round(n).toLocaleString('es-BO');
+
+addEventListener('scroll',()=>{
+  const h=document.documentElement; $('#prog').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  let cur=''; $$('.sec').forEach(s=>{ if(s.getBoundingClientRect().top<130) cur=s.id; });
+  $$('.nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur));
+},{passive:true});
+
+(function(){
+  const els=$$('[data-count]');
+  const final=el=>(el.dataset.pre||'')+(+el.dataset.count).toLocaleString('es-BO')+(el.dataset.suf||'');
+  const fijar=()=>els.forEach(el=>el.textContent=final(el));
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce||!window.requestAnimationFrame||document.visibilityState==='hidden'){ fijar(); return; }
+  const red=setTimeout(fijar,2600); // red de seguridad: si la animación no corre, quedan los valores reales
+  els.forEach(el=>{
+    const end=+el.dataset.count, pre=el.dataset.pre||'', suf=el.dataset.suf||''; let t0=null;
+    const step=ts=>{ if(!t0)t0=ts; const p=Math.min((ts-t0)/1100,1), e=1-Math.pow(1-p,3);
+      el.textContent=pre+Math.round(end*e).toLocaleString('es-BO')+suf;
+      if(p<1) requestAnimationFrame(step); else clearTimeout(red); };
+    setTimeout(()=>requestAnimationFrame(step),300);
+  });
+})();
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return; e.target.classList.add('vis');
+  e.target.querySelectorAll('.ibar i,.fbar').forEach(i=>{ if(i.dataset.w) i.style.width=i.dataset.w+'%'; });
+  io.unobserve(e.target);
+}),{threshold:.15});
+$$('.reveal').forEach(el=>io.observe(el));
+
+$$('svg.spark').forEach(sv=>{
+  const d=sv.dataset.spark.split(',').map(Number), bars=sv.dataset.bars, c=sv.dataset.c==='rojo'?ROJO:LIMA;
+  const W=200,H=34,max=Math.max(...d); sv.setAttribute('viewBox','0 0 '+W+' '+H);
+  if(bars){ const bw=W/d.length-8;
+    sv.innerHTML=d.map((v,i)=>'<rect x="'+(i*(bw+8))+'" y="'+(H-v/max*H)+'" width="'+bw+'" height="'+(v/max*H)+'" rx="3" fill="'+(i===d.length-1?c:GRIS2)+'"/>').join('');
+  } else {
+    const pts=d.map((v,i)=>(i/(d.length-1)*W)+','+(H-4-(v/max)*(H-8))).join(' ');
+    sv.innerHTML='<polyline points="'+pts+'" fill="none" stroke="'+c+'" stroke-width="3" stroke-linecap="round"/><circle cx="'+W+'" cy="'+(H-4-(d[d.length-1]/max)*(H-8))+'" r="4" fill="'+c+'"/>';
+  }
+});
+
+const yr={m:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago'],v:[82408,57010,65290,42103,45245,31461,28593,41095],at:[357,199,133,152,149,100,142,144],t:[231,286,491,277,304,315,201,285]};
+const docs={n:['Kathe','Ximena','Shirley','Brenda','Yanaina'],jul:[7517,10001,4830,5035,1210],ago:[18275,12560,6750,2880,630],at:[50,48,26,18,2]};
+const sem={l:['Sem 1 (1-7)','Sem 2 (8-14)','Sem 3 (15-21)','Sem 4 (22-28)','Sem 5 (29-31)'],
+  Kathe:[6515,5230,4020,1810,700],Ximena:[4250,2640,2500,2170,1000],Shirley:[510,1980,1480,2080,700],Brenda:[720,300,1370,210,280],Yanaina:[0,630,0,0,0]};
+const proc=[['Restauraciones',29,10060],['Limpiezas',37,6310],['Endodoncias',10,4875],['Placas',5,3590],['Coronas',4,3170],['Blanqueamientos',17,2570],['Extracciones',9,2540],['Consultas',74,2220],['Otros',32,5760]];
+const spaAds=[['Blanqueamiento · video',982,432,2.27,'ok','Activo'],['Placas acrílicas · propio',374,132,2.83,'ok','Activo'],['Placas (12-20/08)',306,100,3.06,'off','Migrado'],['Archivados del mes',1076,222,4.85,'off','Archivados'],['Consulta 30 · limpieza imagen · retargeting',286,36,7.96,'bad','No vuelven así']];
+const cosAds=[['Implantes',937,286,3.28,17.07,'ok','Activo · motor'],['Blanqueamiento 3 Luces',425,110,3.86,21.36,'ok','Activo'],['Limpieza-Carillas',1042,159,6.56,31.68,'bad','Video urgente'],['Capilar',793,122,6.50,22.04,'off','Pausado 27/08'],['Diseño Sonrisa',285,35,8.15,33.46,'off','Pausado 11/08']];
+const coh=[['R. A.','NUEVO',30,3310],['M. M.','antigua',300,2200],['J. C. A.','antiguo',1100,2020],['M. E. R.','antigua',357,1210],['G. Ch.','NUEVA',200,780],['L. G.','NUEVA',1000,730],['M. Mz.','NUEVO',540,590],['A. B.','antiguo',350,350],['C. A.','NUEVO',120,270],['R. V.','NUEVO',30,250],['M. Á.','NUEVO',30,250],['M. L.','NUEVA',580,200],['E. D.','NUEVA',770,170],['J. L. A.','NUEVO',390,150],['A. H.','NUEVA',700,140]];
+const gastoDia=[133.61,171.96,157.32,138.90,100.87,115.76,3.13,134.87,103.16,115.09,78.02,92.32,97.86,104.27,79.26,107.63,96.84,95.53,102.93,84.23,120.64,76.57,104.57,90.20,64.04,81.90,48.92,65.38,94.35,97.51,66.85];
+
+function mk(id,fn){ if(!window.Chart) return; const el=document.getElementById(id); const o=new IntersectionObserver(es=>{ if(es[0].isIntersecting){ try{fn()}catch(e){console.error(id,e)} o.disconnect(); } },{threshold:.2}); o.observe(el); }
+
+mk('chYear',()=>new Chart(document.getElementById('chYear'),{type:'bar',data:{labels:yr.m,datasets:[
+ {type:'line',label:'Ticket',data:yr.t,yAxisID:'y1',borderColor:TINTA,backgroundColor:TINTA,tension:.35,pointRadius:3,borderWidth:2},
+ {label:'Facturación',data:yr.v,backgroundColor:yr.m.map((_,i)=>i===7?LIMA:GRIS2),borderRadius:7}]},
+ options:{maintainAspectRatio:false,animation:{duration:900},plugins:{legend:{labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='y1'?'Bs '+c.parsed.y:bs(c.parsed.y))}}},
+ scales:{y:{ticks:{callback:v=>'Bs '+(v/1000)+'k'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>'Bs '+v}}}}}));
+
+mk('chSem',()=>new Chart(document.getElementById('chSem'),{type:'bar',data:{labels:sem.l,datasets:[
+ {label:'Kathe',data:sem.Kathe,backgroundColor:LIMA,stack:'s',borderRadius:4},
+ {label:'Ximena',data:sem.Ximena,backgroundColor:'#7E9A10',stack:'s',borderRadius:4},
+ {label:'Shirley',data:sem.Shirley,backgroundColor:'#C9DF6A',stack:'s',borderRadius:4},
+ {label:'Brenda',data:sem.Brenda,backgroundColor:GRIS,stack:'s',borderRadius:4},
+ {label:'Yanaina',data:sem.Yanaina,backgroundColor:'#BDBDB8',stack:'s',borderRadius:4}]},
+ options:{maintainAspectRatio:false,animation:{duration:900},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+bs(c.parsed.y),footer:i=>'Semana: '+bs(i.reduce((a,c)=>a+c.parsed.y,0))}},legend:{labels:{boxWidth:12}}},
+ scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>'Bs '+(v/1000)+'k'}}}}}));
+
+mk('chCpl',()=>new Chart(document.getElementById('chCpl'),{type:'bar',data:{labels:['Spadental','Cosmetic'],datasets:[
+ {label:'Julio',data:[5.52,9.36],backgroundColor:GRIS2,borderRadius:6},
+ {label:'Agosto',data:[3.28,4.89],backgroundColor:[LIMA,ORO],borderRadius:6}]},
+ options:{maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': Bs '+c.parsed.y.toFixed(2)}}},scales:{y:{ticks:{callback:v=>'Bs '+v}}}}}));
+
+mk('chLeads',()=>new Chart(document.getElementById('chLeads'),{type:'bar',data:{labels:['Julio','Agosto'],datasets:[
+ {label:'Spadental',data:[700,922],backgroundColor:LIMA,stack:'s',borderRadius:5},
+ {label:'Cosmetic',data:[191,712],backgroundColor:ORO,stack:'s',borderRadius:5}]},
+ options:{maintainAspectRatio:false,plugins:{tooltip:{callbacks:{footer:i=>'Total: '+i.reduce((a,c)=>a+c.parsed.y,0)+' leads'}}},scales:{x:{stacked:true},y:{stacked:true}}}}));
+
+mk('chLtv',()=>new Chart(document.getElementById('chLtv'),{type:'bar',data:{labels:['No vuelve (1er mes)','Vuelve (60 días)'],datasets:[{data:[227,1274],backgroundColor:[GRIS2,LIMA],borderRadius:7}]},
+ options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+bs(c.parsed.y)+' por paciente'}}},scales:{y:{ticks:{callback:v=>'Bs '+v}}}}}));
+
+mk('chProy',()=>new Chart(document.getElementById('chProy'),{type:'bar',data:{labels:['Julio real','Agosto real','Sept · piso','Sept · esperado'],datasets:[
+ {label:'Spadental',data:[700,922,850,975],backgroundColor:[LIMA,LIMA,'rgba(175,206,14,.45)','rgba(175,206,14,.8)'],stack:'s',borderRadius:6},
+ {label:'Cosmetic',data:[191,712,710,865],backgroundColor:[ORO,ORO,'rgba(203,161,53,.4)','rgba(203,161,53,.8)'],stack:'s',borderRadius:6}]},
+ options:{maintainAspectRatio:false,plugins:{tooltip:{callbacks:{footer:i=>'Total: '+i.reduce((a,c)=>a+c.parsed.y,0)+' leads'+(i[0].dataIndex>1?' (proyección)':'')}},legend:{labels:{boxWidth:12}}},
+ scales:{x:{stacked:true},y:{stacked:true,title:{display:true,text:'leads'}}}}}));
+
+(function(){
+  const cal=$('#cal'); const dias=['L','M','X','J','V','S','D'];
+  dias.forEach(d=>cal.insertAdjacentHTML('beforeend','<div class="dh">'+d+'</div>'));
+  const primero=5;
+  for(let i=0;i<primero;i++) cal.insertAdjacentHTML('beforeend','<div class="d x"></div>');
+  const max=Math.max.apply(null,gastoDia);
+  gastoDia.forEach((g,i)=>{
+    const dia=i+1, inc=(dia===7||dia===27||dia===28);
+    const a=Math.max(.08,g/max);
+    const bg=inc?('rgba(196,61,61,'+Math.max(.16,a*.85)+')'):('rgba(175,206,14,'+(a*.9)+')');
+    const extra = dia===7?'<span>WhatsApp caído</span>' : (dia===27||dia===28)?'<span>bloqueo</span>':'';
+    cal.insertAdjacentHTML('beforeend','<div class="d" style="background:'+bg+'" title="'+dia+'/08 · gasto Bs '+g.toFixed(2)+'"><b>'+dia+'</b><span class="num">Bs '+Math.round(g)+'</span>'+extra+'</div>');
+  });
+})();
+
+function fill(sel,rows){$(sel).innerHTML=rows.join('')}
+let prev=null;
+fill('#tYear tbody',yr.m.map((m,i)=>{const mo=prev?((yr.v[i]/prev-1)*100):null;prev=yr.v[i];
+ return '<tr'+(i===7?' style="font-weight:800"':'')+'><td>'+m+(i===7?' <span class="pill ok">este informe</span>':'')+'</td><td class="n num">'+bs(yr.v[i])+'</td><td class="n num">'+yr.at[i]+'</td><td class="n num">'+bs(yr.t[i])+'</td><td class="n num">'+(mo===null?'—':((mo>=0?'▲ ':'▼ ')+Math.abs(mo).toFixed(0)+'%'))+'</td></tr>'}));
+fill('#tDocs tbody',docs.n.map((n,i)=>{const mo=(docs.ago[i]/docs.jul[i]-1)*100;
+ return '<tr><td>Dra. '+n+'<span class="ibar"><i data-w="'+(docs.ago[i]/18275*100)+'"></i></span></td><td class="n num">'+bs(docs.jul[i])+'</td><td class="n num">'+bs(docs.ago[i])+'</td><td class="n num" data-v="'+mo+'"><span class="pill '+(mo>=0?'ok':'bad')+'">'+(mo>=0?'▲':'▼')+' '+Math.abs(mo).toFixed(0)+'%</span></td><td class="n num">'+bs(docs.ago[i]/docs.at[i])+'</td></tr>'})
+ .concat(['<tr class="tot"><td>Total</td><td class="n num">'+bs(28593)+'</td><td class="n num">'+bs(41095)+'</td><td class="n"><span class="pill ok">▲ 44%</span></td><td class="n num">'+bs(285)+'</td></tr>']));
+const maxP=10060;
+fill('#tProc tbody',proc.map(p=>'<tr><td>'+p[0]+'<span class="ibar"><i data-w="'+(p[2]/maxP*100)+'"></i></span></td><td class="n num">'+p[1]+'</td><td class="n num" data-v="'+p[2]+'">'+bs(p[2])+'</td><td class="n num">'+(p[2]/41095*100).toFixed(0)+'%</td></tr>')
+ .concat(['<tr class="tot"><td>Total</td><td class="n num">217</td><td class="n num">'+bs(41095)+'</td><td class="n num">100%</td></tr>']));
+fill('#tSpa tbody',spaAds.map(a=>'<tr><td>'+a[0]+'<span class="ibar"><i data-w="'+(a[1]/1076*100)+'"></i></span></td><td class="n num">'+bs(a[1])+'</td><td class="n num">'+a[2]+'</td><td class="n num"><b>Bs '+a[3].toFixed(2)+'</b></td><td><span class="pill '+a[4]+'">'+a[5]+'</span></td></tr>')
+ .concat(['<tr class="tot"><td>Total (cuadra con la cuenta)</td><td class="n num">'+bs(3024)+'</td><td class="n num">922</td><td class="n num"><b>Bs 3,28</b></td><td></td></tr>']));
+fill('#tCos tbody',cosAds.map(a=>'<tr><td>'+a[0]+'<span class="ibar oro"><i data-w="'+(a[1]/1042*100)+'"></i></span></td><td class="n num">'+bs(a[1])+'</td><td class="n num">'+a[2]+'</td><td class="n num"><b>Bs '+a[3].toFixed(2)+'</b></td><td class="n num">'+a[4].toFixed(0)+'</td><td><span class="pill '+a[5]+'">'+a[6]+'</span></td></tr>')
+ .concat(['<tr class="tot"><td>Total</td><td class="n num">'+bs(3483)+'</td><td class="n num">712</td><td class="n num"><b>Bs 4,89</b></td><td class="n"></td><td></td></tr>']));
+fill('#tCoh tbody',coh.map(c=>'<tr><td>'+c[0]+'</td><td>'+c[1]+'</td><td class="n num">'+bs(c[2])+'</td><td class="n num"><b>'+bs(c[3])+'</b></td><td class="n num">'+bs(c[2]+c[3])+'</td></tr>')
+ .concat(['<tr class="tot"><td>15 pacientes</td><td>11 nuevos</td><td class="n num">'+bs(6497)+'</td><td class="n num">'+bs(12620)+'</td><td class="n num">'+bs(19117)+'</td></tr>']));
+
+$$('table').forEach(tb=>tb.querySelectorAll('th').forEach((th,ci)=>th.addEventListener('click',()=>{
+  const body=tb.tBodies[0]; if(!body)return;
+  const rows=[...body.rows].filter(r=>!r.classList.contains('tot')); const tot=[...body.rows].find(r=>r.classList.contains('tot'));
+  const dir=th.dataset.d=th.dataset.d==='a'?'d':'a';
+  rows.sort((a,b)=>{
+    const ca=a.cells[ci], cb=b.cells[ci];
+    const va=(ca&&ca.dataset.v)?ca.dataset.v:((ca?ca.textContent:'').replace(/[^\d,.-]/g,'').replace(',','.'));
+    const vb=(cb&&cb.dataset.v)?cb.dataset.v:((cb?cb.textContent:'').replace(/[^\d,.-]/g,'').replace(',','.'));
+    const na=parseFloat(va),nb=parseFloat(vb);
+    if(!isNaN(na)&&!isNaN(nb))return dir==='a'?na-nb:nb-na;
+    return dir==='a'?(ca?ca.textContent:'').localeCompare(cb?cb.textContent:''):(cb?cb.textContent:'').localeCompare(ca?ca.textContent:'');
+  });
+  rows.forEach(r=>body.appendChild(r)); if(tot)body.appendChild(tot);
+  body.querySelectorAll('.ibar i').forEach(i=>{if(i.dataset.w)i.style.width=i.dataset.w+'%';});
+})));
+</script>
+</body>
+</html>
