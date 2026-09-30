@@ -1878,8 +1878,16 @@ function flushQueue(){
 function pullCfg(){
   if(!CONNECTED)return Promise.resolve(false);
   return api('cfgGet').then(function(r){
-    if(r&&r.ok&&r.cfg&&aplicarCfgServidor(r.cfg)){reintentarClaveEnEspera(); return true}
-    return false}).catch(function(){CFG_SIN_RESPUESTA=true; return false})}
+    if(!r||!r.ok)return false;
+    /* El servidor contesto: lo que tenga (o no tenga) ya esta aca. Un
+       consultorio recien conectado no tiene config guardada todavia y el
+       servidor devuelve cfg vacia; sin esta marca, una clave equivocada
+       quedaba en "sincronizando" para siempre en vez de decir que es
+       incorrecta. */
+    var aplicada=!!(r.cfg&&aplicarCfgServidor(r.cfg));
+    CFG_DEL_SERVIDOR=true;
+    reintentarClaveEnEspera();
+    return aplicada}).catch(function(){CFG_SIN_RESPUESTA=true; return false})}
 
 function reintentarClaveEnEspera(){
   if(!CLAVE_EN_ESPERA)return;
@@ -1898,7 +1906,9 @@ function pullServer(){
         var m={};
         r.pacientes.forEach(function(p){var n=pacNormalize(p),k=keyPac(n.nombre); if(k)m[k]=n});
         PAC=m; savePacLocal()}
-      if(r.cfg){aplicarCfgServidor(r.cfg); reintentarClaveEnEspera()}
+      if(r.cfg)aplicarCfgServidor(r.cfg);
+      CFG_DEL_SERVIDOR=true;          // contesto: aunque no tenga config guardada
+      reintentarClaveEnEspera();
       return true}
     return false}).catch(function(){CFG_SIN_RESPUESTA=true; return false})
 }
@@ -5088,7 +5098,7 @@ function guardarPago(id){
   if(m<=0){toast('Poné un monto',1);return}
   if(!met){toast('Marcá cómo paga',1);
     $('#cp-seg').style.outline='2px solid var(--clay)';
-    setTimeout(function(){$('#cp-seg').style.outline=''},2000); return}
+    setTimeout(function(){var e=$('#cp-seg'); if(e)e.style.outline=''},2000); return}
   r.acuenta=num(r.acuenta)+m; r.saldo=Math.max(0,num(r.total)-num(r.acuenta));
   // el pago nuevo se suma al desglose, no lo pisa
   r.pagos=(r.pagos||[]).slice();
@@ -6263,6 +6273,10 @@ function llenarProfMiDia(){
    bloqueadores de pop-ups la comen. Se pinta en un bloque oculto que
    solo existe para la impresión.
    ===================================================================== */
+/* El logo del membrete impreso (historia, receta, informe). Es de la
+   clínica, no del motor: cada panel pone el suyo. */
+function logoHtml(){return 'SPA<span>DENTAL</span>'}
+
 function edadTexto(nac){
   if(!nac)return '';
   var e=edadDe(nac);
@@ -6365,7 +6379,7 @@ function htmlHistoria(nombre){
   return '<div class="hc-cab">'+
       '<div class="hc-marca">'+
         '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
-        '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
+        '<div><div class="hc-logo">'+logoHtml()+'</div>'+
         '<div class="hc-sub">Dra. Mirna Veizaga · Odontología integral</div></div>'+
       '</div>'+
       '<div class="hc-fecha">Historia clínica<br><b>'+fmtF(hoy)+'</b></div>'+
@@ -6641,7 +6655,7 @@ function imprimirReceta(nombre){
   $('#print-area').innerHTML=
     '<div class="hc-cab"><div class="hc-marca">'+
       '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
-      '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
+      '<div><div class="hc-logo">'+logoHtml()+'</div>'+
       '<div class="hc-sub">'+esc(prof||'Dra. Mirna Veizaga')+' · Odontología integral</div></div></div>'+
       '<div class="hc-fecha">Indicaciones<br><b>'+fmtF(hoyISO())+'</b></div></div>'+
     '<table class="hc-datos">'+
@@ -6741,7 +6755,7 @@ function imprimirInforme(){
   $('#print-area').innerHTML=
     '<div class="hc-cab"><div class="hc-marca">'+
       '<svg class="hc-corona" viewBox="0 0 120 92"><use href="#corona"/></svg>'+
-      '<div><div class="hc-logo">SPA<span>DENTAL</span></div>'+
+      '<div><div class="hc-logo">'+logoHtml()+'</div>'+
       '<div class="hc-sub">Dra. Mirna Veizaga · Odontología integral</div></div></div>'+
       '<div class="hc-fecha">Informe mensual<br><b>'+mesLabel(ym)+'</b></div></div>'+
 
