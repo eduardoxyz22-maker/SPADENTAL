@@ -11,12 +11,13 @@ guarda en su propia hoja de Google y en su propio espacio del navegador.
 
 | Quién | Clave inicial | Qué abre |
 |---|---|---|
-| Recepción (Cecilia) | `cosmetic2026` | Cargar atenciones, agenda, recordatorios |
-| Dueña (Dra. Mirna) | `mirnacosmetic2026` | Todo: caja, panel, liquidación, ajustes |
-| Cada doctora | *sin clave todavía* | Su propia agenda y sus atenciones |
+| Recepción (Cecilia) | `cosmetic2026` | Todo: atenciones, agenda, caja, panel, liquidación, ajustes |
+| Dueña (Dra. Mirna) | `mirnacosmetic2026` | Todo, igual que recepción |
+| Cada doctora (Brenda, Shirley) | *sin clave todavía* | Solo lo suyo: su agenda, sus atenciones y sus cobros. Sin caja ni panel |
 
-Las tres se cambian en **Ajustes** entrando como dueña. Las claves de las
-doctoras se asignan ahí mismo (*Claves de las doctoras*).
+Las tres se cambian en **Ajustes**. Las claves de las doctoras se asignan
+ahí mismo (*Claves de las doctoras*). Ojo: la clave de recepción abre todo,
+así que no se les da a las doctoras; ellas entran con la suya.
 
 ## Conectarlo a Google (10 minutos, una sola vez)
 
