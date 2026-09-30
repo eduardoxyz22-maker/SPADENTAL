@@ -1744,9 +1744,9 @@ function loadCfg(){try{var c=JSON.parse(localStorage.getItem(K_CFG));if(c&&c.pre
    nada que el consultorio haya editado a mano. */
 function migrarCfg(c){
   var antes=c.v||0;
-  // v2: se sumaron las otras doctoras. v3: apareció la Dra. Yanaina en los
-  // cuadernos. Solo se aplica si la lista seguía siendo la de fábrica
-  // anterior (o sea, si nadie la tocó a mano).
+  // v2 y v3 renovaron la lista de doctoras en el panel original. Cosmetic
+  // arrancó ya en v4, así que acá no cambian nada: quedan para que el motor
+  // sea el mismo en los dos paneles.
   if(!c.v&&JSON.stringify(c.prof)===JSON.stringify(PROF_V1))c.prof=PROF_BASE.slice();
   if(c.v<3&&JSON.stringify(c.prof)===JSON.stringify(PROF_V2))c.prof=PROF_BASE.slice();
   /* v4: los precios ganaron el costo de laboratorio. Los que ya estaban

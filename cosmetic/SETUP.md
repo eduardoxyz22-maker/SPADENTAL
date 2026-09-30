@@ -45,21 +45,16 @@ y el celular vean lo mismo:
 
    Autorizá la primera vez (**Configuración avanzada → Ir a … → Permitir**) y
    copiá la **URL de la aplicación web** (termina en `/exec`).
-4. **Pegar la URL en el panel.** En `cosmetic/pacientes.html`, cerca del
-   principio, cambiá
+4. **La URL ya está pegada en el panel.** `cosmetic/pacientes.html` viene
+   con la URL `/exec` del Web App de Cosmetic cargada, cerca del principio:
 
    ```js
-   var SHEETS_URL = '';
+   var SHEETS_URL = 'https://script.google.com/macros/s/…/exec';
    ```
 
-   por
-
-   ```js
-   var SHEETS_URL = 'https://script.google.com/macros/s/TU-URL-AQUI/exec';
-   ```
-
-   Guardá y subí el archivo. Al abrirlo tiene que decir **🟢 Conectado a la
-   hoja de Google**.
+   Solo hay que tocarla si se vuelve a crear la implementación (paso 3) y
+   Google entrega una URL nueva: se reemplaza, se guarda y se sube el archivo.
+   Al abrir el panel tiene que decir **🟢 Conectado a la hoja de Google**.
 
 ## Cómo comprobar que quedó bien
 
