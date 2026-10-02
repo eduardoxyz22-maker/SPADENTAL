@@ -1,3 +1,15 @@
+# Actualización funcional — 2 de octubre de 2026
+
+Las reglas nuevas de cobros, identidad y restauración se documentan en [COORDINACION.md](COORDINACION.md) y prevalecen sobre la descripción histórica de abajo.
+
+- Cobros posteriores: usar **Registrar pago**. Caja y reportes contables los ubican en su fecha de pago; la ficha mantiene el acumulado. Los cobros antiguos sin fecha se señalan para conciliación y no se migran.
+- Homónimos: se bloquea asociar CI distintos al mismo nombre. Los nombres existentes sin CI único requieren revisión; no se separan fichas automáticamente.
+- Restauración: solo respaldos nuevos identificados con la misma clínica. Los archivos antiguos o de otra clínica se bloquean antes de modificar datos.
+- Una sesión solo se realiza con estado **Atendido**; cancelar/corregir una atención libera su sesión. Las citas derivadas pendientes actualizan su hora y se cancelan al quitar la próxima fecha. El laboratorio en cero se respeta.
+- No cambian accesos, claves ni autenticación; no se despliega Apps Script.
+
+---
+
 # Panel de pacientes · Spadental
 
 `pacientes.html` — una sola página, sin instalar nada, para que el consultorio
@@ -446,3 +458,4 @@ recargar. Se comprobó que pasa **igual con la versión anterior** a estos
 cambios, así que es del navegador de prueba y no del panel; las pruebas
 corren sobre un servidor local para que sean estables.
 - Móvil a 390×844: sin scroll horizontal.
+
