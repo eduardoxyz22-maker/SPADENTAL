@@ -1341,7 +1341,7 @@ body.locked{overflow:hidden}
       <button class="btn sec sm" id="btn-json">⬇ Respaldo JSON</button>
       <button class="btn sec sm" id="btn-import">⬆ Restaurar JSON</button>
       <button class="btn sec sm" id="btn-subir">☁ Subir a la nube lo de este equipo</button>
-      <a class="btn sec sm" href="guia.html" target="_blank" rel="noopener">📖 Guía de uso para el equipo</a>
+      <!-- la guía de uso todavía es solo la de Spadental: no se enlaza desde Cosmetic -->
       <input type="file" id="file-json" accept="application/json,.json" class="sr" style="display:none">
     </div>
   </div>
@@ -1447,6 +1447,12 @@ var CFG_DEL_SERVIDOR=false, CFG_SIN_RESPUESTA=false, CLAVE_EN_ESPERA='';
 /* La clave del consultorio (recepción) y la de la dueña abren TODO: Panel,
    Caja, Excel y montos. Lo restringido es la clave personal de cada doctora. */
 function esAdmin(){return ROL==='admin'||ROL==='equipo'}
+/* Con su clave, una doctora trabaja con lo suyo: sus atenciones, sus
+   pacientes y su plata. Lo de otra doctora no se ve ni se toca. */
+function esMia(r){return !esDoctora()||!r||r.profesional===PROF_ACTUAL||r.profesional==='Por definir'}
+function datosVisibles(){return esDoctora()?DATA.filter(esMia):DATA}
+function pacientesMios(){var s={}; datosVisibles().forEach(function(r){var k=keyPac(r.paciente); if(k)s[k]=1}); return s}
+function noEsTuya(){toast('Eso es de otra doctora 🔐',1)}
 function esDoctora(){return ROL==='doctora'}
 
 /* La clave personal de cada doctora, guardada como hash en la config
@@ -1727,7 +1733,18 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
 /* escapa un texto para meterlo dentro de un onclick="fn('...')" del HTML */
 function jss(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")
   .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function num(v){var n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0}
+/* Montos como se escriben acá: "1.500" es mil quinientos (el panel muestra
+   los miles con punto) y "1.500,50" o "1500,5" llevan coma decimal. Antes
+   "1.500" se guardaba como 1,5. Lo que ya es número pasa tal cual. */
+function num(v){
+  if(typeof v==='number')return isFinite(v)?v:0;
+  var t=String(v==null?'':v).replace(/[^0-9.,\-]/g,'');
+  if(t.indexOf(',')>=0&&t.indexOf('.')>=0){
+    if(t.lastIndexOf(',')>t.lastIndexOf('.'))t=t.replace(/\./g,'').replace(',','.');
+    else t=t.replace(/,/g,'')}
+  else if(t.indexOf(',')>=0)t=/^-?\d{1,3}(,\d{3})+$/.test(t)?t.replace(/,/g,''):t.replace(',','.');
+  else if(/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');
+  var n=parseFloat(t);return isFinite(n)?n:0}
 function bs(n){return 'Bs '+Math.round(num(n)).toLocaleString('es-BO')}
 function n0(n){return Math.round(num(n)).toLocaleString('es-BO')}
 function uid(){return 'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -2432,16 +2449,16 @@ function refreshNro(){
 
 function fillDatalists(){
   var pac={},prof={};
-  DATA.forEach(function(r){if(r.paciente)pac[r.paciente]=1;if(r.profesional)prof[r.profesional]=1});
+  DATA.forEach(function(r){if(r.paciente&&esMia(r))pac[r.paciente]=1;if(r.profesional)prof[r.profesional]=1});
   CFG.prof.forEach(function(p){prof[p]=1});
   $('#dl-pac').innerHTML=Object.keys(pac).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('');
   $('#dl-prof').innerHTML='<option value="Por definir">'+
     Object.keys(prof).sort().map(function(p){return '<option value="'+esc(p)+'">'}).join('')}
 
 function autoPaciente(){
-  var n=$('#f-paciente').value.trim().toLowerCase(); if(!n)return;
+  var n=keyPac($('#f-paciente').value); if(!n)return;
   if(identidadAmbigua(n)){toast(AVISO_IDENTIDAD,1);return}
-  var prev=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n})
+  var prev=DATA.filter(function(r){return keyPac(r.paciente)===n})
                .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   if(!prev)return;
   if(!$('#f-cel').value)$('#f-cel').value=prev.celular||'';
@@ -2451,8 +2468,8 @@ function autoPaciente(){
   if(ficha.nac&&!$('#f-nac').value)$('#f-nac').value=ficha.nac;
   var r=$$('#seg-tipo input').filter(function(i){return i.value==='Recurrente'})[0]; if(r)r.checked=true;
   var c=$$('#seg-canal input').filter(function(i){return i.value===prev.canal})[0]; if(c&&!getRadio('canal'))c.checked=true;
-  var nv=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n}).length;
-  var deuda=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n})
+  var nv=DATA.filter(function(r){return keyPac(r.paciente)===n}).length;
+  var deuda=DATA.filter(function(r){return keyPac(r.paciente)===n})
                 .reduce(function(a,r){return a+num(r.saldo)},0);
   toast('Paciente conocido · '+nv+' visita'+(nv===1?'':'s')+' · última '+fmtF(prev.fecha)+
         (deuda>0?' · debe '+bs(deuda):''))}
@@ -2559,10 +2576,14 @@ function loadForm(r){
   // (típico de una cita que recién se está atendiendo), se deja que se calcule
   // solo a medida que se agregan servicios.
   $('#f-total').value=r.total||'';
-  if(num(r.total)>0)$('#f-total').dataset.touched='1'; else delete $('#f-total').dataset.touched;
+  /* El total queda fijo solo si alguien lo cambió a mano (un descuento). Si
+     coincide con los servicios, se recalcula al editarlos: antes quedaba fijo
+     siempre y agregar un servicio no cambiaba el total. */
+  if(num(r.total)>0&&Math.abs(num(r.total)-totalSrv())>0.01)$('#f-total').dataset.touched='1';
+  else delete $('#f-total').dataset.touched;
   $('#f-acuenta').value=r.acuenta||'';
   $('#f-saldo').value=r.saldo||'';
-  if(num(r.saldo)>0)$('#f-saldo').dataset.touched='1'; else delete $('#f-saldo').dataset.touched;
+  delete $('#f-saldo').dataset.touched;   // el saldo sale de total − a cuenta
   var ps=r.pagos&&r.pagos.length?r.pagos:[];
   METODOS.forEach(function(k){$(MX[k]).value=''});
   if(ps.length>1){
@@ -2626,9 +2647,53 @@ function validar(){
   if(a>0&&m==='Mixto'&&Math.abs(sumaPagos(leerPagos())-a)>0.01){bad.push('el desglose del pago no cuadra');
     $('#wrap-mixto').style.outline='2px solid var(--clay)';
     setTimeout(function(){$('#wrap-mixto').style.outline=''},2200)}
+  /* un saldo negativo escondía la deuda real de otra visita del paciente */
+  var tt=num($('#f-total').value), ss=num($('#f-saldo').value);
+  if(a>tt+0.01){bad.push('lo cobrado ('+bs(a)+') es más que el total ('+bs(tt)+')');
+    $('#f-total').classList.add('bad')}
+  else if(ss<-0.001||ss>tt-a+0.01){bad.push('el saldo tiene que estar entre 0 y '+bs(Math.max(0,tt-a)));
+    $('#f-saldo').classList.add('bad')}
   return bad}
 
+/* ---------------------------------------------------------------------
+   UNA SOLA VERSIÓN DE CADA ATENCIÓN
+   Dos equipos abiertos a la vez se pisaban: la pestaña que no se había
+   refrescado mandaba su foto vieja y borraba el pago que otra acababa de
+   registrar, o revivía una atención borrada. Antes de tocar plata o de
+   guardar una edición se trae la versión del servidor.
+   --------------------------------------------------------------------- */
+function hayPendiente(id){return pend().some(function(q){return q&&q.rec&&q.rec.id===id})}
+function traerFresca(id){
+  if(!CONNECTED||hayPendiente(id))return Promise.resolve({local:true});
+  return api('list').then(function(r){
+    var l=r&&r.ok&&(r.registros||r.pedidos);
+    if(!Array.isArray(l))return {local:true};
+    var f=l.filter(function(x){return x&&x.id===id})[0];
+    return f?{fresca:normalize(f)}:{borrada:true}}).catch(function(){return {local:true}})}
+function reemplazarLocal(r){DATA=DATA.map(function(x){return x.id===r.id?r:x}); saveLocal()}
+function avisoBorrada(id){
+  DATA=DATA.filter(function(x){return x.id!==id}); saveLocal(); closeModal();
+  toast('Esa atención fue borrada desde otro equipo. No se guardó nada.',1); refreshAll()}
+function conAtencionFresca(id,fn){
+  traerFresca(id).then(function(res){
+    if(res.borrada){avisoBorrada(id);return}
+    if(res.fresca)reemplazarLocal(res.fresca);
+    fn(DATA.filter(function(x){return x.id===id})[0])})}
+
 function submitAtencion(){
+  var id=EDIT_ID, local=id?DATA.filter(function(x){return x.id===id})[0]:null;
+  if(!local||!CONNECTED)return guardarAtencion();
+  traerFresca(id).then(function(res){
+    if(res.borrada){avisoBorrada(id); clearForm(); return}
+    var f=res.fresca;
+    if(f&&(Math.abs(num(f.acuenta)-num(local.acuenta))>0.001||f.estado!==local.estado||
+        (f.cobrosPosteriores||[]).length!==(local.cobrosPosteriores||[]).length)){
+      reemplazarLocal(f); loadForm(f);
+      toast('Mientras editabas, otro equipo cambió esta atención (un cobro o su estado). Ya está actualizada: revisá y volvé a guardar.',1);
+      return}
+    guardarAtencion()})}
+
+function guardarAtencion(){
   var bad=validar();
   if(bad.length){toast('Falta: '+bad.join(', '),1);return}
   /* El canal no entra en validar() con los demás: merece su propia
@@ -2644,6 +2709,21 @@ function submitAtencion(){
       (num($('#f-acuenta').value)!==num(prev.acuenta)||
        JSON.stringify(agruparPagos(leerPagos()))!==JSON.stringify(agruparPagos(pagosDe(prev))))){
     toast('Esta atención tiene cobros fechados. Usá Registrar pago; para corregir cobros anteriores se necesita conciliación.',1);return}
+  /* el plan vive en la ficha del paciente: cambiarle el nombre a una sesión
+     la dejaba huérfana y el plan seguía bajo el nombre viejo */
+  if(prev&&prev.planId&&keyPac(prev.paciente)!==keyPac($('#f-paciente').value)){
+    toast('Esta atención es una sesión del plan de '+prev.paciente+'. Para corregir el nombre, quitala del plan primero.',1);return}
+  /* una visita que no sucedió no puede quedar con plata cobrada: la caja la
+     sumaba y la liquidación no, y nunca cuadraban */
+  if(getRadio('estado')!=='Atendido'&&num($('#f-acuenta').value)>0){
+    toast('Tiene cobrado '+bs(num($('#f-acuenta').value))+'. Una visita "'+getRadio('estado')+
+      '" no puede quedar con plata: si no vino, primero hay que devolver o pasar ese cobro a otra atención.',1);return}
+  /* la próxima cita también avisa si choca con otra, como al agendar */
+  if($('#f-prox').value&&$('#f-prox-hora').value){
+    var citaPrev=prev?DATA.filter(function(x){return x.citaDe===prev.id&&x.estado==='Agendada'})[0]:null;
+    var profP=$('#f-prof').value.trim();
+    var igual=citaPrev&&citaPrev.fecha===$('#f-prox').value&&citaPrev.hora===$('#f-prox-hora').value&&citaPrev.profesional===profP;
+    if(!igual&&!confirmarChoque($('#f-prox').value,$('#f-prox-hora').value,profP,citaPrev?citaPrev.id:null))return}
   var fecha=$('#f-fecha').value;
   var rec={
     id:EDIT_ID||uid(), clinicaId:CLINICA_ID,
@@ -2705,8 +2785,13 @@ function submitAtencion(){
 
 function borrar(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!esMia(r)){noEsTuya();return}
   if(!confirm('¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?'))return;
   liberarSesionPlan(r);
+  /* la próxima cita que había dejado esta atención ya no tiene sentido */
+  DATA.filter(function(x){return x.citaDe===id&&x.estado==='Agendada'}).forEach(function(x){
+    x.estado='Canceló'; x.resueltaTs=new Date().toISOString();
+    x.obs=(x.obs?x.obs+'\n':'')+'Se borró la atención que la había creado'; persist(x)});
   DATA=DATA.filter(function(x){return x.id!==id}); saveLocal();
   if(CONNECTED){enviar('delete',{id:id})}
   closeModal(); toast('Atención borrada'); refreshAll()}
@@ -2729,8 +2814,8 @@ function renderAgendaPor(){
     return '<label><input type="radio" name="qcanal" value="'+esc(c)+'"><span>'+esc(c)+'</span></label>'}).join('')}
 
 function esPacienteConocido(nombre){
-  var n=String(nombre||'').trim().toLowerCase();
-  return !!n&&DATA.some(function(r){return (r.paciente||'').trim().toLowerCase()===n})}
+  var n=keyPac(nombre);
+  return !!n&&DATA.some(function(r){return keyPac(r.paciente)===n})}
 
 /* ---------- servicios previstos de una cita ----------
    No es un presupuesto ni un cobro: es lo que la recepción anotó que se
@@ -2779,7 +2864,7 @@ function clearCita(){
 
 function autoCita(){
   var nom=$('#q-paciente').value.trim(), n=nom.toLowerCase();
-  var prev=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===n})
+  var prev=DATA.filter(function(r){return keyPac(r.paciente)===n})
                .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   if(prev&&!$('#q-cel').value)$('#q-cel').value=prev.celular||'';
   if(prev&&!$('#q-prof').value)$('#q-prof').value=prev.profesional||'';
@@ -2892,7 +2977,7 @@ function renderCitasProximas(){
   var ym=dia.slice(0,7);
   var delMes=soloAtenciones(DATA).filter(function(r){
     return (r.fecha||'').slice(0,7)===ym&&(!prof||r.profesional===prof)});
-  var pacMes={}; delMes.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)pacMes[k]=1});
+  var pacMes={}; delMes.forEach(function(r){var k=keyPac(r.paciente); if(k)pacMes[k]=1});
   var bsMes=delMes.reduce(function(a,r){return a+num(r.total)},0);
   /* el mismo criterio que el Panel: acá se contaba solo lo que recepción
      marcó, y el mes salía con menos altas de las que hubo */
@@ -2975,11 +3060,34 @@ function notaRapida(nombre){
       '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>');
   var t=$('#nr-txt'); if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}}
 
+/* ---------------------------------------------------------------------
+   LA FICHA MÉDICA NO SE PISA
+   Una pestaña vieja podía borrar una alergia que otro equipo acababa de
+   cargar: se guardaba la ficha entera con lo que esa pestaña conocía.
+   Antes de guardar se compara con el servidor; si cambió, se avisa y se
+   muestra la versión nueva para volver a cargar lo propio encima.
+   --------------------------------------------------------------------- */
+function fichaJSON(p){p=pacNormalize(JSON.parse(JSON.stringify(p||{})));
+  return JSON.stringify({nac:p.nac,med:p.med,planes:p.planes})}
+function conFichaFresca(nombre,reabrir,fn){
+  if(!CONNECTED||pend().some(function(q){return q.action==='pac'&&keyPac(q.rec&&q.rec.nombre)===keyPac(nombre)})){fn();return}
+  var k=keyPac(nombre), antes=PAC[k]?fichaJSON(PAC[k]):fichaJSON({nombre:nombre});
+  api('list').then(function(r){
+    if(!r||!r.ok||!Array.isArray(r.pacientes)){fn();return}
+    var srv=r.pacientes.filter(function(p){return keyPac(p&&p.nombre)===k})[0];
+    var ahora=srv?fichaJSON(srv):fichaJSON({nombre:nombre});
+    if(srv&&ahora!==antes){
+      PAC[k]=pacNormalize(srv); savePacLocal(); closeModal(); reabrir();
+      toast('Otro equipo acababa de cambiar esta ficha. Ya ves la versión nueva: volvé a cargar tu cambio y guardá.',1);return}
+    fn()}).catch(function(){fn()})}
+
 function guardarNotaRapida(nombre){
+  var txt=$('#nr-txt').value.trim();
+  conFichaFresca(nombre,function(){notaRapida(nombre)},function(){
   var f=pacDe(nombre);
-  f.med.notas=$('#nr-txt').value.trim();
+  f.med.notas=txt;
   savePac(f); closeModal(); refreshAll();
-  toast(f.med.notas?'Nota guardada 📌':'Nota borrada')}
+  toast(f.med.notas?'Nota guardada 📌':'Nota borrada')})}
 
 /* Una cita ya resuelta: se ve el desenlace y se puede corregir */
 function citaResueltaCard(r){
@@ -3084,10 +3192,10 @@ function canalHistorico(nombre){
   return r?r.canal:''}
 
 function deudaDe(nombre){
-  var k=String(nombre||'').trim().toLowerCase();
+  var k=keyPac(nombre);
   /* solo visitas reales: el saldo de una atención que después se marcó como
      cancelada no existe, y cobrarlo por WhatsApp sería un papelón */
-  return DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===k&&esAtencion(r)})
+  return DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)})
              .reduce(function(a,r){return a+num(r.saldo)},0)}
 
 /* ---------------------------------------------------------------------
@@ -3131,6 +3239,7 @@ function confirmarChoque(fecha,hora,prof,exceptId){
 /* --------- resolver una cita --------- */
 function resolverCita(id,estado){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!esMia(r)){noEsTuya();return}
   if(estado==='Atendido'){
     // Pasa a ser una atención normal. No se toca el estado todavía: se abre el
     // formulario y recién al guardar queda como Atendido. Si cierran sin
@@ -3156,7 +3265,9 @@ function crearCitaDesde(r){
     return null}
   var pendiente=pendientes[0];
   if(pendiente){
-    var cambio=pendiente.fecha!==r.prox||pendiente.hora!==(r.proxHora||'')||pendiente.profesional!==r.profesional;
+    var cambio=pendiente.fecha!==r.prox||pendiente.hora!==(r.proxHora||'')||pendiente.profesional!==r.profesional||
+      keyPac(pendiente.paciente)!==keyPac(r.paciente);
+    pendiente.paciente=r.paciente; if(r.nac)pendiente.nac=r.nac;
     if(pendiente.fecha!==r.prox)pendiente.nroDia=nroDelDia(r.prox,pendiente.id);
     pendiente.fecha=r.prox; pendiente.hora=r.proxHora||'';
     pendiente.proxMotivo=r.proxMotivo||'';
@@ -3165,6 +3276,15 @@ function crearCitaDesde(r){
     if(cambio){pendiente.contactado=false;pendiente.contactadoTs=''}
     persist(pendiente);return pendiente}
   var resuelta=DATA.filter(function(x){return x.citaDe===r.id&&x.fecha===r.prox&&x.estado!=='Agendada'})[0];
+  /* si la habían quitado y la vuelven a poner, la cita vuelve: antes
+     quedaba cancelada y el paciente sin turno */
+  if(resuelta&&resuelta.estado==='Canceló'&&/Próxima cita retirada/.test(resuelta.obs||'')){
+    resuelta.estado='Agendada'; resuelta.resueltaTs='';
+    resuelta.hora=r.proxHora||''; resuelta.proxMotivo=r.proxMotivo||'';
+    resuelta.profesional=r.profesional; resuelta.paciente=r.paciente; resuelta.celular=r.celular;
+    resuelta.planId=r.planId||''; resuelta.contactado=false; resuelta.contactadoTs='';
+    resuelta.obs=(resuelta.obs?resuelta.obs+'\n':'')+'Vuelta a agendar desde la atención de origen';
+    persist(resuelta); return resuelta}
   if(resuelta)return resuelta;
   var c={
     id:uid(), clinicaId:CLINICA_ID, ts:new Date().toISOString(),
@@ -3196,7 +3316,13 @@ function crearCitaDesde(r){
    ===================================================================== */
 var PAC={};
 
-function keyPac(n){return String(n==null?'':n).trim().toLowerCase()}
+/* "María  Pérez" y "maria perez" son la misma persona: sin esto, un acento
+   o un doble espacio partía la historia en dos y burlaba el control de
+   homónimos por fecha de nacimiento. */
+function keyPac(n){
+  var t=String(n==null?'':n);
+  if(t.normalize)t=t.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return t.replace(/\s+/g,' ').trim().toLowerCase()}
 
 function pacBlanco(nombre){
   return {nombre:String(nombre==null?'':nombre).trim(), nac:'',
@@ -3500,8 +3626,8 @@ function saldosPend(prof){
   DATA.forEach(function(r){
     if(num(r.saldo)<=0||!esAtencion(r))return;
     if(prof&&r.profesional!==prof)return;
-    var k=(r.paciente||'—').trim();
-    if(!by[k])by[k]={paciente:k,celular:r.celular,saldo:0,n:0,ult:'',ids:[]};
+    var k=keyPac(r.paciente)||'—';
+    if(!by[k])by[k]={paciente:(r.paciente||'—').trim(),celular:r.celular,saldo:0,n:0,ult:'',ids:[]};
     by[k].saldo+=num(r.saldo); by[k].n++; by[k].ids.push(r.id);
     if(r.celular)by[k].celular=r.celular;
     if((r.fecha||'')>by[k].ult)by[k].ult=r.fecha||''});
@@ -3510,8 +3636,8 @@ function saldosPend(prof){
 function dormidos(){
   var hoy=hoyISO(),lim=CFG.diasDorm,by={};
   DATA.forEach(function(r){
-    var k=(r.paciente||'—').trim();
-    if(!by[k])by[k]={paciente:k,celular:r.celular,ult:'',n:0,prox:'',canal:r.canal};
+    var k=keyPac(r.paciente)||'—';
+    if(!by[k])by[k]={paciente:(r.paciente||'—').trim(),celular:r.celular,ult:'',n:0,prox:'',canal:r.canal};
     if(r.celular)by[k].celular=r.celular;
     if(!esCitaPendiente(r)){
       by[k].n++;
@@ -3527,11 +3653,13 @@ function dormidos(){
 function totalPendientes(){
   /* lo que hay que hacer hoy: citas que ya asoman, el cumpleaños del día
      y los controles que se pasaron de fecha */
-  return citasPend().filter(function(c){return c.dias<=CFG.diasProx}).length
-       + cumples().filter(function(c){return c.dias===0}).length
-       + controles().filter(function(c){return c.dias<=0}).length
-       + planesFrenados().length
-       + cuotasVencidas().length}
+  var mios=esDoctora()?pacientesMios():null;
+  var suyo=function(x){return !mios||!!mios[keyPac(x.paciente||(x.r&&x.r.paciente))]};
+  return citasPend().filter(function(c){return c.dias<=CFG.diasProx&&esMia(c.r)}).length
+       + cumples().filter(function(c){return c.dias===0&&suyo(c)}).length
+       + controles().filter(function(c){return c.dias<=0&&suyo(c)}).length
+       + planesFrenados().filter(suyo).length
+       + cuotasVencidas().filter(suyo).length}
 
 /* Cuántos pacientes tiene la clínica: personas distintas con al menos una
    visita o una cita por venir. Discreto y gris: es un dato, no un pendiente. */
@@ -3618,7 +3746,13 @@ function renderRem(){
   var cit=citasPend().filter(mismaProf), sal=saldosPend(rprof), dor=dormidos();
   var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
       sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
-  var cum=cumples(), ctl=controles(), fre=planesFrenados(), cuo=cuotasVencidas();
+  /* filtrar por doctora filtra todo: también cumpleaños, controles,
+     dormidos, planes y cuotas, que antes mostraban a todos los pacientes */
+  var pacProf=null;
+  if(rprof){pacProf={}; DATA.forEach(function(r){if(r.profesional===rprof){var k=keyPac(r.paciente); if(k)pacProf[k]=1}})}
+  var deProf=function(x){return !pacProf||!!pacProf[keyPac(x.paciente)]};
+  dor=dor.filter(deProf);
+  var cum=cumples().filter(deProf), ctl=controles().filter(deProf), fre=planesFrenados().filter(deProf), cuo=cuotasVencidas().filter(deProf);
   var totSaldo=sal.reduce(function(a,p){return a+p.saldo},0);
   $('#k-venc').innerHTML='<div class="k">Citas vencidas</div><div class="v">'+venc.length+'</div><div class="d">sin marcar si vino</div>';
   $('#k-hoy').innerHTML='<div class="k">Citas de hoy</div><div class="v">'+hy.length+'</div><div class="d">'+fmtF(hoy)+'</div>';
@@ -3844,7 +3978,7 @@ function esImportada(r){return /^Importado del /.test(r.obs||'')}
 function renderLista(){
   llenarFiltroProfLista();
   var rows=filtrarLista();
-  var pacs={}; rows.forEach(function(r){if(r.paciente)pacs[r.paciente.trim().toLowerCase()]=1});
+  var pacs={}; rows.forEach(function(r){if(r.paciente)pacs[keyPac(r.paciente)]=1});
   var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0),
       saldo=rows.reduce(function(a,r){return a+num(r.saldo)},0),
       tot=rows.reduce(function(a,r){return a+num(r.total)},0),
@@ -3984,7 +4118,7 @@ function acumularPanel(rows){
     var pacs={},canal={},serv={},prof={},dow={},mens={},cat={},srvProf={},porDia={};
     var tot=0,cobr=0,sal=0;
     rows.forEach(function(r){
-      var k=(r.paciente||'').trim().toLowerCase();
+      var k=keyPac(r.paciente);
       if(k)pacs[k]=1;
       tot+=num(r.total); cobr+=num(r.acuenta); sal+=num(r.saldo);
       var c=r.canal||'Sin dato';
@@ -4071,7 +4205,7 @@ function renderPanel(){
   /* ================= SECCIÓN PACIENTES ================= */
   if(sec==='pacientes'){
     var visitasPorPac={};
-    rows.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)visitasPorPac[k]=(visitasPorPac[k]||0)+1});
+    rows.forEach(function(r){var k=keyPac(r.paciente); if(k)visitasPorPac[k]=(visitasPorPac[k]||0)+1});
     /* una reconsulta es una visita que no es la primera de ese paciente */
     var reconsultas=rows.filter(function(r){
       var k=keyPac(r.paciente);
@@ -4867,17 +5001,17 @@ function renderCaja(){
   }).join(''):'<tr><td colspan="7" class="empty">No hay movimientos en este periodo.</td></tr>'}
 
 /* ============================ PACIENTES ============================ */
-function agrupaPacientes(){
+function agrupaPacientes(filas){
   var by={},hoy=hoyISO();
-  DATA.forEach(function(r){
-    var k=(r.paciente||'—').trim(); if(!k)return;
+  (filas||datosVisibles()).forEach(function(r){
+    var k=keyPac(r.paciente); if(!k)return;
     if(!esAtencion(r)){   // la cita pendiente solo aporta la próxima fecha
       if(by[k]&&esCitaPendiente(r)&&r.fecha>=hoy&&(!by[k].prox||r.fecha<by[k].prox))by[k].prox=r.fecha;
       if(!by[k]&&esCitaPendiente(r)&&r.fecha>=hoy)
-        by[k]={paciente:k,celular:r.celular||'',canal:r.canal||'',visitas:0,gasto:0,cobrado:0,
+        by[k]={paciente:(r.paciente||'').trim(),celular:r.celular||'',canal:r.canal||'',visitas:0,gasto:0,cobrado:0,
                saldo:0,ult:'',prim:'',prox:r.fecha};
       return}
-    if(!by[k])by[k]={paciente:k,celular:'',canal:'',visitas:0,gasto:0,cobrado:0,saldo:0,ult:'',prim:'',prox:''};
+    if(!by[k])by[k]={paciente:(r.paciente||'').trim(),celular:'',canal:'',visitas:0,gasto:0,cobrado:0,saldo:0,ult:'',prim:'',prox:''};
     var p=by[k]; p.visitas++; p.gasto+=num(r.total); p.cobrado+=num(r.acuenta); p.saldo+=num(r.saldo);
     if(r.celular)p.celular=r.celular;
     if(!p.prim||(r.fecha||'')<p.prim)p.prim=r.fecha||'';
@@ -5203,6 +5337,7 @@ function mrow(k,v){return '<div class="mrow"><span class="mk">'+k+'</span><b>'+v
 
 function verFicha(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!esMia(r)){noEsTuya();return}
   var srv=(r.servicios||[]).map(function(s){
     var pz=piezasTexto(s);
     return '<div class="mrow"><span>'+esc(s.nom)+(s.det?' <span class="mini">('+esc(s.det)+')</span>':'')+
@@ -5243,10 +5378,11 @@ function verFicha(id){
       '<button class="btn danger sm" onclick="borrar(\''+r.id+'\')">Borrar</button>'+
       '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
 
-function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(r)loadForm(r)}
+function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return; if(!esMia(r)){noEsTuya();return} loadForm(r)}
 
 function cobrarSaldo(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!esMia(r)){noEsTuya();return}
   openModal('<h3>Registrar pago</h3><p class="mini">'+esc(r.paciente)+' · saldo actual '+bs(r.saldo)+'</p>'+
     '<div style="margin-top:12px"><label>Monto que paga ahora</label>'+
     '<input id="cp-m" inputmode="decimal" value="'+num(r.saldo)+'"></div>'+
@@ -5257,14 +5393,21 @@ function cobrarSaldo(id){
     '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
 
 function guardarPago(id){
-  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
-  if(!esAtencion(r)||identidadAmbigua(r.paciente)){toast('Revisá la atención y la identidad antes de cobrar',1);return}
+  var r0=DATA.filter(function(x){return x.id===id})[0]; if(!r0)return;
+  if(!esMia(r0)){noEsTuya();return}
   var m=num($('#cp-m').value), met=getRadio('cpmet');
   if(m<=0){toast('Poné un monto',1);return}
-  if(m>num(r.saldo)+0.001){toast('El pago supera el saldo pendiente',1);return}
   if(!met){toast('Marcá cómo paga',1);
     $('#cp-seg').style.outline='2px solid var(--clay)';
     setTimeout(function(){var e=$('#cp-seg'); if(e)e.style.outline=''},2000); return}
+  /* el pago se aplica sobre la versión del servidor: si otro equipo ya
+     cobró algo, se suma a eso en lugar de pisarlo */
+  conAtencionFresca(id,function(r){ if(r)aplicarPago(r,m,met)})}
+
+function aplicarPago(r,m,met){
+  if(!esAtencion(r)||identidadAmbigua(r.paciente)){toast('Revisá la atención y la identidad antes de cobrar',1);return}
+  if(m>num(r.saldo)+0.001){closeModal();
+    toast('El pago supera el saldo pendiente ('+bs(r.saldo)+'). Puede que otro equipo ya haya cobrado parte.',1);refreshAll();return}
   r.cobrosPosteriores=(r.cobrosPosteriores||[]).slice();
   r.cobrosPosteriores.push({id:uid(),fecha:hoyISO(),metodo:met,monto:m});
   r.acuenta=Math.round((num(r.acuenta)+m)*100)/100; r.saldo=Math.max(0,Math.round((num(r.saldo)-m)*100)/100);
@@ -5274,7 +5417,11 @@ function guardarPago(id){
   if(ya)ya.monto=num(ya.monto)+m; else r.pagos.push({metodo:met,monto:m});
   r.metodo=r.pagos.length>1?'Mixto':met;
   r.obs=(r.obs?r.obs+'\n':'')+'Pago de '+bs(m)+' en '+met+' el '+fmtF(hoyISO());
-  persist(r); closeModal(); toast('Pago registrado · saldo '+bs(r.saldo)); refreshAll()}
+  persist(r);
+  /* si con este pago el plan quedó pagado y sin sesiones pendientes, termina */
+  if(r.planId){var fp=PAC[keyPac(r.paciente)], pl=fp&&(fp.planes||[]).filter(function(x){return x.id===r.planId})[0];
+    if(pl&&pl.estado==='activo'&&!proxSesion(pl)&&saldoPlan(pl)<=0){pl.estado='terminado'; savePac(fp)}}
+  closeModal(); toast('Pago registrado · saldo '+bs(r.saldo)); refreshAll()}
 
 /* La ficha del paciente: todo lo suyo en una sola pantalla — datos, aviso
    médico, plan en curso, próxima cita y cada visita que hizo. Es lo que
@@ -5282,7 +5429,8 @@ function guardarPago(id){
 function verPaciente(nombre){
   if(identidadAmbigua(nombre)){toast(AVISO_IDENTIDAD,1);return}
   var k=keyPac(nombre), hoy=hoyISO(), f=pacDe(nombre);
-  var mios=DATA.filter(function(r){return keyPac(r.paciente)===k});
+  if(esDoctora()&&!pacientesMios()[k]){toast('Ese paciente no tiene atenciones con vos 🔐',1);return}
+  var mios=datosVisibles().filter(function(r){return keyPac(r.paciente)===k});
   var rs=mios.filter(esAtencion).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
   var citas=mios.filter(function(r){return esCitaPendiente(r)&&r.fecha>=hoy})
                 .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')});
@@ -5383,7 +5531,7 @@ function verPaciente(nombre){
 
 function nuevaParaPaciente(nombre){
   closeModal(); clearForm();
-  var rs=DATA.filter(function(r){return (r.paciente||'').trim().toLowerCase()===String(nombre).trim().toLowerCase()})
+  var rs=DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)})
     .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   $('#f-paciente').value=nombre;
   if(rs){$('#f-cel').value=rs.celular||'';$('#f-ci').value=rs.ci||'';$('#f-edad').value=rs.edad||'';
@@ -5564,15 +5712,18 @@ function abrirFichaMed(nombre){
     '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
 
 function guardarFichaMed(nombre){
+  var v={nac:$('#fm-nac').value, ale:$('#fm-ale').value.trim(), med:$('#fm-med').value.trim(),
+    ant:$$('#fm-ant input').filter(function(i){return i.checked}).map(function(i){return i.value}),
+    not:$('#fm-not').value.trim(), con:$('#fm-con').checked};
+  conFichaFresca(nombre,function(){abrirFichaMed(nombre)},function(){
   var p=pacDe(nombre);
   p.nombre=String(nombre||'').trim();
-  p.nac=$('#fm-nac').value;
-  p.med.alergias=$('#fm-ale').value.trim();
-  p.med.medicacion=$('#fm-med').value.trim();
-  p.med.antecedentes=$$('#fm-ant input').filter(function(i){return i.checked})
-                     .map(function(i){return i.value});
-  p.med.notas=$('#fm-not').value.trim();
-  var con=$('#fm-con').checked;
+  p.nac=v.nac;
+  p.med.alergias=v.ale;
+  p.med.medicacion=v.med;
+  p.med.antecedentes=v.ant;
+  p.med.notas=v.not;
+  var con=v.con;
   if(con&&!p.med.consent)p.med.consentTs=new Date().toISOString();
   if(!con)p.med.consentTs='';
   p.med.consent=con;
@@ -5580,7 +5731,7 @@ function guardarFichaMed(nombre){
   if(keyPac($('#f-paciente').value)===keyPac(nombre)){
     if(p.nac)$('#f-nac').value=p.nac;
     refrescarFichaForm($('#f-plan').value||'')}
-  refreshAll()}
+  refreshAll()})}
 
 /* ======================= PLANES DE TRATAMIENTO ======================= */
 function abrirPlanes(nombre){
@@ -6788,11 +6939,11 @@ function abrirBuscador(){
 
 function pintarBusqueda(){
   var q=claveServ($('#bsq').value);
-  var vistos={}, out=[];
-  DATA.forEach(function(r){
+  var vistos={}, out=[], vis=datosVisibles();
+  vis.forEach(function(r){
     var k=keyPac(r.paciente); if(!k||vistos[k])return; vistos[k]=1;
     if(q&&claveServ(r.paciente).indexOf(q)<0)return;
-    var mios=DATA.filter(function(x){return keyPac(x.paciente)===k});
+    var mios=vis.filter(function(x){return keyPac(x.paciente)===k});
     var ult=mios.filter(esAtencion).map(function(x){return x.fecha||''}).sort().pop()||'';
     out.push({nombre:r.paciente,cel:r.celular||'',ult:ult,n:mios.filter(esAtencion).length})});
   out.sort(function(a,b){return b.ult.localeCompare(a.ult)});
@@ -7433,7 +7584,7 @@ function exportXlsx(rows,nombre){
 
   var atendidas=rows.filter(function(r){return r.estado==='Atendido'});
   var pacs={};
-  rows.forEach(function(r){var k=(r.paciente||'').trim().toLowerCase(); if(k)pacs[k]=1});
+  rows.forEach(function(r){var k=keyPac(r.paciente); if(k)pacs[k]=1});
   var nuevos=nuevosDelPeriodo(rows);
   var tot=rows.reduce(function(a,r){return a+num(r.total)},0);
   var cobr=rows.reduce(function(a,r){return a+num(r.acuenta)},0);
@@ -7443,7 +7594,7 @@ function exportXlsx(rows,nombre){
   /* ---------- agregados ---------- */
   var prof={},canal={},serv={},mes={};
   rows.forEach(function(r){
-    var k=(r.paciente||'').trim().toLowerCase();
+    var k=keyPac(r.paciente);
     var p=r.profesional||'Sin asignar';
     if(!prof[p])prof[p]={n:0,bs:0,pac:{},falta:0};
     prof[p].n++; prof[p].bs+=num(r.total); if(k)prof[p].pac[k]=1;
@@ -7881,7 +8032,8 @@ function bind(){
     if(bpz){abrirPiezas(+bpz.dataset.i); return}
     if(e.target.classList.contains('s-del')){
       readSrv(); var i=+e.target.closest('.srv').dataset.i;
-      SRV.splice(i,1); if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv()}});
+      SRV.splice(i,1); if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}];
+      delete $('#f-total').dataset.touched; renderSrv()}});
   $('#srv-list').addEventListener('change',function(e){
     var box=e.target.closest('.srv'); if(!box)return;
     if(e.target.classList.contains('s-nom')){
@@ -7891,10 +8043,13 @@ function bind(){
       readSrv();
       /* el campo de laboratorio aparece o desaparece según el servicio */
       if(SRV[+box.dataset.i]){SRV[+box.dataset.i].lab=p?num(p.lab):0}
-      renderSrv(); return}
+      delete $('#f-total').dataset.touched; renderSrv(); return}
+    if(/\bs-(precio|cant)\b/.test(e.target.className))delete $('#f-total').dataset.touched;
     readSrv(); recalcTotal()});
   $('#srv-list').addEventListener('input',function(e){
     if(e.target.classList.contains('s-precio'))e.target.dataset.touched='1';
+    /* cambiar un precio o una cantidad rehace el total: si no, la deuda queda mal */
+    if(/\bs-(precio|cant)\b/.test(e.target.className))delete $('#f-total').dataset.touched;
     readSrv(); recalcTotal()});
 
   $('#f-total').oninput=function(){this.dataset.touched='1';recalcSaldo()};
@@ -8090,8 +8245,8 @@ function bind(){
         var errorRespaldo=validarRespaldoClinica(j);
         if(errorRespaldo){toast(errorRespaldo,1);return}
         if(!confirm('Se van a agregar '+arr.length+' registros a los que ya hay. ¿Seguir?'))return;
-        var ids={}; DATA.forEach(function(r){ids[r.id]=1});
-        arr.map(normalize).forEach(function(r){if(!ids[r.id]){DATA.push(r);ids[r.id]=1}});
+        var ids={}, agregados=[]; DATA.forEach(function(r){ids[r.id]=1});
+        arr.map(normalize).forEach(function(r){if(!ids[r.id]){DATA.push(r);ids[r.id]=1;agregados.push(r)}});
         /* La config del archivo NO se aplica: un respaldo de hace dos meses
        resetearía las claves y los precios de todo el consultorio. Los datos
        sí se restauran; los ajustes se cambian en Ajustes. */
@@ -8109,14 +8264,24 @@ function bind(){
         /* lo restaurado tiene que llegar al servidor: si no, el próximo
            refresco lo reemplaza con lo de la nube y se evapora en silencio */
         if(CONNECTED){
-          DATA.forEach(function(r){queue('save',r)});
+          /* solo lo que faltaba: reenviar todo pisaba lo que otros equipos
+             cambiaron después de la fecha del respaldo */
+          agregados.forEach(function(r){queue('save',r)});
           EGR.forEach(function(e){queue('egreso',e)});
           Object.keys(PAC).forEach(function(k){if(!pacVacia(PAC[k]))queue('pac',PAC[k])});
           flushQueue()}
         refreshAll(); toast('Respaldo restaurado ✅'+(CONNECTED?' · subiendo a la nube…':''))
       }catch(err){toast('Archivo inválido',1)}
       e.target.value=''};
-    rd.readAsText(f)}}
+    rd.readAsText(f)};
+  /* Estos botones se esconden para las doctoras, pero esconder no alcanza:
+     también se frenan si alguien los dispara igual. */
+  ['#btn-json','#btn-import','#btn-subir','#btn-save-pass-admin','#btn-save-pass','#btn-save-claves-prof',
+   '#btn-save-comision','#btn-save-precios','#btn-reset-precios','#btn-save-prof','#btn-save-canal',
+   '#btn-save-ind','#btn-reset-ind','#btn-save-rem','#btn-save-respaldo','#btn-nuevo-egreso',
+   '#btn-xls','#btn-xls2','#btn-xls-caja','#btn-resp-xlsx','#btn-resp-lote'].forEach(function(s){
+    var b=$(s); if(!b||!b.onclick)return; var f0=b.onclick;
+    b.onclick=function(e){if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1);return}return f0.call(this,e)}})}
 
 function banner(){
   /* Decir "Conectado" cuando hay cosas esperando en la cola es peor que no
