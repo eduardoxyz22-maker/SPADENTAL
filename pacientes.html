@@ -560,6 +560,7 @@ body.octubre nav button.on{border-bottom-color:#E8761B}
 @media(max-width:760px){.arana,.murci{display:none}.telarana{width:90px;height:90px;opacity:.16}
   .sombrero{top:2px;width:27px;height:24px}}
 @media(prefers-reduced-motion:reduce){.murci,.arana,.boo{animation:none}}
+nav .nav-cnt{background:var(--paper);color:var(--gray);border:1px solid var(--line);font-weight:600}
 #gate .octu{display:inline-block;margin-top:8px;font-size:12.5px;color:var(--lime-dk);font-weight:600}
 #gate .chk-nota{font-size:12px;color:var(--gray);margin-top:14px;line-height:1.5}
 #gate .err{color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:0 0 4px}
@@ -610,7 +611,7 @@ body.locked{overflow:hidden}
     <button data-v="lista">📋 Atenciones</button>
     <button data-v="panel">📊 Panel</button>
     <button data-v="caja">💰 Caja</button>
-    <button data-v="pacientes">👤 Pacientes</button>
+    <button data-v="pacientes">👤 Pacientes <span class="pill nav-cnt" id="nav-pac" title="Pacientes registrados en la clínica"></span></button>
     <button data-v="config">⚙️ Ajustes</button>
     <button id="nav-buscar" title="Buscar paciente">🔍</button>
     <button id="nav-duena" title="Modo dueña">🔐</button>
@@ -3511,7 +3512,15 @@ function totalPendientes(){
        + planesFrenados().length
        + cuotasVencidas().length}
 
+/* Cuántos pacientes tiene la clínica: personas distintas con al menos una
+   visita o una cita por venir. Discreto y gris: es un dato, no un pendiente. */
+function updateNavPac(){
+  var el=$('#nav-pac'); if(!el)return;
+  var n=agrupaPacientes().length;
+  el.textContent=n?n.toLocaleString('es-BO'):''; el.style.display=n?'':'none'}
+
 function updateNavRem(){
+  updateNavPac();
   var n=totalPendientes(),el=$('#nav-rem');
   el.style.display=n?'':'none'; el.textContent=n;
   updateNavCita()}
