@@ -16,12 +16,12 @@ function boot(file,storage=new Map()){
  c.getRadio=n=>radios[n]||'';c.esAdmin=()=>true;c.hoyISO=()=> '2026-10-02';
  return {c,el,requests,db,storage,html,radios,messages};
 }
-const row=(o={})=>Object.assign({id:'FICTICIO-1',paciente:'Paciente Ficticio',ci:'TEST-001',fecha:'2026-09-01',estado:'Atendido',total:100,acuenta:20,saldo:80,metodo:'Efectivo',pagos:[{metodo:'Efectivo',monto:20}],servicios:[],profesional:'Doctora Ficticia',celular:'00000000'},o);
+const row=(o={})=>Object.assign({id:'FICTICIO-1',paciente:'Paciente Ficticio',ci:'TEST-001',nac:'1990-01-01',fecha:'2026-09-01',estado:'Atendido',total:100,acuenta:20,saldo:80,metodo:'Efectivo',pagos:[{metodo:'Efectivo',monto:20}],servicios:[],profesional:'Doctora Ficticia',celular:'00000000'},o);
 function form(b,overrides={}){
  const {c,el,radios}=b;c.readSrv=()=>{};c.readPre=()=>{};c.preParaGuardar=()=>[];c.autoCerrarPresu=()=>0;
  c.EDIT_ID=null;c.SRV=[{nom:'Corona ficticia',cant:1,precio:100,lab:0}];
  Object.assign(radios,{canal:'Otro',estado:'Atendido',metodo:'Efectivo',origen:'Espontánea',tipo:'Nuevo'});
- const values={'#f-fecha':'2026-10-02','#f-prof':'Doctora Ficticia','#f-cel':'00000000','#f-paciente':'Paciente Ficticio','#f-ci':'TEST-001','#f-total':'100','#f-acuenta':'20','#f-saldo':'80','#f-plan':'','#f-prox':'',...overrides};
+ const values={'#f-fecha':'2026-10-02','#f-prof':'Doctora Ficticia','#f-cel':'00000000','#f-paciente':'Paciente Ficticio','#f-ci':'TEST-001','#f-nac':'1990-01-01','#f-total':'100','#f-acuenta':'20','#f-saldo':'80','#f-plan':'','#f-prox':'',...overrides};
  for(const [s,v] of Object.entries(values))el(s).value=v;
 }
 async function run(file){
@@ -49,13 +49,13 @@ async function run(file){
  const rec=c.DATA[0];form(b,{'#f-plan':'PLAN-A'});c.EDIT_ID=rec.id;radios.estado='Atendido';c.submitAtencion();test('Atendido consume una sesión',()=>assert.equal(p.planes[0].sesiones[0].hecha,true));
  c.submitAtencion();test('Guardar dos veces no consume dos sesiones',()=>assert.equal(p.planes[0].sesiones.filter(s=>s.hecha).length,1));
  radios.estado='No asistió';c.submitAtencion();test('Corregir atención libera su sesión',()=>assert.equal(p.planes[0].sesiones[0].hecha,false));
- c.DATA=[row()];c.PAC={};test('CI distinto para mismo nombre se bloquea; CI igual continúa',()=>{assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','TEST-002',null),false);assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','TEST-001',null),true);assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','',null),false)});
- const before=JSON.stringify(c.DATA);form(b,{'#f-ci':'TEST-002'});c.submitAtencion();test('Guardado real bloquea homónimo sin cambiar DATA',()=>assert.equal(JSON.stringify(c.DATA),before));
- for(const [s,v] of Object.entries({'#q-paciente':'Paciente Ficticio','#q-ci':'TEST-002','#q-fecha':'2026-10-02','#q-cel':'00000000'}))el(s).value=v;
+ c.DATA=[row()];c.PAC={};test('Fecha de nacimiento distinta para mismo nombre se bloquea; igual o vacía continúa',()=>{assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','1990-01-02',null),false);assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','1990-01-01',null),true);assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','',null),true)});
+ const before=JSON.stringify(c.DATA);form(b,{'#f-nac':'1990-01-02'});c.submitAtencion();test('Guardado real bloquea homónimo sin cambiar DATA',()=>assert.equal(JSON.stringify(c.DATA),before));
+ for(const [s,v] of Object.entries({'#q-paciente':'Paciente Ficticio','#q-nac':'1990-01-02','#q-fecha':'2026-10-02','#q-cel':'00000000'}))el(s).value=v;
  radios.qagenda='Otro';radios.qcanal='Otro';c.confirmarChoque=()=>true;c.serviciosPrevistos=()=>[];c.guardarCita();test('Agenda también bloquea homónimo',()=>assert.equal(JSON.stringify(c.DATA),before));
- el('#q-ci').value='TEST-001';c.guardarCita();test('Agenda acepta CI verificado sin perderlo',()=>{assert.equal(c.DATA.length,2);assert.equal(c.DATA[1].ci,'TEST-001')});c.DATA=[row()];
- c.DATA.push(row({id:'FICTICIO-2',ci:'TEST-002'}));test('Ambigüedad previa queda intacta y bloqueada',()=>{const saved=JSON.stringify(c.DATA);assert(c.identidadAmbigua('Paciente Ficticio'));assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','TEST-001',c.DATA[0]),false);assert.equal(JSON.stringify(c.DATA),saved)});
- c.DATA=[row({ci:''})];test('Identidad histórica sin CI necesita revisión',()=>assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','TEST-001',null),false));
+ el('#q-nac').value='1990-01-01';c.guardarCita();test('Agenda acepta fecha verificada sin perderla',()=>{assert.equal(c.DATA.length,2);assert.equal(c.DATA[1].nac,'1990-01-01')});c.DATA=[row()];
+ c.DATA.push(row({id:'FICTICIO-2',nac:'1990-01-02'}));test('Ambigüedad previa queda intacta y bloqueada',()=>{const saved=JSON.stringify(c.DATA);assert(c.identidadAmbigua('Paciente Ficticio'));assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','1990-01-01',c.DATA[0]),false);assert.equal(JSON.stringify(c.DATA),saved)});
+ c.DATA=[row({nac:''})];test('Historial sin fecha de nacimiento no bloquea una visita nueva',()=>assert.equal(c.validarIdentidadPaciente('Paciente Ficticio','1990-01-01',null),true));
  c.DATA=[];c.PAC={};form(b);c.CFG.precios=[{nom:'Corona ficticia',lab:90}];c.submitAtencion();test('Laboratorio cero persiste y reporta cero',()=>{assert.equal(c.DATA[0].servicios[0].lab,0);assert.equal(c.labDeAtencion(c.DATA[0]),0)});
  test('Laboratorio sin override conserva valor de catálogo',()=>assert.equal(c.labDe({nom:'Corona ficticia',cant:2}),180));
  const paid=c.DATA[0];el('#cp-m').value='30';c.guardarPago(paid.id);await c.flushQueue();form(b,{'#f-acuenta':'50','#f-saldo':'50'});c.EDIT_ID=paid.id;c.submitAtencion();test('Editar atención conserva cobros fechados',()=>assert.equal(c.DATA[0].cobrosPosteriores.length,1));

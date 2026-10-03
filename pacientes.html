@@ -880,7 +880,7 @@ body.locked{overflow:hidden}
       <div><label>Celular <span class="req">*</span></label>
         <input id="q-cel" inputmode="tel" placeholder="7XXXXXXX"></div>
     </div>
-    <div style="margin-top:12px"><label>CI del paciente (verificar si ya existe el nombre)</label><input id="q-ci" autocomplete="off"></div>
+    <div style="margin-top:12px"><label>Fecha de nacimiento <span class="mini">(opcional · si el nombre ya existe, confirma que es la misma persona)</span></label><input type="date" id="q-nac"></div>
     <div id="q-aviso"></div>
     <div style="margin-top:16px">
       <label>¿Por dónde agendó? <span class="req">*</span></label>
@@ -2005,22 +2005,33 @@ function horaLimpia(v){
   }catch(e){return t}}
 
 /* Correcciones funcionales 2026-10-02. No migran datos al abrir el panel. */
-var AVISO_IDENTIDAD='Este nombre tiene CI distintos. No se puede asociar una ficha o un plan hasta revisar la identidad. No se modificó el historial.';
+/* IDENTIDAD DEL PACIENTE
+   El nombre es la clave, y lo que distingue a dos personas con el mismo
+   nombre es la fecha de nacimiento: es el dato que la clínica sí tiene de
+   todos. El CI queda como documento para la historia clínica, no se usa
+   para esto. Un nombre repetido sin fecha en el historial no se bloquea:
+   la primera fecha que se cargue pasa a ser la de la ficha. */
+var AVISO_IDENTIDAD='Hay dos personas con este nombre y distinta fecha de nacimiento. Cargá a cada una con el nombre completo (segundo apellido o inicial) para no mezclar sus historias.';
 var AVISO_COBROS_HISTORICOS='Histórico sin fecha de cobro comprobada: se conserva en la fecha de atención. Los cobros nuevos sí usan su fecha real. Conciliar el histórico antes de cerrar caja.';
-function ciClave(ci){return String(ci||'').trim().toUpperCase()}
-function cisDePaciente(nombre,filas){
-  var k=keyPac(nombre), cis={};
-  (filas||DATA).forEach(function(r){if(keyPac(r.paciente)===k&&ciClave(r.ci))cis[ciClave(r.ci)]=1});
-  return Object.keys(cis)}
-function identidadAmbigua(nombre){return cisDePaciente(nombre).length>1}
-function validarIdentidadPaciente(nombre,ci,prev){
-  var k=keyPac(nombre), c=ciClave(ci), mismos=DATA.filter(function(r){return keyPac(r.paciente)===k});
-  var cis=cisDePaciente(nombre);
-  if(cis.length>1||(c&&cis.length&&cis[0]!==c)){toast(AVISO_IDENTIDAD,1);return false}
-  if(prev&&(keyPac(prev.paciente)!==k||ciClave(prev.ci)!==c)){
-    toast('Cambiar la identidad de una atención requiere revisar su ficha y sus planes. No se reasigna automáticamente.',1);return false}
-  if(!prev&&(mismos.length||PAC[k])&&(!c||cis.length!==1)){
-    toast('El nombre ya existe. Verificá el CI de la persona. Si el historial no tiene CI, requiere revisión antes de asociar otra visita o cita.',1);return false}
+function nacClave(n){return String(n||'').trim()}
+/* Las fechas de nacimiento conocidas de un nombre: la de su ficha y las que
+   se anotaron en cada visita o cita. Más de una = son dos personas. */
+function nacsDePaciente(nombre,filas){
+  var k=keyPac(nombre), out={};
+  (filas||DATA).forEach(function(r){if(keyPac(r.paciente)===k&&nacClave(r.nac))out[nacClave(r.nac)]=1});
+  var f=PAC[k]; if(f&&nacClave(f.nac))out[nacClave(f.nac)]=1;
+  return Object.keys(out)}
+function identidadAmbigua(nombre){return nacsDePaciente(nombre).length>1}
+function validarIdentidadPaciente(nombre,nac,prev){
+  var k=keyPac(nombre), n=nacClave(nac), nacs=nacsDePaciente(nombre);
+  if(nacs.length>1){toast(AVISO_IDENTIDAD,1);return false}
+  /* editar la misma visita, de la misma persona: nada que verificar */
+  if(prev&&keyPac(prev.paciente)===k&&(!n||!nacs.length||nacs[0]===n))return true;
+  if(n&&nacs.length===1&&nacs[0]!==n){
+    toast('Ya hay un paciente '+String(nombre||'').trim()+' nacido el '+fmtF(nacs[0])+
+      '. Si es otra persona, cargala con el nombre completo (segundo apellido). '+
+      'Si es la misma y la fecha estaba mal, corregila en su Ficha médica.',1);
+    return false}
   return true}
 function respaldoClinica(){
   return {schemaVersion:2,clinicaId:CLINICA_ID,exportado:new Date().toISOString(),
@@ -2035,8 +2046,8 @@ function validarRespaldoClinica(j){
     return 'Hay registros de otra clínica. Importación bloqueada.';
   var juntos=DATA.concat(j.data), nombres={};
   juntos.forEach(function(r){if(r.paciente)nombres[keyPac(r.paciente)]=r.paciente});
-  if(Object.keys(nombres).some(function(k){return cisDePaciente(nombres[k],juntos).length>1}))
-    return 'El respaldo contiene identidades ambiguas por nombre y CI. Requiere revisión; no se importó nada.';
+  if(Object.keys(nombres).some(function(k){return nacsDePaciente(nombres[k],juntos).length>1}))
+    return 'El respaldo tiene un mismo nombre con dos fechas de nacimiento distintas. Requiere revisión; no se importó nada.';
   return ''}
 function agruparPagos(ps){
   var m={};(ps||[]).forEach(function(p){m[p.metodo]=(m[p.metodo]||0)+num(p.monto)});
@@ -2087,6 +2098,7 @@ function normalize(r){
   if(ESTADOS_VIEJOS[r.estado])r.estado=ESTADOS_VIEJOS[r.estado];
   if(!r.origen)r.origen='';
   if(!r.agendaPor)r.agendaPor='';
+  if(!r.nac)r.nac='';
   if(!r.planId)r.planId='';
   if(typeof r.presu==='string'){try{r.presu=JSON.parse(r.presu)}catch(e){r.presu=[]}}
   if(!Array.isArray(r.presu))r.presu=[];
@@ -2411,7 +2423,7 @@ function autoPaciente(){
                .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   if(!prev)return;
   if(!$('#f-cel').value)$('#f-cel').value=prev.celular||'';
-  // El CI se verifica a mano: autocompletarlo por nombre confirmaría un homónimo por error.
+  if(!$('#f-ci').value)$('#f-ci').value=prev.ci||'';
   if(!$('#f-edad').value)$('#f-edad').value=prev.edad||'';
   var ficha=pacDe($('#f-paciente').value.trim());
   if(ficha.nac&&!$('#f-nac').value)$('#f-nac').value=ficha.nac;
@@ -2603,7 +2615,7 @@ function submitAtencion(){
   if(!getRadio('canal')){avisoCanal('marcar por dónde nos encontró','seg-canal');return}
   readSrv();
   var prev=EDIT_ID?DATA.filter(function(r){return r.id===EDIT_ID})[0]:null;
-  if(!validarIdentidadPaciente($('#f-paciente').value,$('#f-ci').value,prev))return;
+  if(!validarIdentidadPaciente($('#f-paciente').value,$('#f-nac').value,prev))return;
   if(prev&&prev.estado==='Atendido'&&num($('#f-acuenta').value)!==num(prev.acuenta)){
     toast('Para agregar un cobro usá Registrar pago en la ficha de la atención. Corregir un cobro anterior requiere conciliación.',1);return}
   if(prev&&(prev.cobrosPosteriores||[]).length&&
@@ -2621,6 +2633,7 @@ function submitAtencion(){
     profesional:$('#f-prof').value.trim(),
     paciente:$('#f-paciente').value.trim(),
     celular:$('#f-cel').value.trim(), ci:$('#f-ci').value.trim(), edad:$('#f-edad').value.trim(),
+    nac:$('#f-nac').value,
     planId:$('#wrap-plan').style.display==='none'?((prev&&prev.planId)||''):$('#f-plan').value,
     tipo:getRadio('tipo'), canal:getRadio('canal'), canalDetalle:$('#f-canal-det').value.trim(),
     origen:getRadio('origen'),
@@ -2733,7 +2746,7 @@ function serviciosPrevistos(){
 function clearCita(){
   $('#q-fecha').value=hoyISO(); $('#q-hora').value='';
   if(!$('#q-dia').value)$('#q-dia').value=hoyISO();
-  ['q-prof','q-motivo','q-paciente','q-cel','q-ci','q-obs'].forEach(function(id){
+  ['q-prof','q-motivo','q-paciente','q-cel','q-nac','q-obs'].forEach(function(id){
     $('#'+id).value=''; $('#'+id).classList.remove('bad')});
   $$('input[name="qagenda"]').forEach(function(i){i.checked=false});
   $$('input[name="qcanal"]').forEach(function(i){i.checked=false});
@@ -2761,13 +2774,15 @@ function autoCita(){
       return esc(x.p.nom)+(num(x.p.monto)>0?' ('+bs(x.p.monto)+')':'')}).join(', ')+'</b>');
     if(!$('#q-motivo').value)$('#q-motivo').value=pend[0].p.nom}
   if(deuda>0)tr.push('💰 Debe <b>'+bs(deuda)+'</b> de antes');
+  var fn=pacDe(nom).nac;
+  if(fn)tr.push('🎂 Nació el <b>'+fmtF(fn)+'</b> · si no coincide, es otra persona con el mismo nombre');
   av.innerHTML=tr.length
     ? '<div class="mi-avisos" style="margin-top:10px">'+tr.map(function(t2){
         return '<div class="mi-a presu">'+t2+'</div>'}).join('')+'</div>'
     : ''}
 
 function guardarCita(){
-  if(!validarIdentidadPaciente($('#q-paciente').value,$('#q-ci').value,null))return;
+  if(!validarIdentidadPaciente($('#q-paciente').value,$('#q-nac').value,null))return;
   var bad=[];
   [['q-fecha','fecha'],['q-paciente','paciente'],['q-cel','celular']]
     .forEach(function(p){var e=$('#'+p[0]),ok=!!e.value.trim();
@@ -2789,7 +2804,7 @@ function guardarCita(){
        recién al atender */
     profesional:$('#q-prof').value.trim()||'Por definir',
     paciente:$('#q-paciente').value.trim(), celular:$('#q-cel').value.trim(),
-    ci:$('#q-ci').value.trim(), edad:'',
+    ci:'', edad:'', nac:$('#q-nac').value,
     tipo:esPacienteConocido($('#q-paciente').value)?'Recurrente':'Nuevo',
     canal:getRadio('qcanal')||'', canalDetalle:'',
     origen:'Programada', agendaPor:ag,
@@ -2800,6 +2815,7 @@ function guardarCita(){
     obs:$('#q-obs').value.trim()
   };
   DATA.push(rec); persist(rec);
+  if(rec.nac){var fi=pacDe(rec.paciente); if(!fi.nac){fi.nac=rec.nac; savePac(fi)}}
   clearCita(); fillDatalists(); updateNavRem();
   toast('Cita agendada para el '+fmtF(fecha));
   mostrarWaCita(rec)}
@@ -3132,7 +3148,7 @@ function crearCitaDesde(r){
     id:uid(), clinicaId:CLINICA_ID, ts:new Date().toISOString(),
     fecha:r.prox, hora:r.proxHora||'', nroDia:nroDelDia(r.prox,null),
     profesional:r.profesional, paciente:r.paciente, celular:r.celular,
-    ci:r.ci||'', edad:r.edad||'', tipo:'Recurrente',
+    ci:r.ci||'', edad:r.edad||'', nac:r.nac||'', tipo:'Recurrente',
     canal:r.canal||'', canalDetalle:'',
     origen:'Programada', agendaPor:'En el consultorio',
     servicios:[], total:0, acuenta:0, saldo:0, metodo:'', pagos:[],
@@ -3727,7 +3743,7 @@ function guardarReagenda(id){
     id:uid(), ts:new Date().toISOString(),
     fecha:f, hora:$('#rg-h').value, nroDia:nroDelDia(f,null),
     profesional:r.profesional, paciente:r.paciente, celular:r.celular,
-    ci:r.ci||'', edad:r.edad||'', tipo:r.tipo||'Recurrente',
+    ci:r.ci||'', edad:r.edad||'', nac:r.nac||'', tipo:r.tipo||'Recurrente',
     canal:r.canal||'', canalDetalle:r.canalDetalle||'',
     origen:'Programada', agendaPor:getRadio('rgag')||r.agendaPor||'WhatsApp',
     /* se reprograma la misma visita: lo previsto y el plan viajan con ella */

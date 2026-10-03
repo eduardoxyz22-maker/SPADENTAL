@@ -3,7 +3,7 @@
 Las reglas nuevas de cobros, identidad y restauración se documentan en [COORDINACION.md](COORDINACION.md) y prevalecen sobre la descripción histórica de abajo.
 
 - Cobros posteriores: usar **Registrar pago**. Caja y reportes contables los ubican en su fecha de pago; la ficha mantiene el acumulado. Los cobros antiguos sin fecha se señalan para conciliación y no se migran.
-- Homónimos: se bloquea asociar CI distintos al mismo nombre. Los nombres existentes sin CI único requieren revisión; no se separan fichas automáticamente.
+- Homónimos: la persona se distingue por fecha de nacimiento. Si un nombre ya existe con otra fecha, se bloquea hasta cargarlo con el nombre completo. Un historial sin fecha no bloquea; la primera fecha que se cargue queda en la ficha. No se separan fichas automáticamente.
 - Restauración: solo respaldos nuevos identificados con la misma clínica. Los archivos antiguos o de otra clínica se bloquean antes de modificar datos.
 - Una sesión solo se realiza con estado **Atendido**; cancelar/corregir una atención libera su sesión. Las citas derivadas pendientes actualizan su hora y se cancelan al quitar la próxima fecha. El laboratorio en cero se respeta.
 - No cambian accesos, claves ni autenticación; no se despliega Apps Script.
