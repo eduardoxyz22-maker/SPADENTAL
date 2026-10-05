@@ -6,8 +6,10 @@
  *
  * Acciones que entiende:
  *   {action:'list'}                  → {ok:true, registros:[...]}
- *   {action:'save',  registro:{…}}   → {ok:true, registro:{…}}   (crea o actualiza por id)
- *   {action:'delete',registro:{id}}  → {ok:true}
+ *   {action:'save',  registro:{…}, base:{…}} → {ok:true, registro:{…}}   (crea o actualiza por id;
+ *                                   con base, junta los cambios con lo que hay en vez de pisarlo)
+ *   {action:'delete',registro:{id}, base} → {ok:true} · {ok:false, error:'cambio', registro}
+ *                                   (no borra si la atención cambió desde que se la vio)
  *   {action:'bulk',  registros:[…]}  → {ok:true, agregados, actualizados, total}
  *   {action:'info'}                  → {ok:true, planilla, url, filas}
  *   {action:'cfg',    cfg:{…}}        → {ok:true}   (guarda los ajustes compartidos)
@@ -173,23 +175,33 @@ function doListPac() {
   return out;
 }
 
-/* Una fila por paciente: se busca por nombre, sin distinguir mayúsculas. */
-function doGuardarPac(p) {
+/* Una ficha por paciente: se busca por nombre sin distinguir mayúsculas,
+   tildes ni espacios dobles ("María Pérez" = "Maria Perez"). Si quedaron
+   dos filas de la misma persona, se juntan y las dos quedan iguales. Con
+   base, lo que mandó este equipo se junta con lo que ya había. */
+function doGuardarPac(p, base) {
   if (!p || !p.nombre) return { ok: false, error: 'sin_nombre' };
   var sh = getSheetPac();
   var n = sh.getLastRow();
-  var clave = String(p.nombre).trim().toLowerCase();
-  var destino = 0;
+  var clave = fClavePac(p.nombre);
+  var destinos = [], actual = null;
   if (n >= 2) {
-    var nombres = sh.getRange(2, 1, n - 1, 1).getValues();
-    for (var i = 0; i < nombres.length; i++) {
-      if (String(nombres[i][0] || '').trim().toLowerCase() === clave) { destino = i + 2; break; }
+    var filas = sh.getRange(2, 1, n - 1, COLS_PAC.length).getValues();
+    for (var i = 0; i < filas.length; i++) {
+      if (filas[i][0] && fClavePac(filas[i][0]) === clave) {
+        destinos.push(i + 2);
+        actual = fusionarFichas(actual, pacienteDeFila(filas[i]));
+      }
     }
   }
-  var fila = filaDePaciente(p);
-  if (destino) sh.getRange(destino, 1, 1, COLS_PAC.length).setValues([fila]);
-  else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_PAC.length).setValues([fila]);
-  return { ok: true, paciente: p.nombre };
+  var conf = [], final = p;
+  if (actual && base) final = fusion3(base, p, actual, '', conf);
+  final.nombre = p.nombre;
+  var fila = filaDePaciente(final);
+  if (destinos.length) {
+    for (var d = 0; d < destinos.length; d++) sh.getRange(destinos[d], 1, 1, COLS_PAC.length).setValues([fila]);
+  } else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_PAC.length).setValues([fila]);
+  return { ok: true, paciente: pacienteDeFila(fila), conflictos: conf };
 }
 
 function getSheetEgr() {
@@ -380,10 +392,11 @@ function doList() {
   return { ok: true, registros: out, cfg: leerCfg(), pacientes: doListPac(), egresos: doListEgr() };
 }
 
-function doSave(r) {
+function doSave(r, base) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
   var sh = getSheet();
   var n = sh.getLastRow();
+  var conf = [];
 
   // Busca si el registro ya existe y, de paso, cuenta los del mismo día.
   var destino = 0, nroGuardado = 0, fechaGuardada = '', cuantas = 0, maxNro = 0;
@@ -401,6 +414,16 @@ function doSave(r) {
         maxNro = Math.max(maxNro, Number(datos[j][4]) || 0);
       }
     }
+  }
+
+  /* Con base: lo que mandó este equipo se junta con lo que hay guardado, así
+     una pantalla vieja no borra el cobro o el servicio que cargó otra. */
+  /* Tenía base pero ya no está: la borraron desde otro equipo. Un cambio
+     viejo no la revive. */
+  if (!destino && base) return { ok: false, error: 'borrada', id: r.id };
+  if (destino && base) {
+    var actual = registroDeFila(sh.getRange(destino, 1, 1, COLS.length).getValues()[0]);
+    r = fusionRegistro(base, r, actual, conf);
   }
 
   // N° del día: lo asigna el servidor para que no se repita entre celulares.
@@ -421,7 +444,7 @@ function doSave(r) {
   if (destino) sh.getRange(destino, 1, 1, COLS.length).setValues([fila]);
   else sh.appendRow(fila);
 
-  return { ok: true, registro: r };
+  return { ok: true, registro: registroDeFila(fila), conflictos: conf };
 }
 
 /**
@@ -462,20 +485,234 @@ function doBulk(lista) {
            total: Math.max(0, sh.getLastRow() - 1) };
 }
 
-function doDelete(r) {
+function doDelete(r, base) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
   var sh = getSheet();
   var n = sh.getLastRow();
   if (n < 2) return { ok: true };
   var ids = sh.getRange(2, 1, n - 1, 1).getValues();
   for (var i = 0; i < ids.length; i++) {
-    if (ids[i][0] === r.id) { sh.deleteRow(i + 2); return { ok: true }; }
+    if (ids[i][0] === r.id) {
+      /* si desde que este equipo la vio alguien la cobró o la cambió, no se
+         borra: se devuelve cómo está para que la revisen */
+      if (base) {
+        var actual = registroDeFila(sh.getRange(i + 2, 1, 1, COLS.length).getValues()[0]);
+        if (fCambioParaBorrar(base, actual)) return { ok: false, error: 'cambio', registro: actual };
+      }
+      sh.deleteRow(i + 2); return { ok: true };
+    }
   }
   return { ok: true };
 }
 
+/* =====================================================================
+   FUSIÓN DE CAMBIOS (va idéntica en el panel y en el Apps Script)
+   Dos equipos tocan la misma atención o la misma ficha: cada uno manda lo
+   suyo junto con la versión que tenía al empezar (la "base"). Lo que solo
+   cambió uno, queda; lo que cambiaron los dos, se resuelve campo por campo.
+   Los cobros se suman (no se pisan) y una visita atendida no vuelve atrás.
+   ===================================================================== */
+var FUSION_V = 2;
+var FUSION_SUMA = {acuenta: 1, saldo: 1};
+function fVacio(v) {
+  if (v === undefined || v === null || v === '' || v === false) return true;
+  if (Object.prototype.toString.call(v) === '[object Array]') return v.length === 0;
+  if (typeof v === 'object') { for (var k in v) if (Object.prototype.hasOwnProperty.call(v, k)) return false; return true; }
+  return false;
+}
+function fEsLista(v) { return Object.prototype.toString.call(v) === '[object Array]'; }
+function fEsObj(v) { return !!v && typeof v === 'object' && !fEsLista(v); }
+function fIgual(a, b) {
+  if (a === b) return true;
+  if (fVacio(a) && fVacio(b)) return true;
+  if ((a === 0 || a === '0') && fVacio(b) || (b === 0 || b === '0') && fVacio(a)) return true;
+  if (fEsLista(a) || fEsLista(b)) {
+    if (!fEsLista(a) || !fEsLista(b) || a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (!fIgual(a[i], b[i])) return false;
+    return true;
+  }
+  if (fEsObj(a) || fEsObj(b)) {
+    if (!fEsObj(a) || !fEsObj(b)) return false;
+    var ks = {}, k;
+    for (k in a) if (Object.prototype.hasOwnProperty.call(a, k)) ks[k] = 1;
+    for (k in b) if (Object.prototype.hasOwnProperty.call(b, k)) ks[k] = 1;
+    for (k in ks) if (!fIgual(a[k], b[k])) return false;
+    return true;
+  }
+  if (typeof a === 'boolean' || typeof b === 'boolean') {
+    var ta = String(a).toUpperCase(), tb = String(b).toUpperCase();
+    var va = a === true || ta === 'TRUE' || ta === 'SÍ' || ta === 'SI';
+    var vb = b === true || tb === 'TRUE' || tb === 'SÍ' || tb === 'SI';
+    return va === vb;
+  }
+  if (typeof a === 'number' || typeof b === 'number') {
+    var x = Number(a), y = Number(b);
+    if (!isNaN(x) && !isNaN(y) && String(a).replace(/\s/g, '') !== '' && String(b).replace(/\s/g, '') !== '') return Math.abs(x - y) < 1e-6;
+  }
+  return String(a) === String(b);
+}
+function fConId(l) {
+  if (!fEsLista(l)) return false;
+  for (var i = 0; i < l.length; i++) if (!fEsObj(l[i]) || !l[i].id) return false;
+  return true;
+}
+function fTodosObj(l) {
+  for (var i = 0; i < l.length; i++) if (!fEsObj(l[i])) return false;
+  return true;
+}
+function fPorId(b, m, t, ruta, conf) {
+  var iB = {}, iM = {}, out = [], visto = {}, i;
+  for (i = 0; i < b.length; i++) iB[b[i].id] = b[i];
+  for (i = 0; i < m.length; i++) iM[m[i].id] = m[i];
+  for (i = 0; i < t.length; i++) {
+    var x = t[i], id = x.id; visto[id] = 1;
+    if (iM[id]) out.push(fusion3(iB[id], iM[id], x, ruta + '[' + id + ']', conf));
+    else if (iB[id]) { if (!fIgual(iB[id], x)) { out.push(x); conf.push(ruta + '[' + id + ']'); } }
+    else out.push(x);
+  }
+  for (i = 0; i < m.length; i++) {
+    var y = m[i];
+    if (visto[y.id]) continue;
+    if (iB[y.id]) { if (!fIgual(iB[y.id], y)) { out.push(y); conf.push(ruta + '[' + y.id + ']'); } }
+    else out.push(y);
+  }
+  return out;
+}
+/* b = base (lo que tenía este equipo al empezar), m = lo mío, t = lo del servidor */
+function fusion3(b, m, t, ruta, conf) {
+  if (fIgual(m, t)) return m;
+  if (fIgual(m, b)) return t;
+  if (fIgual(t, b)) return m;
+  if (fEsObj(m) && fEsObj(t)) {
+    var bb = fEsObj(b) ? b : {}, out = {}, ks = {}, k;
+    for (k in bb) if (Object.prototype.hasOwnProperty.call(bb, k)) ks[k] = 1;
+    for (k in m) if (Object.prototype.hasOwnProperty.call(m, k)) ks[k] = 1;
+    for (k in t) if (Object.prototype.hasOwnProperty.call(t, k)) ks[k] = 1;
+    for (k in ks) {
+      var v = fCampo(k, bb[k], m[k], t[k], ruta ? ruta + '.' + k : k, conf);
+      if (v !== undefined) out[k] = v;
+    }
+    return out;
+  }
+  if (fEsLista(m) && fEsLista(t)) {
+    var bL = fEsLista(b) ? b : [];
+    if (fConId(m) && fConId(t) && fConId(bL)) return fPorId(bL, m, t, ruta, conf);
+    if (m.length === t.length && m.length === bL.length && fTodosObj(m) && fTodosObj(t) && fTodosObj(bL)) {
+      var o2 = [];
+      for (var i = 0; i < m.length; i++) o2.push(fusion3(bL[i], m[i], t[i], ruta + '[' + i + ']', conf));
+      return o2;
+    }
+  }
+  conf.push(ruta);
+  return m;
+}
+function fCampo(k, b, m, t, ruta, conf) {
+  if (fIgual(m, t)) return m;
+  if (fIgual(m, b)) return t;
+  if (fIgual(t, b)) return m;
+  /* los dos cobraron: se suman los dos cobros */
+  if (FUSION_SUMA[k] && !isNaN(Number(m)) && !isNaN(Number(t))) {
+    return Math.round((Number(t || 0) + Number(m || 0) - Number(b || 0)) * 100) / 100;
+  }
+  /* marcas de tiempo: la más nueva */
+  if (/^(ts|.*Ts)$/.test(k) && typeof m === 'string' && typeof t === 'string') return m > t ? m : t;
+  /* sesiones de un plan marcadas desde dos equipos: cada atención ocupa su
+     propia sesión, no se pisan */
+  if (k === 'sesiones' && fEsLista(m) && fEsLista(t) && fEsLista(b) && m.length === t.length && m.length === b.length) {
+    return fSesiones(b, m, t, ruta, conf);
+  }
+  /* una visita que ya se atendió no vuelve a "no vino" desde una pantalla vieja */
+  if (k === 'estado' && (m === 'Atendido' || t === 'Atendido')) { conf.push(ruta); return 'Atendido'; }
+  return fusion3(b, m, t, ruta, conf);
+}
+function fSesiones(b, m, t, ruta, conf) {
+  var out = [], i, j, usadas = {};
+  for (i = 0; i < t.length; i++) { out.push(t[i]); if (t[i] && t[i].atencionId) usadas[t[i].atencionId] = 1; }
+  for (i = 0; i < m.length; i++) {
+    if (fIgual(m[i], b[i])) continue;                 // esta sesión no la tocó este equipo
+    if (fIgual(t[i], b[i])) { if (!(m[i].atencionId && usadas[m[i].atencionId] && t[i].atencionId !== m[i].atencionId)) out[i] = m[i]; continue; }
+    if (m[i] && m[i].atencionId && t[i] && t[i].atencionId && m[i].atencionId !== t[i].atencionId) {
+      if (usadas[m[i].atencionId]) continue;
+      for (j = 0; j < out.length; j++) {
+        if (out[j] && !out[j].hecha && !out[j].atencionId) {
+          var o = {}, kk; for (kk in out[j]) if (Object.prototype.hasOwnProperty.call(out[j], kk)) o[kk] = out[j][kk];
+          o.hecha = true; o.fecha = m[i].fecha; o.atencionId = m[i].atencionId;
+          out[j] = o; usadas[m[i].atencionId] = 1; break;
+        }
+      }
+      if (j === out.length) conf.push(ruta + '[' + i + ']');
+      continue;
+    }
+    out[i] = fusion3(b[i], m[i], t[i], ruta + '[' + i + ']', conf);
+  }
+  return out;
+}
+function fCuadra(r) {
+  return r && Math.abs(Number(r.total || 0) - Number(r.acuenta || 0) - Number(r.saldo || 0)) < 0.01;
+}
+/* Una atención: además del campo a campo, el saldo vuelve a cerrar con el
+   total y lo cobrado si de los dos lados cerraba. */
+function fusionRegistro(b, m, t, conf) {
+  if (!t) return m;
+  if (!b) return m;
+  var r = fusion3(b, m, t, '', conf);
+  if (fCuadra(m) && fCuadra(t) && !fCuadra(r)) {
+    r.saldo = Math.round((Number(r.total || 0) - Number(r.acuenta || 0)) * 100) / 100;
+  }
+  return r;
+}
+/* Lo que mira un borrado para saber si la atención cambió desde que se la
+   vio: plata, estado y de quién es. Lo cosmético no frena un borrado. */
+var FUSION_CLAVE_BORRAR = ['fecha', 'paciente', 'profesional', 'estado', 'total', 'acuenta', 'saldo', 'servicios', 'cobrosPosteriores', 'planId'];
+function fEstadoN(e) { return {'Agendado': 'Agendada', 'Reagendar': 'Reprogramó'}[e] || e; }
+function fCambioParaBorrar(base, actual) {
+  for (var i = 0; i < FUSION_CLAVE_BORRAR.length; i++) {
+    var k = FUSION_CLAVE_BORRAR[i], a = base[k], b = actual[k];
+    if (k === 'estado') { a = fEstadoN(a); b = fEstadoN(b); }
+    if (!fIgual(a, b)) return true;
+  }
+  return false;
+}
+/* Clave de la ficha: sin tildes, sin espacios dobles, en minúsculas. */
+function fClavePac(n) {
+  var t = String(n == null ? '' : n);
+  if (t.normalize) t = t.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return t.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+/* Dos filas de ficha que son la misma persona escrita distinto ("María
+   Pérez" y "Maria Perez"): se juntan sin perder nada. Si dicen cosas
+   distintas, se muestran las dos: una alergia nunca puede quedar oculta. */
+function fJuntarTexto(a, b) {
+  a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
+  if (!a) return b; if (!b) return a;
+  if (a === b || a.indexOf(b) >= 0) return a;
+  if (b.indexOf(a) >= 0) return b;
+  return a + ' / ' + b;
+}
+function fusionarFichas(a, b) {
+  if (!a) return b; if (!b) return a;
+  var nuevo = String(a.ts || '') >= String(b.ts || '') ? a : b, viejo = nuevo === a ? b : a;
+  var ma = nuevo.med || {}, mb = viejo.med || {}, med = {}, k;
+  for (k in mb) if (Object.prototype.hasOwnProperty.call(mb, k)) med[k] = mb[k];
+  for (k in ma) if (Object.prototype.hasOwnProperty.call(ma, k)) med[k] = ma[k];
+  med.alergias = fJuntarTexto(ma.alergias, mb.alergias);
+  med.medicacion = fJuntarTexto(ma.medicacion, mb.medicacion);
+  med.notas = fJuntarTexto(ma.notas, mb.notas);
+  var ant = [], vistos = {};
+  [].concat(ma.antecedentes || [], mb.antecedentes || []).forEach(function (x) { if (!vistos[x]) { vistos[x] = 1; ant.push(x); } });
+  med.antecedentes = ant;
+  med.consent = !!(ma.consent || mb.consent);
+  med.consentTs = ma.consentTs || mb.consentTs || '';
+  var planes = [], ids = {};
+  [].concat(nuevo.planes || [], viejo.planes || []).forEach(function (p) {
+    if (p && p.id && ids[p.id]) return; if (p && p.id) ids[p.id] = 1; planes.push(p);
+  });
+  return {nombre: nuevo.nombre || viejo.nombre, nac: nuevo.nac || viejo.nac || '', med: med, planes: planes, ts: nuevo.ts || viejo.ts || ''};
+}
+
 /* ------------------------------------------------------------------ HTTP */
 function json(obj) {
+  if (obj && typeof obj === 'object') obj.v = FUSION_V;
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -487,15 +724,15 @@ function doPost(e) {
     var body = JSON.parse(e.postData.contents || '{}');
     var reg = body.registro || body.pedido || {};
     if (body.action === 'list') return json(doList());
-    if (body.action === 'save') return json(doSave(reg));
-    if (body.action === 'delete') return json(doDelete(reg));
+    if (body.action === 'save') return json(doSave(reg, body.base || null));
+    if (body.action === 'delete') return json(doDelete(reg, body.base || null));
     if (body.action === 'bulk') return json(doBulk(body.registros || []));
     if (body.action === 'info') return json(doInfo());
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg));
     /* Solo la configuracion: el list arrastra miles de atenciones y tarda
        segundos; las claves de las doctoras tienen que llegar ya. */
     if (body.action === 'cfgGet') return json({ ok: true, cfg: leerCfg() });
-    if (body.action === 'pac') return json(doGuardarPac(reg));
+    if (body.action === 'pac') return json(doGuardarPac(reg, body.base || null));
     if (body.action === 'egreso') return json(doGuardarEgreso(reg));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg));
     return json({ ok: false, error: 'accion_desconocida' });
