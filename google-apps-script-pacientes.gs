@@ -195,7 +195,7 @@ function doGuardarPac(p, base) {
     }
   }
   var conf = [], final = p;
-  if (actual && base) final = fusion3(base, p, actual, '', conf);
+  if (actual && base !== undefined) final = fusion3(base || {}, p, actual, '', conf);
   final.nombre = p.nombre;
   var fila = filaDePaciente(final);
   if (destinos.length) {
@@ -255,20 +255,35 @@ function filaEgresoPorId(sh, id) {
   return 0;
 }
 
-function doGuardarEgreso(e) {
+/* Con base, igual que las atenciones: un equipo sin refrescar no revive un
+   egreso borrado ni pisa una corrección de otro. */
+function doGuardarEgreso(e, base) {
   if (!e || !e.id) return { ok: false, error: 'sin_id' };
   var sh = getSheetEgr();
   var destino = filaEgresoPorId(sh, e.id);
+  if (!destino && base) return { ok: false, error: 'borrada', id: e.id };
+  var conf = [];
+  if (destino && base !== undefined) {
+    var actual = egresoDeFila(sh.getRange(destino, 1, 1, COLS_EGR.length).getValues()[0]);
+    e = fusion3(base || {}, e, actual, '', conf);
+  }
   var fila = filaDeEgreso(e);
   if (destino) sh.getRange(destino, 1, 1, COLS_EGR.length).setValues([fila]);
   else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_EGR.length).setValues([fila]);
-  return { ok: true, egreso: e.id };
+  return { ok: true, egreso: e.id, registro: egresoDeFila(fila), conflictos: conf };
 }
 
-function doBorrarEgreso(e) {
+function doBorrarEgreso(e, base) {
   if (!e || !e.id) return { ok: false, error: 'sin_id' };
   var sh = getSheetEgr();
   var fila = filaEgresoPorId(sh, e.id);
+  if (fila && base) {
+    var actual = egresoDeFila(sh.getRange(fila, 1, 1, COLS_EGR.length).getValues()[0]);
+    var b2 = {}, a2 = {}, k;
+    for (k in base) if (k !== 'ts') b2[k] = base[k];
+    for (k in actual) if (k !== 'ts') a2[k] = actual[k];
+    if (!fIgual(b2, a2)) return { ok: false, error: 'cambio', registro: actual };
+  }
   if (fila) sh.deleteRow(fila);
   return { ok: true, borrado: !!fila };
 }
@@ -362,13 +377,18 @@ function formatoFecha(v) {
    objeto y así no ensucian la planilla que mira el consultorio. */
 var K_CFG = 'CFG_SPADENTAL';
 
-function doGuardarCfg(cfg) {
+function doGuardarCfg(cfg, base) {
   if (!cfg || !cfg.precios || !cfg.canales) return { ok: false, error: 'cfg_invalida' };
+  /* con base, los ajustes de dos equipos se juntan acá adentro, sin carrera */
+  if (base) {
+    var actual = leerCfg();
+    if (actual) cfg = fusion3(base, cfg, actual, '', []);
+  }
   var props = PropertiesService.getScriptProperties();
   var texto = JSON.stringify(cfg);
   if (texto.length > 450000) return { ok: false, error: 'cfg_muy_grande' };
   props.setProperty(K_CFG, texto);
-  return { ok: true, ts: cfg.ts || '' };
+  return { ok: true, ts: cfg.ts || '', cfg: cfg };
 }
 
 function leerCfg() {
@@ -421,7 +441,7 @@ function doSave(r, base) {
   /* Tenía base pero ya no está: la borraron desde otro equipo. Un cambio
      viejo no la revive. */
   if (!destino && base) return { ok: false, error: 'borrada', id: r.id };
-  if (destino && base) {
+  if (destino && base !== undefined) {
     var actual = registroDeFila(sh.getRange(destino, 1, 1, COLS.length).getValues()[0]);
     r = fusionRegistro(base, r, actual, conf);
   }
@@ -510,10 +530,11 @@ function doDelete(r, base) {
    Dos equipos tocan la misma atención o la misma ficha: cada uno manda lo
    suyo junto con la versión que tenía al empezar (la "base"). Lo que solo
    cambió uno, queda; lo que cambiaron los dos, se resuelve campo por campo.
-   Los cobros se suman (no se pisan) y una visita atendida no vuelve atrás.
+   La plata no se suma "por diferencia": lo cobrado sale de los cobros, que
+   tienen id, así un reintento nunca cuenta dos veces el mismo pago.
    ===================================================================== */
-var FUSION_V = 2;
-var FUSION_SUMA = {acuenta: 1, saldo: 1};
+var FUSION_V = 3;
+var FUSION_TEXTO = {obs: 1, notas: 1, alergias: 1, medicacion: 1, detalle: 1};
 function fVacio(v) {
   if (v === undefined || v === null || v === '' || v === false) return true;
   if (Object.prototype.toString.call(v) === '[object Array]') return v.length === 0;
@@ -551,6 +572,7 @@ function fIgual(a, b) {
   }
   return String(a) === String(b);
 }
+function fCopia(o) { return o === undefined ? undefined : JSON.parse(JSON.stringify(o)); }
 function fConId(l) {
   if (!fEsLista(l)) return false;
   for (var i = 0; i < l.length; i++) if (!fEsObj(l[i]) || !l[i].id) return false;
@@ -578,6 +600,36 @@ function fPorId(b, m, t, ruta, conf) {
   }
   return out;
 }
+/* Listas sin id (servicios, antecedentes, profesionales): lo que agregó cada
+   uno se suma y lo que sacó cada uno se saca. */
+function fMulti(b, m, t) {
+  var cB = {}, cM = {}, i, k, out = [], quitar = {};
+  for (i = 0; i < b.length; i++) { k = JSON.stringify(b[i]); cB[k] = (cB[k] || 0) + 1; }
+  for (i = 0; i < m.length; i++) { k = JSON.stringify(m[i]); cM[k] = (cM[k] || 0) + 1; }
+  for (k in cB) if ((cM[k] || 0) < cB[k]) quitar[k] = cB[k] - (cM[k] || 0);
+  for (i = 0; i < t.length; i++) {
+    k = JSON.stringify(t[i]);
+    if (quitar[k]) { quitar[k]--; continue; }
+    out.push(t[i]);
+  }
+  var agregar = {};
+  for (k in cM) if (cM[k] > (cB[k] || 0)) agregar[k] = cM[k] - (cB[k] || 0);
+  for (i = 0; i < m.length; i++) {
+    k = JSON.stringify(m[i]);
+    if (agregar[k]) { agregar[k]--; out.push(m[i]); }
+  }
+  return out;
+}
+/* Un texto que los dos completaron: se conservan los dos agregados. Si lo
+   reescribieron distinto, quedan los dos (una nota clínica no se pierde). */
+function fTexto3(b, m, t) {
+  b = String(b == null ? '' : b); m = String(m == null ? '' : m); t = String(t == null ? '' : t);
+  if (b && m.indexOf(b) === 0 && t.indexOf(b) === 0) {
+    var extra = m.slice(b.length);
+    return t.indexOf(extra) >= 0 ? t : t + extra;
+  }
+  return fJuntarTexto(t, m);
+}
 /* b = base (lo que tenía este equipo al empezar), m = lo mío, t = lo del servidor */
 function fusion3(b, m, t, ruta, conf) {
   if (fIgual(m, t)) return m;
@@ -602,6 +654,7 @@ function fusion3(b, m, t, ruta, conf) {
       for (var i = 0; i < m.length; i++) o2.push(fusion3(bL[i], m[i], t[i], ruta + '[' + i + ']', conf));
       return o2;
     }
+    return fMulti(bL, m, t);
   }
   conf.push(ruta);
   return m;
@@ -610,65 +663,131 @@ function fCampo(k, b, m, t, ruta, conf) {
   if (fIgual(m, t)) return m;
   if (fIgual(m, b)) return t;
   if (fIgual(t, b)) return m;
-  /* los dos cobraron: se suman los dos cobros */
-  if (FUSION_SUMA[k] && !isNaN(Number(m)) && !isNaN(Number(t))) {
-    return Math.round((Number(t || 0) + Number(m || 0) - Number(b || 0)) * 100) / 100;
-  }
   /* marcas de tiempo: la más nueva */
   if (/^(ts|.*Ts)$/.test(k) && typeof m === 'string' && typeof t === 'string') return m > t ? m : t;
-  /* sesiones de un plan marcadas desde dos equipos: cada atención ocupa su
-     propia sesión, no se pisan */
-  if (k === 'sesiones' && fEsLista(m) && fEsLista(t) && fEsLista(b) && m.length === t.length && m.length === b.length) {
-    return fSesiones(b, m, t, ruta, conf);
+  if (FUSION_TEXTO[k] && typeof m !== 'object' && typeof t !== 'object') {
+    var tx = fTexto3(b, m, t);
+    if (tx !== String(m == null ? '' : m)) conf.push(ruta);
+    return tx;
   }
   /* una visita que ya se atendió no vuelve a "no vino" desde una pantalla vieja */
   if (k === 'estado' && (m === 'Atendido' || t === 'Atendido')) { conf.push(ruta); return 'Atendido'; }
+  /* sesiones de un plan marcadas desde dos equipos: cada atención ocupa su
+     propia sesión, no se pisan */
+  if (k === 'sesiones' && fEsLista(m) && fEsLista(t)) return fSesiones(fEsLista(b) ? b : [], m, t, ruta, conf);
   return fusion3(b, m, t, ruta, conf);
 }
 function fSesiones(b, m, t, ruta, conf) {
-  var out = [], i, j, usadas = {};
-  for (i = 0; i < t.length; i++) { out.push(t[i]); if (t[i] && t[i].atencionId) usadas[t[i].atencionId] = 1; }
-  for (i = 0; i < m.length; i++) {
-    if (fIgual(m[i], b[i])) continue;                 // esta sesión no la tocó este equipo
-    if (fIgual(t[i], b[i])) { if (!(m[i].atencionId && usadas[m[i].atencionId] && t[i].atencionId !== m[i].atencionId)) out[i] = m[i]; continue; }
-    if (m[i] && m[i].atencionId && t[i] && t[i].atencionId && m[i].atencionId !== t[i].atencionId) {
-      if (usadas[m[i].atencionId]) continue;
-      for (j = 0; j < out.length; j++) {
-        if (out[j] && !out[j].hecha && !out[j].atencionId) {
-          var o = {}, kk; for (kk in out[j]) if (Object.prototype.hasOwnProperty.call(out[j], kk)) o[kk] = out[j][kk];
-          o.hecha = true; o.fecha = m[i].fecha; o.atencionId = m[i].atencionId;
-          out[j] = o; usadas[m[i].atencionId] = 1; break;
-        }
-      }
-      if (j === out.length) conf.push(ruta + '[' + i + ']');
+  var out = [], i, j, usadas = {}, n = Math.max(b.length, m.length, t.length);
+  for (i = 0; i < t.length; i++) if (t[i] && t[i].atencionId) usadas[t[i].atencionId] = 1;
+  var pend = [];
+  for (i = 0; i < n; i++) {
+    var bi = b[i], mi = m[i], ti = t[i];
+    if (mi === undefined && ti === undefined) continue;
+    if (mi === undefined) { if (bi !== undefined && fIgual(ti, bi)) continue; out.push(ti); continue; }
+    if (ti === undefined) { if (bi !== undefined && fIgual(mi, bi)) continue; out.push(mi); continue; }
+    if (fIgual(mi, bi) || fIgual(mi, ti)) { out.push(ti); continue; }
+    if (fIgual(ti, bi)) {
+      if (mi.atencionId && usadas[mi.atencionId] && ti.atencionId !== mi.atencionId) { out.push(ti); continue; }
+      out.push(mi); continue;
+    }
+    if (mi.atencionId && ti.atencionId && mi.atencionId !== ti.atencionId) {
+      out.push(ti);
+      if (!usadas[mi.atencionId]) pend.push(mi);
       continue;
     }
-    out[i] = fusion3(b[i], m[i], t[i], ruta + '[' + i + ']', conf);
+    out.push(fusion3(bi, mi, ti, ruta + '[' + i + ']', conf));
+  }
+  /* la atención que quedó sin lugar ocupa la primera sesión libre */
+  for (i = 0; i < pend.length; i++) {
+    for (j = 0; j < out.length; j++) {
+      if (out[j] && !out[j].hecha && !out[j].atencionId) {
+        var o = fCopia(out[j]); o.hecha = true; o.fecha = pend[i].fecha; o.atencionId = pend[i].atencionId;
+        out[j] = o; break;
+      }
+    }
+    if (j === out.length) conf.push(ruta);
   }
   return out;
 }
-function fCuadra(r) {
-  return r && Math.abs(Number(r.total || 0) - Number(r.acuenta || 0) - Number(r.saldo || 0)) < 0.01;
-}
-/* Una atención: además del campo a campo, el saldo vuelve a cerrar con el
-   total y lo cobrado si de los dos lados cerraba. */
-function fusionRegistro(b, m, t, conf) {
-  if (!t) return m;
-  if (!b) return m;
-  var r = fusion3(b, m, t, '', conf);
-  if (fCuadra(m) && fCuadra(t) && !fCuadra(r)) {
-    r.saldo = Math.round((Number(r.total || 0) - Number(r.acuenta || 0)) * 100) / 100;
+/* ---- la plata de una atención ----
+   A cuenta = cobro inicial + cobros posteriores (con id). Al juntar, el cobro
+   inicial y la deuda perdonada se deciden campo a campo; los cobros
+   posteriores se unen por id; y recién ahí se vuelven a armar el a cuenta, el
+   desglose por método y el saldo. Así nada se cuenta dos veces. */
+function fNum(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+function fR(n) { return Math.round(n * 100) / 100; }
+function fCobrosPost(r) { return fEsLista(r && r.cobrosPosteriores) ? r.cobrosPosteriores : []; }
+function fPorMetodo(lista, signo, acc) {
+  for (var i = 0; i < lista.length; i++) {
+    var p = lista[i]; if (!p || !p.metodo) continue;
+    acc[p.metodo] = fR((acc[p.metodo] || 0) + signo * fNum(p.monto));
   }
+  return acc;
+}
+function fListaMetodos(acc) {
+  var ks = [], k, out = [];
+  for (k in acc) if (Object.prototype.hasOwnProperty.call(acc, k) && acc[k] > 0.004) ks.push(k);
+  ks.sort();
+  for (var i = 0; i < ks.length; i++) out.push({metodo: ks[i], monto: acc[ks[i]]});
+  return out;
+}
+function fDesarmar(r) {
+  r = r || {};
+  var cp = fCobrosPost(r), sumaCp = 0, i;
+  for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
+  var pagos = fEsLista(r.pagos) && r.pagos.length ? r.pagos
+    : (r.metodo && r.metodo !== 'Mixto' && fNum(r.acuenta) > 0 ? [{metodo: r.metodo, monto: fNum(r.acuenta)}] : []);
+  var ini = fPorMetodo(cp, -1, fPorMetodo(pagos, 1, {}));
+  var o = {}, k;
+  for (k in r) if (Object.prototype.hasOwnProperty.call(r, k)) o[k] = r[k];
+  delete o.acuenta; delete o.saldo; delete o.pagos; delete o.metodo;
+  o.__cobroIni = fR(fNum(r.acuenta) - sumaCp);
+  o.__pagosIni = fListaMetodos(ini);
+  o.__metodoIni = (!pagos.length && !cp.length) ? (r.metodo || '') : '';
+  o.__perdon = fR(fNum(r.total) - fNum(r.acuenta) - fNum(r.saldo));
+  return o;
+}
+function fArmar(o) {
+  var cp = fCobrosPost(o), sumaCp = 0, i;
+  for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
+  var acc = {}, ini = o.__pagosIni || [];
+  for (i = 0; i < ini.length; i++) acc[ini[i].metodo] = fNum(ini[i].monto);
+  var pagos = fListaMetodos(fPorMetodo(cp, 1, acc));
+  var r = {}, k;
+  for (k in o) if (Object.prototype.hasOwnProperty.call(o, k) && k.indexOf('__') !== 0) r[k] = o[k];
+  r.acuenta = fR(fNum(o.__cobroIni) + sumaCp);
+  r.pagos = pagos;
+  r.metodo = pagos.length > 1 ? 'Mixto' : (pagos.length ? pagos[0].metodo : (o.__metodoIni || ''));
+  r.saldo = fR(fNum(r.total) - r.acuenta - fNum(o.__perdon));
+  if (r.saldo < 0 && fNum(o.__perdon) > 0) r.saldo = fR(Math.max(0, r.saldo));
   return r;
 }
+function fSumaSrv(r) {
+  var l = fEsLista(r && r.servicios) ? r.servicios : [], s = 0;
+  for (var i = 0; i < l.length; i++) s += fNum(l[i] && l[i].precio) * (fNum(l[i] && l[i].cant) || 1);
+  return fR(s);
+}
+/* Una atención. Sin base (alta nueva cuya respuesta se perdió, o cola de una
+   versión anterior) se junta igual: lo que tienen los dos queda. */
+function fusionRegistro(b, m, t, conf) {
+  if (!t) return m;
+  var dB = fDesarmar(b || {}), dM = fDesarmar(m), dT = fDesarmar(t);
+  if (!b) { dB = {}; }
+  var o = fusion3(dB, dM, dT, '', conf);
+  /* si de los dos lados el total eran los servicios, sigue siéndolo */
+  if (Math.abs(fNum(m.total) - fSumaSrv(m)) < 0.01 && Math.abs(fNum(t.total) - fSumaSrv(t)) < 0.01) o.total = fSumaSrv(o);
+  return fArmar(o);
+}
 /* Lo que mira un borrado para saber si la atención cambió desde que se la
-   vio: plata, estado y de quién es. Lo cosmético no frena un borrado. */
-var FUSION_CLAVE_BORRAR = ['fecha', 'paciente', 'profesional', 'estado', 'total', 'acuenta', 'saldo', 'servicios', 'cobrosPosteriores', 'planId'];
+   vio: plata, estado, de quién es y las notas. */
+var FUSION_CLAVE_BORRAR = ['fecha', 'paciente', 'profesional', 'estado', 'total', 'acuenta', 'saldo', 'servicios', 'cobrosPosteriores', 'planId', 'obs'];
 function fEstadoN(e) { return {'Agendado': 'Agendada', 'Reagendar': 'Reprogramó'}[e] || e; }
 function fCambioParaBorrar(base, actual) {
   for (var i = 0; i < FUSION_CLAVE_BORRAR.length; i++) {
     var k = FUSION_CLAVE_BORRAR[i], a = base[k], b = actual[k];
     if (k === 'estado') { a = fEstadoN(a); b = fEstadoN(b); }
+    if (k === 'obs') { a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim(); }
     if (!fIgual(a, b)) return true;
   }
   return false;
@@ -724,17 +843,20 @@ function doPost(e) {
     var body = JSON.parse(e.postData.contents || '{}');
     var reg = body.registro || body.pedido || {};
     if (body.action === 'list') return json(doList());
-    if (body.action === 'save') return json(doSave(reg, body.base || null));
-    if (body.action === 'delete') return json(doDelete(reg, body.base || null));
+    /* base ausente = panel de una versión anterior: escribe como siempre.
+       base null = alta nueva (o cola vieja): se junta igual con lo que haya. */
+    var base = Object.prototype.hasOwnProperty.call(body, 'base') ? body.base : undefined;
+    if (body.action === 'save') return json(doSave(reg, base));
+    if (body.action === 'delete') return json(doDelete(reg, base));
     if (body.action === 'bulk') return json(doBulk(body.registros || []));
     if (body.action === 'info') return json(doInfo());
-    if (body.action === 'cfg') return json(doGuardarCfg(body.cfg));
+    if (body.action === 'cfg') return json(doGuardarCfg(body.cfg, base));
     /* Solo la configuracion: el list arrastra miles de atenciones y tarda
        segundos; las claves de las doctoras tienen que llegar ya. */
     if (body.action === 'cfgGet') return json({ ok: true, cfg: leerCfg() });
-    if (body.action === 'pac') return json(doGuardarPac(reg, body.base || null));
-    if (body.action === 'egreso') return json(doGuardarEgreso(reg));
-    if (body.action === 'egresoDel') return json(doBorrarEgreso(reg));
+    if (body.action === 'pac') return json(doGuardarPac(reg, base));
+    if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
+    if (body.action === 'egresoDel') return json(doBorrarEgreso(reg, base));
     return json({ ok: false, error: 'accion_desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });

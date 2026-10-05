@@ -20,7 +20,8 @@ Para quien siga trabajando en `pacientes.html` (Ezequiel Spadental) y `cosmetic/
 |---|---|---|
 | `53a6a30` | Arreglos de la 1.ª revisión: montos con punto de miles, total que se recalcula, "No asistió" con cobro bloqueado, plan terminado, `keyPac`, doctoras restringidas en Lista, Caja y Pacientes | Sí |
 | `e4b609f` | **Fusión de cambios entre equipos** (panel y Apps Script) y los 30 hallazgos de la 2.ª auditoría | **No**: está en local, esperando el ok |
-| (sin commit) | Este informe y `tests/apps-script-en-memoria.cjs` | No |
+| `855dae1` | Este informe y `tests/apps-script-en-memoria.cjs` | No |
+| (siguiente) | Correcciones de la 3.ª auditoría (re-auditoría de `e4b609f`); ver la sección "Ronda 3" | No |
 
 **Falta desplegar el Apps Script.** `google-apps-script-pacientes.gs` y `cosmetic/google-apps-script-pacientes.gs` cambiaron en `e4b609f`, pero hay que pegarlos a mano en cada proyecto de Google Apps Script y publicar una versión nueva de la Web App. Lo hace la clínica, guiada. Mientras no se haga, el panel nuevo funciona igual que el viejo: el servidor ignora la `base` y escribe encima, como antes.
 
@@ -89,12 +90,43 @@ El bloque "FUSIÓN DE CAMBIOS" es texto idéntico en los 2 HTML y los 2 `.gs`. E
 - Borrar sigue la cadena de reprogramaciones (`citaDe`) y cancela la cita viva.
 - `subirLocal` y "Restaurar respaldo" solo mandan lo que falta.
 
+## Ronda 3: lo que cambió después de la re-auditoría de `e4b609f`
+
+La re-auditoría encontró tres retrocesos con el Apps Script nuevo:
+
+- un cobro se contaba dos veces al reintentar después de una respuesta perdida;
+- una ficha guardada sin base borraba la alergia o el plan de otra doctora;
+- una atención con cobro, cargada sin red, se descartaba si otro equipo había borrado la cita.
+
+Se corrigió así (`FUSION_V = 3`):
+
+- **La plata no se suma por diferencia.** `fusionRegistro` desarma el registro (`fDesarmar`) en cobro inicial (`__cobroIni`), desglose inicial por método (`__pagosIni`) y deuda perdonada (`__perdon`). `cobrosPosteriores` se une por id. Después `fArmar` vuelve a calcular `acuenta`, `pagos`, `metodo` y `saldo`. Así el resultado es idempotente: el mismo envío repetido no cambia nada.
+  - Si de los dos lados el total coincidía con la suma de los servicios, el total se recalcula después de juntar.
+  - El saldo no queda negativo cuando hubo deuda perdonada.
+- **Listas sin id** (servicios, antecedentes, profesionales, canales): `fMulti` suma lo que agregó cada lado y saca lo que sacó cada lado.
+- **Textos** (`obs`, `notas`, `alergias`, `medicacion`, `detalle`): `fTexto3` conserva los dos agregados. Si los dos lados reescribieron el texto, quedan los dos separados por " / ".
+- **Sesiones de plan:** `fSesiones` acepta largos distintos. Si un equipo agrega una sesión, eso no desmarca la que ya estaba hecha.
+- **Base en el servidor:** en `doPost`, que falte `base` en el pedido (panel viejo) se trata distinto de `base: null` (alta nueva o cola vieja).
+  - Sin `base`, se escribe como siempre.
+  - Con `base: null`, el servidor junta con lo que haya, como si la base estuviera vacía. Así un alta repetida o una ficha que el equipo nunca vio no pisan nada.
+  - La cola que dejó el panel anterior se manda con `base: null` (`initSnaps`).
+- **`rechazado`:**
+  - Si el error es `borrada` y el item traía trabajo (cobro o servicios atendidos), la atención se vuelve a crear en vez de descartarse.
+  - Si el error es `cambio` en un borrado, se deshacen sus efectos: la cita vuelve a `Agendada` y la sesión del plan se vuelve a marcar.
+- **Egresos:** `doGuardarEgreso` y `doBorrarEgreso` reciben base, con los mismos errores `borrada` y `cambio`.
+- **Ajustes:** `doGuardarCfg(cfg, base)` junta dentro del servidor, sin carrera entre dos equipos. `subirCfg` manda como base la config que leyó del servidor justo antes. Si el equipo todavía no tiene base, usa `cfgDefault()` como base; para las claves delicadas mantiene la regla anterior.
+- **Borrado:** `FUSION_CLAVE_BORRAR` incluye `obs`, así que una nota clínica nueva también frena un borrado.
+- **Doctoras:**
+  - el formulario, "Nueva atención" desde el Historial y la Agenda quedan siempre a nombre de la doctora;
+  - cada plan tiene doctora (`duenaPlan`): la que lo cargó, la de sus sesiones o la que atiende al paciente.
+- **Montos:** `num` entiende "1.500.00". `montoRaro` frena montos con letras ("15OO", "1e3") en el cobro y en el formulario.
+
 ## Cómo verificar
 
 Desde la raíz del repo:
 
 ```
-node tests/pacientes-regression.cjs        # 114 comprobaciones, sin red
+node tests/pacientes-regression.cjs        # 122 comprobaciones, sin red
 ```
 
 `tests/apps-script-en-memoria.cjs` corre el `.gs` **real** sobre una planilla en memoria. Expone `handle(body)` y vistas `registros`, `pacientes`, `egresos` y `cfg`:
@@ -129,9 +161,10 @@ También pasaron, pero esas pruebas viven fuera del repo:
 
 1. **Desplegar los 2 `.gs`** en Google, después del ok y con guía.
 2. **Homónimos que solo difieren en una tilde y tienen distinta fecha de nacimiento** (por ejemplo "Ana Ríos" de 1980 y "Ana Rios" de 2001): el panel los trata como la misma clave, y la regla de identidad frena el cobro hasta que se renombre a una. Es el diseño acordado. La solución real es un ID estable de paciente; ver `COORDINACION.md`.
-3. **Planes existentes sin `prof`**: en un paciente compartido, la otra doctora los ve. Los planes nuevos ya guardan su doctora.
+3. **Planes existentes sin `prof`**: se les asigna doctora al vuelo (`duenaPlan`), según quién atendió sus sesiones o al paciente. Si un plan no tiene sesiones ni atenciones, lo ven todas.
 4. **Alergias de un paciente ajeno**: la doctora las sigue viendo al cargarlo. Es a propósito, por seguridad clínica.
-5. `num()` con texto sin sentido (por ejemplo `"1e3"` o `"1.000.0"`) da un número raro. Los formatos reales se leen bien.
+5. `num()` con texto sin sentido sigue devolviendo un número raro, pero `montoRaro` frena esos montos antes de guardarlos.
 6. **Datos de Cosmetic**: hay Bs 40.030 cobrados sin método y Bs 46.910 sin doctora, sobre todo de Ana María Vargas. Vienen de los Excel históricos. Las doctoras históricas (Nadia, Ximena, Katherine, Yanaina, Carolina) no están en la config, y las doctoras actuales todavía no tienen clave asignada.
 7. Mirna debe cambiar las claves de fábrica (la de dueña y la del equipo).
-8. Al cerrar este informe había una **re-auditoría con agentes de `e4b609f` todavía en curso**. Si aparecen hallazgos, quedarán en un commit posterior o en este archivo.
+8. La re-auditoría de `e4b609f` encontró problemas, que se corrigieron en la ronda 3. Los repros de los auditores (32 scripts) dan bien contra el `.gs` nuevo en los dos paneles. Antes de publicar se hace una auditoría más de la ronda 3.
+9. **Orden de despliegue recomendado:** primero publicar los paneles (las colas viejas se vacían con el servidor viejo, que se comporta como siempre); después pegar los dos `.gs` nuevos y publicar una versión nueva de cada Web App.

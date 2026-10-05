@@ -1466,11 +1466,23 @@ function bloqueaAjeno(nombre){
   return false}
 /* El plan de otra doctora no se ve: sus montos son de ella. Un plan sin dueña
    anotada es de quien atendió sus sesiones; sin sesiones, es de todos. */
+function duenaPlan(pl){
+  if(!pl)return '';
+  if(pl.prof)return pl.prof;
+  var porFecha=function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')};
+  var conProf=function(r){return r.profesional&&r.profesional!=='Por definir'};
+  var ses=DATA.filter(function(r){return r.planId===pl.id&&conProf(r)}).sort(porFecha);
+  if(ses.length)return ses[0].profesional;
+  /* sin sesiones todavía: es de quien atiende a ese paciente */
+  var k='';
+  Object.keys(PAC).some(function(x){
+    if((PAC[x].planes||[]).some(function(p){return p.id===pl.id})){k=x;return true}return false});
+  var at=DATA.filter(function(r){return k&&keyPac(r.paciente)===k&&esAtencion(r)&&conProf(r)}).sort(porFecha);
+  return at.length?at[0].profesional:''}
 function planVisible(pl){
   if(!esDoctora()||!pl)return true;
-  if(pl.prof)return pl.prof===PROF_ACTUAL;
-  var ses=DATA.filter(function(r){return r.planId===pl.id});
-  return !ses.length||ses.some(esMia)}
+  var d=duenaPlan(pl);
+  return !d||d===PROF_ACTUAL}
 function planesVisibles(l){return (l||[]).filter(planVisible)}
 /* los planes que la doctora puede ver de un paciente: ninguno si es ajeno */
 function planesVisiblesDe(nombre){return pacAjeno(nombre)?[]:planesVisibles(planesDe(nombre))}
@@ -1769,7 +1781,12 @@ function num(v){
     else t=t.replace(/,/g,'')}
   else if(t.indexOf(',')>=0)t=/^-?\d{1,3}(,\d{3})+$/.test(t)?t.replace(/,/g,''):t.replace(',','.');
   else if(/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');
+  else if(/^-?[1-9]\d{0,2}(\.\d{3})+\.\d{1,2}$/.test(t))t=t.replace(/\.(?=\d{3}(\.|$))/g,'');
   var n=parseFloat(t);return isFinite(n)?n:0}
+/* "15OO" o "1e3" no son un monto: mejor frenar que guardar 15 o 13 */
+function montoRaro(v){
+  var t=String(v==null?'':v).replace(/bs\.?/ig,'').replace(/\s/g,'');
+  return /[^0-9.,\-]/.test(t)}
 function bs(n){return 'Bs '+Math.round(num(n)).toLocaleString('es-BO')}
 function n0(n){return Math.round(num(n)).toLocaleString('es-BO')}
 function uid(){return 'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -1866,7 +1883,12 @@ function cfgBase(){try{var t=localStorage.getItem(K_CFG+'_BASE');return t?JSON.p
 function fijarCfgBase(c){try{localStorage.setItem(K_CFG+'_BASE',JSON.stringify(c))}catch(e){}}
 function juntarCfg(remota){
   var b=cfgBase();
-  return b?fusion3(b,CFG,remota,'',[]):fusionarCfg(remota,CFG)}
+  if(b)return fusion3(b,CFG,remota,'',[]);
+  /* sin base todavía: lo de fábrica hace de base (lo que este equipo no tocó
+     no pisa lo de otro); las claves siguen la regla de siempre */
+  var r=fusion3(cfgDefault(),CFG,remota,'',[]), f=fusionarCfg(remota,CFG);
+  CLAVES_DELICADAS.forEach(function(k){if(f[k]===undefined)delete r[k]; else r[k]=f[k]});
+  return r}
 
 function saveCfg(guardarEnServidor){
   CFG.ts=new Date().toISOString();
@@ -1883,8 +1905,16 @@ function subirCfg(){
       CFG.ts=new Date().toISOString();
       saveCfgObj(CFG)}
     var mando=JSON.parse(JSON.stringify(CFG));
-    return api('cfg',null,mando).then(function(res){
-      if(res&&res.ok)fijarCfgBase(mando);
+    var remota=(r&&r.ok&&r.cfg&&cfgSana(r.cfg))?JSON.parse(JSON.stringify(r.cfg)):undefined;
+    /* la base que viaja es lo que había recién en el servidor: si otro equipo
+       guarda justo en el medio, el servidor junta los dos */
+    return api('cfg',null,mando,remota).then(function(res){
+      if(res&&res.ok){
+        var fin=(res.cfg&&cfgSana(res.cfg))?res.cfg:mando;
+        if(fin!==mando&&!fIgual(fin,CFG)){
+          CFG=fin; var d=cfgDefault(); for(var k in d){if(CFG[k]==null)CFG[k]=d[k]}
+          saveCfgObj(CFG); renderCanales(); renderAgendaPor()}
+        fijarCfgBase(fin)}
       return res})})}
 
 /* Un hash de clave válido es SHA-256: 64 caracteres hexadecimales. Cualquier
@@ -1941,10 +1971,11 @@ function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){
    Dos equipos tocan la misma atención o la misma ficha: cada uno manda lo
    suyo junto con la versión que tenía al empezar (la "base"). Lo que solo
    cambió uno, queda; lo que cambiaron los dos, se resuelve campo por campo.
-   Los cobros se suman (no se pisan) y una visita atendida no vuelve atrás.
+   La plata no se suma "por diferencia": lo cobrado sale de los cobros, que
+   tienen id, así un reintento nunca cuenta dos veces el mismo pago.
    ===================================================================== */
-var FUSION_V = 2;
-var FUSION_SUMA = {acuenta: 1, saldo: 1};
+var FUSION_V = 3;
+var FUSION_TEXTO = {obs: 1, notas: 1, alergias: 1, medicacion: 1, detalle: 1};
 function fVacio(v) {
   if (v === undefined || v === null || v === '' || v === false) return true;
   if (Object.prototype.toString.call(v) === '[object Array]') return v.length === 0;
@@ -1982,6 +2013,7 @@ function fIgual(a, b) {
   }
   return String(a) === String(b);
 }
+function fCopia(o) { return o === undefined ? undefined : JSON.parse(JSON.stringify(o)); }
 function fConId(l) {
   if (!fEsLista(l)) return false;
   for (var i = 0; i < l.length; i++) if (!fEsObj(l[i]) || !l[i].id) return false;
@@ -2009,6 +2041,36 @@ function fPorId(b, m, t, ruta, conf) {
   }
   return out;
 }
+/* Listas sin id (servicios, antecedentes, profesionales): lo que agregó cada
+   uno se suma y lo que sacó cada uno se saca. */
+function fMulti(b, m, t) {
+  var cB = {}, cM = {}, i, k, out = [], quitar = {};
+  for (i = 0; i < b.length; i++) { k = JSON.stringify(b[i]); cB[k] = (cB[k] || 0) + 1; }
+  for (i = 0; i < m.length; i++) { k = JSON.stringify(m[i]); cM[k] = (cM[k] || 0) + 1; }
+  for (k in cB) if ((cM[k] || 0) < cB[k]) quitar[k] = cB[k] - (cM[k] || 0);
+  for (i = 0; i < t.length; i++) {
+    k = JSON.stringify(t[i]);
+    if (quitar[k]) { quitar[k]--; continue; }
+    out.push(t[i]);
+  }
+  var agregar = {};
+  for (k in cM) if (cM[k] > (cB[k] || 0)) agregar[k] = cM[k] - (cB[k] || 0);
+  for (i = 0; i < m.length; i++) {
+    k = JSON.stringify(m[i]);
+    if (agregar[k]) { agregar[k]--; out.push(m[i]); }
+  }
+  return out;
+}
+/* Un texto que los dos completaron: se conservan los dos agregados. Si lo
+   reescribieron distinto, quedan los dos (una nota clínica no se pierde). */
+function fTexto3(b, m, t) {
+  b = String(b == null ? '' : b); m = String(m == null ? '' : m); t = String(t == null ? '' : t);
+  if (b && m.indexOf(b) === 0 && t.indexOf(b) === 0) {
+    var extra = m.slice(b.length);
+    return t.indexOf(extra) >= 0 ? t : t + extra;
+  }
+  return fJuntarTexto(t, m);
+}
 /* b = base (lo que tenía este equipo al empezar), m = lo mío, t = lo del servidor */
 function fusion3(b, m, t, ruta, conf) {
   if (fIgual(m, t)) return m;
@@ -2033,6 +2095,7 @@ function fusion3(b, m, t, ruta, conf) {
       for (var i = 0; i < m.length; i++) o2.push(fusion3(bL[i], m[i], t[i], ruta + '[' + i + ']', conf));
       return o2;
     }
+    return fMulti(bL, m, t);
   }
   conf.push(ruta);
   return m;
@@ -2041,65 +2104,131 @@ function fCampo(k, b, m, t, ruta, conf) {
   if (fIgual(m, t)) return m;
   if (fIgual(m, b)) return t;
   if (fIgual(t, b)) return m;
-  /* los dos cobraron: se suman los dos cobros */
-  if (FUSION_SUMA[k] && !isNaN(Number(m)) && !isNaN(Number(t))) {
-    return Math.round((Number(t || 0) + Number(m || 0) - Number(b || 0)) * 100) / 100;
-  }
   /* marcas de tiempo: la más nueva */
   if (/^(ts|.*Ts)$/.test(k) && typeof m === 'string' && typeof t === 'string') return m > t ? m : t;
-  /* sesiones de un plan marcadas desde dos equipos: cada atención ocupa su
-     propia sesión, no se pisan */
-  if (k === 'sesiones' && fEsLista(m) && fEsLista(t) && fEsLista(b) && m.length === t.length && m.length === b.length) {
-    return fSesiones(b, m, t, ruta, conf);
+  if (FUSION_TEXTO[k] && typeof m !== 'object' && typeof t !== 'object') {
+    var tx = fTexto3(b, m, t);
+    if (tx !== String(m == null ? '' : m)) conf.push(ruta);
+    return tx;
   }
   /* una visita que ya se atendió no vuelve a "no vino" desde una pantalla vieja */
   if (k === 'estado' && (m === 'Atendido' || t === 'Atendido')) { conf.push(ruta); return 'Atendido'; }
+  /* sesiones de un plan marcadas desde dos equipos: cada atención ocupa su
+     propia sesión, no se pisan */
+  if (k === 'sesiones' && fEsLista(m) && fEsLista(t)) return fSesiones(fEsLista(b) ? b : [], m, t, ruta, conf);
   return fusion3(b, m, t, ruta, conf);
 }
 function fSesiones(b, m, t, ruta, conf) {
-  var out = [], i, j, usadas = {};
-  for (i = 0; i < t.length; i++) { out.push(t[i]); if (t[i] && t[i].atencionId) usadas[t[i].atencionId] = 1; }
-  for (i = 0; i < m.length; i++) {
-    if (fIgual(m[i], b[i])) continue;                 // esta sesión no la tocó este equipo
-    if (fIgual(t[i], b[i])) { if (!(m[i].atencionId && usadas[m[i].atencionId] && t[i].atencionId !== m[i].atencionId)) out[i] = m[i]; continue; }
-    if (m[i] && m[i].atencionId && t[i] && t[i].atencionId && m[i].atencionId !== t[i].atencionId) {
-      if (usadas[m[i].atencionId]) continue;
-      for (j = 0; j < out.length; j++) {
-        if (out[j] && !out[j].hecha && !out[j].atencionId) {
-          var o = {}, kk; for (kk in out[j]) if (Object.prototype.hasOwnProperty.call(out[j], kk)) o[kk] = out[j][kk];
-          o.hecha = true; o.fecha = m[i].fecha; o.atencionId = m[i].atencionId;
-          out[j] = o; usadas[m[i].atencionId] = 1; break;
-        }
-      }
-      if (j === out.length) conf.push(ruta + '[' + i + ']');
+  var out = [], i, j, usadas = {}, n = Math.max(b.length, m.length, t.length);
+  for (i = 0; i < t.length; i++) if (t[i] && t[i].atencionId) usadas[t[i].atencionId] = 1;
+  var pend = [];
+  for (i = 0; i < n; i++) {
+    var bi = b[i], mi = m[i], ti = t[i];
+    if (mi === undefined && ti === undefined) continue;
+    if (mi === undefined) { if (bi !== undefined && fIgual(ti, bi)) continue; out.push(ti); continue; }
+    if (ti === undefined) { if (bi !== undefined && fIgual(mi, bi)) continue; out.push(mi); continue; }
+    if (fIgual(mi, bi) || fIgual(mi, ti)) { out.push(ti); continue; }
+    if (fIgual(ti, bi)) {
+      if (mi.atencionId && usadas[mi.atencionId] && ti.atencionId !== mi.atencionId) { out.push(ti); continue; }
+      out.push(mi); continue;
+    }
+    if (mi.atencionId && ti.atencionId && mi.atencionId !== ti.atencionId) {
+      out.push(ti);
+      if (!usadas[mi.atencionId]) pend.push(mi);
       continue;
     }
-    out[i] = fusion3(b[i], m[i], t[i], ruta + '[' + i + ']', conf);
+    out.push(fusion3(bi, mi, ti, ruta + '[' + i + ']', conf));
+  }
+  /* la atención que quedó sin lugar ocupa la primera sesión libre */
+  for (i = 0; i < pend.length; i++) {
+    for (j = 0; j < out.length; j++) {
+      if (out[j] && !out[j].hecha && !out[j].atencionId) {
+        var o = fCopia(out[j]); o.hecha = true; o.fecha = pend[i].fecha; o.atencionId = pend[i].atencionId;
+        out[j] = o; break;
+      }
+    }
+    if (j === out.length) conf.push(ruta);
   }
   return out;
 }
-function fCuadra(r) {
-  return r && Math.abs(Number(r.total || 0) - Number(r.acuenta || 0) - Number(r.saldo || 0)) < 0.01;
-}
-/* Una atención: además del campo a campo, el saldo vuelve a cerrar con el
-   total y lo cobrado si de los dos lados cerraba. */
-function fusionRegistro(b, m, t, conf) {
-  if (!t) return m;
-  if (!b) return m;
-  var r = fusion3(b, m, t, '', conf);
-  if (fCuadra(m) && fCuadra(t) && !fCuadra(r)) {
-    r.saldo = Math.round((Number(r.total || 0) - Number(r.acuenta || 0)) * 100) / 100;
+/* ---- la plata de una atención ----
+   A cuenta = cobro inicial + cobros posteriores (con id). Al juntar, el cobro
+   inicial y la deuda perdonada se deciden campo a campo; los cobros
+   posteriores se unen por id; y recién ahí se vuelven a armar el a cuenta, el
+   desglose por método y el saldo. Así nada se cuenta dos veces. */
+function fNum(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+function fR(n) { return Math.round(n * 100) / 100; }
+function fCobrosPost(r) { return fEsLista(r && r.cobrosPosteriores) ? r.cobrosPosteriores : []; }
+function fPorMetodo(lista, signo, acc) {
+  for (var i = 0; i < lista.length; i++) {
+    var p = lista[i]; if (!p || !p.metodo) continue;
+    acc[p.metodo] = fR((acc[p.metodo] || 0) + signo * fNum(p.monto));
   }
+  return acc;
+}
+function fListaMetodos(acc) {
+  var ks = [], k, out = [];
+  for (k in acc) if (Object.prototype.hasOwnProperty.call(acc, k) && acc[k] > 0.004) ks.push(k);
+  ks.sort();
+  for (var i = 0; i < ks.length; i++) out.push({metodo: ks[i], monto: acc[ks[i]]});
+  return out;
+}
+function fDesarmar(r) {
+  r = r || {};
+  var cp = fCobrosPost(r), sumaCp = 0, i;
+  for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
+  var pagos = fEsLista(r.pagos) && r.pagos.length ? r.pagos
+    : (r.metodo && r.metodo !== 'Mixto' && fNum(r.acuenta) > 0 ? [{metodo: r.metodo, monto: fNum(r.acuenta)}] : []);
+  var ini = fPorMetodo(cp, -1, fPorMetodo(pagos, 1, {}));
+  var o = {}, k;
+  for (k in r) if (Object.prototype.hasOwnProperty.call(r, k)) o[k] = r[k];
+  delete o.acuenta; delete o.saldo; delete o.pagos; delete o.metodo;
+  o.__cobroIni = fR(fNum(r.acuenta) - sumaCp);
+  o.__pagosIni = fListaMetodos(ini);
+  o.__metodoIni = (!pagos.length && !cp.length) ? (r.metodo || '') : '';
+  o.__perdon = fR(fNum(r.total) - fNum(r.acuenta) - fNum(r.saldo));
+  return o;
+}
+function fArmar(o) {
+  var cp = fCobrosPost(o), sumaCp = 0, i;
+  for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
+  var acc = {}, ini = o.__pagosIni || [];
+  for (i = 0; i < ini.length; i++) acc[ini[i].metodo] = fNum(ini[i].monto);
+  var pagos = fListaMetodos(fPorMetodo(cp, 1, acc));
+  var r = {}, k;
+  for (k in o) if (Object.prototype.hasOwnProperty.call(o, k) && k.indexOf('__') !== 0) r[k] = o[k];
+  r.acuenta = fR(fNum(o.__cobroIni) + sumaCp);
+  r.pagos = pagos;
+  r.metodo = pagos.length > 1 ? 'Mixto' : (pagos.length ? pagos[0].metodo : (o.__metodoIni || ''));
+  r.saldo = fR(fNum(r.total) - r.acuenta - fNum(o.__perdon));
+  if (r.saldo < 0 && fNum(o.__perdon) > 0) r.saldo = fR(Math.max(0, r.saldo));
   return r;
 }
+function fSumaSrv(r) {
+  var l = fEsLista(r && r.servicios) ? r.servicios : [], s = 0;
+  for (var i = 0; i < l.length; i++) s += fNum(l[i] && l[i].precio) * (fNum(l[i] && l[i].cant) || 1);
+  return fR(s);
+}
+/* Una atención. Sin base (alta nueva cuya respuesta se perdió, o cola de una
+   versión anterior) se junta igual: lo que tienen los dos queda. */
+function fusionRegistro(b, m, t, conf) {
+  if (!t) return m;
+  var dB = fDesarmar(b || {}), dM = fDesarmar(m), dT = fDesarmar(t);
+  if (!b) { dB = {}; }
+  var o = fusion3(dB, dM, dT, '', conf);
+  /* si de los dos lados el total eran los servicios, sigue siéndolo */
+  if (Math.abs(fNum(m.total) - fSumaSrv(m)) < 0.01 && Math.abs(fNum(t.total) - fSumaSrv(t)) < 0.01) o.total = fSumaSrv(o);
+  return fArmar(o);
+}
 /* Lo que mira un borrado para saber si la atención cambió desde que se la
-   vio: plata, estado y de quién es. Lo cosmético no frena un borrado. */
-var FUSION_CLAVE_BORRAR = ['fecha', 'paciente', 'profesional', 'estado', 'total', 'acuenta', 'saldo', 'servicios', 'cobrosPosteriores', 'planId'];
+   vio: plata, estado, de quién es y las notas. */
+var FUSION_CLAVE_BORRAR = ['fecha', 'paciente', 'profesional', 'estado', 'total', 'acuenta', 'saldo', 'servicios', 'cobrosPosteriores', 'planId', 'obs'];
 function fEstadoN(e) { return {'Agendado': 'Agendada', 'Reagendar': 'Reprogramó'}[e] || e; }
 function fCambioParaBorrar(base, actual) {
   for (var i = 0; i < FUSION_CLAVE_BORRAR.length; i++) {
     var k = FUSION_CLAVE_BORRAR[i], a = base[k], b = actual[k];
     if (k === 'estado') { a = fEstadoN(a); b = fEstadoN(b); }
+    if (k === 'obs') { a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim(); }
     if (!fIgual(a, b)) return true;
   }
   return false;
@@ -2158,7 +2287,9 @@ function claveCola(action,rec){
   if(action==='cfg')return 'cfg';
   return action+':'+JSON.stringify(rec)}
 function snapDe(action,rec){
-  var t=(action==='save'||action==='delete')?SNAP_R[rec.id]:(action==='pac'?SNAP_P[keyPac(rec.nombre)]:null);
+  var t=(action==='save'||action==='delete')?SNAP_R[rec.id]
+    :(action==='pac'?SNAP_P[keyPac(rec.nombre)]
+    :((action==='egreso'||action==='egresoDel')?SNAP_E[rec.id]:null));
   try{return t?JSON.parse(t):null}catch(e){return null}}
 function queue(action,rec,base){
   var q=pend(), k=claveCola(action,rec), copia=JSON.parse(JSON.stringify(rec==null?null:rec));
@@ -2170,7 +2301,7 @@ function queue(action,rec,base){
     if(bAnt!==undefined)q[i].base=bAnt;
     setPend(q); if(window.banner)banner(); return}
   var it={action:action,rec:copia}, b=base!==undefined?base:snapDe(action,rec);
-  if(action==='save'||action==='delete'||action==='pac')it.base=b;
+  if(action!=='cfg')it.base=b;
   q.push(it); setPend(q); if(window.banner)banner()}
 
 /* El único camino para mandar algo al servidor.
@@ -2224,7 +2355,12 @@ function confirmado(k,item,enviado,r){
     if(!resto&&r.v>=FUSION_V&&typeof r.paciente==='object'){
       var n=pacNormalize(JSON.parse(JSON.stringify(p)));
       if(!PAC[kp]||!fIgual(PAC[kp],n)){PAC[kp]=n; savePacLocal(); repintarSuave()}}}
-  else if(item.action==='egreso'){SNAP_E[item.rec.id]=JSON.stringify(item.rec)}
+  else if(item.action==='egreso'){
+    var eg=(r.registro&&r.registro.id)?r.registro:item.rec;
+    SNAP_E[item.rec.id]=JSON.stringify(eg);
+    if(!resto&&r.v>=FUSION_V&&r.registro&&r.registro.id){
+      var en=egrNormalize(JSON.parse(JSON.stringify(r.registro)));
+      EGR=EGR.map(function(x){return x.id===en.id?en:x}); saveEgrLocal(); repintarSuave()}}
   else if(item.action==='egresoDel'){delete SNAP_E[item.rec.id]}}
 
 /* Lo que el servidor guardó después de juntar: es lo que ven todos. */
@@ -2241,9 +2377,30 @@ function tomarDelServidor(reg,conf){
 
 /* El servidor no aceptó: borrar algo que otro cobró o cambió, o guardar algo
    que otro ya borró. No se reintenta: se muestra cómo quedó de verdad. */
+function conTrabajo(x){
+  return !!x&&(num(x.acuenta)>0||(x.cobrosPosteriores||[]).length>0||
+    (x.estado==='Atendido'&&(x.servicios||[]).length>0))}
 function rechazado(k,item,r){
   setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k}));
   if(window.banner)banner();
+  if(item.action==='egreso'||item.action==='egresoDel'){
+    var eid=item.rec&&item.rec.id;
+    if(r.error==='borrada'){
+      delete SNAP_E[eid]; EGR=EGR.filter(function(x){return x.id!==eid}); saveEgrLocal();
+      toast('Ese egreso fue borrado desde otro equipo: el cambio no se guardó.',1)}
+    else if(r.registro&&r.registro.id){
+      SNAP_E[eid]=JSON.stringify(r.registro);
+      EGR=EGR.filter(function(x){return x.id!==eid}).concat([egrNormalize(JSON.parse(JSON.stringify(r.registro)))]);
+      saveEgrLocal();
+      toast('No se borró el egreso: otro equipo lo corrigió. Revisalo y, si igual sobra, borralo de nuevo.',1)}
+    repintarSuave(); return}
+  /* una atención con trabajo hecho (cobro o servicios) que otro equipo borró
+     mientras tanto no se tira: vuelve a cargarse tal cual */
+  if(r.error==='borrada'&&item.action==='save'&&conTrabajo(item.rec)){
+    delete SNAP_R[item.rec.id];
+    enviar('save',item.rec,undefined,null);
+    toast('La cita de '+(item.rec.paciente||'')+' había sido borrada en otro equipo. Se conservó la atención con lo que se cargó.',1);
+    return}
   if(r.error==='borrada'){
     var id=item.rec&&item.rec.id;
     delete SNAP_R[id];
@@ -2255,6 +2412,13 @@ function rechazado(k,item,r){
   SNAP_R[reg.id]=JSON.stringify(reg);
   var n=normalize(JSON.parse(JSON.stringify(reg)));
   DATA=DATA.filter(function(x){return x.id!==n.id}); DATA.push(n); saveLocal();
+  /* el borrado no ocurrió: la próxima cita y la sesión del plan vuelven */
+  DATA.forEach(function(x){
+    if(x.citaDe===n.id&&x.estado==='Canceló'&&/\nSe borró la atención que la había creado$|^Se borró la atención que la había creado$/.test(x.obs||'')){
+      x.estado='Agendada'; x.resueltaTs='';
+      x.obs=String(x.obs).replace(/\n?Se borró la atención que la había creado$/,'');
+      persist(x)}});
+  if(n.planId&&n.estado==='Atendido')marcarSesionPlan(n);
   toast('No se borró la atención de '+(n.paciente||'')+': otro equipo la cobró o la cambió. Revisala y, si igual hay que borrarla, borrala de nuevo.',1);
   repintarSuave()}
 
@@ -2286,7 +2450,12 @@ function initSnaps(){
   for(var i=q.length-1;i>=0;i--){
     var k=claveCola(q[i].action,q[i].rec); if(visto[k])continue;
     visto[k]=1; limpia.unshift(q[i])}
-  if(limpia.length!==q.length)setPend(limpia);
+  /* lo que dejó en la cola el panel anterior no tiene base: se manda como
+     alta para que el servidor lo junte en vez de pisar */
+  var cambio=limpia.length!==q.length;
+  limpia.forEach(function(it){
+    if(!('base' in it)&&it.action!=='cfg'&&it.action!=='delete'&&it.action!=='egresoDel'){it.base=null;cambio=true}});
+  if(cambio)setPend(limpia);
   DATA.forEach(function(r){if(!visto['r:'+r.id])SNAP_R[r.id]=JSON.stringify(r)});
   Object.keys(PAC).forEach(function(k){if(!visto['p:'+k])SNAP_P[k]=JSON.stringify(PAC[k])});
   EGR.forEach(function(e){if(!visto['e:'+e.id])SNAP_E[e.id]=JSON.stringify(e)})}
@@ -2943,7 +3112,7 @@ function clearForm(keepFecha){
   EDIT_ID=null;
   if(!keepFecha)$('#f-fecha').value=hoyISO();
   var d=new Date(); $('#f-hora').value=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
-  if(esDoctora()&&!$('#f-prof').value)$('#f-prof').value=PROF_ACTUAL;
+  if(esDoctora())$('#f-prof').value=PROF_ACTUAL;
   ['f-paciente','f-cel','f-ci','f-edad','f-nac','f-canal-det','f-obs','f-total','f-acuenta','f-saldo','f-prox','f-prox-hora','f-prox-motivo']
     .forEach(function(id){var e=$('#'+id);e.value='';delete e.dataset.touched;delete e.dataset.desc;delete e.dataset.ajuste;e.classList.remove('bad')});
   FORM_BASE=undefined;
@@ -3075,6 +3244,9 @@ function validar(){
     if(!$('#f-cel').value.trim()){bad=bad.filter(function(x){return x!=='celular'});$('#f-cel').classList.remove('bad')}
     if(Math.abs(a-num(prevV.acuenta))<0.01)m=m||'importado'}
   if(a<0){bad.push('lo cobrado no puede ser negativo');$('#f-acuenta').classList.add('bad')}
+  ['f-total','f-acuenta','f-saldo'].forEach(function(id){
+    if(montoRaro($('#'+id).value)){bad.push('el monto de '+id.slice(2)+' tiene letras');$('#'+id).classList.add('bad')}});
+  if($$('#srv-list .s-precio').some(function(i){return montoRaro(i.value)}))bad.push('un precio tiene letras');
   if(a>0&&!m){bad.push('forma de pago');
     $('#seg-metodo').style.outline='2px solid var(--clay)';
     setTimeout(function(){$('#seg-metodo').style.outline=''},2200)}
@@ -3313,6 +3485,7 @@ function clearCita(){
   $$('input[name="qagenda"]').forEach(function(i){i.checked=false});
   $$('input[name="qcanal"]').forEach(function(i){i.checked=false});
   $('#q-nuevo').style.display='none';
+  if(esDoctora())$('#q-prof').value=PROF_ACTUAL;
   QSRV=[]; renderQSrv();
   if($('#q-aviso'))$('#q-aviso').innerHTML='';
   renderCitasProximas()}
@@ -3364,7 +3537,7 @@ function guardarCita(){
     fecha:fecha, hora:$('#q-hora').value, nroDia:nroDelDia(fecha,null),
     /* a veces el paciente agenda sin saber con quién: la doctora se define
        recién al atender */
-    profesional:$('#q-prof').value.trim()||'Por definir',
+    profesional:esDoctora()?PROF_ACTUAL:($('#q-prof').value.trim()||'Por definir'),
     paciente:$('#q-paciente').value.trim(), celular:$('#q-cel').value.trim(),
     ci:'', edad:'', nac:$('#q-nac').value,
     tipo:esPacienteConocido($('#q-paciente').value)?'Recurrente':'Nuevo',
@@ -5864,6 +6037,7 @@ function guardarPago(id){
   var r0=DATA.filter(function(x){return x.id===id})[0]; if(!r0)return;
   if(!esMia(r0)){noEsTuya();return}
   var m=num($('#cp-m').value), met=getRadio('cpmet');
+  if(montoRaro($('#cp-m').value)){toast('El monto tiene letras: escribilo solo con números',1);return}
   if(m<=0){toast('Poné un monto',1);return}
   if(!met){toast('Marcá cómo paga',1);
     $('#cp-seg').style.outline='2px solid var(--clay)';
@@ -6003,7 +6177,7 @@ function nuevaParaPaciente(nombre){
     .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   $('#f-paciente').value=nombre;
   if(rs){$('#f-cel').value=rs.celular||'';$('#f-ci').value=rs.ci||'';$('#f-edad').value=rs.edad||'';
-    $('#f-prof').value=rs.profesional||'';
+    $('#f-prof').value=esDoctora()?PROF_ACTUAL:(rs.profesional||'');
     $$('#seg-canal input').forEach(function(i){i.checked=(i.value===rs.canal)});
     $('#f-canal-det').value=rs.canalDetalle||''}
   $('#f-nac').value=pacDe(nombre).nac||'';
@@ -6363,7 +6537,15 @@ function guardarPlan(nombre,id){
   if(!descs.length){toast('Poné al menos una sesión',1);return}
   var plan=id?p.planes.filter(function(x){return x.id===id})[0]:null;
   if(plan&&!planVisible(plan)){noEsTuya();return}
-  if(!plan){plan=planNormalize({prof:esDoctora()?PROF_ACTUAL:''}); p.planes.push(plan)}
+  if(!plan){
+    /* el plan queda a nombre de su doctora: la que lo carga, o la que atiende
+       a ese paciente si lo carga recepción */
+    var profPlan=esDoctora()?PROF_ACTUAL
+      :(keyPac($('#f-paciente').value)===keyPac(nombre)&&$('#f-prof').value.trim()?$('#f-prof').value.trim()
+        :duenaPlan({id:'__nuevo__'})||'');
+    plan=planNormalize({prof:profPlan}); p.planes.push(plan);
+    if(!profPlan){var ult=DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&esAtencion(r)&&r.profesional&&r.profesional!=='Por definir'})
+      .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0]; if(ult)plan.prof=ult.profesional}}
   plan.nombre=$('#pl-nom').value.trim()||'Plan de tratamiento';
   plan.fecha=$('#pl-fec').value||hoyISO();
   plan.total=num($('#pl-tot').value);

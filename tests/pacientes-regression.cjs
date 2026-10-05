@@ -86,6 +86,7 @@ async function run(file){
  c.DATA=[row()];form(b,{'#f-acuenta':'20','#f-saldo':'80'});c.EDIT_ID='FICTICIO-1';radios.estado='No asistió';c.submitAtencion();await settle();radios.estado='Atendido';
  test('Una visita con cobro no pasa a No asistió',()=>assert.equal(c.DATA[0].estado,'Atendido'));
  test('Nombres iguales sin importar acentos ni espacios',()=>assert.equal(c.keyPac(' María  Pérez '),c.keyPac('maria perez')));
+ test('Montos con letras se detectan',()=>{assert(c.montoRaro('15OO'));assert(c.montoRaro('1e3'));assert(!c.montoRaro('Bs. 1.500'));assert(!c.montoRaro('1.500,50'))});
  test('Montos con texto alrededor',()=>{assert.equal(c.num('5.000.'),5000);assert.equal(c.num('Bs. 1.500'),1500);assert.equal(c.num('1.500.-'),1500);assert.equal(c.num('-'),0)});
  c.DATA=[];form(b,{'#f-total':'100','#f-acuenta':'-50','#f-saldo':'150'});c.submitAtencion();await settle();test('No guarda un cobro negativo',()=>assert.equal(c.DATA.length,0));
  test('La cola junta cambios del mismo registro y conserva la base',()=>{c.setPend([]);c.SNAP_R['Q-1']=JSON.stringify(row({id:'Q-1'}));c.queue('save',row({id:'Q-1',obs:'a'}));c.queue('save',row({id:'Q-1',obs:'b'}));const q=c.pend();assert.equal(q.length,1);assert.equal(q[0].rec.obs,'b');assert.equal(q[0].base.obs,row().obs);c.setPend([])});
@@ -109,8 +110,17 @@ async function run(file){
    check(file+': una pantalla vieja que cambia una nota no borra cobros',()=>{assert.equal(fin2.acuenta,80);assert.equal(fin2.obs,'nota')});
    check(file+': no borra una atención que se cobró desde que se la vio',()=>assert.equal(ctx.doDelete({id:'J-1'},structuredClone(b0)).error,'cambio'));
    check(file+': un cambio viejo no revive una atención borrada',()=>{ctx.doDelete({id:'J-1'},null);assert.equal(ctx.doSave(structuredClone(b0),structuredClone(b0)).error,'borrada')});
+   const b1=row({id:'J-2',acuenta:0,saldo:100,total:100});ctx.doSave(structuredClone(b1),null);
+   const p1=structuredClone(b1);p1.acuenta=30;p1.saldo=70;p1.cobrosPosteriores=[{id:'k1',monto:30,metodo:'QR',fecha:'2026-10-02'}];
+   ctx.doSave(structuredClone(p1),structuredClone(b1));const otra=ctx.doSave(structuredClone(p1),structuredClone(b1)).registro;
+   check(file+': reintentar el mismo cobro no lo cuenta dos veces',()=>{assert.equal(otra.acuenta,30);assert.equal(otra.saldo,70)});
+   const nueva=row({id:'J-3'});ctx.doSave(structuredClone(nueva),null);const conPago=structuredClone(nueva);conPago.acuenta=nueva.acuenta+50;conPago.saldo=nueva.saldo-50;conPago.cobrosPosteriores=[{id:'k9',monto:50,metodo:'QR',fecha:'2026-10-02'}];ctx.doSave(conPago,structuredClone(nueva));
+   check(file+': un alta repetida (respuesta perdida) no borra el cobro de otro',()=>assert.equal(ctx.doSave(structuredClone(nueva),null).registro.acuenta,nueva.acuenta+50));
+   const props={};ctx.PropertiesService={getScriptProperties:()=>({getProperty:k=>props[k]||null,setProperty:(k,v)=>{props[k]=v}})};
+   const cb={precios:[{nom:'x',precio:1}],canales:['A'],prof:['Dra. X']};ctx.doGuardarCfg(structuredClone(cb));ctx.doGuardarCfg({...structuredClone(cb),prof:['Dra. X','Dra. Y']},structuredClone(cb));
+   check(file+': ajustes de dos equipos se juntan en el servidor',()=>{const c2=ctx.doGuardarCfg({...structuredClone(cb),canales:['A','B']},structuredClone(cb)).cfg;assert.deepEqual([...c2.prof],['Dra. X','Dra. Y']);assert.deepEqual([...c2.canales],['A','B'])});
    check(file+': fichas con y sin tilde se juntan sin perder la alergia',()=>{const f=ctx.fusionarFichas({nombre:'María Pérez',med:{alergias:'PENICILINA'},ts:'1'},{nombre:'Maria Perez',med:{notas:'x'},ts:'2'});assert.equal(f.med.alergias,'PENICILINA');assert.equal(ctx.fClavePac('María  Pérez'),'maria perez')});
-   check(file+': fusión idéntica en panel y servidor',()=>{for(const fn of ['fIgual','fusion3','fCampo','fSesiones','fPorId','fusionRegistro','fCambioParaBorrar','fusionarFichas','fClavePac'])assert.equal(ctx[fn].toString(),(file.startsWith('cosmetic')?b:a).c[fn].toString())});
+   check(file+': fusión idéntica en panel y servidor',()=>{for(const fn of ['fIgual','fusion3','fCampo','fSesiones','fPorId','fMulti','fTexto3','fDesarmar','fArmar','fusionRegistro','fCambioParaBorrar','fusionarFichas','fClavePac'])assert.equal(ctx[fn].toString(),(file.startsWith('cosmetic')?b:a).c[fn].toString())});
    const roundtrip=ctx.registroDeFila(ctx.filaDeRegistro(r));check(file+': serialización real conserva nuevos campos y laboratorio cero',()=>{assert.deepEqual(JSON.parse(JSON.stringify(roundtrip.cobrosPosteriores)),r.cobrosPosteriores);assert.equal(roundtrip.clinicaId,r.clinicaId);assert.equal(roundtrip.servicios[0].lab,0);assert.equal(roundtrip.cobroInicialFechado,true)});
  }
  console.log(JSON.stringify({passed:count,networkRequests:0,evidence},null,2));})().catch(e=>{console.error(e);process.exitCode=1});
