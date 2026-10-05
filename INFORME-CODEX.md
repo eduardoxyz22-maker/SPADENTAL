@@ -220,7 +220,7 @@ También pasaron, pero esas pruebas viven fuera del repo:
 
 1. **Desplegar los 2 `.gs`** en Google, después del ok y con guía.
 2. **Homónimos que solo difieren en una tilde y tienen distinta fecha de nacimiento** (por ejemplo "Ana Ríos" de 1980 y "Ana Rios" de 2001): el panel los trata como la misma clave, y la regla de identidad frena el cobro hasta que se renombre a una. Es el diseño acordado. La solución real es un ID estable de paciente; ver `COORDINACION.md`.
-3. **Planes existentes sin `prof`**: se les asigna doctora al vuelo (`duenaPlan`), según quién atendió sus sesiones o al paciente. Si un plan no tiene sesiones ni atenciones, lo ven todas.
+3. **Planes existentes sin `prof`**: la dueña se deduce al vuelo (`duenaPlan`): la doctora que más sesiones atendidas tiene o, si no hay, la que más atendió al paciente. No se graba en los datos. Si un plan no tiene ni sesiones ni atenciones, lo ven todas, pero solo lo modifica el equipo (`planEsMio`). Recepción o la dueña pueden asignarle doctora en el editor del plan.
 4. **Alergias de un paciente ajeno**: la doctora las sigue viendo al cargarlo. Es a propósito, por seguridad clínica.
 5. `num()` con texto sin sentido sigue devolviendo un número raro, pero `montoRaro` frena esos montos antes de guardarlos.
 6. **Datos de Cosmetic**: hay Bs 40.030 cobrados sin método y Bs 46.910 sin doctora, sobre todo de Ana María Vargas. Vienen de los Excel históricos. Las doctoras históricas (Nadia, Ximena, Katherine, Yanaina, Carolina) no están en la config, y las doctoras actuales todavía no tienen clave asignada.
