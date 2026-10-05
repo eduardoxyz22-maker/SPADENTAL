@@ -261,11 +261,12 @@ function doGuardarEgreso(e, base) {
   if (!e || !e.id) return { ok: false, error: 'sin_id' };
   var sh = getSheetEgr();
   var destino = filaEgresoPorId(sh, e.id);
-  if (!destino && base) return { ok: false, error: 'borrada', id: e.id };
+  if (!destino && base !== undefined && fueBorrado('e:' + e.id)) return { ok: false, error: 'borrada', id: e.id };
+  if (!destino && base && !base.__alta) return { ok: false, error: 'borrada', id: e.id };
   var conf = [];
-  if (destino && base !== undefined) {
+  if (destino && base) {
     var actual = egresoDeFila(sh.getRange(destino, 1, 1, COLS_EGR.length).getValues()[0]);
-    e = fusion3(base || {}, e, actual, '', conf);
+    e = fusion3(fSinAlta(base), e, actual, '', conf);
   }
   var fila = filaDeEgreso(e);
   if (destino) sh.getRange(destino, 1, 1, COLS_EGR.length).setValues([fila]);
@@ -284,8 +285,30 @@ function doBorrarEgreso(e, base) {
     for (k in actual) if (k !== 'ts') a2[k] = actual[k];
     if (!fIgual(b2, a2)) return { ok: false, error: 'cambio', registro: actual };
   }
-  if (fila) sh.deleteRow(fila);
+  if (fila) { sh.deleteRow(fila); anotarBorrado('e:' + e.id); }
   return { ok: true, borrado: !!fila };
+}
+
+/* ------------------------------------------------- lo que se borró
+   Una lista de ids borrados: un alta que se reintenta (porque se cortó la
+   respuesta) o un pendiente viejo no puede revivir algo que alguien borró. */
+var HOJA_BORR = '_Borrados';
+function hojaBorrados() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(HOJA_BORR);
+  if (!sh) { sh = ss.insertSheet(HOJA_BORR); sh.getRange(1, 1, 1, 2).setValues([['ID', 'Borrado']]); }
+  return sh;
+}
+function fueBorrado(id) {
+  var sh = hojaBorrados(), n = sh.getLastRow();
+  if (n < 2) return false;
+  var ids = sh.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) if (String(ids[i][0]) === String(id)) return true;
+  return false;
+}
+function anotarBorrado(id) {
+  var sh = hojaBorrados();
+  sh.getRange(sh.getLastRow() + 1, 1, 1, 2).setValues([[String(id), new Date().toISOString()]]);
 }
 
 /* ------------------------------------------------- serialización servicios */
@@ -440,10 +463,30 @@ function doSave(r, base) {
      una pantalla vieja no borra el cobro o el servicio que cargó otra. */
   /* Tenía base pero ya no está: la borraron desde otro equipo. Un cambio
      viejo no la revive. */
-  if (!destino && base) return { ok: false, error: 'borrada', id: r.id };
+  var esAlta = !!(base && base.__alta), separada = null;
+  if (!destino && base !== undefined && fueBorrado(r.id)) return { ok: false, error: 'borrada', id: r.id };
+  if (!destino && base && !esAlta) return { ok: false, error: 'borrada', id: r.id };
   if (destino && base !== undefined) {
     var actual = registroDeFila(sh.getRange(destino, 1, 1, COLS.length).getValues()[0]);
-    r = fusionRegistro(base, r, actual, conf);
+    var b0 = fSinAlta(base);
+    if (b0 && fOtraDoctora(b0, r, actual)) {
+      /* la misma cita la atendieron dos doctoras: son dos visitas, no una */
+      var ids = {}, cpA = fCobrosPost(actual), q;
+      for (q = 0; q < cpA.length; q++) if (cpA[q] && cpA[q].id) ids[cpA[q].id] = 1;
+      var dm = fDesarmar(r), propios = [];
+      var cpM = fCobrosPost(r);
+      for (q = 0; q < cpM.length; q++) if (!(cpM[q] && cpM[q].id && ids[cpM[q].id])) propios.push(cpM[q]);
+      dm.cobrosPosteriores = propios;
+      separada = fArmar(dm);
+      separada.id = r.id + 'd' + (n + 1);
+      separada.citaDe = r.id;
+      separada.obs = String(separada.obs || '') + (separada.obs ? '\n' : '') +
+        '⚠ Separada: la misma cita la atendió también ' + actual.profesional + '. Revisar.';
+      separada.nroDia = Math.max(cuantas, maxNro) + 1;
+      sh.appendRow(filaDeRegistro(separada));
+      return { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(separada)), conflictos: ['profesional'] };
+    }
+    r = fusionRegistro(b0, r, actual, conf);
   }
 
   // N° del día: lo asigna el servidor para que no se repita entre celulares.
@@ -519,7 +562,7 @@ function doDelete(r, base) {
         var actual = registroDeFila(sh.getRange(i + 2, 1, 1, COLS.length).getValues()[0]);
         if (fCambioParaBorrar(base, actual)) return { ok: false, error: 'cambio', registro: actual };
       }
-      sh.deleteRow(i + 2); return { ok: true };
+      sh.deleteRow(i + 2); anotarBorrado(r.id); return { ok: true };
     }
   }
   return { ok: true };
@@ -533,7 +576,7 @@ function doDelete(r, base) {
    La plata no se suma "por diferencia": lo cobrado sale de los cobros, que
    tienen id, así un reintento nunca cuenta dos veces el mismo pago.
    ===================================================================== */
-var FUSION_V = 3;
+var FUSION_V = 4;
 var FUSION_TEXTO = {obs: 1, notas: 1, alergias: 1, medicacion: 1, detalle: 1};
 function fVacio(v) {
   if (v === undefined || v === null || v === '' || v === false) return true;
@@ -600,23 +643,23 @@ function fPorId(b, m, t, ruta, conf) {
   }
   return out;
 }
-/* Listas sin id (servicios, antecedentes, profesionales): lo que agregó cada
-   uno se suma y lo que sacó cada uno se saca. */
+/* Listas sin id (servicios, antecedentes, profesionales): cada elemento
+   cuenta cuántas veces está. Lo que agregaron los dos a la vez es el mismo
+   agregado (no se duplica); lo que agregó uno solo se suma; lo que sacó uno
+   se saca. */
 function fMulti(b, m, t) {
-  var cB = {}, cM = {}, i, k, out = [], quitar = {};
-  for (i = 0; i < b.length; i++) { k = JSON.stringify(b[i]); cB[k] = (cB[k] || 0) + 1; }
-  for (i = 0; i < m.length; i++) { k = JSON.stringify(m[i]); cM[k] = (cM[k] || 0) + 1; }
-  for (k in cB) if ((cM[k] || 0) < cB[k]) quitar[k] = cB[k] - (cM[k] || 0);
-  for (i = 0; i < t.length; i++) {
-    k = JSON.stringify(t[i]);
-    if (quitar[k]) { quitar[k]--; continue; }
-    out.push(t[i]);
-  }
-  var agregar = {};
-  for (k in cM) if (cM[k] > (cB[k] || 0)) agregar[k] = cM[k] - (cB[k] || 0);
-  for (i = 0; i < m.length; i++) {
-    k = JSON.stringify(m[i]);
-    if (agregar[k]) { agregar[k]--; out.push(m[i]); }
+  var cB = {}, cM = {}, cT = {}, orden = [], visto = {}, i, k, x;
+  function contar(l, c) { for (var q = 0; q < l.length; q++) { var kk = JSON.stringify(l[q]); c[kk] = (c[kk] || 0) + 1; if (!visto[kk]) { visto[kk] = l[q]; orden.push(kk); } } }
+  contar(t, cT); contar(m, cM); contar(b, cB);
+  var out = [];
+  for (i = 0; i < orden.length; i++) {
+    k = orden[i];
+    var dm = (cM[k] || 0) - (cB[k] || 0), dt = (cT[k] || 0) - (cB[k] || 0), d;
+    if (dm > 0 && dt > 0) d = Math.max(dm, dt);
+    else if (dm < 0 && dt < 0) d = Math.min(dm, dt);
+    else d = dm + dt;
+    var n = Math.max(0, (cB[k] || 0) + d);
+    for (x = 0; x < n; x++) out.push(visto[k]);
   }
   return out;
 }
@@ -738,27 +781,31 @@ function fDesarmar(r) {
   for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
   var pagos = fEsLista(r.pagos) && r.pagos.length ? r.pagos
     : (r.metodo && r.metodo !== 'Mixto' && fNum(r.acuenta) > 0 ? [{metodo: r.metodo, monto: fNum(r.acuenta)}] : []);
-  var ini = fPorMetodo(cp, -1, fPorMetodo(pagos, 1, {}));
+  var ini = fListaMetodos(fPorMetodo(cp, -1, fPorMetodo(pagos, 1, {})));
   var o = {}, k;
-  for (k in r) if (Object.prototype.hasOwnProperty.call(r, k)) o[k] = r[k];
+  for (k in r) if (Object.prototype.hasOwnProperty.call(r, k) && k !== '__alta') o[k] = r[k];
   delete o.acuenta; delete o.saldo; delete o.pagos; delete o.metodo;
-  o.__cobroIni = fR(fNum(r.acuenta) - sumaCp);
-  o.__pagosIni = fListaMetodos(ini);
-  o.__metodoIni = (!pagos.length && !cp.length) ? (r.metodo || '') : '';
+  /* el cobro del día de la atención es UNA cosa: monto y forma de pago van juntos */
+  o.__cobro = {monto: fR(fNum(r.acuenta) - sumaCp), pagos: ini,
+    metodo: (!pagos.length && !cp.length) ? (r.metodo || '') : ''};
   o.__perdon = fR(fNum(r.total) - fNum(r.acuenta) - fNum(r.saldo));
+  /* con servicios, el total es servicios menos el descuento */
+  if (fEsLista(r.servicios) && r.servicios.length) { delete o.total; o.__desc = fR(fSumaSrv(r) - fNum(r.total)); }
   return o;
 }
 function fArmar(o) {
-  var cp = fCobrosPost(o), sumaCp = 0, i;
+  var cp = fCobrosPost(o), sumaCp = 0, i, c = o.__cobro || {monto: 0, pagos: [], metodo: ''};
   for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
-  var acc = {}, ini = o.__pagosIni || [];
+  var acc = {}, ini = c.pagos || [];
   for (i = 0; i < ini.length; i++) acc[ini[i].metodo] = fNum(ini[i].monto);
   var pagos = fListaMetodos(fPorMetodo(cp, 1, acc));
   var r = {}, k;
   for (k in o) if (Object.prototype.hasOwnProperty.call(o, k) && k.indexOf('__') !== 0) r[k] = o[k];
-  r.acuenta = fR(fNum(o.__cobroIni) + sumaCp);
+  if (fEsLista(o.servicios) && o.servicios.length) r.total = fR(Math.max(0, fSumaSrv(o) - fNum(o.__desc)));
+  else if (r.total === undefined) r.total = 0;
+  r.acuenta = fR(fNum(c.monto) + sumaCp);
   r.pagos = pagos;
-  r.metodo = pagos.length > 1 ? 'Mixto' : (pagos.length ? pagos[0].metodo : (o.__metodoIni || ''));
+  r.metodo = pagos.length > 1 ? 'Mixto' : (pagos.length ? pagos[0].metodo : (c.metodo || ''));
   r.saldo = fR(fNum(r.total) - r.acuenta - fNum(o.__perdon));
   if (r.saldo < 0 && fNum(o.__perdon) > 0) r.saldo = fR(Math.max(0, r.saldo));
   return r;
@@ -768,15 +815,39 @@ function fSumaSrv(r) {
   for (var i = 0; i < l.length; i++) s += fNum(l[i] && l[i].precio) * (fNum(l[i] && l[i].cant) || 1);
   return fR(s);
 }
-/* Una atención. Sin base (alta nueva cuya respuesta se perdió, o cola de una
-   versión anterior) se junta igual: lo que tienen los dos queda. */
+function fUnirCobros(a, b) {
+  var out = [], ids = {}, l = fCobrosPost(a).concat(fCobrosPost(b)), i;
+  for (i = 0; i < l.length; i++) { var x = l[i]; if (x && x.id) { if (ids[x.id]) continue; ids[x.id] = 1; } out.push(x); }
+  return out;
+}
+/* ¿Dos doctoras distintas cargaron la misma visita? Se separan en dos. */
+function fOtraDoctora(b, m, t) {
+  if (!b || !m || !t) return false;
+  var pb = String(b.profesional || ''), pm = String(m.profesional || ''), pt = String(t.profesional || '');
+  return pm !== pb && pt !== pb && pm !== pt && pm !== 'Por definir' && pt !== 'Por definir' && !!pm && !!pt;
+}
+/* Una atención.
+   - base = lo que el equipo vio en el servidor: junta campo por campo.
+   - base null = un alta que se reintenta o un pendiente de la versión
+     anterior: vale lo de este equipo, pero los cobros de otros se conservan. */
 function fusionRegistro(b, m, t, conf) {
   if (!t) return m;
-  var dB = fDesarmar(b || {}), dM = fDesarmar(m), dT = fDesarmar(t);
-  if (!b) { dB = {}; }
+  if (!b) {
+    var dm = fDesarmar(m);
+    dm.cobrosPosteriores = fUnirCobros(t, m);
+    return fArmar(dm);
+  }
+  var dB = fDesarmar(b), dM = fDesarmar(m), dT = fDesarmar(t);
   var o = fusion3(dB, dM, dT, '', conf);
-  /* si de los dos lados el total eran los servicios, sigue siéndolo */
-  if (Math.abs(fNum(m.total) - fSumaSrv(m)) < 0.01 && Math.abs(fNum(t.total) - fSumaSrv(t)) < 0.01) o.total = fSumaSrv(o);
+  /* dos equipos anotaron un cobro inicial distinto para la misma visita:
+     queda el primero, coherente, y la diferencia anotada para conciliar */
+  if (!fIgual(dM.__cobro, dB.__cobro) && !fIgual(dT.__cobro, dB.__cobro) && !fIgual(dM.__cobro, dT.__cobro)) {
+    o.__cobro = dT.__cobro;
+    var desc = [], pm = dM.__cobro.pagos || [];
+    for (var i = 0; i < pm.length; i++) desc.push(pm[i].metodo + ' ' + pm[i].monto);
+    o.obs = String(o.obs || '') + (o.obs ? '\n' : '') + '⚠ Conciliar: otro equipo anotó un cobro inicial de ' + fNum(dM.__cobro.monto) + (desc.length ? ' (' + desc.join(', ') + ')' : '') + ' que no se sumó.';
+    conf.push('__cobro');
+  }
   return fArmar(o);
 }
 /* Lo que mira un borrado para saber si la atención cambió desde que se la
@@ -801,12 +872,26 @@ function fClavePac(n) {
 /* Dos filas de ficha que son la misma persona escrita distinto ("María
    Pérez" y "Maria Perez"): se juntan sin perder nada. Si dicen cosas
    distintas, se muestran las dos: una alergia nunca puede quedar oculta. */
+function fPartes(x) {
+  var p = String(x).split(/\s*(?:,|;|\/|\n| y )\s*/), out = [];
+  for (var i = 0; i < p.length; i++) { var q = fClavePac(p[i]); if (q) out.push(q); }
+  return out;
+}
 function fJuntarTexto(a, b) {
   a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
   if (!a) return b; if (!b) return a;
   if (a === b || a.indexOf(b) >= 0) return a;
   if (b.indexOf(a) >= 0) return b;
-  return a + ' / ' + b;
+  /* "Penicilina, Látex" y "látex": lo de uno ya está en el otro */
+  var pa = fPartes(a), pb = fPartes(b), i, falta = [], partesB = String(b).split(/\s*(?:,|;|\/|\n)\s*/);
+  for (i = 0; i < pb.length; i++) if (pa.indexOf(pb[i]) < 0) { falta = null; break; }
+  if (falta !== null) return a;
+  var todasA = true;
+  for (i = 0; i < pa.length; i++) if (pb.indexOf(pa[i]) < 0) { todasA = false; break; }
+  if (todasA) return b;
+  falta = [];
+  for (i = 0; i < partesB.length; i++) { var c = fClavePac(partesB[i]); if (c && pa.indexOf(c) < 0) falta.push(partesB[i].trim()); }
+  return falta.length ? a + ' / ' + falta.join(', ') : a;
 }
 function fusionarFichas(a, b) {
   if (!a) return b; if (!b) return a;
@@ -827,6 +912,14 @@ function fusionarFichas(a, b) {
     if (p && p.id && ids[p.id]) return; if (p && p.id) ids[p.id] = 1; planes.push(p);
   });
   return {nombre: nuevo.nombre || viejo.nombre, nac: nuevo.nac || viejo.nac || '', med: med, planes: planes, ts: nuevo.ts || viejo.ts || ''};
+}
+/* La base de un alta todavía no confirmada lleva esta marca: si el alta ya
+   llegó, es la base para juntar; si no llegó, se crea. */
+function fSinAlta(b) {
+  if (!b || !b.__alta) return b;
+  var o = {}, k;
+  for (k in b) if (Object.prototype.hasOwnProperty.call(b, k) && k !== '__alta') o[k] = b[k];
+  return o;
 }
 
 /* ------------------------------------------------------------------ HTTP */

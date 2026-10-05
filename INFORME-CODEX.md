@@ -19,9 +19,10 @@ Para quien siga trabajando en `pacientes.html` (Ezequiel Spadental) y `cosmetic/
 | Commit | Qué es | ¿Publicado? |
 |---|---|---|
 | `53a6a30` | Arreglos de la 1.ª revisión: montos con punto de miles, total que se recalcula, "No asistió" con cobro bloqueado, plan terminado, `keyPac`, doctoras restringidas en Lista, Caja y Pacientes | Sí |
-| `e4b609f` | **Fusión de cambios entre equipos** (panel y Apps Script) y los 30 hallazgos de la 2.ª auditoría | **No**: está en local, esperando el ok |
-| `855dae1` | Este informe y `tests/apps-script-en-memoria.cjs` | No |
-| (siguiente) | Correcciones de la 3.ª auditoría (re-auditoría de `e4b609f`); ver la sección "Ronda 3" | No |
+| `e4b609f` | **Fusión de cambios entre equipos** (panel y Apps Script) y los 30 hallazgos de la 2.ª auditoría | Sí, junto con las rondas 3 y 4 |
+| `855dae1` | Este informe y `tests/apps-script-en-memoria.cjs` | Sí |
+| `f189076` | Correcciones de la re-auditoría de `e4b609f`; ver la sección "Ronda 3" | Sí, junto con la ronda 4 |
+| (último) | Correcciones de la auditoría de `f189076`; ver la sección "Ronda 4" | Sí |
 
 **Falta desplegar el Apps Script.** `google-apps-script-pacientes.gs` y `cosmetic/google-apps-script-pacientes.gs` cambiaron en `e4b609f`, pero hay que pegarlos a mano en cada proyecto de Google Apps Script y publicar una versión nueva de la Web App. Lo hace la clínica, guiada. Mientras no se haga, el panel nuevo funciona igual que el viejo: el servidor ignora la `base` y escribe encima, como antes.
 
@@ -121,12 +122,44 @@ Se corrigió así (`FUSION_V = 3`):
   - cada plan tiene doctora (`duenaPlan`): la que lo cargó, la de sus sesiones o la que atiende al paciente.
 - **Montos:** `num` entiende "1.500.00". `montoRaro` frena montos con letras ("15OO", "1e3") en el cobro y en el formulario.
 
+## Ronda 4: auditoría de `f189076`
+
+`FUSION_V = 4`.
+
+- **Altas:** la base de un alta todavía no confirmada es su propio contenido, con la marca `__alta` (`baseAlta` en el panel y `fSinAlta` en el servidor). El servidor decide según el caso:
+  - si la fila no existe, la crea;
+  - si existe (la respuesta se cortó), junta contra esa base. Así una corrección posterior no duplica servicios.
+  - `base: null` queda solo para la cola de la versión anterior. En ese caso vale lo del equipo, pero se conservan los `cobrosPosteriores` de otros.
+- **Lápidas:** la hoja `_Borrados` guarda los ids borrados (`anotarBorrado` y `fueBorrado`). Un alta reintentada o un pendiente viejo no revive lo borrado. Los egresos se guardan como `e:<id>`.
+- **Listas sin id:** `fMulti` es idempotente. Lo que agregaron los dos a la vez cuenta una sola vez.
+- **Textos:** `fJuntarTexto` no repite partes que ya están ("Penicilina, Látex" junto con "látex" da "Penicilina, Látex").
+- **Cobro inicial:** monto, desglose y método forman una sola unidad (`__cobro`). Si dos equipos anotaron un cobro inicial distinto, queda el del servidor, coherente, y en `obs` se agrega "⚠ Conciliar…".
+- **Descuento:** es un campo propio (`__desc`). El total se calcula como servicios menos descuento.
+- **Dos doctoras distintas atendieron la misma cita** (`fOtraDoctora`): el servidor guarda la del otro equipo como una visita separada, con id `<id>d<n>` y `citaDe` apuntando a la original. El panel recibe esa visita en `separada`.
+- **Cola:**
+  - cada item lleva `tab` (`PESTANA`). Un pendiente de otra pestaña del mismo navegador se junta con el nuevo en vez de reemplazarse;
+  - `conPendientes` y `pacConPendientes` reescriben el pendiente con lo que se muestra y ponen como base lo del servidor;
+  - `rechazado` decide con el pendiente vigente. Una atención con trabajo cuya cita fue borrada se vuelve a crear con otro id.
+- **Doctoras:**
+  - `esMia` solo cuenta "Por definir" si la cita sigue `Agendada`, y `validar` no deja guardar una atención Atendido con "Por definir";
+  - una doctora no puede agendarse ni atender a un paciente ajeno;
+  - `validarIdentidadPaciente` no le muestra la fecha de nacimiento de un paciente ajeno;
+  - `#q-prof` queda fijo, y el aviso de choques usa la agenda de la propia doctora.
+- **Planes:**
+  - la dueña del plan es solo `plan.prof`. En el editor, recepción o la dueña eligen la doctora; por defecto se propone la que atiende al paciente (`duenaPlanDeducida`);
+  - un plan sin doctora lo ven todas, pero una doctora no lo puede borrar;
+  - el selector conserva el plan de una sesión atendida en reemplazo.
+- **Montos:**
+  - el laboratorio tiene que estar entre 0 y el precio;
+  - `montoRaro` frena letras y separadores dobles en el cobro, el formulario, los egresos y el total del plan;
+  - `num` entiende "1,500,00".
+
 ## Cómo verificar
 
 Desde la raíz del repo:
 
 ```
-node tests/pacientes-regression.cjs        # 122 comprobaciones, sin red
+node tests/pacientes-regression.cjs        # 128 comprobaciones, sin red
 ```
 
 `tests/apps-script-en-memoria.cjs` corre el `.gs` **real** sobre una planilla en memoria. Expone `handle(body)` y vistas `registros`, `pacientes`, `egresos` y `cfg`:
@@ -166,5 +199,8 @@ También pasaron, pero esas pruebas viven fuera del repo:
 5. `num()` con texto sin sentido sigue devolviendo un número raro, pero `montoRaro` frena esos montos antes de guardarlos.
 6. **Datos de Cosmetic**: hay Bs 40.030 cobrados sin método y Bs 46.910 sin doctora, sobre todo de Ana María Vargas. Vienen de los Excel históricos. Las doctoras históricas (Nadia, Ximena, Katherine, Yanaina, Carolina) no están en la config, y las doctoras actuales todavía no tienen clave asignada.
 7. Mirna debe cambiar las claves de fábrica (la de dueña y la del equipo).
-8. La re-auditoría de `e4b609f` encontró problemas, que se corrigieron en la ronda 3. Los repros de los auditores (32 scripts) dan bien contra el `.gs` nuevo en los dos paneles. Antes de publicar se hace una auditoría más de la ronda 3.
+8. Hubo cuatro rondas de auditoría con agentes. Después de la ronda 4 se volvieron a correr contra el `.gs` nuevo, en los dos paneles, todos los repros de las rondas 1 a 3, unos 110 scripts:
+   - todos dan el resultado esperado;
+   - la única excepción es un caso que ahora se frena a propósito: una atención Atendido con "Por definir".
+   - Fuera del repo, la cuarta ronda (el súper auditor de `f189076`) dejó sin rehacer, como deuda baja, que "500-100" se lee como 500.
 9. **Orden de despliegue recomendado:** primero publicar los paneles (las colas viejas se vacían con el servidor viejo, que se comporta como siempre); después pegar los dos `.gs` nuevos y publicar una versión nueva de cada Web App.

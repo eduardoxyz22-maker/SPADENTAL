@@ -100,6 +100,7 @@ async function run(file){
    const ctx={};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),ctx);ctx.formatoFecha=x=>x;ctx.formatoHora=x=>x;
    const r=row({clinicaId:file.startsWith('cosmetic')?'cosmetic':'spadental',cobroInicialFechado:true,cobrosPosteriores:[{id:'P-FICTICIO',fecha:'2026-10-02',metodo:'QR',monto:30}],servicios:[{nom:'Corona ficticia',lab:0,precio:100,cant:1}]});
    /* el servidor junta cambios: hoja en memoria, sin red */
+   const borr=[];ctx.fueBorrado=id=>borr.includes(String(id));ctx.anotarBorrado=id=>borr.push(String(id));
    const filas=[];ctx.getSheet=()=>({getLastRow:()=>filas.length+1,getRange:(r0,c0,nr,nc)=>({getValues:()=>filas.slice(r0-2,r0-2+nr).map(f=>f.slice(c0-1,c0-1+nc)),setValues:v=>{filas[r0-2]=v[0].slice()}}),appendRow:f=>filas.push(f.slice()),deleteRow:i=>filas.splice(i-2,1)});
    const b0=row({id:'J-1',acuenta:0,saldo:100,total:100});ctx.doSave(structuredClone(b0),null);
    const m1=structuredClone(b0);m1.acuenta=30;m1.saldo=70;m1.cobrosPosteriores=[{id:'c1',monto:30,metodo:'QR',fecha:'2026-10-02'}];
@@ -119,6 +120,16 @@ async function run(file){
    const props={};ctx.PropertiesService={getScriptProperties:()=>({getProperty:k=>props[k]||null,setProperty:(k,v)=>{props[k]=v}})};
    const cb={precios:[{nom:'x',precio:1}],canales:['A'],prof:['Dra. X']};ctx.doGuardarCfg(structuredClone(cb));ctx.doGuardarCfg({...structuredClone(cb),prof:['Dra. X','Dra. Y']},structuredClone(cb));
    check(file+': ajustes de dos equipos se juntan en el servidor',()=>{const c2=ctx.doGuardarCfg({...structuredClone(cb),canales:['A','B']},structuredClone(cb)).cfg;assert.deepEqual([...c2.prof],['Dra. X','Dra. Y']);assert.deepEqual([...c2.canales],['A','B'])});
+   const alta=row({id:'J-4',total:200,acuenta:0,saldo:200,servicios:[{nom:'L',precio:200,cant:1}]});ctx.doSave(structuredClone(alta),{...structuredClone(alta),__alta:true});
+   const corr=structuredClone(alta);corr.servicios=[{nom:'L',precio:250,cant:1}];corr.total=250;corr.saldo=250;
+   const trasCorr=ctx.doSave(corr,{...structuredClone(alta),__alta:true}).registro;
+   check(file+': un alta con la respuesta cortada y corregida no duplica servicios',()=>{assert.equal(trasCorr.total,250);assert.equal(trasCorr.servicios.length,1)});
+   ctx.doDelete({id:'J-4'},null);
+   check(file+': un alta reintentada no revive lo que se borró',()=>assert.equal(ctx.doSave(structuredClone(alta),{...structuredClone(alta),__alta:true}).error,'borrada'));
+   const cita=row({id:'J-5',estado:'Agendada',profesional:'Por definir',total:0,acuenta:0,saldo:0,servicios:[]});ctx.doSave(structuredClone(cita),null);
+   const porM={...structuredClone(cita),estado:'Atendido',profesional:'Dra. M',servicios:[{nom:'S',precio:900,cant:1}],total:900,saldo:900};ctx.doSave(porM,structuredClone(cita));
+   const porB={...structuredClone(cita),estado:'Atendido',profesional:'Dra. B',servicios:[{nom:'S',precio:200,cant:1}],total:200,saldo:200};const sep=ctx.doSave(porB,structuredClone(cita));
+   check(file+': la misma cita atendida por dos doctoras queda como dos visitas',()=>{assert.equal(sep.registro.profesional,'Dra. M');assert.equal(sep.separada.profesional,'Dra. B');assert.equal(sep.separada.total,200)});
    check(file+': fichas con y sin tilde se juntan sin perder la alergia',()=>{const f=ctx.fusionarFichas({nombre:'María Pérez',med:{alergias:'PENICILINA'},ts:'1'},{nombre:'Maria Perez',med:{notas:'x'},ts:'2'});assert.equal(f.med.alergias,'PENICILINA');assert.equal(ctx.fClavePac('María  Pérez'),'maria perez')});
    check(file+': fusión idéntica en panel y servidor',()=>{for(const fn of ['fIgual','fusion3','fCampo','fSesiones','fPorId','fMulti','fTexto3','fDesarmar','fArmar','fusionRegistro','fCambioParaBorrar','fusionarFichas','fClavePac'])assert.equal(ctx[fn].toString(),(file.startsWith('cosmetic')?b:a).c[fn].toString())});
    const roundtrip=ctx.registroDeFila(ctx.filaDeRegistro(r));check(file+': serialización real conserva nuevos campos y laboratorio cero',()=>{assert.deepEqual(JSON.parse(JSON.stringify(roundtrip.cobrosPosteriores)),r.cobrosPosteriores);assert.equal(roundtrip.clinicaId,r.clinicaId);assert.equal(roundtrip.servicios[0].lab,0);assert.equal(roundtrip.cobroInicialFechado,true)});

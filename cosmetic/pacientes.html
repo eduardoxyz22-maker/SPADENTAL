@@ -1449,7 +1449,9 @@ var CFG_DEL_SERVIDOR=false, CFG_SIN_RESPUESTA=false, CLAVE_EN_ESPERA='';
 function esAdmin(){return ROL==='admin'||ROL==='equipo'}
 /* Con su clave, una doctora trabaja con lo suyo: sus atenciones, sus
    pacientes y su plata. Lo de otra doctora no se ve ni se toca. */
-function esMia(r){return !esDoctora()||!r||r.profesional===PROF_ACTUAL||r.profesional==='Por definir'}
+function esMia(r){return !esDoctora()||!r||r.profesional===PROF_ACTUAL||
+  /* "por definir" es de todas solo mientras es una cita sin atender */
+  (r.profesional==='Por definir'&&r.estado==='Agendada')}
 function datosVisibles(){return esDoctora()?DATA.filter(esMia):DATA}
 function pacientesMios(){var s={}; datosVisibles().forEach(function(r){var k=keyPac(r.paciente); if(k)s[k]=1}); return s}
 function noEsTuya(){toast('Eso es de otra doctora 🔐',1)}
@@ -1468,17 +1470,14 @@ function bloqueaAjeno(nombre){
    anotada es de quien atendió sus sesiones; sin sesiones, es de todos. */
 function duenaPlan(pl){
   if(!pl)return '';
-  if(pl.prof)return pl.prof;
-  var porFecha=function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')};
-  var conProf=function(r){return r.profesional&&r.profesional!=='Por definir'};
-  var ses=DATA.filter(function(r){return r.planId===pl.id&&conProf(r)}).sort(porFecha);
-  if(ses.length)return ses[0].profesional;
-  /* sin sesiones todavía: es de quien atiende a ese paciente */
-  var k='';
-  Object.keys(PAC).some(function(x){
-    if((PAC[x].planes||[]).some(function(p){return p.id===pl.id})){k=x;return true}return false});
-  var at=DATA.filter(function(r){return k&&keyPac(r.paciente)===k&&esAtencion(r)&&conProf(r)}).sort(porFecha);
-  return at.length?at[0].profesional:''}
+  return pl.prof||''}
+/* La doctora que atiende a ese paciente (su última visita atendida): es la
+   que se propone como dueña de un plan nuevo cargado por recepción. */
+function duenaPlanDeducida(pl,nombre){
+  if(pl&&pl.prof)return pl.prof;
+  var ult=DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&esAtencion(r)&&r.profesional&&r.profesional!=='Por definir'})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
+  return ult?ult.profesional:''}
 function planVisible(pl){
   if(!esDoctora()||!pl)return true;
   var d=duenaPlan(pl);
@@ -1568,6 +1567,10 @@ function fijarSelectoresProf(){
   if(fp){
     if(esDoctora()){fp.value=PROF_ACTUAL; fp.readOnly=true; fp.classList.add('fijo')}
     else{fp.readOnly=false; fp.classList.remove('fijo')}}
+  var qp=$('#q-prof');
+  if(qp){
+    if(esDoctora()){qp.value=PROF_ACTUAL; qp.readOnly=true; qp.classList.add('fijo')}
+    else{qp.readOnly=false; qp.classList.remove('fijo')}}
   ['#m-prof','#rem-prof','#q-filtro-prof'].forEach(function(id){
     var sel=$(id); if(!sel)return;
     if(esDoctora()){
@@ -1779,14 +1782,15 @@ function num(v){
   if(t.indexOf(',')>=0&&t.indexOf('.')>=0){
     if(t.lastIndexOf(',')>t.lastIndexOf('.'))t=t.replace(/\./g,'').replace(',','.');
     else t=t.replace(/,/g,'')}
+  else if(/^-?\d{1,3}(,\d{3})+,\d{1,2}$/.test(t))t=t.replace(/,(?=\d{3}(,|$))/g,'').replace(',','.');
   else if(t.indexOf(',')>=0)t=/^-?\d{1,3}(,\d{3})+$/.test(t)?t.replace(/,/g,''):t.replace(',','.');
   else if(/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');
   else if(/^-?[1-9]\d{0,2}(\.\d{3})+\.\d{1,2}$/.test(t))t=t.replace(/\.(?=\d{3}(\.|$))/g,'');
   var n=parseFloat(t);return isFinite(n)?n:0}
 /* "15OO" o "1e3" no son un monto: mejor frenar que guardar 15 o 13 */
 function montoRaro(v){
-  var t=String(v==null?'':v).replace(/bs\.?/ig,'').replace(/\s/g,'');
-  return /[^0-9.,\-]/.test(t)}
+  var t=String(v==null?'':v).replace(/bs\.?/ig,'').replace(/\s/g,'').replace(/\.-$/,'');
+  return /[^0-9.,\-]/.test(t)||/[.,]{2}/.test(t)}
 function bs(n){return 'Bs '+Math.round(num(n)).toLocaleString('es-BO')}
 function n0(n){return Math.round(num(n)).toLocaleString('es-BO')}
 function uid(){return 'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -1974,7 +1978,7 @@ function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){
    La plata no se suma "por diferencia": lo cobrado sale de los cobros, que
    tienen id, así un reintento nunca cuenta dos veces el mismo pago.
    ===================================================================== */
-var FUSION_V = 3;
+var FUSION_V = 4;
 var FUSION_TEXTO = {obs: 1, notas: 1, alergias: 1, medicacion: 1, detalle: 1};
 function fVacio(v) {
   if (v === undefined || v === null || v === '' || v === false) return true;
@@ -2041,23 +2045,23 @@ function fPorId(b, m, t, ruta, conf) {
   }
   return out;
 }
-/* Listas sin id (servicios, antecedentes, profesionales): lo que agregó cada
-   uno se suma y lo que sacó cada uno se saca. */
+/* Listas sin id (servicios, antecedentes, profesionales): cada elemento
+   cuenta cuántas veces está. Lo que agregaron los dos a la vez es el mismo
+   agregado (no se duplica); lo que agregó uno solo se suma; lo que sacó uno
+   se saca. */
 function fMulti(b, m, t) {
-  var cB = {}, cM = {}, i, k, out = [], quitar = {};
-  for (i = 0; i < b.length; i++) { k = JSON.stringify(b[i]); cB[k] = (cB[k] || 0) + 1; }
-  for (i = 0; i < m.length; i++) { k = JSON.stringify(m[i]); cM[k] = (cM[k] || 0) + 1; }
-  for (k in cB) if ((cM[k] || 0) < cB[k]) quitar[k] = cB[k] - (cM[k] || 0);
-  for (i = 0; i < t.length; i++) {
-    k = JSON.stringify(t[i]);
-    if (quitar[k]) { quitar[k]--; continue; }
-    out.push(t[i]);
-  }
-  var agregar = {};
-  for (k in cM) if (cM[k] > (cB[k] || 0)) agregar[k] = cM[k] - (cB[k] || 0);
-  for (i = 0; i < m.length; i++) {
-    k = JSON.stringify(m[i]);
-    if (agregar[k]) { agregar[k]--; out.push(m[i]); }
+  var cB = {}, cM = {}, cT = {}, orden = [], visto = {}, i, k, x;
+  function contar(l, c) { for (var q = 0; q < l.length; q++) { var kk = JSON.stringify(l[q]); c[kk] = (c[kk] || 0) + 1; if (!visto[kk]) { visto[kk] = l[q]; orden.push(kk); } } }
+  contar(t, cT); contar(m, cM); contar(b, cB);
+  var out = [];
+  for (i = 0; i < orden.length; i++) {
+    k = orden[i];
+    var dm = (cM[k] || 0) - (cB[k] || 0), dt = (cT[k] || 0) - (cB[k] || 0), d;
+    if (dm > 0 && dt > 0) d = Math.max(dm, dt);
+    else if (dm < 0 && dt < 0) d = Math.min(dm, dt);
+    else d = dm + dt;
+    var n = Math.max(0, (cB[k] || 0) + d);
+    for (x = 0; x < n; x++) out.push(visto[k]);
   }
   return out;
 }
@@ -2179,27 +2183,31 @@ function fDesarmar(r) {
   for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
   var pagos = fEsLista(r.pagos) && r.pagos.length ? r.pagos
     : (r.metodo && r.metodo !== 'Mixto' && fNum(r.acuenta) > 0 ? [{metodo: r.metodo, monto: fNum(r.acuenta)}] : []);
-  var ini = fPorMetodo(cp, -1, fPorMetodo(pagos, 1, {}));
+  var ini = fListaMetodos(fPorMetodo(cp, -1, fPorMetodo(pagos, 1, {})));
   var o = {}, k;
-  for (k in r) if (Object.prototype.hasOwnProperty.call(r, k)) o[k] = r[k];
+  for (k in r) if (Object.prototype.hasOwnProperty.call(r, k) && k !== '__alta') o[k] = r[k];
   delete o.acuenta; delete o.saldo; delete o.pagos; delete o.metodo;
-  o.__cobroIni = fR(fNum(r.acuenta) - sumaCp);
-  o.__pagosIni = fListaMetodos(ini);
-  o.__metodoIni = (!pagos.length && !cp.length) ? (r.metodo || '') : '';
+  /* el cobro del día de la atención es UNA cosa: monto y forma de pago van juntos */
+  o.__cobro = {monto: fR(fNum(r.acuenta) - sumaCp), pagos: ini,
+    metodo: (!pagos.length && !cp.length) ? (r.metodo || '') : ''};
   o.__perdon = fR(fNum(r.total) - fNum(r.acuenta) - fNum(r.saldo));
+  /* con servicios, el total es servicios menos el descuento */
+  if (fEsLista(r.servicios) && r.servicios.length) { delete o.total; o.__desc = fR(fSumaSrv(r) - fNum(r.total)); }
   return o;
 }
 function fArmar(o) {
-  var cp = fCobrosPost(o), sumaCp = 0, i;
+  var cp = fCobrosPost(o), sumaCp = 0, i, c = o.__cobro || {monto: 0, pagos: [], metodo: ''};
   for (i = 0; i < cp.length; i++) sumaCp += fNum(cp[i] && cp[i].monto);
-  var acc = {}, ini = o.__pagosIni || [];
+  var acc = {}, ini = c.pagos || [];
   for (i = 0; i < ini.length; i++) acc[ini[i].metodo] = fNum(ini[i].monto);
   var pagos = fListaMetodos(fPorMetodo(cp, 1, acc));
   var r = {}, k;
   for (k in o) if (Object.prototype.hasOwnProperty.call(o, k) && k.indexOf('__') !== 0) r[k] = o[k];
-  r.acuenta = fR(fNum(o.__cobroIni) + sumaCp);
+  if (fEsLista(o.servicios) && o.servicios.length) r.total = fR(Math.max(0, fSumaSrv(o) - fNum(o.__desc)));
+  else if (r.total === undefined) r.total = 0;
+  r.acuenta = fR(fNum(c.monto) + sumaCp);
   r.pagos = pagos;
-  r.metodo = pagos.length > 1 ? 'Mixto' : (pagos.length ? pagos[0].metodo : (o.__metodoIni || ''));
+  r.metodo = pagos.length > 1 ? 'Mixto' : (pagos.length ? pagos[0].metodo : (c.metodo || ''));
   r.saldo = fR(fNum(r.total) - r.acuenta - fNum(o.__perdon));
   if (r.saldo < 0 && fNum(o.__perdon) > 0) r.saldo = fR(Math.max(0, r.saldo));
   return r;
@@ -2209,15 +2217,39 @@ function fSumaSrv(r) {
   for (var i = 0; i < l.length; i++) s += fNum(l[i] && l[i].precio) * (fNum(l[i] && l[i].cant) || 1);
   return fR(s);
 }
-/* Una atención. Sin base (alta nueva cuya respuesta se perdió, o cola de una
-   versión anterior) se junta igual: lo que tienen los dos queda. */
+function fUnirCobros(a, b) {
+  var out = [], ids = {}, l = fCobrosPost(a).concat(fCobrosPost(b)), i;
+  for (i = 0; i < l.length; i++) { var x = l[i]; if (x && x.id) { if (ids[x.id]) continue; ids[x.id] = 1; } out.push(x); }
+  return out;
+}
+/* ¿Dos doctoras distintas cargaron la misma visita? Se separan en dos. */
+function fOtraDoctora(b, m, t) {
+  if (!b || !m || !t) return false;
+  var pb = String(b.profesional || ''), pm = String(m.profesional || ''), pt = String(t.profesional || '');
+  return pm !== pb && pt !== pb && pm !== pt && pm !== 'Por definir' && pt !== 'Por definir' && !!pm && !!pt;
+}
+/* Una atención.
+   - base = lo que el equipo vio en el servidor: junta campo por campo.
+   - base null = un alta que se reintenta o un pendiente de la versión
+     anterior: vale lo de este equipo, pero los cobros de otros se conservan. */
 function fusionRegistro(b, m, t, conf) {
   if (!t) return m;
-  var dB = fDesarmar(b || {}), dM = fDesarmar(m), dT = fDesarmar(t);
-  if (!b) { dB = {}; }
+  if (!b) {
+    var dm = fDesarmar(m);
+    dm.cobrosPosteriores = fUnirCobros(t, m);
+    return fArmar(dm);
+  }
+  var dB = fDesarmar(b), dM = fDesarmar(m), dT = fDesarmar(t);
   var o = fusion3(dB, dM, dT, '', conf);
-  /* si de los dos lados el total eran los servicios, sigue siéndolo */
-  if (Math.abs(fNum(m.total) - fSumaSrv(m)) < 0.01 && Math.abs(fNum(t.total) - fSumaSrv(t)) < 0.01) o.total = fSumaSrv(o);
+  /* dos equipos anotaron un cobro inicial distinto para la misma visita:
+     queda el primero, coherente, y la diferencia anotada para conciliar */
+  if (!fIgual(dM.__cobro, dB.__cobro) && !fIgual(dT.__cobro, dB.__cobro) && !fIgual(dM.__cobro, dT.__cobro)) {
+    o.__cobro = dT.__cobro;
+    var desc = [], pm = dM.__cobro.pagos || [];
+    for (var i = 0; i < pm.length; i++) desc.push(pm[i].metodo + ' ' + pm[i].monto);
+    o.obs = String(o.obs || '') + (o.obs ? '\n' : '') + '⚠ Conciliar: otro equipo anotó un cobro inicial de ' + fNum(dM.__cobro.monto) + (desc.length ? ' (' + desc.join(', ') + ')' : '') + ' que no se sumó.';
+    conf.push('__cobro');
+  }
   return fArmar(o);
 }
 /* Lo que mira un borrado para saber si la atención cambió desde que se la
@@ -2242,12 +2274,26 @@ function fClavePac(n) {
 /* Dos filas de ficha que son la misma persona escrita distinto ("María
    Pérez" y "Maria Perez"): se juntan sin perder nada. Si dicen cosas
    distintas, se muestran las dos: una alergia nunca puede quedar oculta. */
+function fPartes(x) {
+  var p = String(x).split(/\s*(?:,|;|\/|\n| y )\s*/), out = [];
+  for (var i = 0; i < p.length; i++) { var q = fClavePac(p[i]); if (q) out.push(q); }
+  return out;
+}
 function fJuntarTexto(a, b) {
   a = String(a == null ? '' : a).trim(); b = String(b == null ? '' : b).trim();
   if (!a) return b; if (!b) return a;
   if (a === b || a.indexOf(b) >= 0) return a;
   if (b.indexOf(a) >= 0) return b;
-  return a + ' / ' + b;
+  /* "Penicilina, Látex" y "látex": lo de uno ya está en el otro */
+  var pa = fPartes(a), pb = fPartes(b), i, falta = [], partesB = String(b).split(/\s*(?:,|;|\/|\n)\s*/);
+  for (i = 0; i < pb.length; i++) if (pa.indexOf(pb[i]) < 0) { falta = null; break; }
+  if (falta !== null) return a;
+  var todasA = true;
+  for (i = 0; i < pa.length; i++) if (pb.indexOf(pa[i]) < 0) { todasA = false; break; }
+  if (todasA) return b;
+  falta = [];
+  for (i = 0; i < partesB.length; i++) { var c = fClavePac(partesB[i]); if (c && pa.indexOf(c) < 0) falta.push(partesB[i].trim()); }
+  return falta.length ? a + ' / ' + falta.join(', ') : a;
 }
 function fusionarFichas(a, b) {
   if (!a) return b; if (!b) return a;
@@ -2268,6 +2314,14 @@ function fusionarFichas(a, b) {
     if (p && p.id && ids[p.id]) return; if (p && p.id) ids[p.id] = 1; planes.push(p);
   });
   return {nombre: nuevo.nombre || viejo.nombre, nac: nuevo.nac || viejo.nac || '', med: med, planes: planes, ts: nuevo.ts || viejo.ts || ''};
+}
+/* La base de un alta todavía no confirmada lleva esta marca: si el alta ya
+   llegó, es la base para juntar; si no llegó, se crea. */
+function fSinAlta(b) {
+  if (!b || !b.__alta) return b;
+  var o = {}, k;
+  for (k in b) if (Object.prototype.hasOwnProperty.call(b, k) && k !== '__alta') o[k] = b[k];
+  return o;
 }
 
 /* ---------------------------------------------------------------------
@@ -2291,16 +2345,29 @@ function snapDe(action,rec){
     :(action==='pac'?SNAP_P[keyPac(rec.nombre)]
     :((action==='egreso'||action==='egresoDel')?SNAP_E[rec.id]:null));
   try{return t?JSON.parse(t):null}catch(e){return null}}
+/* Cada pestaña se reconoce: si otra pestaña de este mismo navegador dejó un
+   pendiente del mismo registro, se junta con él en vez de reemplazarlo. */
+var PESTANA=uid();
+function baseAlta(action,rec){
+  /* un alta que todavía no llegó: su propio contenido es la base. Si el
+     alta ya había llegado (respuesta cortada), el servidor junta contra eso;
+     si no llegó, la crea. */
+  if(action!=='save'&&action!=='egreso')return null;
+  var b=JSON.parse(JSON.stringify(rec)); b.__alta=true; return b}
 function queue(action,rec,base){
   var q=pend(), k=claveCola(action,rec), copia=JSON.parse(JSON.stringify(rec==null?null:rec));
   for(var i=0;i<q.length;i++){
     if(claveCola(q[i].action,q[i].rec)!==k)continue;
     if(q[i].action===action&&JSON.stringify(q[i].rec)===JSON.stringify(copia))return;
-    var bAnt=('base' in q[i])?q[i].base:undefined;
-    q[i]={action:action,rec:copia};
+    var prev=q[i], bAnt=('base' in prev)?prev.base:undefined;
+    if(prev.tab&&prev.tab!==PESTANA&&prev.action===action&&bAnt!==undefined){
+      if(action==='save')copia=fusionRegistro(fSinAlta(bAnt),copia,prev.rec,[]);
+      else if(action==='pac')copia=fusion3(bAnt||{},copia,prev.rec,'',[])}
+    q[i]={action:action,rec:copia,tab:PESTANA};
     if(bAnt!==undefined)q[i].base=bAnt;
     setPend(q); if(window.banner)banner(); return}
-  var it={action:action,rec:copia}, b=base!==undefined?base:snapDe(action,rec);
+  var it={action:action,rec:copia,tab:PESTANA}, b=base!==undefined?base:snapDe(action,rec);
+  if(b===null)b=baseAlta(action,copia);
   if(action!=='cfg')it.base=b;
   q.push(it); setPend(q); if(window.banner)banner()}
 
@@ -2344,6 +2411,11 @@ function confirmado(k,item,enviado,r){
     else q.splice(i,1);
     setPend(q)}
   if(window.banner)banner();
+  if(item.action==='save'&&r.separada&&r.separada.id){
+    SNAP_R[r.separada.id]=JSON.stringify(r.separada);
+    var sep=normalize(JSON.parse(JSON.stringify(r.separada)));
+    DATA=DATA.filter(function(x){return x.id!==sep.id}).concat([sep]); saveLocal();
+    toast('Esta cita la atendió también '+((r.registro&&r.registro.profesional)||'otra doctora')+': quedaron como dos visitas. Revisalas.',1)}
   if(item.action==='save'){
     var srv=(r.registro&&r.registro.id)?r.registro:item.rec;
     SNAP_R[srv.id]=JSON.stringify(srv);
@@ -2381,6 +2453,8 @@ function conTrabajo(x){
   return !!x&&(num(x.acuenta)>0||(x.cobrosPosteriores||[]).length>0||
     (x.estado==='Atendido'&&(x.servicios||[]).length>0))}
 function rechazado(k,item,r){
+  var vig=itemCola(k)||item;
+  if(vig.action===item.action)item=vig;
   setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k}));
   if(window.banner)banner();
   if(item.action==='egreso'||item.action==='egresoDel'){
@@ -2397,10 +2471,15 @@ function rechazado(k,item,r){
   /* una atención con trabajo hecho (cobro o servicios) que otro equipo borró
      mientras tanto no se tira: vuelve a cargarse tal cual */
   if(r.error==='borrada'&&item.action==='save'&&conTrabajo(item.rec)){
-    delete SNAP_R[item.rec.id];
-    enviar('save',item.rec,undefined,null);
-    toast('La cita de '+(item.rec.paciente||'')+' había sido borrada en otro equipo. Se conservó la atención con lo que se cargó.',1);
-    return}
+    /* se vuelve a cargar como una visita nueva (la borrada no revive) */
+    var viejo=item.rec.id, nueva=JSON.parse(JSON.stringify(item.rec));
+    nueva.id=uid(); nueva.citaDe='';
+    nueva.obs=(nueva.obs?nueva.obs+'\n':'')+'Se volvió a cargar: la cita original se había borrado en otro equipo.';
+    delete SNAP_R[viejo];
+    DATA=DATA.filter(function(x){return x.id!==viejo}).concat([normalize(JSON.parse(JSON.stringify(nueva)))]); saveLocal();
+    enviar('save',nueva,undefined,null);
+    toast('La cita de '+(nueva.paciente||'')+' había sido borrada en otro equipo. Se conservó la atención con lo que se cargó.',1);
+    repintarSuave(); return}
   if(r.error==='borrada'){
     var id=item.rec&&item.rec.id;
     delete SNAP_R[id];
@@ -2464,18 +2543,25 @@ function initSnaps(){
    atención recién cargada desaparecía de la lista si el servidor estaba
    ocupado, y al cargarla de nuevo quedaba dos veces. */
 function conPendientes(lista,q){
-  var porId={}, fuera={};
+  var porId={}, fuera={}, cambio=false;
   lista.forEach(function(x,i){porId[x.id]=i});
   q.forEach(function(it){
     if(!it||!it.rec)return;
     if(it.action==='delete'){fuera[it.rec.id]=1;return}
     if(it.action!=='save')return;
     var id=it.rec.id, srv=SNAP_R[id]?JSON.parse(SNAP_R[id]):null;
-    if(!srv&&it.base)return;            // la borraron en otro equipo
-    var vista=normalize(srv&&it.base
-      ? fusionRegistro(it.base,JSON.parse(JSON.stringify(it.rec)),srv,[])
-      : JSON.parse(JSON.stringify(it.rec)));
+    var base=('base' in it)?it.base:undefined;
+    /* la borraron en otro equipo: se esconde, salvo que traiga plata o trabajo */
+    if(!srv&&base&&!base.__alta&&!conTrabajo(it.rec))return;
+    var vista=JSON.parse(JSON.stringify(it.rec));
+    if(srv&&base!==undefined){
+      vista=fusionRegistro(fSinAlta(base),vista,srv,[]);
+      /* lo pendiente pasa a partir de lo que se ve: si se vuelve a editar,
+         no se mandan otra vez cosas que ya están en el servidor */
+      it.rec=JSON.parse(JSON.stringify(vista)); it.base=srv; cambio=true}
+    vista=normalize(vista);
     if(id in porId)lista[porId[id]]=vista; else {porId[id]=lista.length; lista.push(vista)}});
+  if(cambio)setPend(q);
   return lista.filter(function(x){return !fuera[x.id]})}
 function egrConPendientes(lista,q){
   q.forEach(function(it){
@@ -2489,9 +2575,12 @@ function pacConPendientes(m,q){
   q.forEach(function(it){
     if(!it||!it.rec||it.action!=='pac')return;
     var k=keyPac(it.rec.nombre); if(!k)return;
-    var srv=SNAP_P[k]?JSON.parse(SNAP_P[k]):null;
-    m[k]=pacNormalize(srv&&it.base?fusion3(it.base,JSON.parse(JSON.stringify(it.rec)),srv,'',[])
-                                  :JSON.parse(JSON.stringify(it.rec)))});
+    var srv=SNAP_P[k]?JSON.parse(SNAP_P[k]):null, vista=JSON.parse(JSON.stringify(it.rec));
+    if(srv&&('base' in it)){
+      vista=fusion3(it.base||{},vista,srv,'',[]);
+      it.rec=JSON.parse(JSON.stringify(vista)); it.base=srv; q.__cambio=true}
+    m[k]=pacNormalize(vista)});
+  if(q.__cambio){delete q.__cambio; setPend(q)}
   return m}
 /* Trae SOLO la config: no arrastra las miles de atenciones, asi que llega en
    un segundo en vez de en catorce. Si el servidor todavia no conoce la accion
@@ -2627,6 +2716,7 @@ function nacsDePaciente(nombre,filas){
   return Object.keys(out)}
 function identidadAmbigua(nombre){return nacsDePaciente(nombre).length>1}
 function validarIdentidadPaciente(nombre,nac,prev){
+  if(esDoctora()&&pacAjeno(nombre)){toast('Ese paciente es de otra doctora 🔐',1);return false}
   var k=keyPac(nombre), n=nacClave(nac), nacs=nacsDePaciente(nombre);
   if(nacs.length>1){toast(AVISO_IDENTIDAD,1);return false}
   /* editar la misma visita, de la misma persona: nada que verificar */
@@ -3076,14 +3166,16 @@ function renderPlanSel(sel){
   /* la sesión de un plan ya terminado igual muestra su plan: si no, no había
      forma de quitarla del plan para corregir el nombre */
   if(sel&&!ps.some(function(p){return p.id===sel})){
-    var ya=planesVisiblesDe($('#f-paciente').value.trim()).filter(function(p){return p.id===sel})[0];
+    /* aunque el plan sea de otra doctora (sesión atendida en reemplazo), la
+       atención no puede perder su plan al guardarse */
+    var ya=planesDe($('#f-paciente').value.trim()).filter(function(p){return p.id===sel})[0];
     if(ya)ps=ps.concat([ya])}
   if(!ps.length){$('#wrap-plan').style.display='none';$('#f-plan').innerHTML='';$('#plan-hint').textContent='';return}
   $('#wrap-plan').style.display='';
   $('#f-plan').innerHTML='<option value="">— no, es una visita suelta —</option>'+
     ps.map(function(p){var a=avancePlan(p);
       return '<option value="'+esc(p.id)+'"'+(sel===p.id?' selected':'')+'>'+esc(p.nombre)+
-        ' · '+a.hechas+'/'+a.total+' sesiones · saldo '+bs(saldoPlan(p))+'</option>'}).join('');
+        (planVisible(p)?' · '+a.hechas+'/'+a.total+' sesiones · saldo '+bs(saldoPlan(p)):' · plan de '+esc(duenaPlan(p)))+'</option>'}).join('');
   planHint()}
 
 function planHint(){
@@ -3244,6 +3336,14 @@ function validar(){
     if(!$('#f-cel').value.trim()){bad=bad.filter(function(x){return x!=='celular'});$('#f-cel').classList.remove('bad')}
     if(Math.abs(a-num(prevV.acuenta))<0.01)m=m||'importado'}
   if(a<0){bad.push('lo cobrado no puede ser negativo');$('#f-acuenta').classList.add('bad')}
+  /* una visita atendida es de una doctora: "por definir" la dejaba de todas */
+  if(getRadio('estado')==='Atendido'&&/^por definir$/i.test($('#f-prof').value.trim())){
+    bad.push('elegí la doctora que atendió');$('#f-prof').classList.add('bad')}
+  $$('#srv-list .srv').forEach(function(el){
+    var l=el.querySelector('.s-lab'); if(!l||!l.value.trim())return;
+    var pr=num(el.querySelector('.s-precio').value)*(num(el.querySelector('.s-cant').value)||1);
+    if(montoRaro(l.value)||num(l.value)<0||num(l.value)>pr+0.01){
+      bad.push('el laboratorio tiene que estar entre 0 y el precio');l.classList.add('bad')}});
   ['f-total','f-acuenta','f-saldo'].forEach(function(id){
     if(montoRaro($('#'+id).value)){bad.push('el monto de '+id.slice(2)+' tiene letras');$('#'+id).classList.add('bad')}});
   if($$('#srv-list .s-precio').some(function(i){return montoRaro(i.value)}))bad.push('un precio tiene letras');
@@ -3311,6 +3411,8 @@ function guardarAtencion(){
   if(!getRadio('canal')&&!(prevC&&esImportada(prevC))){avisoCanal('marcar por dónde nos encontró','seg-canal');return}
   readSrv();
   var prev=EDIT_ID?DATA.filter(function(r){return r.id===EDIT_ID})[0]:null;
+  if(!prev&&esDoctora()&&pacAjeno($('#f-paciente').value)){
+    toast('Ese paciente es de otra doctora 🔐 Pedile a recepción que lo agende con vos.',1);return}
   if(!validarIdentidadPaciente($('#f-paciente').value,$('#f-nac').value,prev))return;
   if(prev&&prev.estado==='Atendido'&&num($('#f-acuenta').value)!==num(prev.acuenta)){
     toast('Para agregar un cobro usá Registrar pago en la ficha de la atención. Corregir un cobro anterior requiere conciliación.',1);return}
@@ -3517,6 +3619,9 @@ function autoCita(){
     : ''}
 
 function guardarCita(){
+  /* una doctora no se agenda un paciente de otra: así no se abre su ficha */
+  if(esDoctora()&&pacAjeno($('#q-paciente').value)){
+    toast('Ese paciente es de otra doctora 🔐 Pedile a recepción que lo agende.',1);return}
   if(!validarIdentidadPaciente($('#q-paciente').value,$('#q-nac').value,null))return;
   var bad=[];
   [['q-fecha','fecha'],['q-paciente','paciente'],['q-cel','celular']]
@@ -3529,7 +3634,7 @@ function guardarCita(){
      ya está anotado de su primera vez */
   if(!getRadio('qcanal')&&!canalHistorico($('#q-paciente').value)){
     avisoCanal('marcar por dónde nos encontró','seg-q-canal');return}
-  if(!confirmarChoque($('#q-fecha').value,$('#q-hora').value,$('#q-prof').value.trim(),null))return;
+  if(!confirmarChoque($('#q-fecha').value,$('#q-hora').value,esDoctora()?PROF_ACTUAL:$('#q-prof').value.trim(),null))return;
 
   var fecha=$('#q-fecha').value;
   var rec={
@@ -5336,6 +5441,7 @@ function nuevoEgreso(pre){
 
 function submitEgreso(id){
   if(!soloEquipo())return;
+  if(montoRaro($('#eg-monto').value)){toast('El monto tiene letras: escribilo solo con números',1);return}
   var m=num($('#eg-monto').value);
   if(m<=0){toast('Poné el monto',1);return}
   var e=guardarEgreso({id:id||undefined, fecha:$('#eg-fecha').value||hoyISO(),
@@ -6506,6 +6612,12 @@ function editorPlan(nombre,p){
         (CFG.planesTipo||[]).map(function(t,i){
           return '<option value="'+i+'">'+esc(t.nombre)+' · '+t.sesiones.length+' sesiones · '+bs(t.total)+'</option>'}).join('')+
         '</select></div>' : '')+
+    (esDoctora()?'':'<div style="margin-top:12px"><label>Doctora del plan</label><select id="pl-prof">'+
+      '<option value="">— lo ven todas —</option>'+
+      (CFG.prof||[]).filter(function(x){return x&&x!=='Por definir'}).map(function(x){
+        var def=p?(p.prof||''):(keyPac($('#f-paciente').value)===keyPac(nombre)&&$('#f-prof').value.trim()
+          ?$('#f-prof').value.trim():duenaPlanDeducida({id:'',prof:''},nombre));
+        return '<option'+(x===def?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select></div>')+
     '<div style="margin-top:12px"><label>Nombre del plan</label>'+
       '<input id="pl-nom" value="'+esc(p?p.nombre:'')+'" placeholder="Ej. Ortodoncia superior / Rehabilitación"></div>'+
     '<div class="grid g2" style="margin-top:12px">'+
@@ -6537,15 +6649,10 @@ function guardarPlan(nombre,id){
   if(!descs.length){toast('Poné al menos una sesión',1);return}
   var plan=id?p.planes.filter(function(x){return x.id===id})[0]:null;
   if(plan&&!planVisible(plan)){noEsTuya();return}
-  if(!plan){
-    /* el plan queda a nombre de su doctora: la que lo carga, o la que atiende
-       a ese paciente si lo carga recepción */
-    var profPlan=esDoctora()?PROF_ACTUAL
-      :(keyPac($('#f-paciente').value)===keyPac(nombre)&&$('#f-prof').value.trim()?$('#f-prof').value.trim()
-        :duenaPlan({id:'__nuevo__'})||'');
-    plan=planNormalize({prof:profPlan}); p.planes.push(plan);
-    if(!profPlan){var ult=DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&esAtencion(r)&&r.profesional&&r.profesional!=='Por definir'})
-      .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0]; if(ult)plan.prof=ult.profesional}}
+  if(montoRaro($('#pl-tot').value)){toast('El presupuesto tiene letras: escribilo solo con números',1);return}
+  if(!plan){plan=planNormalize({prof:esDoctora()?PROF_ACTUAL:''}); p.planes.push(plan)}
+  /* la doctora del plan la elige recepción o la dueña; la doctora carga los suyos */
+  if(!esDoctora()&&$('#pl-prof'))plan.prof=$('#pl-prof').value;
   plan.nombre=$('#pl-nom').value.trim()||'Plan de tratamiento';
   plan.fecha=$('#pl-fec').value||hoyISO();
   plan.total=num($('#pl-tot').value);
@@ -6578,6 +6685,9 @@ function borrarPlan(nombre,id){
   if(bloqueaAjeno(nombre))return;
   var pl0=planesDe(nombre).filter(function(x){return x.id===id})[0];
   if(pl0&&!planVisible(pl0)){noEsTuya();return}
+  /* un plan sin doctora anotada lo puede ver cualquiera, pero lo borra
+     recepción o la dueña */
+  if(pl0&&esDoctora()&&duenaPlan(pl0)!==PROF_ACTUAL){toast('Ese plan no está a tu nombre: lo borra recepción o la dueña.',1);return}
   if(!confirm('¿Borrar este plan? Las atenciones ya cargadas no se tocan.'))return;
   var p=pacDe(nombre);
   p.planes=p.planes.filter(function(x){return x.id!==id});
