@@ -22,7 +22,8 @@ Para quien siga trabajando en `pacientes.html` (Ezequiel Spadental) y `cosmetic/
 | `e4b609f` | **Fusión de cambios entre equipos** (panel y Apps Script) y los 30 hallazgos de la 2.ª auditoría | Sí, junto con las rondas 3 y 4 |
 | `855dae1` | Este informe y `tests/apps-script-en-memoria.cjs` | Sí |
 | `f189076` | Correcciones de la re-auditoría de `e4b609f`; ver la sección "Ronda 3" | Sí, junto con la ronda 4 |
-| (último) | Correcciones de la auditoría de `f189076`; ver la sección "Ronda 4" | Sí |
+| `f75a2ef` | Correcciones de la auditoría de `f189076`; ver la sección "Ronda 4" | Sí |
+| (último) | Correcciones de la auditoría de `f75a2ef`; ver la sección "Ronda 5" | Sí |
 
 **Falta desplegar el Apps Script.** `google-apps-script-pacientes.gs` y `cosmetic/google-apps-script-pacientes.gs` cambiaron en `e4b609f`, pero hay que pegarlos a mano en cada proyecto de Google Apps Script y publicar una versión nueva de la Web App. Lo hace la clínica, guiada. Mientras no se haga, el panel nuevo funciona igual que el viejo: el servidor ignora la `base` y escribe encima, como antes.
 
@@ -154,6 +155,31 @@ Se corrigió así (`FUSION_V = 3`):
   - `montoRaro` frena letras y separadores dobles en el cobro, el formulario, los egresos y el total del plan;
   - `num` entiende "1,500,00".
 
+## Ronda 5: auditoría de `f75a2ef`
+
+`FUSION_V = 5`.
+
+- **Planes viejos sin doctora:** `duenaPlan` vuelve a deducir la dueña: la doctora que más sesiones atendidas tiene; si no hay sesiones, la que más atendió al paciente. Una cita "Por definir" o un reemplazo de un día no le cambian la dueña. `planEsMio` controla editar, marcar, cerrar y borrar.
+- **Separación de visitas** (`fOtraDoctora`): ahora solo se separa si la base era una cita `Agendada` y las dos versiones quedaron `Atendido` con doctoras distintas. Corregir la doctora de una atención ya cargada no separa nada.
+  - La visita separada tiene un id fijo, `<id>-<doctora>`, así que un reintento la junta en vez de crear otra.
+  - `conPendientes` no rebasa un pendiente en ese caso, para que el servidor pueda separarlo.
+- **Base null** (cola de la versión anterior): si el servidor tiene la atención en `Atendido` y la del equipo no lo está, gana la del servidor. El cobro inicial nunca baja.
+- **`rechazado` con error `borrada`:**
+  - si lo borrado era una atención ya cargada, no se revive, y se avisa qué pagos no se guardaron;
+  - si era una cita, se vuelve a crear con id fijo `<id>-r`.
+- **Servicios:** `fServicios` junta fila por fila con la clave nombre más número de aparición. El detalle y el precio son campos de la fila.
+- **Pestañas:** ya no se juntan pendientes entre pestañas. Cada pestaña recarga `DATA`, `PAC` y `EGR` con el evento `storage`. `PESTANA` se guarda en `sessionStorage`.
+- **Ajustes:** `subirCfg` no manda nada si `cfgGet` falla; queda en la cola.
+- **Citas "Por definir":** solo cuentan para una doctora mientras están `Agendada` (Mi día, Agenda, Lista, Recordatorios). `pacAjeno` ignora los registros "Por definir".
+- **Formulario:**
+  - una atención de cortesía (total 0) conserva su total;
+  - el recargo (total mayor que la suma de servicios) también se conserva;
+  - el laboratorio se compara por unidad;
+  - la cantidad tiene que ser mayor que 0.
+- **Ajustes:** precios y laboratorio sin letras ni negativos; comisiones entre 0 y 100.
+- **Receta:** una doctora la ve precargada con su propio nombre.
+- **Próxima cita:** tiene id fijo `<id>-pAAAAMMDD`, así que dos equipos con la misma fecha generan una sola cita.
+
 ## Cómo verificar
 
 Desde la raíz del repo:
@@ -199,8 +225,9 @@ También pasaron, pero esas pruebas viven fuera del repo:
 5. `num()` con texto sin sentido sigue devolviendo un número raro, pero `montoRaro` frena esos montos antes de guardarlos.
 6. **Datos de Cosmetic**: hay Bs 40.030 cobrados sin método y Bs 46.910 sin doctora, sobre todo de Ana María Vargas. Vienen de los Excel históricos. Las doctoras históricas (Nadia, Ximena, Katherine, Yanaina, Carolina) no están en la config, y las doctoras actuales todavía no tienen clave asignada.
 7. Mirna debe cambiar las claves de fábrica (la de dueña y la del equipo).
-8. Hubo cuatro rondas de auditoría con agentes. Después de la ronda 4 se volvieron a correr contra el `.gs` nuevo, en los dos paneles, todos los repros de las rondas 1 a 3, unos 110 scripts:
+8. Hubo cinco rondas de auditoría con agentes. Después de la ronda 5 se volvieron a correr todos los repros de las rondas 1 a 5, en Spa y Cosmetic y con los tres servidores (`.gs` nuevo, `.gs` viejo y servidor falso clásico): todos dan el resultado esperado, salvo los casos que ahora se frenan a propósito.
+9. Antes de la ronda 5: hubo cuatro rondas de auditoría con agentes. Después de la ronda 4 se volvieron a correr contra el `.gs` nuevo, en los dos paneles, todos los repros de las rondas 1 a 3, unos 110 scripts:
    - todos dan el resultado esperado;
    - la única excepción es un caso que ahora se frena a propósito: una atención Atendido con "Por definir".
    - Fuera del repo, la cuarta ronda (el súper auditor de `f189076`) dejó sin rehacer, como deuda baja, que "500-100" se lee como 500.
-9. **Orden de despliegue recomendado:** primero publicar los paneles (las colas viejas se vacían con el servidor viejo, que se comporta como siempre); después pegar los dos `.gs` nuevos y publicar una versión nueva de cada Web App.
+10. **Orden de despliegue recomendado:** primero publicar los paneles (las colas viejas se vacían con el servidor viejo, que se comporta como siempre); después pegar los dos `.gs` nuevos y publicar una versión nueva de cada Web App.

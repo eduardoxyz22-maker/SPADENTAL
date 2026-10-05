@@ -478,7 +478,17 @@ function doSave(r, base) {
       for (q = 0; q < cpM.length; q++) if (!(cpM[q] && cpM[q].id && ids[cpM[q].id])) propios.push(cpM[q]);
       dm.cobrosPosteriores = propios;
       separada = fArmar(dm);
-      separada.id = r.id + 'd' + (n + 1);
+      /* id fijo por doctora: un reintento cae en la misma, no crea otra */
+      separada.id = r.id + '-' + fSlug(r.profesional);
+      var ya = 0, ids2 = sh.getRange(2, 1, Math.max(1, sh.getLastRow() - 1), 1).getValues();
+      for (q = 0; q < ids2.length; q++) if (String(ids2[q][0]) === separada.id) { ya = q + 2; break; }
+      if (ya) {
+        var previa = registroDeFila(sh.getRange(ya, 1, 1, COLS.length).getValues()[0]);
+        var junta = fusionRegistro(null, separada, previa, []);
+        junta.id = separada.id; junta.nroDia = previa.nroDia;
+        sh.getRange(ya, 1, 1, COLS.length).setValues([filaDeRegistro(junta)]);
+        return { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(junta)), conflictos: ['profesional'] };
+      }
       separada.citaDe = r.id;
       separada.obs = String(separada.obs || '') + (separada.obs ? '\n' : '') +
         '⚠ Separada: la misma cita la atendió también ' + actual.profesional + '. Revisar.';
@@ -576,7 +586,7 @@ function doDelete(r, base) {
    La plata no se suma "por diferencia": lo cobrado sale de los cobros, que
    tienen id, así un reintento nunca cuenta dos veces el mismo pago.
    ===================================================================== */
-var FUSION_V = 4;
+var FUSION_V = 5;
 var FUSION_TEXTO = {obs: 1, notas: 1, alergias: 1, medicacion: 1, detalle: 1};
 function fVacio(v) {
   if (v === undefined || v === null || v === '' || v === false) return true;
@@ -640,6 +650,35 @@ function fPorId(b, m, t, ruta, conf) {
     if (visto[y.id]) continue;
     if (iB[y.id]) { if (!fIgual(iB[y.id], y)) { out.push(y); conf.push(ruta + '[' + y.id + ']'); } }
     else out.push(y);
+  }
+  return out;
+}
+/* Servicios: no tienen id, pero cada fila es "tal servicio" (la primera
+   limpieza, la segunda…). Se juntan fila por fila con esa clave (el detalle
+   y el precio son parte de la fila): si dos equipos corrigen la misma fila
+   no queda duplicada. */
+function fClavesServ(l) {
+  var n = {}, out = [];
+  for (var i = 0; i < l.length; i++) {
+    var x = l[i] || {}, k = fClavePac(x.nom);
+    n[k] = (n[k] || 0) + 1; out.push(k + '#' + n[k]);
+  }
+  return out;
+}
+function fServicios(b, m, t, ruta, conf) {
+  var kb = fClavesServ(b), km = fClavesServ(m), kt = fClavesServ(t), iB = {}, iM = {}, out = [], visto = {}, i;
+  for (i = 0; i < b.length; i++) iB[kb[i]] = b[i];
+  for (i = 0; i < m.length; i++) iM[km[i]] = m[i];
+  for (i = 0; i < t.length; i++) {
+    var k = kt[i]; visto[k] = 1;
+    if (iM[k]) out.push(fusion3(iB[k], iM[k], t[i], ruta + '[' + k + ']', conf));
+    else if (iB[k]) { if (!fIgual(iB[k], t[i])) { out.push(t[i]); conf.push(ruta + '[' + k + ']'); } }
+    else out.push(t[i]);
+  }
+  for (i = 0; i < m.length; i++) {
+    var k2 = km[i]; if (visto[k2]) continue;
+    if (iB[k2]) { if (!fIgual(iB[k2], m[i])) { out.push(m[i]); conf.push(ruta + '[' + k2 + ']'); } }
+    else out.push(m[i]);
   }
   return out;
 }
@@ -718,6 +757,7 @@ function fCampo(k, b, m, t, ruta, conf) {
   /* sesiones de un plan marcadas desde dos equipos: cada atención ocupa su
      propia sesión, no se pisan */
   if (k === 'sesiones' && fEsLista(m) && fEsLista(t)) return fSesiones(fEsLista(b) ? b : [], m, t, ruta, conf);
+  if (k === 'servicios' && fEsLista(m) && fEsLista(t)) return fServicios(fEsLista(b) ? b : [], m, t, ruta, conf);
   return fusion3(b, m, t, ruta, conf);
 }
 function fSesiones(b, m, t, ruta, conf) {
@@ -820,12 +860,15 @@ function fUnirCobros(a, b) {
   for (i = 0; i < l.length; i++) { var x = l[i]; if (x && x.id) { if (ids[x.id]) continue; ids[x.id] = 1; } out.push(x); }
   return out;
 }
-/* ¿Dos doctoras distintas cargaron la misma visita? Se separan en dos. */
+/* ¿Dos doctoras atendieron la misma cita (cada una en su equipo)? Son dos
+   visitas. Corregir la doctora de una atención ya cargada no lo es. */
 function fOtraDoctora(b, m, t) {
   if (!b || !m || !t) return false;
-  var pb = String(b.profesional || ''), pm = String(m.profesional || ''), pt = String(t.profesional || '');
-  return pm !== pb && pt !== pb && pm !== pt && pm !== 'Por definir' && pt !== 'Por definir' && !!pm && !!pt;
+  if (fEstadoN(b.estado) !== 'Agendada' || m.estado !== 'Atendido' || t.estado !== 'Atendido') return false;
+  var pm = String(m.profesional || ''), pt = String(t.profesional || '');
+  return pm !== pt && pm !== 'Por definir' && pt !== 'Por definir' && !!pm && !!pt;
 }
+function fSlug(s) { return fClavePac(s).replace(/[^a-z0-9]+/g, ''); }
 /* Una atención.
    - base = lo que el equipo vio en el servidor: junta campo por campo.
    - base null = un alta que se reintenta o un pendiente de la versión
@@ -833,7 +876,11 @@ function fOtraDoctora(b, m, t) {
 function fusionRegistro(b, m, t, conf) {
   if (!t) return m;
   if (!b) {
-    var dm = fDesarmar(m);
+    var dm = fDesarmar(m), dtt = fDesarmar(t);
+    /* una visita ya atendida en el servidor no vuelve atrás por un pendiente
+       viejo; y la plata nunca baja sin aviso */
+    if (t.estado === 'Atendido' && m.estado !== 'Atendido') dm = dtt;
+    else if (fNum(dtt.__cobro.monto) > fNum(dm.__cobro.monto)) dm.__cobro = dtt.__cobro;
     dm.cobrosPosteriores = fUnirCobros(t, m);
     return fArmar(dm);
   }
