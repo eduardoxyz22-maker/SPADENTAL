@@ -1132,7 +1132,8 @@ body.locked{overflow:hidden}
     <p class="hint">Todo lo que sale de caja. Sin esto, la Caja solo cuenta la mitad:
       se sabe cuánto entró, no si el mes cerró en verde.</p>
     <div class="row-btn" style="margin:0 0 12px">
-      <button class="btn sm" id="btn-nuevo-egreso">➖ Registrar egreso</button></div>
+      <button class="btn sm" id="btn-nuevo-egreso">➖ Registrar egreso</button>
+      <button class="btn sec sm" id="btn-nuevo-anticipo">💜 Registrar anticipo</button></div>
     <div id="cj-egresos"></div></div>
 
   <div class="card"><h2>Liquidación de las doctoras</h2>
@@ -1448,7 +1449,7 @@ function esAdmin(){return ROL==='admin'||ROL==='equipo'}
 function esMia(r){return !esDoctora()||!r||r.profesional===PROF_ACTUAL||
   /* "por definir" es de todas solo mientras es una cita sin atender */
   (r.profesional==='Por definir'&&r.estado==='Agendada')}
-function datosVisibles(){return esDoctora()?DATA.filter(esMia):DATA}
+function datosVisibles(){return DATA.filter(function(r){return !esAnticipo(r)&&(!esDoctora()||esMia(r))})}
 function pacientesMios(){var s={}; datosVisibles().forEach(function(r){var k=keyPac(r.paciente); if(k)s[k]=1}); return s}
 function noEsTuya(){toast('Eso es de otra doctora 🔐',1)}
 function esDoctora(){return ROL==='doctora'}
@@ -1457,7 +1458,7 @@ function esDoctora(){return ROL==='doctora'}
 function pacAjeno(nombre){
   if(!esDoctora())return false;
   var k=keyPac(nombre); if(!k)return false;
-  var suyos=DATA.filter(function(r){return keyPac(r.paciente)===k&&r.profesional&&r.profesional!=='Por definir'});
+  var suyos=DATA.filter(function(r){return keyPac(r.paciente)===k&&r.profesional&&r.profesional!=='Por definir'&&!esAnticipo(r)});
   return suyos.length>0&&!suyos.some(esMia)}
 function bloqueaAjeno(nombre){
   if(pacAjeno(nombre)){toast('Ese paciente es de otra doctora 🔐',1);return true}
@@ -2808,18 +2809,27 @@ function agruparPagos(ps){
    producción permanecen en la atención; los cobros posteriores son movimientos. */
 function filasCaja(datos){
   var out=[];
+  /* el anticipo entra a la caja el día que se paga */
+  datos.forEach(function(r){
+    if(!esAnticipo(r))return;
+    out.push(Object.assign({},r,{total:0,saldo:0,servicios:[],pagos:pagosDe(r),
+      _soloCobro:true,_anticipo:true,_cobroHistorico:false,cobrosPosteriores:[],
+      obs:'Anticipo (saldo a favor)'+(r.obs?' · '+r.obs:'')}))});
   soloAtenciones(datos).forEach(function(r){
     var posteriores=Array.isArray(r.cobrosPosteriores)?r.cobrosPosteriores:[];
     var base=Object.assign({},r), resto=pagosDe(r).map(function(p){return {metodo:p.metodo,monto:num(p.monto)}});
     var suma=0;
     posteriores.forEach(function(p){
       suma+=num(p.monto);resto.push({metodo:p.metodo,monto:-num(p.monto)});
+      /* lo pagado con saldo a favor ya entró el día del anticipo */
+      if(p.metodo===SALDO_FAVOR)return;
       out.push(Object.assign({},r,{fecha:p.fecha,acuenta:num(p.monto),total:0,saldo:0,
         pagos:[{metodo:p.metodo,monto:num(p.monto)}],metodo:p.metodo,servicios:[],
         _soloCobro:true,_cobroHistorico:false,cobroId:p.id,fechaAtencion:r.fecha,
         obs:'Cobro de atención del '+fmtF(r.fecha),cobrosPosteriores:[]}))});
-    base.acuenta=Math.round((num(r.acuenta)-suma)*100)/100;
-    base.pagos=agruparPagos(resto);base.metodo=base.pagos.length===1?base.pagos[0].metodo:(base.pagos.length?'Mixto':'');
+    var favor=resto.reduce(function(a,p){return a+(p.metodo===SALDO_FAVOR?num(p.monto):0)},0);
+    base.acuenta=Math.round((num(r.acuenta)-suma-favor)*100)/100;
+    base.pagos=agruparPagos(resto.filter(function(p){return p.metodo!==SALDO_FAVOR}));base.metodo=base.pagos.length===1?base.pagos[0].metodo:(base.pagos.length?'Mixto':'');
     base._cobroHistorico=base.acuenta>0&&!r.cobroInicialFechado;
     out.push(base)});
   return out}
@@ -3105,28 +3115,30 @@ var MX={'Efectivo':'#mx-efectivo','QR':'#mx-qr','Tarjeta':'#mx-tarjeta','Transfe
 /* Devuelve el desglose del cobro: [{metodo, monto}, …].
    Un solo método → todo va ahí. Mixto → lo que se cargó en cada casilla. */
 function leerPagos(){
-  var m=getRadio('metodo'), a=num($('#f-acuenta').value);
-  if(!m||a<=0)return [];
-  if(m!=='Mixto')return [{metodo:m,monto:a}];
+  /* lo que ya se pagó con saldo a favor no se toca desde acá: va aparte */
+  var m=getRadio('metodo'), a=Math.round((num($('#f-acuenta').value)-FORM_SALDO)*100)/100;
+  var fav=FORM_SALDO>0?[{metodo:SALDO_FAVOR,monto:FORM_SALDO}]:[];
+  if(!m||a<=0)return fav;
+  if(m!=='Mixto')return [{metodo:m,monto:a}].concat(fav);
   return METODOS.map(function(k){return {metodo:k,monto:num($(MX[k]).value)}})
-                .filter(function(p){return p.monto>0})}
+                .filter(function(p){return p.monto>0}).concat(fav)}
 
 function sumaPagos(ps){return (ps||[]).reduce(function(a,p){return a+num(p.monto)},0)}
 
 function recalcSaldo(){
-  var t=num($('#f-total').value),a=num($('#f-acuenta').value);
+  var t=num($('#f-total').value),a=num($('#f-acuenta').value),ef=Math.round((a-FORM_SALDO)*100)/100;
   /* una deuda perdonada a mano (saldo menor) sigue perdonada al editar */
   var aj=num($('#f-saldo').dataset.ajuste);
   if(!$('#f-saldo').dataset.touched)$('#f-saldo').value=Math.max(0,t-a-aj)||(t-a<0?(t-a):'');
   var s=num($('#f-saldo').value),tag=$('#pago-tag');
 
   // el bloque de forma de pago solo aparece si entró plata
-  $('#wrap-metodo').style.display=a>0?'':'none';
+  $('#wrap-metodo').style.display=ef>0?'':'none';
   var esMixto=getRadio('metodo')==='Mixto';
-  $('#wrap-mixto').style.display=(a>0&&esMixto)?'':'none';
-  if(a>0&&esMixto){
-    $('#mix-obj').textContent=bs(a);
-    var sm=METODOS.reduce(function(x,k){return x+num($(MX[k]).value)},0), dif=a-sm;
+  $('#wrap-mixto').style.display=(ef>0&&esMixto)?'':'none';
+  if(ef>0&&esMixto){
+    $('#mix-obj').textContent=bs(ef);
+    var sm=METODOS.reduce(function(x,k){return x+num($(MX[k]).value)},0), dif=ef-sm;
     $('#mix-tag').innerHTML = Math.abs(dif)<0.01
       ? '<span class="pill ok">✅ El desglose cuadra</span>'
       : (dif>0 ? '<span class="pill warn">Faltan '+bs(dif)+' por repartir</span>'
@@ -3135,7 +3147,10 @@ function recalcSaldo(){
   if(t<=0){tag.innerHTML=''}
   else if(s<=0){tag.innerHTML='<span class="pill ok">✅ Pagado completo</span>'}
   else if(a>0){tag.innerHTML='<span class="pill warn">⏳ Pago parcial · debe '+bs(s)+'</span>'}
-  else{tag.innerHTML='<span class="pill bad">⚠ Sin pago · debe '+bs(s)+'</span>'}}
+  else{tag.innerHTML='<span class="pill bad">⚠ Sin pago · debe '+bs(s)+'</span>'}
+  if(FORM_SALDO>0)tag.innerHTML+=' <span class="pill lime">💜 '+bs(FORM_SALDO)+' pagados con saldo a favor</span>';
+  var cr=creditoDe($('#f-paciente').value);
+  if(cr>0.009&&!FORM_SALDO)tag.innerHTML+=' <span class="pill lime">💜 Tiene '+bs(cr)+' a favor: al guardar podés usarlo</span>'}
 
 /* Texto corto de la forma de pago, para tablas y fichas */
 function metodoText(r){
@@ -3156,7 +3171,9 @@ function renderCanales(){
 
 function nroDelDia(fecha,exceptId){
   return DATA.filter(function(r){
-    return r.fecha===fecha&&r.id!==exceptId&&esAtencion(r)}).length+1}
+    /* el servidor también numera los anticipos del día: se cuentan igual, así
+       el número tentativo coincide con el que vuelve */
+    return r.fecha===fecha&&r.id!==exceptId&&(esAtencion(r)||esAnticipo(r))}).length+1}
 
 function refreshNro(){
   var f=$('#f-fecha').value;
@@ -3264,7 +3281,7 @@ function clearForm(keepFecha){
   if(esDoctora())$('#f-prof').value=PROF_ACTUAL;
   ['f-paciente','f-cel','f-ci','f-edad','f-nac','f-canal-det','f-obs','f-total','f-acuenta','f-saldo','f-prox','f-prox-hora','f-prox-motivo']
     .forEach(function(id){var e=$('#'+id);e.value='';delete e.dataset.touched;delete e.dataset.desc;delete e.dataset.ajuste;e.classList.remove('bad')});
-  FORM_BASE=undefined;
+  FORM_BASE=undefined; FORM_SALDO=0;
   $$('input[name="metodo"]').forEach(function(i){i.checked=false});
   METODOS.forEach(function(k){$(MX[k]).value=''});
   $('#wrap-metodo').style.display='none'; $('#wrap-mixto').style.display='none';
@@ -3283,10 +3300,12 @@ function clearForm(keepFecha){
 /* La versión del servidor de la que sale lo que se está editando: es la
    base que viaja al guardar, así lo que otro equipo cambió mientras tanto
    no se pisa. */
-var FORM_BASE;
+var FORM_BASE, FORM_SALDO=0;
 function loadForm(r){
+  if(esAnticipo(r)){verPaciente(r.paciente);return}
   EDIT_ID=r.id;
   FORM_BASE=SNAP_R[r.id]?JSON.parse(SNAP_R[r.id]):undefined;
+  FORM_SALDO=Math.round(usoSaldoDe(r)*100)/100;
   $('#f-fecha').value=r.fecha||hoyISO(); $('#f-hora').value=r.hora||'';
   $('#f-prof').value=(r.profesional==='Por definir'?'':r.profesional)||'';
   /* la doctora que atiende una cita "por definir" queda como su doctora */
@@ -3330,13 +3349,13 @@ function loadForm(r){
   var ajuste=num(r.total)-num(r.acuenta)-num(r.saldo);
   if(num(r.total)>0&&ajuste>0.01)$('#f-saldo').dataset.ajuste=String(ajuste);
   else delete $('#f-saldo').dataset.ajuste;
-  var ps=r.pagos&&r.pagos.length?r.pagos:[];
+  var ps=(r.pagos&&r.pagos.length?r.pagos:[]).filter(function(p){return p.metodo!==SALDO_FAVOR});
   METODOS.forEach(function(k){$(MX[k]).value=''});
   if(ps.length>1){
     setRadio('metodo','Mixto');
     ps.forEach(function(p){if(MX[p.metodo])$(MX[p.metodo]).value=num(p.monto)||''})}
   else if(ps.length===1){setRadio('metodo',ps[0].metodo)}
-  else if(r.metodo){setRadio('metodo',r.metodo)}
+  else if(r.metodo&&!FORM_SALDO){setRadio('metodo',r.metodo)}
   else{$$('input[name="metodo"]').forEach(function(i){i.checked=false})}
   $('#f-prox').value=r.prox||''; $('#f-prox-hora').value=r.proxHora||''; $('#f-prox-motivo').value=r.proxMotivo||'';
   $('#f-obs').value=r.obs||'';
@@ -3409,7 +3428,7 @@ function validar(){
     if(montoRaro($('#'+id).value)){bad.push('el monto de '+id.slice(2)+' tiene letras');$('#'+id).classList.add('bad')}});
   if($$('#srv-list .s-precio').some(function(i){return montoRaro(i.value)}))bad.push('un precio tiene letras');
   if($$('#srv-list .s-cant').some(function(i){return i.value.trim()&&(montoRaro(i.value)||num(i.value)<=0)}))bad.push('la cantidad tiene que ser mayor que 0');
-  if(a>0&&!m){bad.push('forma de pago');
+  if(a-FORM_SALDO>0.009&&!m){bad.push('forma de pago');
     $('#seg-metodo').style.outline='2px solid var(--clay)';
     setTimeout(function(){$('#seg-metodo').style.outline=''},2200)}
   if(a>0&&m==='Mixto'&&Math.abs(sumaPagos(leerPagos())-a)>0.01){bad.push('el desglose del pago no cuadra');
@@ -3527,7 +3546,8 @@ function guardarAtencion(){
       if(s.piezas&&s.piezas.length)o.piezas=s.piezas.slice();
       return o}),
     total:num($('#f-total').value), acuenta:num($('#f-acuenta').value), saldo:num($('#f-saldo').value),
-    metodo:getRadio('metodo'), pagos:leerPagos(), estado:getRadio('estado'),
+    metodo:(function(){var ps=leerPagos(); return ps.length>1?'Mixto':(ps.length?ps[0].metodo:getRadio('metodo'))})(),
+    pagos:leerPagos(), estado:getRadio('estado'),
     prox:$('#f-prox').value, proxHora:$('#f-prox-hora').value, proxMotivo:$('#f-prox-motivo').value.trim(),
     obs:$('#f-obs').value.trim(),
     presu:(readPre(),preParaGuardar(prev)),
@@ -3565,13 +3585,15 @@ function guardarAtencion(){
 
 function borrar(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(esAnticipo(r)){borrarAnticipo(id);return}
   if(!esMia(r)){noEsTuya();return}
   var cobrado=num(r.acuenta);
   if(cobrado>0&&esDoctora()){toast('Esta atención tiene '+bs(cobrado)+' cobrados: la borra recepción o la dueña.',1);return}
-  if(!confirm(cobrado>0
-      ? '¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?\n\nTiene '+bs(cobrado)+
-        ' COBRADOS: esa plata sale de la caja. Si fue un error de carga, está bien; si el paciente pagó, no la borres.'
-      : '¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?'))return;
+  var favor=usoSaldoDe(r), efectivo=Math.round((cobrado-favor)*100)/100;
+  if(!confirm('¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?'+
+      (efectivo>0.009?'\n\nTiene '+bs(efectivo)+
+        ' COBRADOS: esa plata sale de la caja. Si fue un error de carga, está bien; si el paciente pagó, no la borres.':'')+
+      (favor>0.009?'\n\n💜 '+bs(favor)+' se pagaron con saldo a favor: vuelven al saldo del paciente.':'')))return;
   liberarSesionPlan(r);
   /* la próxima cita que había dejado esta atención ya no tiene sentido, ni
      las que salieron de reprogramarla */
@@ -4440,6 +4462,7 @@ function saldosPend(prof){
 function dormidos(){
   var hoy=hoyISO(),lim=CFG.diasDorm,by={};
   DATA.forEach(function(r){
+    if(esAnticipo(r))return;
     var k=keyPac(r.paciente)||'—';
     if(!by[k])by[k]={paciente:(r.paciente||'—').trim(),celular:r.celular,ult:'',n:0,prox:'',canal:r.canal};
     if(r.celular)by[k].celular=r.celular;
@@ -4742,7 +4765,7 @@ function srvText(r){
 function filtrarLista(){
   var rango=$('#l-rango').value, q=$('#l-q').value.trim().toLowerCase();
   var tipo=$('#l-tipo')?$('#l-tipo').value:'atenciones';
-  var out=DATA.slice();
+  var out=sinAnticipos(DATA);
   /* una doctora ve su propia lista: sumando la columna a ojo, la de todas
      sería el facturado del consultorio */
   if(esDoctora())out=out.filter(function(r){
@@ -4760,8 +4783,8 @@ function filtrarLista(){
     var c=(b.fecha||'').localeCompare(a.fecha||''); return c||((b.hora||'').localeCompare(a.hora||''))})}
 
 function estadoPill(e){
-  var m={'Atendido':'ok','Agendada':'info','Reprogramó':'warn','Canceló':'bad','No asistió':'bad'};
-  var ic={'Atendido':'✅','Agendada':'📅','Reprogramó':'🔁','Canceló':'🚫','No asistió':'✖'};
+  var m={'Atendido':'ok','Agendada':'info','Reprogramó':'warn','Canceló':'bad','No asistió':'bad','Anticipo':'lime'};
+  var ic={'Atendido':'✅','Agendada':'📅','Reprogramó':'🔁','Canceló':'🚫','No asistió':'✖','Anticipo':'💜'};
   return '<span class="pill '+(m[e]||'')+'">'+(ic[e]?ic[e]+' ':'')+esc(e||'—')+'</span>'}
 function estadoCls(e){
   return {'Atendido':'st-atendido','Agendada':'st-agendado','Reprogramó':'st-reagendar',
@@ -4774,8 +4797,129 @@ function esCitaPendiente(r){return r.estado==='Agendada'}
    del día; una cita pendiente, cancelada o reprogramada nunca sucedió, así
    que no debe ensuciar el ticket promedio ni el historial del paciente. */
 function esAtencion(r){
-  return r.estado!=='Agendada'&&r.estado!=='Canceló'&&r.estado!=='Reprogramó'}
+  return r.estado!=='Agendada'&&r.estado!=='Canceló'&&r.estado!=='Reprogramó'&&r.estado!=='Anticipo'}
 function soloAtenciones(a){return a.filter(esAtencion)}
+
+/* ---------- ANTICIPOS: saldo a favor del paciente ----------
+   Plata que el paciente deja antes, para usar en cualquier servicio. Es un
+   registro aparte (estado 'Anticipo', sin doctora ni total): entra a la caja
+   el día que se paga, pero no es una visita, no se factura ni se liquida.
+   Después se usa como forma de pago "Saldo a favor", que no es plata nueva:
+   en la caja no vuelve a entrar. No hay devoluciones; un anticipo mal
+   cargado se borra mientras no se haya usado. */
+var SALDO_FAVOR='Saldo a favor';
+var ANTICIPO_DOCTORAS=true; /* en Spadental también las doctoras registran anticipos */
+function esAnticipo(r){return !!r&&r.estado==='Anticipo'}
+function sinAnticipos(a){return a.filter(function(r){return !esAnticipo(r)})}
+function puedeAnticipo(){return esAdmin()||(ANTICIPO_DOCTORAS&&esDoctora())}
+/* lo que una atención pagó con saldo a favor (su cobro inicial y los posteriores) */
+function usoSaldoDe(r){
+  return (r&&r.pagos||[]).reduce(function(a,p){return a+(p&&p.metodo===SALDO_FAVOR?num(p.monto):0)},0)}
+function anticiposDe(nombre){
+  var k=keyPac(nombre); if(!k)return [];
+  return DATA.filter(function(r){return esAnticipo(r)&&keyPac(r.paciente)===k})}
+/* Lo que le queda a favor: lo que dejó menos lo que ya usó. Mira todo el
+   consultorio, no solo lo de una doctora: el saldo es del paciente. */
+function creditoDe(nombre){
+  var k=keyPac(nombre); if(!k)return 0;
+  var t=0;
+  DATA.forEach(function(r){
+    if(keyPac(r.paciente)!==k)return;
+    if(esAnticipo(r))t+=num(r.acuenta); else t-=usoSaldoDe(r)});
+  return Math.round(t*100)/100}
+function usosSaldoDe(nombre){
+  var k=keyPac(nombre), out=[]; if(!k)return out;
+  DATA.forEach(function(r){
+    if(keyPac(r.paciente)!==k||esAnticipo(r))return;
+    var post=(r.cobrosPosteriores||[]).filter(function(p){return p&&p.metodo===SALDO_FAVOR}), enPost=0;
+    post.forEach(function(p){enPost+=num(p.monto); out.push({fecha:p.fecha||r.fecha,monto:num(p.monto),r:r})});
+    var ini=Math.round((usoSaldoDe(r)-enPost)*100)/100;
+    if(ini>0.009)out.push({fecha:r.fecha,monto:ini,r:r})});
+  return out}
+
+function nuevoAnticipo(nombre){
+  if(!puedeAnticipo()){toast(ANTICIPO_DOCTORAS?'No tenés permiso para registrar anticipos 🔐':'Los anticipos los registra recepción o la dueña 🔐',1);return}
+  nombre=nombre||'';
+  if(nombre&&bloqueaAjeno(nombre))return;
+  var disp=nombre?creditoDe(nombre):0;
+  openModal('<h3>💜 Registrar anticipo</h3>'+
+    '<p class="hint" style="margin-top:6px">Plata que el paciente deja a cuenta, para usar después en cualquier tratamiento. '+
+      'Entra a la caja hoy; cuando se atienda, se descuenta con la forma de pago <b>Saldo a favor</b>. No se devuelve.</p>'+
+    (nombre?'<p class="mini">'+esc(nombre)+(disp?' · ya tiene '+bs(disp)+' a favor':'')+'</p>':
+      '<div style="margin-top:12px"><label>Paciente <span class="req">*</span></label>'+
+      '<input id="an-pac" list="dl-pac" autocomplete="off" placeholder="Nombre y apellido"></div>')+
+    '<div class="grid g2" style="margin-top:12px">'+
+      '<div><label>Fecha <span class="req">*</span></label><input type="date" id="an-fecha" value="'+hoyISO()+'"></div>'+
+      '<div><label>Monto Bs <span class="req">*</span></label><input id="an-monto" inputmode="decimal"></div>'+
+    '</div>'+
+    '<div style="margin-top:12px"><label>¿Cómo paga? <span class="req">*</span></label>'+
+      '<div class="seg lime" id="an-seg">'+METODOS.map(function(m){
+        return '<label><input type="radio" name="anmet" value="'+m+'"><span>'+m+'</span></label>'}).join('')+'</div></div>'+
+    '<div style="margin-top:12px"><label>Nota</label>'+
+      '<input id="an-nota" placeholder="Ej. a cuenta del tratamiento de ortodoncia"></div>'+
+    '<div class="row-btn"><button class="btn" onclick="guardarAnticipo(\''+jss(nombre)+'\')">Guardar anticipo</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+
+function guardarAnticipo(nombre){
+  if(!puedeAnticipo()){toast('No tenés permiso para registrar anticipos 🔐',1);return}
+  var pac=(nombre||($('#an-pac')?$('#an-pac').value:'')).trim();
+  if(!pac){toast('Escribí el nombre del paciente',1);return}
+  if(identidadAmbigua(pac)){toast(AVISO_IDENTIDAD,1);return}
+  if(bloqueaAjeno(pac))return;
+  if(montoRaro($('#an-monto').value)){toast('El monto tiene letras: escribilo solo con números',1);return}
+  var m=Math.round(num($('#an-monto').value)*100)/100, met=getRadio('anmet'), fecha=$('#an-fecha').value;
+  if(m<=0){toast('Poné el monto',1);return}
+  if(!fecha){toast('Poné la fecha',1);return}
+  if(!met){toast('Marcá cómo paga',1);
+    $('#an-seg').style.outline='2px solid var(--clay)';
+    setTimeout(function(){var e=$('#an-seg'); if(e)e.style.outline=''},2000); return}
+  /* el nombre se escribe igual que en su historia, así no se parte en dos */
+  var k=keyPac(pac), ya=DATA.filter(function(r){return keyPac(r.paciente)===k&&r.paciente})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
+  if(ya)pac=ya.paciente.trim();
+  var d=new Date();
+  var rec={id:uid(), clinicaId:CLINICA_ID, ts:d.toISOString(), fecha:fecha,
+    hora:('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2),
+    profesional:'', paciente:pac, celular:ya?(ya.celular||''):'', estado:'Anticipo', origen:'',
+    servicios:[], total:0, acuenta:m, saldo:0, metodo:met, pagos:[{metodo:met,monto:m}],
+    cobrosPosteriores:[], cobroInicialFechado:true,
+    obs:$('#an-nota').value.trim(),
+    anticipoPor:esDoctora()?PROF_ACTUAL:(ROL==='admin'?'Dueña':'Recepción')};
+  DATA.push(rec); persist(rec);
+  closeModal(); toast('Anticipo de '+bs(m)+' registrado · a favor '+bs(creditoDe(pac))+' 💜'); refreshAll()}
+
+/* Un anticipo mal cargado se borra mientras no se haya usado. No hay
+   devoluciones: si ya se usó, el saldo quedaría negativo. */
+function borrarAnticipo(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||!esAnticipo(r))return;
+  if(!puedeAnticipo()){toast('No tenés permiso para borrar anticipos 🔐',1);return}
+  if(esDoctora()&&r.anticipoPor!==PROF_ACTUAL){toast('Ese anticipo lo registró otra persona: lo borra recepción o la dueña 🔐',1);return}
+  var queda=creditoDe(r.paciente)-num(r.acuenta);
+  if(queda<-0.009){toast('Ese anticipo ya se usó en una atención: no se puede borrar.',1);return}
+  if(!confirm('¿Borrar el anticipo de '+bs(r.acuenta)+' de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?\n\n'+
+      'Esa plata sale de la caja de ese día. Hacelo solo si fue un error de carga.'))return;
+  DATA=DATA.filter(function(x){return x.id!==id}); saveLocal();
+  if(CONNECTED){enviar('delete',{id:id})}
+  closeModal(); toast('Anticipo borrado'); refreshAll()}
+
+/* El bloque de la ficha: cuánto tiene a favor y de dónde sale. */
+function htmlSaldoFavor(nom){
+  var ants=anticiposDe(nom), usos=usosSaldoDe(nom);
+  if(!ants.length&&!usos.length)return '';
+  var cred=creditoDe(nom);
+  var movs=ants.map(function(a){return {fecha:a.fecha,txt:'Anticipo'+(a.obs?' · '+a.obs:'')+' · '+metodoText(a),monto:num(a.acuenta),a:a}})
+    .concat(usos.map(function(u){return {fecha:u.fecha,txt:'Usado en la atención del '+fmtF(u.r.fecha),monto:-u.monto}}))
+    .sort(function(x,y){return (y.fecha||'').localeCompare(x.fecha||'')});
+  return '<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">💜 Saldo a favor · '+
+      '<span style="color:'+(cred<-0.009?'var(--clay)':'var(--ok)')+'">'+bs(cred)+'</span></h4>'+
+    (cred<-0.009?'<p class="mini" style="color:var(--clay)">Se usó más de lo que dejó (dos equipos cobraron a la vez). Revisalo con recepción.</p>':'')+
+    '<div class="tw" style="margin:0"><table style="min-width:0"><tbody>'+
+    movs.map(function(x){
+      var puede=x.a&&puedeAnticipo()&&(!esDoctora()||x.a.anticipoPor===PROF_ACTUAL)&&cred-num(x.a.acuenta)>-0.009;
+      return '<tr><td>'+fmtFcorta(x.fecha)+'</td><td>'+esc(x.txt)+'</td>'+
+        '<td class="num" style="color:'+(x.monto<0?'var(--clay)':'var(--ok)')+'">'+(x.monto<0?'−':'+')+n0(Math.abs(x.monto))+'</td>'+
+        '<td>'+(puede?'<button class="btn danger sm" onclick="borrarAnticipo(\''+x.a.id+'\')">Borrar</button>':'')+'</td></tr>'}).join('')+
+    '</tbody></table></div>'}
 
 /* Las atenciones importadas de los cuadernos no tienen forma de pago y nunca
    la van a tener: el cuaderno no la anotaba. No sirve pedir que se completen,
@@ -5617,6 +5761,9 @@ function renderCaja(){
         : (delHistorico.length? delHistorico.length+' del cuaderno (no se pueden recuperar)' : 'todo conciliado ✅'))+'</div></div>';
 
   if(rows.some(function(r){return r._cobroHistorico}))$('#cj-kpis').innerHTML+='<p class="hint">'+esc(AVISO_COBROS_HISTORICOS)+'</p>';
+  var antCaja=rows.filter(function(r){return r._anticipo}).reduce(function(a,r){return a+num(r.acuenta)},0);
+  if(antCaja>0)$('#cj-kpis').innerHTML+='<p class="hint">💜 Lo cobrado incluye '+bs(antCaja)+' de anticipos (saldo a favor de pacientes). '+
+    'Cuando se usen en una atención no vuelven a entrar a la caja.</p>';
   var maxM=Math.max.apply(null,METODOS.map(function(m){return porMetodo[m]}).concat([1]));
   $('#cj-metodos').innerHTML=barras(METODOS.filter(function(m){return porMetodo[m]>0})
       .map(function(m){return {k:m,v:porMetodo[m],lbl:bs(porMetodo[m])}}))+
@@ -6148,6 +6295,7 @@ function mrow(k,v){return '<div class="mrow"><span class="mk">'+k+'</span><b>'+v
 
 function verFicha(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(esAnticipo(r)){verPaciente(r.paciente);return}
   if(!esMia(r)){noEsTuya();return}
   var srv=(r.servicios||[]).map(function(s){
     var pz=piezasTexto(s);
@@ -6189,17 +6337,23 @@ function verFicha(id){
       '<button class="btn danger sm" onclick="borrar(\''+r.id+'\')">Borrar</button>'+
       '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
 
-function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return; if(!esMia(r)){noEsTuya();return} loadForm(r)}
+function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return; if(esAnticipo(r)){verPaciente(r.paciente);return} if(!esMia(r)){noEsTuya();return} loadForm(r)}
 
-function cobrarSaldo(id){
+function cobrarSaldo(id,conFavor){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   if(!esMia(r)){noEsTuya();return}
-  openModal('<h3>Registrar pago</h3><p class="mini">'+esc(r.paciente)+' · saldo actual '+bs(r.saldo)+'</p>'+
+  var cr=creditoDe(r.paciente), usar=conFavor&&cr>0.009;
+  var metsPago=cr>0.009?METODOS.concat([SALDO_FAVOR]):METODOS;
+  openModal('<h3>Registrar pago</h3><p class="mini">'+esc(r.paciente)+' · saldo actual '+bs(r.saldo)+
+      (cr>0.009?' · <b>💜 tiene '+bs(cr)+' a favor</b>':'')+'</p>'+
     '<div style="margin-top:12px"><label>Monto que paga ahora</label>'+
-    '<input id="cp-m" inputmode="decimal" value="'+num(r.saldo)+'"></div>'+
+    '<input id="cp-m" inputmode="decimal" value="'+(usar?Math.min(num(r.saldo),cr):num(r.saldo))+'"></div>'+
     '<div style="margin-top:12px"><label>¿Cómo paga? <span class="req">*</span></label>'+
-    '<div class="seg lime" id="cp-seg">'+METODOS.map(function(m){
-      return '<label><input type="radio" name="cpmet" value="'+m+'"><span>'+m+'</span></label>'}).join('')+'</div></div>'+
+    '<div class="seg lime" id="cp-seg">'+metsPago.map(function(m){
+      var fav=m===SALDO_FAVOR;
+      return '<label><input type="radio" name="cpmet" value="'+m+'"'+(fav&&usar?' checked':'')+
+        (fav?' onchange="if(this.checked)$(\'#cp-m\').value='+Math.min(num(r.saldo),cr)+'"':'')+
+        '><span>'+(fav?'💜 ':'')+m+'</span></label>'}).join('')+'</div></div>'+
     '<div class="row-btn"><button class="btn" onclick="guardarPago(\''+id+'\')">Guardar pago</button>'+
     '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
 
@@ -6218,6 +6372,8 @@ function guardarPago(id){
 
 function aplicarPago(r,m,met){
   if(!esAtencion(r)||identidadAmbigua(r.paciente)){toast('Revisá la atención y la identidad antes de cobrar',1);return}
+  if(met===SALDO_FAVOR&&m>creditoDe(r.paciente)+0.001){closeModal();
+    toast('No le alcanza el saldo a favor: tiene '+bs(Math.max(0,creditoDe(r.paciente)))+'.',1);refreshAll();return}
   if(m>num(r.saldo)+0.001){closeModal();
     toast('El pago supera el saldo pendiente ('+bs(r.saldo)+'). Puede que otro equipo ya haya cobrado parte.',1);refreshAll();return}
   r.cobrosPosteriores=(r.cobrosPosteriores||[]).slice();
@@ -6246,9 +6402,11 @@ function verPaciente(nombre){
   var rs=mios.filter(esAtencion).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
   var citas=mios.filter(function(r){return esCitaPendiente(r)&&r.fecha>=hoy})
                 .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')});
-  if(!rs.length&&!citas.length&&pacVacia(f)){toast('Sin historial',1);return}
+  var ants=anticiposDe(nombre);
+  if(!rs.length&&!citas.length&&pacVacia(f)&&!ants.length){toast('Sin historial',1);return}
 
-  var nom=(rs[0]&&rs[0].paciente)||(citas[0]&&citas[0].paciente)||f.nombre||String(nombre||'');
+  var nom=(rs[0]&&rs[0].paciente)||(citas[0]&&citas[0].paciente)||(ants[0]&&ants[0].paciente)||f.nombre||String(nombre||'');
+  var cred=creditoDe(nom);
   var nj=jss(nom);
   ODON_PAC=nom;
   var mapa=odontoDe(nom), nPiezas=Object.keys(mapa).length, conTemp=tieneTemporales(mapa);
@@ -6311,12 +6469,15 @@ function verPaciente(nombre){
       (esAdmin()?'<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:19px">'+bs(tot)+'</div></div>':'')+
       '<div class="kpi"><div class="k">Saldo</div><div class="v" style="font-size:19px;color:'+
         (sal>0?'var(--clay)':'var(--ok)')+'">'+bs(sal)+'</div></div>'+
+      (ants.length||Math.abs(cred)>0.009?'<div class="kpi"><div class="k">💜 A favor</div><div class="v" style="font-size:19px;color:'+
+        (cred<-0.009?'var(--clay)':'var(--ok)')+'">'+bs(cred)+'</div></div>':'')+
     '</div>'+
     (prox?'<div class="rem '+(prox.f===hoy?'today':'soon')+'" style="margin-bottom:10px"><div>'+
       '<div class="who">'+(prox.cita?'📅 Cita agendada':'📌 Próximo contacto')+'</div>'+
       '<div class="meta">'+fmtF(prox.f)+(prox.h?' · '+prox.h:'')+(prox.mot?' · '+esc(prox.mot):'')+'</div>'+
       '</div><div class="acts"></div></div>':'')+
     (hPlan?'<h4 style="margin:16px 0 0;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Plan de tratamiento</h4>'+hPlan:'')+
+    htmlSaldoFavor(nom)+
     '<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Odontograma</h4>'+
     (nPiezas?'<p class="mini" style="margin:0 0 4px">'+nPiezas+' pieza'+(nPiezas===1?'':'s')+
         ' con trabajo hecho. Tocá una para ver qué se le hizo.</p>'
@@ -6335,6 +6496,7 @@ function verPaciente(nombre){
       (cel?'<a class="btn sm" target="_blank" rel="noopener" href="'+
         waLink(cel,txtDormido({paciente:nom,ult:(rs[0]&&rs[0].fecha)||hoy}))+'">WhatsApp</a>':'')+
       '<button class="btn sec sm" onclick="nuevaParaPaciente(\''+nj+'\')">＋ Nueva atención</button>'+
+      (puedeAnticipo()?'<button class="btn sec sm" onclick="nuevoAnticipo(\''+nj+'\')">💜 Anticipo</button>':'')+
       '<button class="btn sec sm" onclick="abrirFichaMed(\''+nj+'\')">🩺 Ficha médica</button>'+
       '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">🦷 Planes</button>'+
       '<button class="btn sec sm" onclick="imprimirHistoria(\''+nj+'\')">🖨 Imprimir historia</button>'+
@@ -6343,7 +6505,7 @@ function verPaciente(nombre){
 
 function nuevaParaPaciente(nombre){
   closeModal(); clearForm();
-  var rs=DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)})
+  var rs=DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&!esAnticipo(r)})
     .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})[0];
   $('#f-paciente').value=nombre;
   if(rs){$('#f-cel').value=rs.celular||'';$('#f-ci').value=rs.ci||'';$('#f-edad').value=rs.edad||'';
@@ -6370,6 +6532,10 @@ function showWhatsappModal(r,cita){
     (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,t)+'">Abrir WhatsApp</a>':'')+
     '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
     '<button class="btn sec" onclick="closeModal()">Listo</button></div>'+
+    (function(){var cr=esAtencion(r)&&num(r.saldo)>0?creditoDe(r.paciente):0;
+      return cr>0.009?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Tiene '+bs(cr)+' de saldo a favor</div>'+
+        '<div class="meta">Esta atención quedó debiendo '+bs(r.saldo)+'. Podés descontarlo del anticipo.</div></div>'+
+        '<div class="acts"><button class="btn sm" onclick="cobrarSaldo(\''+r.id+'\',true)">Usar saldo a favor</button></div></div>':''})()+
     (ind?'<h4 style="margin:20px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">📋 Indicaciones de cuidado</h4>'+
       '<p class="hint" style="margin:0 0 8px">Salen de los servicios que cargaste. Van aparte del resumen, para que le queden por escrito.</p>'+
       '<div class="wa" id="wa-ind">'+esc(ind)+'</div>'+
@@ -7085,7 +7251,7 @@ function setMiProf(v){try{localStorage.setItem(K_MIPROF,v||'')}catch(e){}}
 /* Todo lo del día de esa doctora: las citas agendadas y lo ya atendido. */
 function filasDelDia(dia,prof){
   return DATA.filter(function(r){
-    if(r.fecha!==dia)return false;
+    if(r.fecha!==dia||esAnticipo(r))return false;
     if(prof&&r.profesional!==prof&&!(r.profesional==='Por definir'&&r.estado==='Agendada'))return false;
     return true})
     .sort(function(a,b){return (a.hora||'99:99').localeCompare(b.hora||'99:99')})}
@@ -7123,7 +7289,7 @@ function clavePar(a,b){var x=[keyPac(a),keyPac(b)].sort(); return x[0]+'|'+x[1]}
 function pacientesRepetidos(){
   var por={};
   DATA.forEach(function(r){
-    var k=keyPac(r.paciente); if(!k)return;
+    var k=keyPac(r.paciente); if(!k||esAnticipo(r))return;
     if(!por[k])por[k]={nombre:(r.paciente||'').trim(),n:0,bs:0,desde:r.fecha,hasta:r.fecha,cels:{}};
     var p=por[k];
     p.n++; p.bs+=num(r.total);
@@ -9071,6 +9237,7 @@ function bind(){
   $('#q-srv').onchange=function(){agregarQSrv(this.value)};
 
   $('#btn-nuevo-egreso').onclick=function(){nuevoEgreso()};
+  $('#btn-nuevo-anticipo').onclick=function(){nuevoAnticipo('')};
 
   $('#btn-save-comision').onclick=function(){
     var malas=$$('#c-comision .cc, #c-comision-def').filter(function(i){
