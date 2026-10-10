@@ -55,3 +55,18 @@ No probado: despliegue Google, autenticación servidor, cuotas/rendimiento real,
 5. Migración histórica requiere decisión y conciliación aparte; no es condición para probar casos nuevos ficticios en staging.
 
 La entrega actual es documental: si se necesitara revertir, revertir solo el commit de este informe, sin tocar paneles. Para futura activación: conservar HTML/versión GAS anteriores y respaldo verificado; ante fallo deshabilitar nuevas escrituras financieras primero. No borrar journal, no borrar filas para «volver atrás», no reproducir recibos como saldos nuevos. Restaurar código anterior sin controlar escrituras no es rollback seguro del ledger; conciliar los eventos aceptados y acordar recuperación por tenant.
+
+
+## Actualización posterior: seguridad autorizada; falta identificación y acceso Google
+
+Eduardo respondió «Autorizo todo» a la pregunta expresa sobre autenticación y permisos por consultorio. La aprobación de ese alcance ya está dada y **no debe solicitarse otra vez**. Esta sección sustituye el pendiente de autorización descrito arriba; no implica migración automática de históricos.
+
+Comprobación adicional: el cliente compara SHA-256 y guarda el hash en sessionStorage; `cfgGet`/`list` devuelven configuración con hashes. Esos hashes no sirven como prueba nueva de identidad ni deben convertirse en tokens. La configuración histórica no proporciona correos verificados ni asociación OAuth a personas. Se conocen nombres/roles descritos en documentación, no identidades autenticadas. No se consultaron configuraciones o registros reales.
+
+El entorno no tiene herramienta Apps Script de despliegue conectada, ejecutable clasp, manifiesto `.clasp.json`/`appsscript.json` del proyecto ni ADC Google configurado. La conexión GitHub sí permite publicar archivos y verificar Pages, pero no sustituye acceso a Apps Script. No se generaron secretos, cuentas o credenciales y no se modificaron permisos reales.
+
+**Dato mínimo para continuar:** correos Google autorizados y su rol por clínica (dueña/recepción/doctora, con nombre profesional exacto para cada doctora), más enlaces de los dos proyectos Apps Script y qué cuenta propietaria puede abrirlos. El propietario debe completar cualquier login/consentimiento Google en su sesión; no enviar contraseñas, códigos de acceso ni tokens por chat. Si los usuarios no usan cuentas Google, acordar el proveedor de identidad antes de implementar esa parte.
+
+Diseño propuesto pendiente de esas identidades: autenticación de identidad verificable, asignación de clínica/rol exclusivamente en servidor, denegación antes de leer/escribir, respuestas filtradas por doctora y configuración sin material de credenciales, revocación/caducidad de sesión, y staging separado por tenant con fixtures ficticios. Conservar recepción/dueña y doctoras existentes sin ampliar permisos; no usar el rol que mande el navegador. No basta proteger únicamente las nuevas acciones financieras: cubrir también list/cfgGet/save/delete/bulk/pac/egreso y GET.
+
+Una vez disponibles identidades y acceso: implementar y probar ausencia de credencial, credencial inválida/expirada/revocada, cruces de tenant, rol falsificado, recursos de otra doctora, eliminación de hashes de respuestas, y regresión completa. Después verificar despliegue real de ambos GAS y frontend operativo. A esta actualización aún no se implementó ni desplegó autenticación nueva; anticipos siguen preparados localmente.
