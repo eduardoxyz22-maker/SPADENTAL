@@ -70,3 +70,14 @@ El entorno no tiene herramienta Apps Script de despliegue conectada, ejecutable 
 Diseño propuesto pendiente de esas identidades: autenticación de identidad verificable, asignación de clínica/rol exclusivamente en servidor, denegación antes de leer/escribir, respuestas filtradas por doctora y configuración sin material de credenciales, revocación/caducidad de sesión, y staging separado por tenant con fixtures ficticios. Conservar recepción/dueña y doctoras existentes sin ampliar permisos; no usar el rol que mande el navegador. No basta proteger únicamente las nuevas acciones financieras: cubrir también list/cfgGet/save/delete/bulk/pac/egreso y GET.
 
 Una vez disponibles identidades y acceso: implementar y probar ausencia de credencial, credencial inválida/expirada/revocada, cruces de tenant, rol falsificado, recursos de otra doctora, eliminación de hashes de respuestas, y regresión completa. Después verificar despliegue real de ambos GAS y frontend operativo. A esta actualización aún no se implementó ni desplegó autenticación nueva; anticipos siguen preparados localmente.
+
+
+## Actualización: acceso Google verificado; alternativa sin correos obligatorios
+
+El coordinador verificó en su navegador cloud la cuenta propietaria y los dos proyectos GAS, cotejando sus implementaciones con el frontend: SPA versión13 y Cosmetic versión2, ambas de 5/10/2026, ejecutadas como propietario/acceso Cualquiera. **No faltan enlaces, login ni conector GAS**: el despliegue podrá realizarlo ese navegador coordinado cuando la integración esté lista. No se invocaron endpoints de pacientes desde esta revisión.
+
+No se exige Google OAuth ni correo Google a cada empleado. La alternativa mínima conserva login por clave pero usa un identificador individual confirmado, verificación servidor y sesiones revocables. Las claves deben renovarse: los hashes del esquema anterior se entregaban al navegador y no se reutilizarán como credenciales nuevas. No se convierte la clave compartida de recepción en identidad individual.
+
+Decisión imprescindible actual: padrón vigente confirmado por propietario —persona, usuario individual, clínica(s), rol y nombre profesional exacto— y enrolamiento privado donde cada persona introduzca/ confirme su nueva clave. Los nombres de documentos antiguos no son autorización actual. No pedir claves/tokens por conversación ni generarlos el agente.
+
+Preparación independiente local en `auth/`: núcleo de sesiones sin integración productiva, derivación WebCrypto y plan detallado `PLAN-ACCESO.md`. No confundir ese módulo con autorización completa: falta conectar todos los handlers, políticas por recurso/respuesta y UI, seguido por pruebas integradas y staging antes de activar. No se publica código de autenticación parcial en los paneles. El informe y el paquete aislado dejan explícitos sus límites y pruebas.
