@@ -1,83 +1,81 @@
-# Traspaso para Claude — anticipos, 10 de octubre de 2026
+# Claude: continuar anticipos conservando los accesos actuales
 
-## Estado de publicación
+## Dictamen y encargo directo
 
-Eduardo autorizó «Publica» y «Deja informe para cuando lea claude» el 10/10/2026, 21:23 UTC. Se publica este informe documental. **Los anticipos no están desplegados ni habilitados en los paneles activos.** La autorización no resuelve los requisitos de seguridad pendientes; no se cambió autenticación, claves, roles ni acceso Google, ni se migraron pacientes o saldos históricos.
+**La función de anticipos está implementada y probada localmente, pero NO está publicada en los paneles activos.** Eduardo autorizó publicar y ajustar seguridad; después pidió mantener los accesos actuales, evitar un rediseño innecesario y dejar este traspaso si no se podía completar con seguridad ahora.
 
-La rama predeterminada y servida por Pages según el traspaso existente es `claude/vibrant-gauss-rvd0wb`. HEAD remoto verificado antes de esta entrega: `a30a438fb23ac8dda275c6042508ef3589b272b1`. `INFORME-CODEX.md` y `COORDINACION.md` son los antecedentes; este informe actualiza únicamente el trabajo de anticipos.
+Continúa desde el patch estable entregado. No reinicies la contabilidad ni cambies las identidades del personal. No exijas correos Google ni crees cuentas para las doctoras de Cosmetic. No despliegues los HTML de revisión desconectados sobre el panel operativo.
 
-## Bloqueo concreto
+## Accesos que Eduardo acaba de indicar
 
-Los `doPost`/`doGet` revisados no comprueban identidad ni rol antes de leer/escribir. Las guías antiguas recomiendan Web Apps ejecutadas como propietario y acceso público. No se comprobó la configuración efectiva de Google ni se llamó a endpoints de pacientes. Un UUID, ScriptLock o filtro UI no reemplaza autorización servidor.
+| Consultorio | Superacceso | Cuentas propias / restricciones |
+|---|---|---|
+| Cosmetic | Mirna y Cecilia | Las doctoras todavía NO tienen usuario ni contraseña. No crearlos por inferencia. |
+| SPA Dental | Solo Mirna | Ximena, Brenda, Shirley y Catherine tienen cuentas propias. Conservarlas y sus permisos. |
 
-`INFORME-CODEX.md` excluye cambios de seguridad sin nuevo pedido; `COORDINACION.md` requiere acordar proveedor de identidad, matriz de roles y despliegue/recuperación. Por eso no se inventaron tokens, cuentas o permisos. Para desbloquear: aprobar autenticación verificada en servidor, confirmar las identidades reales autorizadas por clínica y rol (dueña/recepción/doctoras), aprobar acceso de despliegue a los dos proyectos Google y crear un staging aislado con datos ficticios. No solicitar contraseñas por chat ni poner secretos en este repositorio público.
+Eduardo dictó «Mirda»; el código identifica «Dra. Mirna». El código base escribe «Dra. Katherine», mientras Eduardo dijo «Catherine». Son diferencias de transcripción pendientes de cotejar con la configuración, no permiso para renombrar, duplicar o reasignar cuentas. La lista de profesionales del código no es el padrón de usuarios. No añadir otras personas que aparezcan en documentos antiguos.
 
-GitHub publica HTML estático; no despliega Apps Script. No hay manifiesto clasp ni pipeline GAS identificado en los archivos revisados. Las guías indican actualización manual de cada Web App por su propietario. Hace falta comprobar versión efectiva de ambos backends y ruta de despliegue autorizada, sin leer datos clínicos como prueba.
+## Qué está listo y dónde recuperarlo
 
-## Código preparado, aún no incorporado a esta rama remota
+Base exacta: `a30a438fb23ac8dda275c6042508ef3589b272b1`, rama predeterminada `claude/vibrant-gauss-rvd0wb`, repo `eduardoxyz22-maker/SPADENTAL`. El trabajo se hizo en un clon separado; no se tocaron AKME-ESTUDIO ni MULTIESPUMAS.
 
-Checkout separado: `/workspace/spadental-anticipos-review`, rama local `review/anticipos-20261010`. Base a30a438. Se entregaron en Library un patch, ZIP completo, informe y demo integrada, todos versión 1; las capturas 5000→4200 están versión 0. Pedir al propietario esos entregables si el entorno local no está disponible. No interpretar rutas de este apartado como archivos ya publicados en GitHub.
+Entregables privados del propietario en Library:
 
-Cambios locales:
-- Ambos `pacientes.html`: catálogo «Añadir tratamiento», planes y cuenta/anticipos integrados.
-- Ambos `google-apps-script-pacientes.gs`: journal financiero, idempotencia, control de versión y guards para operaciones legacy.
-- `review/advance-ledger.js`: motor auditado en centavos.
-- `financial/backend.js`, `projections.js`, `panel.js`, `panel-projections.js`: backend/proyecciones/UI/caja/informes/exportación y respaldos.
-- `financial/build-integrated-demo.py`: demo del panel real con GAS real simulado en memoria, CSP sin red, datos ficticios y almacenamiento separado.
-- `tests/financial-*.cjs`, `tests/advance-ledger.cjs`, pruebas catálogo y Chromium; logs en `review-evidence-v2/`.
+- `SPADENTAL-anticipos-catalogo.patch`, versión1. SHA256: `6daca6eec7eac1196f7be7d869728aae579a1a037bfa21de06737b9b3a365ace`.
+- `SPADENTAL-codigo-pruebas-evidencia.zip`, versión1: código estable, pruebas y evidencia.
+- `SPADENTAL-demo-anticipos-offline.html`, versión1: panel real y backend GAS simulado, datos ficticios, sin conexión a producción.
+- Capturas `demo-anticipo5000-antes.png` y `demo-anticipo5000-despues800.png`.
 
-**No copiar los HTML de revisión a producción:** llevan `SHEETS_URL` vacío, CSP de conexiones bloqueadas y claves REVIEW separadas. Antes de una futura activación se debe construir una variante operativa conservando las URLs verificadas, nombres y almacenamiento de cada clínica, con autenticación acordada, y volver a validar. Restaurar solo la URL no completa ni asegura el despliegue.
+El propietario debe adjuntar el patch o ZIP a Claude. El intento de añadir el patch completo al repositorio público fue rechazado por la revisión automática por exposición potencial de código/URLs; no existe un patch público publicado por esta entrega. No buscarlo en una ruta ficticia ni copiar secretos al repositorio.
 
-## Modelo y alcance
+En el entorno original: snapshot estable extraído en `/workspace/spadental-handoff-estable-20261010`. El clon `/workspace/spadental-anticipos-review` contiene además trabajo de seguridad interrumpido: **no usar su diff actual como versión aprobada**. La entrega financiera estable es el patch/ZIP versión1.
 
-Existen dos tenants: SPA Dental y Cosmetic. Dra. Mirna es profesional/marca en ambos, no un tercer tenant encontrado. Fondos aislados por paciente UUID, clínica y BOB; sin transferencias entre marcas/monedas.
+## Implementación estable
 
-Un anticipo libre de Bs5000 deja saldo a favor5000. Una atención adicional800 consume crédito y deja4200, deuda0, caja acumulada5000. Aplicar crédito no genera ingreso nuevo. Las capturas reproducen exactamente ese caso ficticio sin plan asignado.
+Cambios: ambos `pacientes.html` y ambos `google-apps-script-pacientes.gs`; `financial/backend.js`, `projections.js`, `panel.js`, `panel-projections.js`; motor `review/advance-ledger.js`; catálogo integrado; pruebas `tests/*financial*`, ledger, catálogo y Chromium.
 
-Un plan presupuesto5000/pagado5000 tiene deuda0 y sesiones pendientes. Plan7000/pagado5000 debe2000. Los importes asignados al plan se muestran separados del crédito libre, sin sumar dos veces. Las sesiones incluidas carecen de precio individual en el modelo original: no se inventa un reservado restante4200 por realizar una sesión sin valoración contractual. Un reparto monetario por partida requeriría decisión adicional.
+- Dos tenants independientes: SPA Dental y Cosmetic. Dra. Mirna aparece en ambos; no hay un tercer tenant personal encontrado.
+- Saldo por paciente UUID + tenant + BOB. No transferencias de fondos entre marcas o monedas.
+- Recibo real, cargo por atención y aplicación de crédito son movimientos separados. Anticipo libre5000 → atención800 → crédito4200, deuda0, caja5000.
+- Presupuesto5000 pagado5000: deuda0 y sesiones clínicas pendientes. Presupuesto7000 pagado5000: deuda2000. Lo pagado al plan no se suma otra vez al crédito libre.
+- Journal append-only, un evento por operación, huella idempotente y versión bajo ScriptLock. Recargar/reintentar no duplica caja ni consumo.
+- Anular una atención devuelve crédito o avance clínico; no representa refund. No se añadieron devoluciones de dinero ficticias.
+- Guardas bloquean vías legacy que eluden ledger. Caja/exportación/respaldo consumen proyecciones sin duplicar recibos.
+- Ajustes → Lista de precios → Añadir tratamiento, con inclusión en borrador de plan mediante snapshot.
+- Históricos con movimientos no se adoptan automáticamente: conciliar aparte. No migrar ni limpiar datos reales por iniciativa propia.
 
-Journal append-only con una fila/evento, huella de petición y versión por cuenta bajo ScriptLock. Reintento idéntico no duplica dinero; respuesta incierta conserva comando. Anular atención libera crédito/avance, no registra devolución ficticia. Sin refunds ni corrección arbitraria de recibos. Planes históricos con actividad requieren conciliación; no se reinterpretan saldos iniciales automáticamente.
+## Bloqueo exacto y mínimo pendiente
 
-## Evidencia y límites
+El código GAS revisado no autentica/autoriza `doPost` ni `doGet`; el esquema anterior compara claves en el navegador y devuelve hashes dentro de configuración. **No basta trasladar esos hashes al cuerpo de una petición como tokens.** No llamar seguro al sistema por esconder botones o mantener ScriptLock.
 
-534 comprobaciones locales pasadas, cero fallidas en ejecuciones finales: legacy128, catálogo55, ledger26, seguridad offline14, backend180, proyecciones6, panel16, catálogo Chromium12, E2E integrado48, demo integrada15, piloto auxiliar30+4. Exit0 en todos. `git diff --check` y aplicación del patch a base limpia: exit0.
+El navegador cloud coordinador YA verificó propietario, proyectos y deployments coincidentes con el frontend. SPA está en versión13 y Cosmetic en versión2, de 5/10/2026; ambas ejecutan como propietario/acceso Cualquiera. Los enlaces exactos están en el anexo privado de entrega. **No pedir nuevamente acceso Google, enlaces o correos del personal.** No se verificó la vinculación de una hoja candidata de Cosmetic: no cambiar spreadsheet IDs por conjetura.
 
-E2E usa paneles reales y Apps Script en VM con Sheets/Lock simulados: parciales, varias atenciones, agotamiento, deuda por diferencia, pagos adicionales, anulación/corrección, retries, pérdida de respuesta, dos pestañas, recarga, aislamiento, redondeo, históricos, caja, XLSX descargado y respaldo JSON. Chromium bloquea solicitudes externas. Cuatro hallazgos de auditoría fueron corregidos y revalidados: bypass legacy de proyecciones, cobro antiguo sobre ID virtual, refresh parcialmente fallido y visibilidad entre doctoras.
+Resolver la validación mínima servidor conservando las cuentas/roles indicados, con credenciales nuevas introducidas privadamente por el usuario si es necesaria renovación por exposición. El agente no inventa contraseñas ni enrola a personas sin intervención autorizada. No introducir OAuth obligatorio o un sistema nuevo de usuarios como requisito si se puede asegurar el existente.
 
-No probado: despliegue Google, autenticación servidor, cuotas/rendimiento real, concurrencia física Google, migración histórica. **534 checks no equivalen a producción lista.** Las pruebas no deben usar pacientes reales ni probar escribiendo en las hojas operativas.
+Antes de live faltan integración completa de controles por operación/recurso/respuesta y validación en staging, además de la eventual renovación privada. Aún no se implementó esa protección de extremo a extremo. La alternativa de sesiones preparada en `auth/` es solo trabajo exploratorio aislado; no debe desplegarse como solución terminada. Sus pruebas no certifican los endpoints actuales.
 
-## Próxima secuencia y rollback
+## Orden de continuación y despliegue
 
-1. Obtener aprobación y definición concreta de identidad/roles/despliegue, manteniendo separados los dos tenants.
-2. Recuperar patch/ZIP y comparar de nuevo HEAD remoto; conservar cambios concurrentes sin force push.
-3. Implementar autorización fail-closed y probar staging aislado; construir HTML operativo separado del demo.
-4. Verificar versión backend y desplegar de forma coordinada ambos lados; confirmar Pages/commit y URL real mediante lectura estática. No usar un alta de paciente real como smoke test.
-5. Migración histórica requiere decisión y conciliación aparte; no es condición para probar casos nuevos ficticios en staging.
+1. Clonar HEAD actual en una rama de trabajo y obtener el patch/ZIP estable privado. Ejecutar `git apply --check` contra la base indicada; conservar los cambios posteriores de documentación/Claude, sin force ni sobrescritura.
+2. Revisar las diferencias de nombres contra configuración con mínima exposición, sin leer pacientes ni imprimir hashes. Conservar roles existentes; no crear usuarios Cosmetic doctoras.
+3. Completar la protección de TODOS los handlers (legacy, financieros, lectura y escritura), respuestas filtradas por rol/recurso y eliminación de material de credenciales. Probar denegación sin sesión y restricciones entre doctoras/tenants. Si requiere renovación, intervención privada del usuario; no secretos en código/chat/logs.
+4. Crear staging separado con hojas y cuentas ficticias. Aplicar allí backend primero y frontend de staging después; verificar versión, auth, caja, idempotencia, concurrencia y regresiones. No probar dando altas en pacientes reales.
+5. Construir frontend operativo desde la variante revisada: restaurar únicamente URLs verificadas de cada tenant y claves SP_/CD_ correctas, retirar CSP offline y rótulo de revisión, conectar autenticación real y evitar datos cacheados de otra sesión. El HTML entregado tiene servidor vacío/almacenamiento REVIEW y NO es el archivo para live.
+6. Coordinar ventana de actualización: respaldo y versiones previas, backend protegido de cada proyecto primero; comprobar salud/autorización sin datos clínicos; publicar frontend compatible en la rama Pages después. No dejar frontend nuevo hablando con GAS viejo ni pestañas antiguas escribiendo sin control.
+7. Verificar commit remoto, workflow Pages, URL estática real y versión de cada GAS; lectura no equivale a prueba contable productiva. No afirmar activación hasta verificar ambos lados.
 
-La entrega actual es documental: si se necesitara revertir, revertir solo el commit de este informe, sin tocar paneles. Para futura activación: conservar HTML/versión GAS anteriores y respaldo verificado; ante fallo deshabilitar nuevas escrituras financieras primero. No borrar journal, no borrar filas para «volver atrás», no reproducir recibos como saldos nuevos. Restaurar código anterior sin controlar escrituras no es rollback seguro del ledger; conciliar los eventos aceptados y acordar recuperación por tenant.
+## Pruebas realizadas y límites
 
+Versión financiera estable: **534 comprobaciones pasadas, cero fallidas, exit0**. Reparto: legacy128, catálogo55, ledger26, seguridad offline14, backend180, proyecciones6, panel16, catálogo Chromium12, E2E integrado48, demo15, piloto auxiliar30+4. Logs/comandos en `review-evidence-v2/TEST-RESULTS.md`. Patch aplicado en comprobación a base limpia; `git diff --check` exit0.
 
-## Actualización posterior: seguridad autorizada; falta identificación y acceso Google
+Comandos principales: `node tests/pacientes-regression.cjs`, `node tests/catalog-regression.cjs`, `node tests/advance-ledger.cjs`, `node tests/financial-backend.cjs`, `node tests/financial-projections.cjs`, `node tests/financial-panel.cjs`, `node tests/financial-e2e.cjs`, `node tests/integrated-demo-browser.cjs`. Chromium usa servidor local `python3 -m http.server 8765 --bind 127.0.0.1` y bloquea solicitudes externas.
 
-Eduardo respondió «Autorizo todo» a la pregunta expresa sobre autenticación y permisos por consultorio. La aprobación de ese alcance ya está dada y **no debe solicitarse otra vez**. Esta sección sustituye el pendiente de autorización descrito arriba; no implica migración automática de históricos.
+El núcleo de sesiones exploratorio tuvo186 checks y derivación9, aislados. La integración de auth iniciada después se pausó por la instrucción de conservar estructura/hacer traspaso: **sus pruebas E2E no están completadas ni cuentan como pasadas**. No mezclar sus archivos en el patch estable.
 
-Comprobación adicional: el cliente compara SHA-256 y guarda el hash en sessionStorage; `cfgGet`/`list` devuelven configuración con hashes. Esos hashes no sirven como prueba nueva de identidad ni deben convertirse en tokens. La configuración histórica no proporciona correos verificados ni asociación OAuth a personas. Se conocen nombres/roles descritos en documentación, no identidades autenticadas. No se consultaron configuraciones o registros reales.
+No ejecutado: despliegue GAS nuevo, staging Google, login protegido de extremo a extremo, migración histórica, autenticación productiva, pruebas de cuotas/gran volumen. Las534 pruebas locales no hacen seguro el backend actual ni equivalen a producción lista.
 
-El entorno no tiene herramienta Apps Script de despliegue conectada, ejecutable clasp, manifiesto `.clasp.json`/`appsscript.json` del proyecto ni ADC Google configurado. La conexión GitHub sí permite publicar archivos y verificar Pages, pero no sustituye acceso a Apps Script. No se generaron secretos, cuentas o credenciales y no se modificaron permisos reales.
+## Rollback
 
-**Dato mínimo para continuar:** correos Google autorizados y su rol por clínica (dueña/recepción/doctora, con nombre profesional exacto para cada doctora), más enlaces de los dos proyectos Apps Script y qué cuenta propietaria puede abrirlos. El propietario debe completar cualquier login/consentimiento Google en su sesión; no enviar contraseñas, códigos de acceso ni tokens por chat. Si los usuarios no usan cuentas Google, acordar el proveedor de identidad antes de implementar esa parte.
+Guardar versiones HTML y GAS previas y respaldo de cada tenant antes de activar. Si hay fallo, bloquear escrituras financieras nuevas y recuperar frontend/backend compatible, sin borrar journal ni reproducir recibos como saldos nuevos. Revertir solo HTML después de aceptar eventos financieros puede habilitar vías antiguas: conciliar y preservar el journal antes de decidir recuperación. No migrar o revertir datos históricos automáticamente.
 
-Diseño propuesto pendiente de esas identidades: autenticación de identidad verificable, asignación de clínica/rol exclusivamente en servidor, denegación antes de leer/escribir, respuestas filtradas por doctora y configuración sin material de credenciales, revocación/caducidad de sesión, y staging separado por tenant con fixtures ficticios. Conservar recepción/dueña y doctoras existentes sin ampliar permisos; no usar el rol que mande el navegador. No basta proteger únicamente las nuevas acciones financieras: cubrir también list/cfgGet/save/delete/bulk/pac/egreso y GET.
-
-Una vez disponibles identidades y acceso: implementar y probar ausencia de credencial, credencial inválida/expirada/revocada, cruces de tenant, rol falsificado, recursos de otra doctora, eliminación de hashes de respuestas, y regresión completa. Después verificar despliegue real de ambos GAS y frontend operativo. A esta actualización aún no se implementó ni desplegó autenticación nueva; anticipos siguen preparados localmente.
-
-
-## Actualización: acceso Google verificado; alternativa sin correos obligatorios
-
-El coordinador verificó en su navegador cloud la cuenta propietaria y los dos proyectos GAS, cotejando sus implementaciones con el frontend: SPA versión13 y Cosmetic versión2, ambas de 5/10/2026, ejecutadas como propietario/acceso Cualquiera. **No faltan enlaces, login ni conector GAS**: el despliegue podrá realizarlo ese navegador coordinado cuando la integración esté lista. No se invocaron endpoints de pacientes desde esta revisión.
-
-No se exige Google OAuth ni correo Google a cada empleado. La alternativa mínima conserva login por clave pero usa un identificador individual confirmado, verificación servidor y sesiones revocables. Las claves deben renovarse: los hashes del esquema anterior se entregaban al navegador y no se reutilizarán como credenciales nuevas. No se convierte la clave compartida de recepción en identidad individual.
-
-Decisión imprescindible actual: padrón vigente confirmado por propietario —persona, usuario individual, clínica(s), rol y nombre profesional exacto— y enrolamiento privado donde cada persona introduzca/ confirme su nueva clave. Los nombres de documentos antiguos no son autorización actual. No pedir claves/tokens por conversación ni generarlos el agente.
-
-Preparación independiente local en `auth/`: núcleo de sesiones sin integración productiva, derivación WebCrypto y plan detallado `PLAN-ACCESO.md`. No confundir ese módulo con autorización completa: falta conectar todos los handlers, políticas por recurso/respuesta y UI, seguido por pruebas integradas y staging antes de activar. No se publica código de autenticación parcial en los paneles. El informe y el paquete aislado dejan explícitos sus límites y pruebas.
+Esta entrega remota publica documentación, no activa anticipos. Comunicar esa diferencia expresamente al propietario.
