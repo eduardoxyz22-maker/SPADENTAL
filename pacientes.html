@@ -2812,7 +2812,8 @@ function filasCaja(datos){
   /* el anticipo entra a la caja el día que se paga */
   datos.forEach(function(r){
     if(!esAnticipo(r))return;
-    out.push(Object.assign({},r,{total:0,saldo:0,servicios:[],pagos:pagosDe(r),
+    var quien=r.anticipoPor&&r.anticipoPor!=='Dueña'&&r.anticipoPor!=='Recepción'?r.anticipoPor:'';
+    out.push(Object.assign({},r,{profesional:quien,total:0,saldo:0,servicios:[],pagos:pagosDe(r),
       _soloCobro:true,_anticipo:true,_cobroHistorico:false,cobrosPosteriores:[],
       obs:'Anticipo (saldo a favor)'+(r.obs?' · '+r.obs:'')}))});
   soloAtenciones(datos).forEach(function(r){
@@ -2829,7 +2830,8 @@ function filasCaja(datos){
         obs:'Cobro de atención del '+fmtF(r.fecha),cobrosPosteriores:[]}))});
     var favor=resto.reduce(function(a,p){return a+(p.metodo===SALDO_FAVOR?num(p.monto):0)},0);
     base.acuenta=Math.round((num(r.acuenta)-suma-favor)*100)/100;
-    base.pagos=agruparPagos(resto.filter(function(p){return p.metodo!==SALDO_FAVOR}));base.metodo=base.pagos.length===1?base.pagos[0].metodo:(base.pagos.length?'Mixto':'');
+    base.pagos=agruparPagos(resto.filter(function(p){return p.metodo!==SALDO_FAVOR}));
+    base._favor=Math.round(favor*100)/100;base.metodo=base.pagos.length===1?base.pagos[0].metodo:(base.pagos.length?'Mixto':'');
     base._cobroHistorico=base.acuenta>0&&!r.cobroInicialFechado;
     out.push(base)});
   return out}
@@ -3535,6 +3537,7 @@ function guardarAtencion(){
   /* mover la fecha mueve el cobro de esa visita a la caja del otro día */
   if(prev&&prev.fecha&&prev.fecha!==fecha){
     var inicial=num(prev.acuenta)-(prev.cobrosPosteriores||[]).reduce(function(x,p){return x+num(p.monto)},0);
+    inicial-=usoSaldoDe(prev)-(prev.cobrosPosteriores||[]).reduce(function(x,p){return x+(p.metodo===SALDO_FAVOR?num(p.monto):0)},0);
     if(inicial>0.009&&!confirm('Esta atención tiene '+bs(inicial)+' cobrados el '+fmtF(prev.fecha)+
         '. Si le cambiás la fecha, ese cobro pasa a la caja del '+fmtF(fecha)+
         ' (y sale de la del '+fmtF(prev.fecha)+', que puede estar cerrada). ¿Cambiar la fecha igual?'))return}
@@ -3613,9 +3616,8 @@ function borrar(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   if(esAnticipo(r)){borrarAnticipo(id);return}
   if(!esMia(r)){noEsTuya();return}
-  var cobrado=num(r.acuenta);
-  if(cobrado>0&&esDoctora()){toast('Esta atención tiene '+bs(cobrado)+' cobrados: la borra recepción o la dueña.',1);return}
-  var favor=usoSaldoDe(r), efectivo=Math.round((cobrado-favor)*100)/100;
+  var cobrado=num(r.acuenta), favor=usoSaldoDe(r), efectivo=Math.round((cobrado-favor)*100)/100;
+  if(efectivo>0.009&&esDoctora()){toast('Esta atención tiene '+bs(efectivo)+' cobrados: la borra recepción o la dueña.',1);return}
   if(!confirm('¿Borrar la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?'+
       (efectivo>0.009?'\n\nTiene '+bs(efectivo)+
         ' COBRADOS: esa plata sale de la caja. Si fue un error de carga, está bien; si el paciente pagó, no la borres.':'')+
@@ -6011,7 +6013,8 @@ function renderCaja(){
       '<td>'+(r._anticipo?'':esc(r.profesional||'—'))+'</td>'+
       '<td class="num">'+n0(r.total)+'</td><td class="num">'+n0(r.acuenta)+'</td>'+
       '<td class="num"'+(num(r.saldo)>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(r.saldo)+'</td>'+
-      '<td>'+(m?esc(m):(num(r.acuenta)>0?'<span class="pill bad">sin anotar</span>':'—'))+'</td></tr>'
+      '<td>'+(m?esc(m):(num(r.acuenta)>0?'<span class="pill bad">sin anotar</span>':(r._favor>0?'':'—')))+
+        (r._favor>0?' <span class="pill lime">💜 '+n0(r._favor)+' saldo a favor</span>':'')+'</td></tr>'
   }).join(''):'<tr><td colspan="7" class="empty">No hay movimientos en este periodo.</td></tr>'}
 
 /* ============================ PACIENTES ============================ */
@@ -8846,6 +8849,8 @@ function exportCaja(rows,nombre){
   /* ---------- 1. PORTADA ---------- */
   var P=[];
   P.push([celda(clinica()+' · Informe de caja','titulo')]);
+  var antE=rows.filter(function(r){return r._anticipo}).reduce(function(a,r){return a+num(r.acuenta)},0);
+  if(antE>0)P.push([celda('💜 Lo cobrado incluye '+bs(antE)+' de anticipos (saldo a favor de pacientes). Cuando se usan en una atención no vuelven a entrar a la caja.','nota')]);
   P.push([celda('Dra. Mirna Veizaga · '+periodoTexto(rows),'subtitulo')]);
   P.push([celda('Generado el '+fmtF(hoyISO()),'nota')]);
   if(rows.some(function(r){return r._cobroHistorico}))P.push([celda(AVISO_COBROS_HISTORICOS,'nota')]);
@@ -8928,12 +8933,12 @@ function exportCaja(rows,nombre){
   rows.slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})
     .forEach(function(r){
       var m=r.__m||{},falta=Math.max(0,num(r.acuenta)-(r.__ident||0));
-      M.push([r.fecha||'',r.paciente||'',r.profesional||'',srvText(r),
+      M.push([r.fecha||'',r.paciente||'',r._anticipo?'💜 Anticipo':(r.profesional||''),r._anticipo?(r.obs||''):srvText(r),
         celda(num(r.total),'bs'),celda(num(r.acuenta),'bs'),
         celda(num(r.saldo),num(r.saldo)>0?'alerta':'bs'),
         celda(m['Efectivo']||0,'bs'),celda(m['QR']||0,'bs'),
         celda(m['Tarjeta']||0,'bs'),celda(m['Transferencia']||0,'bs'),
-        celda(falta, falta>0?'alerta':'bs'),metodoText(r)])});
+        celda(falta, falta>0?'alerta':'bs'),metodoText(r)+(r._favor>0?(metodoText(r)?' + ':'')+'Saldo a favor '+n0(r._favor)+' (no entra a caja)':'')])});
   M.push([celda('TOTAL','totalTexto'),'','','',celda(totTot,'totalBs'),celda(cobrTot,'totalBs'),
     celda(salTot,'totalBs'),celda(porMetodo['Efectivo'],'totalBs'),celda(porMetodo['QR'],'totalBs'),
     celda(porMetodo['Tarjeta'],'totalBs'),celda(porMetodo['Transferencia'],'totalBs'),

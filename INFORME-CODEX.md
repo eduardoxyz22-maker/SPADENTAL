@@ -231,3 +231,15 @@ También pasaron, pero esas pruebas viven fuera del repo:
    - la única excepción es un caso que ahora se frena a propósito: una atención Atendido con "Por definir".
    - Fuera del repo, la cuarta ronda (el súper auditor de `f189076`) dejó sin rehacer, como deuda baja, que "500-100" se lee como 500.
 10. **Orden de despliegue recomendado:** primero publicar los paneles (las colas viejas se vacían con el servidor viejo, que se comporta como siempre); después pegar los dos `.gs` nuevos y publicar una versión nueva de cada Web App.
+
+## Anticipos (saldo a favor) — rama anticipos-saldo
+
+Se reemplazó el módulo financiero propuesto por Codex (no pasó la auditoría) por un modelo dentro del panel actual. El script de Google NO cambia (v5): los campos nuevos viajan en `_extra_json`.
+
+- **Anticipo** = registro en DATA con `estado:'Anticipo'`, `profesional:''`, `total:0`, `acuenta`=monto, `pagos`, `anticipoPor`. Entra a la caja el día que se paga (`filasCaja`); si lo cobró una doctora, entra a la caja de ella (no a la liquidación). `esAtencion` lo excluye: no es visita, no se factura ni se liquida.
+- **Saldo general del paciente**: `creditoDe(nombre)` = Σ anticipos − Σ pagos con método `Saldo a favor` (`SALDO_FAVOR`). Sirve para cualquier servicio o plan. **Sin devoluciones**: un anticipo se borra solo si no se usó (con conexión y verificado contra el servidor).
+- **Descuento automático**: al guardar una atención nueva (o una cita que pasa a Atendido) que queda debiendo, `guardarAtencion` agrega el pago `Saldo a favor` hasta cubrir la deuda o agotar el saldo. Antes de guardar, `creditoFresco` consulta el servidor para no usar saldo que otro equipo ya usó. El formulario (`#pago-tag`), el cartel posterior y el WhatsApp dicen cuánto se descontó, cuánto queda a favor y cuánto debe. Editar una atención vieja no toca el saldo; se puede usar desde "Registrar pago" → `💜 Saldo a favor`.
+- **Caja**: lo pagado con saldo a favor se quita de lo cobrado y de las formas de pago (ya entró el día del anticipo). Excel de caja y pantalla lo marcan.
+- **Permisos**: Cosmetic registran dueña y recepción (`ANTICIPO_DOCTORAS=false`); Spa también las doctoras (`true`), solo para pacientes propios o nuevos, y borran solo los que cargaron ellas.
+- **Límites conocidos** (requieren validar en el servidor, pendiente con la seguridad): dos equipos usando el mismo saldo en el mismo segundo, o uno sin conexión usando un saldo que otro borra, pueden dejar el saldo negativo (la ficha lo marca en rojo). El servidor numera los anticipos en el N° del día. En la hoja, la columna "A cuenta" incluye anticipos y lo pagado con saldo a favor.
+- Pruebas: `s09-anticipos.js` (harness con el .gs real en memoria) más auditorías audit9/audit10 (dinero, sincronización, UI y permisos).
