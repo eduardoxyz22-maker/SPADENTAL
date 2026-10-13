@@ -402,6 +402,9 @@ var K_CFG = 'CFG_SPADENTAL';
 
 function doGuardarCfg(cfg, base) {
   if (!cfg || !cfg.precios || !cfg.canales) return { ok: false, error: 'cfg_invalida' };
+  var guardada = leerCfg();
+  cfg = cfgSinClaves(cfg, guardada);
+  if (base) base = cfgSinClaves(base, guardada);
   /* con base, los ajustes de dos equipos se juntan acá adentro, sin carrera */
   if (base) {
     var actual = leerCfg();
@@ -411,7 +414,7 @@ function doGuardarCfg(cfg, base) {
   var texto = JSON.stringify(cfg);
   if (texto.length > 450000) return { ok: false, error: 'cfg_muy_grande' };
   props.setProperty(K_CFG, texto);
-  return { ok: true, ts: cfg.ts || '', cfg: cfg };
+  return { ok: true, ts: cfg.ts || '', cfg: cfgPublica(cfg) };
 }
 
 function leerCfg() {
@@ -425,17 +428,17 @@ function leerCfg() {
 function doList() {
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [], cfg: leerCfg(), pacientes: doListPac(), egresos: doListEgr() };
+  if (n < 2) return { ok: true, registros: [], cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: doListEgr() };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out, cfg: leerCfg(), pacientes: doListPac(), egresos: doListEgr() };
+  return { ok: true, registros: out, cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: doListEgr() };
 }
 
-function doSave(r, base) {
+function doSave(r, base, ses) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
   var sh = getSheet();
   var n = sh.getLastRow();
@@ -466,6 +469,9 @@ function doSave(r, base) {
   var esAlta = !!(base && base.__alta), separada = null;
   if (!destino && base !== undefined && fueBorrado(r.id)) return { ok: false, error: 'borrada', id: r.id };
   if (!destino && base && !esAlta) return { ok: false, error: 'borrada', id: r.id };
+  var previa0 = destino ? registroDeFila(sh.getRange(destino, 1, 1, COLS.length).getValues()[0]) : null;
+  if (ses && !doctoraPuedeGuardar(r, previa0, ses, !!(previa0 && base && fOtraDoctora(fSinAlta(base), r, previa0))))
+    return { ok: false, error: 'sin_permiso', id: r.id };
   if (destino && base !== undefined) {
     var actual = registroDeFila(sh.getRange(destino, 1, 1, COLS.length).getValues()[0]);
     var b0 = fSinAlta(base);
@@ -493,6 +499,7 @@ function doSave(r, base) {
       separada.obs = String(separada.obs || '') + (separada.obs ? '\n' : '') +
         '⚠ Separada: la misma cita la atendió también ' + actual.profesional + '. Revisar.';
       separada.nroDia = Math.max(cuantas, maxNro) + 1;
+      delete separada.correccionesCobro;
       sh.appendRow(filaDeRegistro(separada));
       return { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(separada)), conflictos: ['profesional'] };
     }
@@ -513,6 +520,9 @@ function doSave(r, base) {
     r.nroDia = Math.max(cuantas, maxNro) + 1;
   }
 
+  /* la historia de correcciones solo la escribe "Corregir cobro" */
+  if (previa0 && previa0.correccionesCobro) r.correccionesCobro = previa0.correccionesCobro;
+  else delete r.correccionesCobro;
   var fila = filaDeRegistro(r);
   if (destino) sh.getRange(destino, 1, 1, COLS.length).setValues([fila]);
   else sh.appendRow(fila);
@@ -526,23 +536,26 @@ function doSave(r, base) {
  * así que entran cientos de filas en una llamada.
  * Los que ya existen por id se actualizan; los nuevos se agregan.
  */
-function doBulk(lista) {
+function doBulk(lista, ses) {
+  if (ses && ses.rol !== 'admin') return { ok: false, error: 'sin_permiso' };
   if (!lista || !lista.length) return { ok: true, agregados: 0, actualizados: 0 };
   var sh = getSheet();
   var n = sh.getLastRow();
 
-  var filaPorId = {};
-  if (n >= 2) {
-    var ids = sh.getRange(2, 1, n - 1, 1).getValues();
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i][0]) filaPorId[ids[i][0]] = i + 2;
-    }
+  var filaPorId = {}, filasViejas = n >= 2 ? sh.getRange(2, 1, n - 1, COLS.length).getValues() : [];
+  for (var i = 0; i < filasViejas.length; i++) {
+    if (filasViejas[i][0]) filaPorId[filasViejas[i][0]] = i + 2;
   }
 
   var nuevas = [], actualizados = 0;
   for (var k = 0; k < lista.length; k++) {
     var r = lista[k];
     if (!r || !r.id) continue;
+    if (filaPorId[r.id]) {
+      /* una carga masiva no borra la historia de correcciones */
+      var vieja = registroDeFila(filasViejas[filaPorId[r.id] - 2]);
+      if (vieja.correccionesCobro) { r = JSON.parse(JSON.stringify(r)); r.correccionesCobro = vieja.correccionesCobro; }
+    }
     var fila = filaDeRegistro(r);
     if (filaPorId[r.id]) {
       sh.getRange(filaPorId[r.id], 1, 1, COLS.length).setValues([fila]);
@@ -558,7 +571,7 @@ function doBulk(lista) {
            total: Math.max(0, sh.getLastRow() - 1) };
 }
 
-function doDelete(r, base) {
+function doDelete(r, base, ses) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
   var sh = getSheet();
   var n = sh.getLastRow();
@@ -568,8 +581,11 @@ function doDelete(r, base) {
     if (ids[i][0] === r.id) {
       /* si desde que este equipo la vio alguien la cobró o la cambió, no se
          borra: se devuelve cómo está para que la revisen */
+      var actual = registroDeFila(sh.getRange(i + 2, 1, 1, COLS.length).getValues()[0]);
+      if (ses && ses.rol === 'doctora' && (actual.estado === 'Anticipo'
+          ? !(ANTICIPO_DOCTORAS && actual.anticipoPor === ses.prof) : profDeOtra(actual, ses)))
+        return { ok: false, error: 'sin_permiso', registro: actual };
       if (base) {
-        var actual = registroDeFila(sh.getRange(i + 2, 1, 1, COLS.length).getValues()[0]);
         if (fCambioParaBorrar(base, actual)) return { ok: false, error: 'cambio', registro: actual };
       }
       sh.deleteRow(i + 2); anotarBorrado(r.id); return { ok: true };
@@ -969,9 +985,255 @@ function fSinAlta(b) {
   return o;
 }
 
+/* Claves de fábrica (las que traía el panel antes de cambiarlas): sirven
+   para entrar, pero no para corregir cobros. */
+var ADMIN_FABRICA = 'ca8e9b091bc87bdd52becab004bb12c828d57ca200de2027531eec59097b947a';
+var EQUIPO_FABRICA = 'd5f70f16d1284a10785f81bfdb3ce58c629c9137ebf5db3f1ebe7ab151ef4580';
+/* En Spadental corrige cobros solo la dueña. */
+var CORRIGEN = ['admin'];
+/* En Spadental también las doctoras registran anticipos (de sus pacientes). */
+var ANTICIPO_DOCTORAS = true;
+/* =====================================================================
+   IDENTIDAD Y PERMISOS (versión 6)
+   Antes las claves se comparaban solo en el navegador y el servidor
+   aceptaba cualquier escritura. Ahora:
+   - Los verificadores de las claves viven en las propiedades del script,
+     nunca en la configuración que se le manda al panel.
+   - Entrar con la clave abre una sesión de 30 minutos (se renueva sola
+     mientras se usa). Toda escritura sin sesión se rechaza.
+   - El servidor sabe quién es cada sesión (dueña, recepción o una doctora)
+     y frena lo que no le toca, aunque alguien saltee los botones.
+   - Las claves de fábrica sirven para entrar, no para corregir cobros.
+   ===================================================================== */
+var AUTH_V = 1;
+var SESION_SEG = 1800;
+var K_VERIF = 'VERIF_CLAVES';
+
+function shaHex(s) {
+  var b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s), Utilities.Charset.UTF_8);
+  var h = '';
+  for (var i = 0; i < b.length; i++) { var x = (b[i] + 256) % 256; h += (x < 16 ? '0' : '') + x.toString(16); }
+  return h;
+}
+function hashOk(h) { return typeof h === 'string' && /^[0-9a-f]{64}$/.test(h); }
+
+/* Los verificadores: {admin, equipo, prof:{nombre: hash}}. La primera vez se
+   copian de la configuración vieja (que el panel guardaba a la vista); de ahí
+   en más, las claves se cambian solo por la acción "clave". La configuración
+   vieja conserva sus hashes para poder volver a la versión anterior. */
+function leerVerif() {
+  var props = PropertiesService.getScriptProperties();
+  var t = props.getProperty(K_VERIF), v = null;
+  try { v = t ? JSON.parse(t) : null; } catch (e) { v = null; }
+  if (v && hashOk(v.admin) && hashOk(v.equipo)) { if (!v.prof) v.prof = {}; return v; }
+  var cfg = leerCfg() || {};
+  v = { admin: hashOk(cfg.adminHash) ? cfg.adminHash : ADMIN_FABRICA,
+        equipo: hashOk(cfg.passHash) ? cfg.passHash : EQUIPO_FABRICA, prof: {} };
+  var cp = cfg.clavesProf || {};
+  for (var p in cp) if (Object.prototype.hasOwnProperty.call(cp, p) && hashOk(cp[p])) v.prof[p] = cp[p];
+  props.setProperty(K_VERIF, JSON.stringify(v));
+  return v;
+}
+function guardarVerif(v) { PropertiesService.getScriptProperties().setProperty(K_VERIF, JSON.stringify(v)); }
+function esDeFabrica(h) { return h === ADMIN_FABRICA || h === EQUIPO_FABRICA; }
+
+/* Lo que se le manda al panel: sin ningún material de claves. */
+function cfgPublica(cfg) {
+  if (!cfg) return cfg;
+  var o = {}, k;
+  for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
+  delete o.adminHash; delete o.passHash; delete o.clavesProf;
+  var v = leerVerif(), con = [];
+  for (k in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, k)) con.push(k);
+  o.credServidor = true;
+  o.clavesProfHay = con;
+  return o;
+}
+/* Una configuración que llega del panel no puede tocar las claves. */
+function cfgSinClaves(cfg, guardada) {
+  if (!cfg) return cfg;
+  var o = {}, k;
+  for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
+  delete o.credServidor; delete o.clavesProfHay;
+  delete o.adminHash; delete o.passHash; delete o.clavesProf;
+  if (guardada) {
+    if (guardada.adminHash) o.adminHash = guardada.adminHash;
+    if (guardada.passHash) o.passHash = guardada.passHash;
+    if (guardada.clavesProf) o.clavesProf = guardada.clavesProf;
+  }
+  return o;
+}
+
+/* ---- sesiones ---- */
+function cache() { return CacheService.getScriptCache(); }
+function nuevaSesion(s) {
+  var tok = (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '');
+  cache().put('S_' + tok, JSON.stringify(s), SESION_SEG);
+  return tok;
+}
+function sesionDe(tok) {
+  if (typeof tok !== 'string' || !/^[0-9a-f]{64}$/.test(tok)) return null;
+  var t = cache().get('S_' + tok); if (!t) return null;
+  var s = null; try { s = JSON.parse(t); } catch (e) { return null; }
+  /* la clave pudo cambiar desde que se abrió: la sesión vieja ya no vale */
+  var v = leerVerif(), h = s.rol === 'admin' ? v.admin : (s.rol === 'equipo' ? v.equipo : v.prof[s.prof]);
+  if (!h || h !== s.h) { cache().remove('S_' + tok); return null; }
+  cache().put('S_' + tok, t, SESION_SEG);   // se renueva mientras se usa
+  return s;
+}
+
+function doLogin(body) {
+  var c = cache(), fallas = Number(c.get('LOGIN_FALLAS') || 0);
+  if (fallas >= 40) return { ok: false, error: 'muchos_intentos' };
+  var clave = String(body.clave || '');
+  if (!clave) return { ok: false, error: 'clave_incorrecta' };
+  var h = shaHex(clave), v = leerVerif(), s = null;
+  if (h === v.admin) s = { rol: 'admin', prof: '' };
+  else {
+    for (var p in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, p) && v.prof[p] === h) { s = { rol: 'doctora', prof: p }; break; }
+    if (!s && h === v.equipo) s = { rol: 'equipo', prof: '' };
+  }
+  if (!s) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_incorrecta' }; }
+  s.h = h; s.fabrica = esDeFabrica(h);
+  var tok = nuevaSesion(s);
+  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica };
+}
+
+/* Cambiar una clave: la dueña cambia cualquiera; recepción, la suya
+   (diciendo la actual). Nunca dos personas con la misma clave. */
+function doCambiarClave(body, ses) {
+  var quien = body.quien, nueva = String(body.clave || ''), v = leerVerif();
+  if (nueva.length < 6) return { ok: false, error: 'clave_corta' };
+  if (quien === 'equipo' && ses.rol === 'equipo') {
+    if (shaHex(String(body.vieja || '')) !== v.equipo) return { ok: false, error: 'clave_incorrecta' };
+  } else if (ses.rol !== 'admin') return { ok: false, error: 'sin_permiso' };
+  var h = shaHex(nueva);
+  if (esDeFabrica(h)) return { ok: false, error: 'clave_de_fabrica' };
+  var usadas = [];
+  if (quien !== 'admin') usadas.push(v.admin);
+  if (quien !== 'equipo') usadas.push(v.equipo);
+  for (var p in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, p) && !(quien === 'prof' && p === body.prof)) usadas.push(v.prof[p]);
+  if (usadas.indexOf(h) >= 0) return { ok: false, error: 'clave_repetida' };
+  var cfg = leerCfg() || {};
+  if (quien === 'admin') { v.admin = h; cfg.adminHash = h; }
+  else if (quien === 'equipo') { v.equipo = h; cfg.passHash = h; }
+  else if (quien === 'prof' && body.prof) {
+    v.prof[body.prof] = h; cfg.clavesProf = cfg.clavesProf || {}; cfg.clavesProf[body.prof] = h;
+  } else return { ok: false, error: 'pedido_invalido' };
+  guardarVerif(v);
+  /* la config vieja guarda el mismo hash, por si hay que volver a la versión anterior */
+  if (cfg.precios && cfg.canales) PropertiesService.getScriptProperties().setProperty(K_CFG, JSON.stringify(cfg));
+  return { ok: true };
+}
+
+/* ---- qué puede tocar una doctora ---- */
+function profDeOtra(r, ses) {
+  var p = String((r && r.profesional) || '');
+  return !!p && p !== 'Por definir' && p !== ses.prof;
+}
+function doctoraPuedeGuardar(r, actual, ses, separa) {
+  if (ses.rol !== 'doctora') return true;
+  if (r.estado === 'Anticipo' || (actual && actual.estado === 'Anticipo')) {
+    return ANTICIPO_DOCTORAS && r.anticipoPor === ses.prof && (!actual || actual.anticipoPor === ses.prof);
+  }
+  if (separa) return !profDeOtra(r, ses);           // la segunda doctora de una misma cita: queda como visita propia
+  if (actual && profDeOtra(actual, ses)) return false;
+  return !profDeOtra(r, ses);
+}
+
+/* =====================================================================
+   CORREGIR COBRO
+   Corrige el cobro del día de la atención (el inicial), incluso de un
+   histórico importado. No es un pago nuevo: no toca la caja de hoy, cambia
+   lo que entró ese día. Queda la historia en la atención y, aparte, en la
+   hoja _Correcciones, que ninguna otra acción toca.
+   ===================================================================== */
+var HOJA_CORR = '_Correcciones';
+var COLS_CORR = ['Corregido', 'Clave de pedido', 'ID atención', 'Paciente', 'Fecha atención',
+  'Cobrado antes', 'Cobrado después', 'Forma antes', 'Forma después', 'Motivo', 'Responsable'];
+function hojaCorr() {
+  var ss = getSpreadsheet(), sh = ss.getSheetByName(HOJA_CORR);
+  if (!sh) { sh = ss.insertSheet(HOJA_CORR); sh.getRange(1, 1, 1, COLS_CORR.length).setValues([COLS_CORR]); }
+  return sh;
+}
+function correccionYaHecha(idem) {
+  var sh = hojaCorr(), n = sh.getLastRow();
+  if (n < 2) return false;
+  var l = sh.getRange(2, 2, n - 1, 1).getValues();
+  for (var i = 0; i < l.length; i++) if (String(l[i][0]) === String(idem)) return true;
+  return false;
+}
+function responsableDe(ses) {
+  if (ses.rol === 'admin') return 'Dueña (clave de administradora)';
+  if (ses.rol === 'equipo') return 'Recepción (clave compartida del equipo)';
+  return ses.prof || 'Doctora';
+}
+function textoPagos(c) {
+  var l = (c && c.pagos) || [], out = [];
+  for (var i = 0; i < l.length; i++) out.push(l[i].metodo + ' ' + l[i].monto);
+  return out.join(' + ') || (c && c.metodo) || 'sin desglose';
+}
+function filaPorId(sh, id) {
+  var n = sh.getLastRow(); if (n < 2) return 0;
+  var ids = sh.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) if (String(ids[i][0]) === String(id)) return i + 2;
+  return 0;
+}
+function doCorregirCobro(c, ses) {
+  if (CORRIGEN.indexOf(ses.rol) < 0) return { ok: false, error: 'sin_permiso' };
+  if (ses.fabrica) return { ok: false, error: 'clave_de_fabrica' };
+  if (!c || !c.id || !c.idem) return { ok: false, error: 'pedido_invalido' };
+  var motivo = String(c.motivo || '').trim();
+  if (motivo.length < 5) return { ok: false, error: 'falta_motivo' };
+  var monto = Number(c.monto);
+  if (!isFinite(monto) || monto < 0) return { ok: false, error: 'monto_invalido' };
+  monto = fR(monto);
+  var sh = getSheet(), fila = filaPorId(sh, c.id);
+  if (!fila) return { ok: false, error: 'borrada', id: c.id };
+  var actual = registroDeFila(sh.getRange(fila, 1, 1, COLS.length).getValues()[0]);
+  /* un reintento (doble clic, se cortó la respuesta) no corrige dos veces */
+  if (correccionYaHecha(c.idem)) return { ok: true, repetida: true, registro: actual };
+  if (actual.estado !== 'Atendido') return { ok: false, error: 'no_corregible', registro: actual };
+  /* versión: si otro equipo cobró o corrigió desde que se abrió, no se pisa */
+  var ver = { acuenta: fR(fNum(actual.acuenta)), saldo: fR(fNum(actual.saldo)),
+    pagos: fListaMetodos(fPorMetodo(actual.pagos || [], 1, {})), ncp: fCobrosPost(actual).length,
+    ncorr: (actual.correccionesCobro || []).length };
+  if (!c.version || !fIgual(ver, c.version)) return { ok: false, error: 'conflicto', registro: actual };
+  var d = fDesarmar(actual), ant = d.__cobro;
+  /* lo pagado con saldo a favor no se corrige acá: es del anticipo */
+  var favor = 0, i, nuevos = [], suma = 0;
+  for (i = 0; i < ant.pagos.length; i++) if (ant.pagos[i].metodo === 'Saldo a favor') favor = fR(favor + ant.pagos[i].monto);
+  var desg = c.pagos;
+  if (desg !== null && !fEsLista(desg)) return { ok: false, error: 'pedido_invalido' };
+  if (desg) for (i = 0; i < desg.length; i++) {
+    var p = desg[i], m = fR(fNum(p && p.monto));
+    if (!p || !p.metodo || p.metodo === 'Saldo a favor' || m < 0) return { ok: false, error: 'pedido_invalido' };
+    if (m > 0) { nuevos.push({ metodo: String(p.metodo), monto: m }); suma = fR(suma + m); }
+  }
+  if (desg && Math.abs(suma - monto) > 0.009) return { ok: false, error: 'desglose_no_cuadra' };
+  if (favor > 0) nuevos.push({ metodo: 'Saldo a favor', monto: favor });
+  d.__cobro = { monto: fR(monto + favor), pagos: fListaMetodos(fPorMetodo(nuevos, 1, {})), metodo: '' };
+  var r = fArmar(d);
+  if (fNum(r.saldo) < -0.009) return { ok: false, error: 'supera_total', registro: actual };
+  var antes = { cobrado: fR(fNum(ant.monto) - favor), forma: textoPagos({ pagos: (function () {
+    var o = []; for (var j = 0; j < ant.pagos.length; j++) if (ant.pagos[j].metodo !== 'Saldo a favor') o.push(ant.pagos[j]); return o; })(), metodo: ant.metodo }),
+    acuenta: fNum(actual.acuenta), saldo: fNum(actual.saldo) };
+  var despues = { cobrado: monto, forma: desg ? textoPagos({ pagos: nuevos.filter(function (x) { return x.metodo !== 'Saldo a favor'; }) }) : 'sin desglose',
+    acuenta: fNum(r.acuenta), saldo: fNum(r.saldo) };
+  var ts = new Date().toISOString(), resp = responsableDe(ses);
+  r.correccionesCobro = (actual.correccionesCobro || []).concat([{ id: c.idem, ts: ts, por: resp, motivo: motivo,
+    antes: antes, despues: despues }]);
+  /* un cobro importado sin forma de pago sigue sin forma: no se inventa */
+  if (!desg && !favor) r.metodo = '';
+  sh.getRange(fila, 1, 1, COLS.length).setValues([filaDeRegistro(r)]);
+  hojaCorr().appendRow([ts, String(c.idem), actual.id, actual.paciente || '', actual.fecha || '',
+    antes.cobrado, despues.cobrado, antes.forma, despues.forma, motivo, resp]);
+  return { ok: true, registro: registroDeFila(sh.getRange(fila, 1, 1, COLS.length).getValues()[0]) };
+}
+
 /* ------------------------------------------------------------------ HTTP */
 function json(obj) {
-  if (obj && typeof obj === 'object') obj.v = FUSION_V;
+  if (obj && typeof obj === 'object') { obj.v = FUSION_V; obj.auth = AUTH_V; }
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -983,18 +1245,26 @@ function doPost(e) {
     var body = JSON.parse(e.postData.contents || '{}');
     var reg = body.registro || body.pedido || {};
     if (body.action === 'list') return json(doList());
+    if (body.action === 'info') return json(doInfo());
+    if (body.action === 'login') return json(doLogin(body));
+    /* Solo la configuracion: el list arrastra miles de atenciones y tarda
+       segundos. Sin material de claves. */
+    if (body.action === 'cfgGet') return json({ ok: true, cfg: cfgPublica(leerCfg()) });
+    /* De acá para abajo todo escribe: sin sesión válida no se toca nada (un
+       panel viejo, o alguien que encontró la dirección, queda afuera). */
+    var ses = sesionDe(body.token);
+    if (!ses) return json({ ok: false, error: 'sin_sesion' });
     /* base ausente = panel de una versión anterior: escribe como siempre.
        base null = alta nueva (o cola vieja): se junta igual con lo que haya. */
     var base = Object.prototype.hasOwnProperty.call(body, 'base') ? body.base : undefined;
-    if (body.action === 'save') return json(doSave(reg, base));
-    if (body.action === 'delete') return json(doDelete(reg, base));
-    if (body.action === 'bulk') return json(doBulk(body.registros || []));
-    if (body.action === 'info') return json(doInfo());
+    if (body.action === 'save') return json(doSave(reg, base, ses));
+    if (body.action === 'delete') return json(doDelete(reg, base, ses));
+    if (body.action === 'bulk') return json(doBulk(body.registros || [], ses));
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg, base));
-    /* Solo la configuracion: el list arrastra miles de atenciones y tarda
-       segundos; las claves de las doctoras tienen que llegar ya. */
-    if (body.action === 'cfgGet') return json({ ok: true, cfg: leerCfg() });
+    if (body.action === 'clave') return json(doCambiarClave(body, ses));
+    if (body.action === 'corregirCobro') return json(doCorregirCobro(body.correccion, ses));
     if (body.action === 'pac') return json(doGuardarPac(reg, base));
+    if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg, base));
     return json({ ok: false, error: 'accion_desconocida' });
@@ -1006,13 +1276,12 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  if (e && e.parameter && e.parameter.action === 'info') return json(doInfo());
-  return json(doList());
+  return json(doInfo());
 }
 
 function doInfo() {
   var ss = getSpreadsheet();
-  return { ok: true, planilla: ss.getName(), url: ss.getUrl(), filas: Math.max(0, getSheet().getLastRow() - 1) };
+  return { ok: true, planilla: ss.getName(), filas: Math.max(0, getSheet().getLastRow() - 1), seguridad: AUTH_V };
 }
 
 /**
@@ -1023,7 +1292,7 @@ function doInfo() {
 function probar() {
   var info = doInfo();
   Logger.log('Planilla: ' + info.planilla);
-  Logger.log('Abrila acá: ' + info.url);
+  Logger.log('Abrila acá: ' + getSpreadsheet().getUrl());
   Logger.log('Atenciones guardadas: ' + info.filas);
   return info;
 }

@@ -1527,8 +1527,9 @@ function pintarClavesProf(){
     if(el&&el.value)escritos[p]={v:el.value,bad:el.classList.contains('bad'),
       err:($('#cperr-'+cssId(p))||{}).textContent||''}});
   cont.innerHTML=CFG.prof.map(function(p){
-    return '<div><label>'+esc(p)+(cp[p]?' <span class="pill ok">tiene clave</span>':' <span class="pill">sin clave</span>')+'</label>'+
-      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(cp[p]?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password">'+
+    var tiene=credSrv()&&Array.isArray(CFG.clavesProfHay)?CFG.clavesProfHay.indexOf(p)>=0:!!cp[p];
+    return '<div><label>'+esc(p)+(tiene?' <span class="pill ok">tiene clave</span>':' <span class="pill">sin clave</span>')+'</label>'+
+      '<input type="password" id="cp-'+cssId(p)+'" placeholder="'+(tiene?'Cambiar clave':'Asignar clave')+'" autocomplete="new-password">'+
       '<div class="cperr" id="cperr-'+cssId(p)+'"></div></div>'}).join('');
   CFG.prof.forEach(function(p){
     var e2=escritos[p]; if(!e2)return;
@@ -1619,6 +1620,9 @@ function pedirModoDuena(){
 
 function salirModoDuena(){
   ROL='equipo';
+  /* vuelve la sesión de recepción: lo que siga no queda a nombre de la dueña */
+  if(SESION_GUARDADA){SESION=SESION_GUARDADA.s; CLAVE_MEM=SESION_GUARDADA.c; SESION_GUARDADA=null; guardarSesion()}
+  else olvidarSesion();
   try{sessionStorage.setItem(K_UNLOCK,passHash())}catch(e){}
   closeModal(); aplicarRol();
   try{refreshAll()}catch(e){}      // si no, los montos quedan pintados en pantalla
@@ -1631,11 +1635,27 @@ function cambiarUsuario(){
   setTimeout(function(){var g=$('#gate-pass'); if(g)g.focus()},80)}
 
 function entrarModoDuena(){
-  if(sha256($('#adm-pass').value)===adminHash()){
+  var va=$('#adm-pass').value, antes={s:SESION,c:CLAVE_MEM};
+  var activar=function(){
     ROL='admin';
     try{sessionStorage.setItem(K_UNLOCK,adminHash())}catch(e){}
-    closeModal(); aplicarRol(); refreshAll(); toast('👑 Modo dueña activo')}
-  else{$('#adm-err').textContent='Clave incorrecta';$('#adm-pass').value='';$('#adm-pass').focus()}}
+    closeModal(); aplicarRol(); refreshAll(); toast('👑 Modo dueña activo')};
+  var mal=function(){$('#adm-err').textContent='Clave incorrecta';$('#adm-pass').value='';$('#adm-pass').focus()};
+  var volver=function(){SESION=antes.s; CLAVE_MEM=antes.c; guardarSesion()};
+  /* con el servidor nuevo, lo que haga la dueña queda a su nombre; al salir
+     vuelve la sesión que había */
+  if(CONNECTED&&credSrv()){
+    abrirSesion(va).then(function(r){
+      if(r&&r.ok&&r.rol==='admin'){SESION_GUARDADA=antes; recordarClaveLocal('admin','',sha256(va)); activar(); return}
+      if(r&&r.ok){volver(); mal(); return}
+      if(r&&(r.error==='clave_incorrecta'||r.error==='muchos_intentos')){mal(); return}
+      if(sha256(va)===adminHash())activar(); else mal()})
+    .catch(function(){if(sha256(va)===adminHash())activar(); else mal()});
+    return}
+  if(sha256(va)===adminHash()){
+    if(CONNECTED)abrirSesion(va).then(function(r){if(r&&r.ok&&r.rol==='admin')SESION_GUARDADA=antes; else volver()},volver);
+    activar()}
+  else mal()}
 
 function yaDesbloqueado(){return !!rolGuardado()}
 /* La sesion NO se recuerda entre visitas: la compu del consultorio la usan
@@ -1657,7 +1677,7 @@ function desbloquear(){
   try{refreshAll()}catch(e){}
   saludoTemporada()}
 function bloquear(){
-  ROL='equipo'; PROF_ACTUAL='';
+  ROL='equipo'; PROF_ACTUAL=''; olvidarSesion();
   try{sessionStorage.removeItem(K_UNLOCK);localStorage.removeItem(K_UNLOCK)}catch(e){}
   document.body.classList.add('locked');
   $('#gate').classList.remove('off');
@@ -1669,6 +1689,22 @@ function initGate(){
   var intentar=function(auto){
     var v=$('#gate-pass').value;
     var h=sha256(v);
+    var local=h===adminHash()?{rol:'admin',prof:''}:(profDeHash(h)?{rol:'doctora',prof:profDeHash(h)}:(h===passHash()?{rol:'equipo',prof:''}:null));
+    var entrar=function(rol,prof){ROL=rol; PROF_ACTUAL=prof||''; CLAVE_MEM=v; $('#gate-err').textContent=''; desbloquear(); sonidoTemporada()};
+    /* Con el servidor nuevo, la clave la confirma él (las de este equipo
+       pueden haber cambiado en otro). Sin respuesta, vale lo de este equipo. */
+    if(CONNECTED&&credSrv()){
+      $('#gate-err').innerHTML='<span class="sync">⏳ Verificando la clave…</span>';
+      abrirSesion(v).then(function(r){
+        if(r&&r.ok){recordarClaveLocal(r.rol,r.prof,h); entrar(r.rol,r.prof); return}
+        if(r&&r.error==='clave_incorrecta'){olvidarClaveLocal(h); $('#gate-err').textContent='Clave incorrecta';
+          $('#gate-pass').value=''; $('#gate-pass').focus(); return}
+        if(r&&r.error==='muchos_intentos'){$('#gate-err').textContent='Demasiados intentos: esperá unos minutos'; return}
+        if(local){entrar(local.rol,local.prof); return}
+        $('#gate-err').textContent='Clave incorrecta'})
+      .catch(function(){if(local)entrar(local.rol,local.prof); else $('#gate-err').textContent='Sin conexión: no se pudo verificar la clave'});
+      return}
+    if(local){entrar(local.rol,local.prof); if(CONNECTED)abrirSesion(v).catch(function(){}); return}
     if(h===adminHash()){ROL='admin';$('#gate-err').textContent='';desbloquear();sonidoTemporada()}
     else if(profDeHash(h)){ROL='doctora';PROF_ACTUAL=profDeHash(h);
       $('#gate-err').textContent='';desbloquear();sonidoTemporada()}
@@ -1962,13 +1998,113 @@ function loadLocal(){try{var a=JSON.parse(localStorage.getItem(K_DATA));return A
 function saveLocal(){try{localStorage.setItem(K_DATA,JSON.stringify(DATA))}catch(e){toast('No se pudo guardar en este dispositivo',1)}}
 
 /* ---------- backend opcional (Google Sheets) ---------- */
-function api(action,payload,cfg,base){
-  var cuerpo={action:action,pedido:payload,registro:payload,cfg:cfg};
-  if(base!==undefined)cuerpo.base=base;
+/* ---------- sesión con el servidor ----------
+   Desde la versión 6 del Apps Script, escribir exige una sesión: se abre al
+   entrar con la clave y dura 30 minutos (se renueva sola mientras se usa).
+   La clave queda solo en la memoria de esta pestaña, para renovar la sesión
+   sin volver a pedirla; al recargar, si la sesión venció, se pide de nuevo.
+   Con un servidor anterior todo sigue como antes. */
+var SESION={token:'',exp:0,rol:'',prof:'',fabrica:false}, CLAVE_MEM='', SRV_AUTH=null, SESION_GUARDADA=null;
+var K_SES=K_UNLOCK+'_SES';
+try{var s0=JSON.parse(sessionStorage.getItem(K_SES)||'null'); if(s0&&s0.token&&s0.exp>Date.now())SESION=s0}catch(e){}
+function guardarSesion(){try{sessionStorage.setItem(K_SES,JSON.stringify(SESION))}catch(e){}}
+function olvidarSesion(){SESION={token:'',exp:0,rol:'',prof:'',fabrica:false}; CLAVE_MEM=''; SESION_GUARDADA=null;
+  try{sessionStorage.removeItem(K_SES)}catch(e){}}
+/* ¿El servidor guarda las claves? (versión 6 en adelante) */
+function credSrv(){return !!(CFG&&CFG.credServidor)||SRV_AUTH===true}
+function sesionViva(){return !!SESION.token&&SESION.exp>Date.now()+30000}
+var LECTURAS={list:1,cfgGet:1,info:1,login:1};
+function fetchApi(cuerpo){
   return fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body:JSON.stringify(cuerpo)})
-    .then(function(r){return r.json()})
-}
+    body:JSON.stringify(cuerpo)}).then(function(r){return r.json()})}
+function abrirSesion(clave){
+  return fetchApi({action:'login',clave:clave}).then(function(r){
+    if(r&&r.auth)SRV_AUTH=true;
+    if(r&&r.ok&&r.token){
+      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica};
+      CLAVE_MEM=clave; guardarSesion(); return r}
+    if(r&&r.error==='accion_desconocida')SRV_AUTH=false;
+    if(r&&r.error==='clave_incorrecta'&&CLAVE_MEM===clave)CLAVE_MEM='';
+    return r})}
+function tokenPara(action){
+  if(LECTURAS[action]||SRV_AUTH===false)return Promise.resolve('');
+  if(sesionViva())return Promise.resolve(SESION.token);
+  if(CLAVE_MEM)return abrirSesion(CLAVE_MEM).then(function(){return sesionViva()?SESION.token:''},function(){return ''});
+  return Promise.resolve('')}
+function api(action,payload,cfg,base,extra){
+  var cuerpo={action:action,pedido:payload,registro:payload,cfg:cfg}, k;
+  if(base!==undefined)cuerpo.base=base;
+  if(extra)for(k in extra)if(Object.prototype.hasOwnProperty.call(extra,k))cuerpo[k]=extra[k];
+  var mandarCon=function(tok){if(tok)cuerpo.token=tok; else delete cuerpo.token; return fetchApi(cuerpo)};
+  return tokenPara(action).then(mandarCon).then(function(r){
+    if(r&&r.auth)SRV_AUTH=true;
+    if(!(r&&r.ok===false&&r.error==='sin_sesion'))return r;
+    /* la sesión venció o el servidor se actualizó recién: una vez más con la
+       clave en memoria; si no hay, se le pide a quien está usando el panel */
+    SESION.token=''; guardarSesion();
+    if(!CLAVE_MEM){pedirClaveSesion(); return r}
+    return abrirSesion(CLAVE_MEM).then(function(){
+      if(!sesionViva()){pedirClaveSesion(); return r}
+      return mandarCon(SESION.token)})})}
+
+/* Pedido de clave sin tapar lo que se está haciendo: una franja arriba. */
+function pedirClaveSesion(){
+  if(document.body.classList.contains('locked'))return;
+  var el=$('#ses-pedir');
+  if(!el){
+    el=document.createElement('div'); el.id='ses-pedir';
+    el.style.cssText='position:fixed;left:0;right:0;top:0;z-index:9999;background:var(--ink,#222);color:#fff;'+
+      'padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:14px';
+    el.innerHTML='<span>🔐 Por seguridad, volvé a escribir tu clave para guardar en la nube</span>'+
+      '<input type="password" id="ses-clave" autocomplete="current-password" style="max-width:180px;padding:6px 10px">'+
+      '<button class="btn sm" id="ses-btn">Seguir</button><span id="ses-err" style="color:#ffb4a8"></span>';
+    document.body.appendChild(el);
+    var ir=function(){
+      var v=$('#ses-clave').value; if(!v)return;
+      $('#ses-err').textContent='';
+      abrirSesion(v).then(function(r){
+        if(r&&r.ok){
+          if(r.rol!==ROL||(r.prof||'')!==(PROF_ACTUAL||'')){
+            olvidarSesion(); $('#ses-err').textContent='Esa no es la clave de quien está usando el panel'; return}
+          el.remove(); toast('Listo ✅ seguimos guardando'); flushQueue().then(function(){if(window.banner)banner()})}
+        else $('#ses-err').textContent=r&&r.error==='muchos_intentos'?'Demasiados intentos: esperá unos minutos':'Clave incorrecta'})
+        .catch(function(){$('#ses-err').textContent='Sin conexión'})};
+    $('#ses-btn').onclick=ir;
+    $('#ses-clave').onkeydown=function(e){if(e.key==='Enter')ir()}}
+  setTimeout(function(){var i=$('#ses-clave'); if(i)i.focus()},50)}
+
+/* La clave que el servidor confirmó queda como la de este equipo (solo
+   acá), así el panel abre sin conexión y al recargar (F5). */
+function recordarClaveLocal(rol,prof,h){
+  if(rol==='admin')CFG.adminHash=h;
+  else if(rol==='equipo'){CFG.passHash=h; try{localStorage.setItem(K_PASS,h)}catch(e){}}
+  else if(rol==='doctora'&&prof){CFG.clavesProf=Object.assign({},CFG.clavesProf||{}); CFG.clavesProf[prof]=h}
+  saveCfgObj(CFG)}
+function olvidarClaveLocal(h){
+  var cambio=false;
+  if(CFG.adminHash===h){delete CFG.adminHash; cambio=true}
+  if(CFG.passHash===h){delete CFG.passHash; try{localStorage.removeItem(K_PASS)}catch(e){} cambio=true}
+  var cp=CFG.clavesProf||{};
+  for(var p in cp)if(cp[p]===h){delete cp[p]; cambio=true}
+  if(cambio)saveCfgObj(CFG)}
+
+/* Cambiar una clave con el servidor nuevo: la guarda él, no la configuración. */
+var ERR_CLAVE={clave_corta:'Mínimo 6 caracteres',clave_de_fabrica:'Esa es la clave de fábrica: elegí otra',
+  clave_repetida:'Ya la usa otra persona: elegí otra',clave_incorrecta:'La clave actual no coincide',
+  sin_permiso:'Eso lo cambia la dueña',sin_sesion:'Volvé a escribir tu clave y probá de nuevo'};
+function cambiarClaveServidor(quien,prof,clave,vieja){
+  return api('clave',null,undefined,undefined,{quien:quien,prof:prof||'',clave:clave,vieja:vieja||''})
+    .then(function(r){
+      if(r&&r.ok){
+        var h=sha256(clave);
+        recordarClaveLocal(quien==='prof'?'doctora':quien,prof,h);
+        if(quien==='prof'){CFG.clavesProfHay=(CFG.clavesProfHay||[]).filter(function(x){return x!==prof}).concat([prof]); saveCfgObj(CFG)}
+        /* la sesión propia queda vieja si se cambió la clave de quien la usa */
+        if((quien==='admin'&&ROL==='admin')||(quien==='equipo'&&ROL==='equipo')){
+          try{sessionStorage.setItem(K_UNLOCK,h)}catch(e){}
+          abrirSesion(clave)}}
+      return r})}
+
 function pend(){try{var a=JSON.parse(localStorage.getItem(K_PEND));return Array.isArray(a)?a:[]}catch(e){return []}}
 function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){}}
 /* =====================================================================
@@ -2443,6 +2579,10 @@ function mandarYa(k){
     if(r&&r.v>=FUSION_V)SRV_FUSIONA=true;
     if(r&&r.ok){confirmado(k,item,enviado,r);return r}
     if(r&&(r.error==='cambio'||r.error==='borrada')){rechazado(k,item,r);return r}
+    if(r&&r.error==='sin_permiso'){
+      setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
+      toast('El servidor no permitió ese cambio: no te corresponde. Se recargan los datos.',1);
+      pullServer().then(function(){refreshAll()}); return r}
     return null}).catch(function(){return null})}
 
 function confirmado(k,item,enviado,r){
@@ -3511,11 +3651,11 @@ function guardarAtencion(){
     toast('Ese paciente es de otra doctora 🔐 Pedile a recepción que lo agende con vos.',1);return}
   if(!validarIdentidadPaciente($('#f-paciente').value,$('#f-nac').value,prev))return;
   if(prev&&prev.estado==='Atendido'&&num($('#f-acuenta').value)!==num(prev.acuenta)){
-    toast('Para agregar un cobro usá Registrar pago en la ficha de la atención. Corregir un cobro anterior requiere conciliación.',1);return}
+    toast('Para agregar un cobro usá Registrar pago en la ficha de la atención. Para arreglar un cobro mal anotado: ✏️ Corregir cobro, en esa misma ficha'+(CORRIGEN.indexOf(ROL)<0?' ('+(CORRIGEN.length>1?'la dueña o recepción':'la dueña')+')':'')+'.',1);return}
   if(prev&&(prev.cobrosPosteriores||[]).length&&
       (num($('#f-acuenta').value)!==num(prev.acuenta)||
        JSON.stringify(agruparPagos(leerPagos()))!==JSON.stringify(agruparPagos(pagosDe(prev))))){
-    toast('Esta atención tiene cobros fechados. Usá Registrar pago; para corregir cobros anteriores se necesita conciliación.',1);return}
+    toast('Esta atención tiene cobros fechados. Usá Registrar pago; para arreglar un cobro mal anotado, ✏️ Corregir cobro en la ficha de la atención.',1);return}
   /* el plan vive en la ficha del paciente: cambiarle el nombre a una sesión
      la dejaba huérfana y el plan seguía bajo el nombre viejo */
   if(prev&&usoSaldoDe(prev)>0.009&&keyPac(prev.paciente)!==keyPac($('#f-paciente').value)){
@@ -6009,7 +6149,8 @@ function renderCaja(){
   $('#cj-body').innerHTML=rows.length?rows.slice().reverse().map(function(r){
     var m=metodoText(r);
     return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
-      '<td><b>'+esc(r.paciente||'—')+'</b>'+(r._anticipo?' <span class="pill lime">💜 anticipo</span>':'')+'</td>'+
+      '<td><b>'+esc(r.paciente||'—')+'</b>'+(r._anticipo?' <span class="pill lime">💜 anticipo</span>':'')+
+        ((r.correccionesCobro||[]).length&&!r._soloCobro?' <span class="pill">✏️ corregido</span>':'')+'</td>'+
       '<td>'+(r._anticipo?'':esc(r.profesional||'—'))+'</td>'+
       '<td class="num">'+n0(r.total)+'</td><td class="num">'+n0(r.acuenta)+'</td>'+
       '<td class="num"'+(num(r.saldo)>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(r.saldo)+'</td>'+
@@ -6386,6 +6527,7 @@ function verFicha(id){
     mrow('Saldo','<span style="color:'+(num(r.saldo)>0?'var(--clay)':'var(--ok)')+'">'+bs(r.saldo)+'</span>')+
     (metodoText(r)?mrow('Forma de pago',esc(metodoText(r))):
       (num(r.acuenta)>0?mrow('Forma de pago','<span class="pill bad">sin anotar</span>'):''))+
+    htmlCorrecciones(r)+
     (r.prox?'<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Próximo contacto</h4>'+
       mrow('Fecha',fmtF(r.prox)+(r.proxHora?' · '+r.proxHora:''))+
       (r.proxMotivo?mrow('Motivo',esc(r.proxMotivo)):'')+
@@ -6395,6 +6537,7 @@ function verFicha(id){
       (r.celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r.prox?r:{paciente:r.paciente,prox:hoyISO(),saldo:r.saldo}))+'">WhatsApp</a>':'')+
       '<button class="btn sec sm" onclick="editarId(\''+r.id+'\')">✏️ Editar</button>'+
       (num(r.saldo)>0?'<button class="btn sec sm" onclick="cobrarSaldo(\''+r.id+'\')">💰 Registrar pago</button>':'')+
+      (puedeCorregirCobro(r)?'<button class="btn sec sm" onclick="corregirCobro(\''+r.id+'\')">✏️ Corregir cobro</button>':'')+
       (indicacionesDe(r).length?'<button class="btn sec sm" onclick="verIndicaciones(\''+r.id+'\')">📋 Indicaciones</button>':'')+
       '<button class="btn sec sm" onclick="verPaciente(\''+jss(r.paciente)+'\')">👤 Historial</button>'+
       '<button class="btn danger sm" onclick="borrar(\''+r.id+'\')">Borrar</button>'+
@@ -6458,6 +6601,141 @@ function aplicarPago(r,m,met){
   if(r.planId){var fp=PAC[keyPac(r.paciente)], pl=fp&&(fp.planes||[]).filter(function(x){return x.id===r.planId})[0];
     if(pl&&pl.estado==='activo'&&!proxSesion(pl)&&saldoPlan(pl)<=0){pl.estado='terminado'; savePac(fp)}}
   closeModal(); toast('Pago registrado · saldo '+bs(r.saldo)); refreshAll()}
+
+/* =====================================================================
+   CORREGIR COBRO
+   Para un cobro mal anotado (también los importados de los cuadernos): se
+   corrige lo que entró el día de la atención. No es un pago nuevo, así que
+   no toca la caja de hoy; cambia la de ese día. El servidor guarda la
+   historia (antes, después, motivo y quién) y no deja corregir dos veces el
+   mismo pedido ni pisar un cobro que otro equipo cambió mientras tanto.
+   ===================================================================== */
+/* En Spadental corrige cobros solo la dueña. El servidor lo vuelve a controlar. */
+var CORRIGEN=['admin'];
+function puedeCorregirCobro(r){
+  return !!r&&CORRIGEN.indexOf(ROL)>=0&&r.estado==='Atendido'&&!esAnticipo(r)}
+/* El cobro del día de la atención, separado de los cobros posteriores y de
+   lo pagado con saldo a favor (eso no se corrige acá). */
+function partesCobro(r){
+  var cp=r.cobrosPosteriores||[], sumaCp=cp.reduce(function(a,p){return a+num(p.monto)},0);
+  var ini=fPorMetodo(cp,-1,fPorMetodo(pagosDe(r),1,{})), favor=fR(Math.max(0,ini[SALDO_FAVOR]||0));
+  delete ini[SALDO_FAVOR];
+  var desg=fListaMetodos(ini), inicial=fR(num(r.acuenta)-sumaCp-favor);
+  return {inicial:inicial, desg:desg, favor:favor, cp:cp, sumaCp:fR(sumaCp),
+    perdon:fR(num(r.total)-num(r.acuenta)-num(r.saldo))}}
+function versionCobro(r){
+  return {acuenta:fR(fNum(r.acuenta)), saldo:fR(fNum(r.saldo)), pagos:fListaMetodos(fPorMetodo(r.pagos||[],1,{})),
+    ncp:(r.cobrosPosteriores||[]).length, ncorr:(r.correccionesCobro||[]).length}}
+var CC={id:'',idem:'',enviando:false};
+function corregirCobro(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!puedeCorregirCobro(r)){toast('Corregir cobros es de '+(CORRIGEN.length>1?'la dueña o recepción':'la dueña')+' 🔐',1);return}
+  if(SESION.fabrica&&sesionViva()){toast('Con la clave de fábrica no se corrigen cobros: cambiala en Ajustes y volvé a entrar.',1);return}
+  if(hayPendiente(id)){toast('Esta atención tiene cambios sin subir: esperá a que se suban y probá de nuevo.',1);return}
+  var pc=partesCobro(r), unico=pc.desg.length===1?pc.desg[0].metodo:(pc.desg.length>1?'Mixto':'Sin dato');
+  /* un pedido = una clave: el doble clic o un reintento no corrigen dos veces */
+  CC={id:id, idem:uid()+uid(), enviando:false};
+  var metodos=METODOS.concat(['Mixto','Sin dato']);
+  openModal('<h3>✏️ Corregir cobro</h3>'+
+    '<p class="mini">'+esc(r.paciente||'—')+' · atención del '+fmtF(r.fecha)+' · total '+bs(r.total)+'</p>'+
+    '<div class="avisomed nota" style="margin-top:10px">Lo que se anotó el día de la atención: <b>'+bs(pc.inicial)+'</b>'+
+      ' · '+(pc.desg.length?esc(pc.desg.map(function(p){return p.metodo+' '+n0(p.monto)}).join(' + ')):'sin forma de pago anotada')+
+      (pc.favor>0?'<div class="mini">💜 Además '+bs(pc.favor)+' con saldo a favor (eso no se corrige acá).</div>':'')+
+      (pc.cp.length?'<div class="mini">Cobros posteriores (no se tocan): '+esc(pc.cp.map(function(p){return fmtF(p.fecha)+' '+p.metodo+' '+n0(p.monto)}).join(' · '))+'</div>':'')+
+    '</div>'+
+    '<div style="margin-top:12px"><label>Cobro correcto del '+fmtF(r.fecha)+' (Bs) <span class="req">*</span></label>'+
+      '<input id="cc-monto" inputmode="decimal" value="'+pc.inicial+'"></div>'+
+    '<div style="margin-top:12px"><label>¿Cómo se cobró? <span class="req">*</span></label>'+
+      '<div class="seg lime" id="cc-seg">'+metodos.map(function(m){
+        return '<label><input type="radio" name="ccmet" value="'+m+'"'+(m===unico?' checked':'')+'><span>'+m+'</span></label>'}).join('')+'</div>'+
+      '<p class="hint" style="margin:6px 0 0">"Sin dato": si el cuaderno no dice cómo se pagó, no se inventa.</p></div>'+
+    '<div id="cc-mixto" style="display:'+(unico==='Mixto'?'':'none')+';margin-top:8px" class="grid g2">'+METODOS.map(function(m){
+      var v=(pc.desg.filter(function(p){return p.metodo===m})[0]||{}).monto||'';
+      return '<div><label>'+m+'</label><input class="cc-mx" data-m="'+m+'" inputmode="decimal" value="'+v+'"></div>'}).join('')+'</div>'+
+    '<div style="margin-top:12px"><label>Motivo <span class="req">*</span></label>'+
+      '<textarea id="cc-motivo" rows="2" placeholder="Ej. en el Excel se anotó 500 pero pagó 300"></textarea></div>'+
+    '<div id="cc-rev" style="margin-top:12px"></div>'+
+    '<div class="row-btn"><button class="btn" id="cc-revisar" onclick="revisarCorreccion()">Revisar</button>'+
+    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  $$('input[name="ccmet"]').forEach(function(i){i.onchange=function(){
+    $('#cc-mixto').style.display=getRadio('ccmet')==='Mixto'?'':'none'; $('#cc-rev').innerHTML=''}});
+  ['#cc-monto','#cc-motivo'].forEach(function(s){$(s).oninput=function(){$('#cc-rev').innerHTML=''}});
+  $$('.cc-mx').forEach(function(i){i.oninput=function(){$('#cc-rev').innerHTML=''}})}
+
+/* Lo que el formulario pide: monto, desglose (o null = sin dato) y motivo. */
+function leerCorreccion(r){
+  var txt=$('#cc-monto').value, met=getRadio('ccmet'), motivo=$('#cc-motivo').value.trim();
+  if(montoRaro(txt))return {err:'El monto tiene letras: escribilo solo con números'};
+  if(String(txt).trim()==='')return {err:'Escribí el cobro correcto (puede ser 0)'};
+  var m=fR(num(txt)); if(m<0)return {err:'El cobro no puede ser negativo'};
+  if(!met)return {err:'Marcá cómo se cobró'};
+  if(motivo.length<5)return {err:'Escribí el motivo de la corrección'};
+  var pagos;
+  if(met==='Sin dato')pagos=null;
+  else if(met==='Mixto'){
+    var malo=false; pagos=[];
+    $$('.cc-mx').forEach(function(i){if(montoRaro(i.value))malo=true; var v=fR(num(i.value)); if(v>0)pagos.push({metodo:i.dataset.m,monto:v})});
+    if(malo)return {err:'Un monto del desglose tiene letras'};
+    var s=fR(pagos.reduce(function(a,p){return a+p.monto},0));
+    if(Math.abs(s-m)>0.009)return {err:'El desglose suma '+bs(s)+' y el cobro es '+bs(m)}}
+  else pagos=m>0?[{metodo:met,monto:m}]:[];
+  var pc=partesCobro(r), dif=fR(m-pc.inicial);
+  var saldoN=fR(num(r.total)-(num(r.acuenta)+dif)-pc.perdon);
+  if(saldoN<-0.009)return {err:'Con ese cobro se pagaría más que el total ('+bs(r.total)+')'};
+  return {monto:m,pagos:pagos,motivo:motivo,dif:dif,antes:pc.inicial,saldoAntes:num(r.saldo),saldoDespues:Math.max(0,saldoN),
+    forma:met==='Sin dato'?'sin forma de pago (como estaba anotado)':(pagos.length?pagos.map(function(p){return p.metodo+' '+n0(p.monto)}).join(' + '):'—')}}
+
+function revisarCorreccion(){
+  var r=DATA.filter(function(x){return x.id===CC.id})[0]; if(!r)return;
+  var c=leerCorreccion(r);
+  if(c.err){toast(c.err,1);return}
+  if(Math.abs(c.dif)<0.005&&c.pagos!==null&&JSON.stringify(fListaMetodos(fPorMetodo(c.pagos,1,{})))===JSON.stringify(partesCobro(r).desg)){
+    toast('Es igual a lo que ya está anotado: no hay nada que corregir',1);return}
+  $('#cc-rev').innerHTML='<div class="rem soon"><div><div class="who">Revisá antes de confirmar</div>'+
+    '<div class="meta">Cobro del '+fmtF(r.fecha)+': <b>'+bs(c.antes)+' → '+bs(c.monto)+'</b> ('+(c.dif>=0?'+':'−')+bs(Math.abs(c.dif))+') · '+esc(c.forma)+'</div>'+
+    '<div class="meta">Saldo de la atención: '+bs(c.saldoAntes)+' → <b>'+bs(c.saldoDespues)+'</b></div>'+
+    '<div class="meta">Cambia la caja del '+fmtF(r.fecha)+'. La caja de hoy no se toca.</div>'+
+    '<div class="meta">Motivo: '+esc(c.motivo)+'</div></div></div>'+
+    '<div class="row-btn"><button class="btn" id="cc-ok" onclick="confirmarCorreccion()">Confirmar corrección</button></div>'}
+
+var ERR_CORR={sin_permiso:'No tenés permiso para corregir cobros 🔐',clave_de_fabrica:'Con la clave de fábrica no se corrigen cobros: cambiala en Ajustes y volvé a entrar.',
+  falta_motivo:'Escribí el motivo de la corrección',monto_invalido:'El monto no es válido',desglose_no_cuadra:'El desglose no suma el cobro',
+  supera_total:'Con ese cobro se pagaría más que el total',no_corregible:'Esa atención ya no está como atendida: revisala',
+  pedido_invalido:'El pedido no es válido',sin_sesion:'Volvé a escribir tu clave (arriba) y confirmá de nuevo'};
+function confirmarCorreccion(){
+  if(CC.enviando)return;
+  var r=DATA.filter(function(x){return x.id===CC.id})[0]; if(!r)return;
+  var c=leerCorreccion(r); if(c.err){toast(c.err,1);return}
+  if(!CONNECTED){toast('Corregir un cobro necesita conexión con el servidor',1);return}
+  if(SRV_AUTH===false){toast('Falta actualizar el Apps Script del consultorio para corregir cobros',1);return}
+  var b=$('#cc-ok'); CC.enviando=true; if(b){b.disabled=true; b.textContent='Guardando…'}
+  var listo=function(){CC.enviando=false; var b2=$('#cc-ok'); if(b2){b2.disabled=false; b2.textContent='Confirmar corrección'}};
+  api('corregirCobro',null,undefined,undefined,{correccion:{id:r.id,idem:CC.idem,version:versionCobro(r),
+      monto:c.monto,pagos:c.pagos,motivo:c.motivo}}).then(function(res){
+    if(res&&res.registro&&res.registro.id){
+      SNAP_R[res.registro.id]=JSON.stringify(res.registro);
+      reemplazarLocal(normalize(JSON.parse(JSON.stringify(res.registro))))}
+    if(res&&res.ok){
+      CC.enviando=false; closeModal(); refreshAll();
+      toast(res.repetida?'Esa corrección ya estaba guardada ✅':'Cobro corregido ✅ · quedó en la historia');
+      verFicha(r.id); return}
+    listo();
+    if(res&&res.error==='borrada'){avisoBorrada(r.id);return}
+    if(res&&res.error==='conflicto'){closeModal(); refreshAll();
+      toast('Mientras tanto otro equipo cambió este cobro. Ya está actualizado: revisalo y corregí de nuevo si hace falta.',1);
+      corregirCobro(r.id);return}
+    if(res&&res.error==='accion_desconocida'){SRV_AUTH=false; toast('Falta actualizar el Apps Script del consultorio para corregir cobros',1);return}
+    toast((res&&ERR_CORR[res.error])||'No se pudo corregir: '+((res&&res.error)||'sin respuesta'),1)})
+  .catch(function(){listo(); toast('No se pudo confirmar (sin conexión). Probá de nuevo: no se corrige dos veces.',1)})}
+
+/* La historia de correcciones, en la ficha de la atención. */
+function htmlCorrecciones(r){
+  var l=r.correccionesCobro||[]; if(!l.length)return '';
+  return '<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">✏️ Correcciones de cobro</h4>'+
+    l.map(function(x){
+      var a=x.antes||{}, d=x.despues||{};
+      return '<div class="mrow" style="display:block"><div><b>'+bs(a.cobrado)+' → '+bs(d.cobrado)+'</b> · '+esc(d.forma||'')+'</div>'+
+        '<div class="mini">'+(x.ts?fmtF(String(x.ts).slice(0,10)):'')+' · '+esc(x.por||'')+' · motivo: '+esc(x.motivo||'')+'</div></div>'}).join('')}
 
 /* La ficha del paciente: todo lo suyo en una sola pantalla — datos, aviso
    médico, plan en curso, próxima cita y cada visita que hizo. Es lo que
@@ -9258,7 +9536,7 @@ function bind(){
        primera versión abortaba todo por un solo error y encima borraba los
        campos válidos antes de abortar: el consultorio "perdió" cuatro
        claves por una colisión en la quinta. Nunca más. */
-    var cp=Object.assign({},clavesProf()), guardadas=0, malas=0;
+    var cp=Object.assign({},clavesProf()), guardadas=0, malas=0, porServidor=[];
     CFG.prof.forEach(function(p){
       var el=$('#cp-'+cssId(p)); if(!el)return;
       var err=$('#cperr-'+cssId(p));
@@ -9271,7 +9549,18 @@ function bind(){
       if(h===adminHash()){marcar('Es la clave de la dueña: elegí otra');return}
       var dueDe=profDeHash(h);
       if(dueDe&&dueDe!==p){marcar('Ya la usa '+dueDe);return}
+      if(credSrv()){porServidor.push({p:p,v:v,el:el,marcar:marcar}); return}
       cp[p]=h; guardadas++; el.value=''});
+    if(porServidor.length){
+      porServidor.reduce(function(pr,x){return pr.then(function(){
+        return cambiarClaveServidor('prof',x.p,x.v).then(function(r){
+          if(r&&r.ok){guardadas++; x.el.value=''} else x.marcar(ERR_CLAVE[r&&r.error]||'No se pudo guardar')},
+          function(){x.marcar('Sin conexión')})})},Promise.resolve()).then(function(){
+        pintarClavesProf();
+        if(guardadas&&malas)toast(guardadas+' guardada'+(guardadas===1?'':'s')+' 🔑 · revisá lo marcado en rojo',1);
+        else if(guardadas)toast(guardadas===1?'Clave guardada 🔑':guardadas+' claves guardadas 🔑');
+        else toast('Ninguna se guardó: revisá lo marcado en rojo',1)});
+      return}
     if(guardadas){CFG.clavesProf=cp; saveCfg(); pintarClavesProf()}
     if(guardadas&&malas)toast(guardadas+' guardada'+(guardadas===1?'':'s')+' 🔑 · revisá la'+(malas===1?'':'s')+' marcada'+(malas===1?'':'s')+' en rojo',1);
     else if(guardadas)toast(guardadas===1?'Clave guardada 🔑':guardadas+' claves guardadas 🔑');
@@ -9282,6 +9571,9 @@ function bind(){
     var v=$('#c-pass-admin').value;
     if(v.length<6){toast('Mínimo 6 caracteres',1);return}
     if(sha256(v)===passHash()){toast('No puede ser igual a la clave del equipo',1);return}
+    if(credSrv()){cambiarClaveServidor('admin','',v).then(function(r){
+      if(r&&r.ok){$('#c-pass-admin').value=''; toast('Clave de administradora cambiada 👑')}
+      else toast(ERR_CLAVE[r&&r.error]||'No se pudo cambiar la clave',1)},function(){toast('Sin conexión: la clave no se cambió',1)}); return}
     CFG.adminHash=sha256(v); saveCfg();
     try{if(ROL==='admin')sessionStorage.setItem(K_UNLOCK,CFG.adminHash)}catch(e){}
     $('#c-pass-admin').value='';
@@ -9291,6 +9583,9 @@ function bind(){
     if(sha256(vieja)!==passHash()){toast('La clave actual no coincide',1);return}
     if(n1.length<6){toast('La clave nueva necesita al menos 6 caracteres',1);return}
     if(n1!==n2){toast('Las dos claves nuevas no coinciden',1);return}
+    if(credSrv()){cambiarClaveServidor('equipo','',n1,vieja).then(function(r){
+      if(r&&r.ok){$('#c-pass-old').value=$('#c-pass-new').value=$('#c-pass-new2').value=''; toast('Clave cambiada ✅ · anotala en algún lado')}
+      else toast(ERR_CLAVE[r&&r.error]||'No se pudo cambiar la clave',1)},function(){toast('Sin conexión: la clave no se cambió',1)}); return}
     CFG.passHash=sha256(n1); saveCfg();
     try{localStorage.setItem(K_PASS,sha256(n1));
       sessionStorage.setItem(K_UNLOCK,sha256(n1));
