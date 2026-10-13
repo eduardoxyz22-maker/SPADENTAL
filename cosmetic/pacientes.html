@@ -1154,6 +1154,10 @@ body.locked{overflow:hidden}
     <p class="hint">Atenciones donde entró plata pero no se marcó cómo. Estas son las que rompen la conciliación.</p>
     <div id="cj-sinmetodo"></div></div>
 
+  <div class="card"><h2>Saldos que no cuadran</h2>
+    <p class="hint">Atenciones con un saldo mayor a lo que falta pagar (casi siempre vienen así del Excel). Inflan el "por cobrar" y las deudas: revisalas una por una.</p>
+    <div id="cj-nocuadra"></div></div>
+
   <div class="card"><h2>Movimientos del periodo</h2>
     <div class="tw"><table><thead><tr><th>Fecha</th><th>Paciente</th><th>Profesional</th>
       <th class="num">Total</th><th class="num">Cobrado</th><th class="num">Saldo</th><th>Forma de pago</th></tr></thead>
@@ -6155,6 +6159,16 @@ function renderCaja(){
       '<p class="mini" style="margin-top:10px">Esto mira <b>toda</b> la historia, no solo el periodo elegido: una deuda vieja sigue siendo deuda. El detalle con el WhatsApp está en <b>🔔 Recordatorios → 💰 Saldos</b>.</p>'
     : '<div class="empty">No hay saldos pendientes 🎉</div>');
 
+  var nc=saldosNoCuadran();
+  $('#cj-nocuadra').innerHTML=nc.length
+    ? tabla([{t:'Fecha'},{t:'Paciente'},{t:'Total',num:1},{t:'Cobrado',num:1},{t:'Saldo anotado',num:1},{t:'Falta pagar',num:1},{t:''}],
+        nc.slice(0,80).map(function(r){
+          return ['<a href="#" onclick="verFicha(\''+r.id+'\');return false">'+fmtFcorta(r.fecha)+'</a>',esc(r.paciente||'—'),
+            n0(r.total),n0(r.acuenta),'<span style="color:var(--clay)">'+n0(r.saldo)+'</span>',n0(faltaPagar(r)),
+            '<button class="btn sec sm" onclick="arreglarSaldo(\''+r.id+'\')">Dejar en '+n0(faltaPagar(r))+'</button>']}),620)+
+      '<p class="mini" style="margin-top:8px">'+nc.length+(nc.length===1?' atención':' atenciones')+' · de más en "por cobrar": <b>'+
+        bs(nc.reduce(function(a,r){return a+num(r.saldo)-faltaPagar(r)},0))+'</b>. Si lo mal anotado era el total, abrila y corregila con ✏️ Editar.</p>'
+    : '<div class="empty">Todos los saldos cuadran con el total y lo cobrado ✅</div>';
   $('#cj-sinmetodo').innerHTML=(faltaCargar.length
     ? tabla([{t:'Fecha'},{t:'Paciente'},{t:'Cobrado',num:1},{t:'Identificado',num:1},{t:'Sin explicar',num:1}],
         faltaCargar.slice(0,50).map(function(x){
@@ -6552,6 +6566,7 @@ function verFicha(id){
     mrow('Saldo','<span style="color:'+(num(r.saldo)>0?'var(--clay)':'var(--ok)')+'">'+bs(r.saldo)+'</span>')+
     (metodoText(r)?mrow('Forma de pago',esc(metodoText(r))):
       (num(r.acuenta)>0?mrow('Forma de pago','<span class="pill bad">sin anotar</span>'):''))+
+    htmlNoCuadra(r)+
     htmlCorrecciones(r)+
     (r.prox?'<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Próximo contacto</h4>'+
       mrow('Fecha',fmtF(r.prox)+(r.proxHora?' · '+r.proxHora:''))+
@@ -6762,6 +6777,40 @@ function htmlCorrecciones(r){
       var a=x.antes||{}, d=x.despues||{};
       return '<div class="mrow" style="display:block"><div><b>'+bs(a.cobrado)+' → '+bs(d.cobrado)+'</b> · '+esc(d.forma||'')+'</div>'+
         '<div class="mini">'+(x.ts?fmtF(iso(new Date(x.ts))):'')+' · '+esc(x.por||'')+' · motivo: '+esc(x.motivo||'')+'</div></div>'}).join('')}
+
+/* =====================================================================
+   SALDOS QUE NO CUADRAN
+   Algunas atenciones importadas traen un saldo mayor a lo que falta pagar
+   (total 700, cobrado 700 y saldo 50). No se arreglan solas: el panel no
+   sabe si lo mal anotado es el saldo o el total. Se avisan y recepción o la
+   dueña deciden: "dejar el saldo en lo que falta" o corregir el total con
+   Editar. El arreglo queda anotado en las observaciones.
+   ===================================================================== */
+function faltaPagar(r){return Math.max(0,Math.round((num(r.total)-num(r.acuenta))*100)/100)}
+function saldoNoCuadra(r){
+  return !!r&&esAtencion(r)&&!esAnticipo(r)&&num(r.saldo)>faltaPagar(r)+0.009}
+function saldosNoCuadran(){return DATA.filter(saldoNoCuadra)
+  .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})}
+function htmlNoCuadra(r){
+  if(!saldoNoCuadra(r))return '';
+  return '<div class="avisomed" style="margin-top:8px">⚠️ <b>Este saldo no cuadra.</b> Total '+bs(r.total)+
+    ' menos cobrado '+bs(r.acuenta)+' da '+bs(faltaPagar(r))+', pero figura un saldo de '+bs(r.saldo)+
+    (esImportada(r)?' (vino así del Excel)':'')+'.'+
+    (esAdmin()?'<div class="row-btn" style="margin-top:8px"><button class="btn sm" onclick="arreglarSaldo(\''+r.id+'\')">Dejar saldo en '+bs(faltaPagar(r))+'</button></div>'+
+      '<div class="mini">Si en realidad el total era otro, corregilo con ✏️ Editar.</div>':'')+'</div>'}
+function arreglarSaldo(id){
+  if(!esAdmin()){toast('Eso lo arregla recepción o la dueña 🔐',1);return}
+  var r0=DATA.filter(function(x){return x.id===id})[0]; if(!r0||!saldoNoCuadra(r0))return;
+  if(!confirm('¿Dejar el saldo de '+(r0.paciente||'')+' ('+fmtF(r0.fecha)+') en '+bs(faltaPagar(r0))+'?\n\n'+
+      'Figura '+bs(r0.saldo)+' pero el total ('+bs(r0.total)+') ya está cobrado'+(faltaPagar(r0)>0?' salvo '+bs(faltaPagar(r0)):'')+
+      '. No mueve plata de ninguna caja.'))return;
+  conAtencionFresca(id,function(r){
+    if(!r||!saldoNoCuadra(r)){closeModal(); toast('Ya estaba arreglado ✅'); refreshAll(); return}
+    var antes=num(r.saldo);
+    r.saldo=faltaPagar(r);
+    r.obs=(r.obs?r.obs+'\n':'')+'Saldo ajustado de '+bs(antes)+' a '+bs(r.saldo)+' el '+fmtF(hoyISO())+
+      ' (no cuadraba con el total y lo cobrado)';
+    persist(r); closeModal(); toast('Saldo arreglado: '+bs(r.saldo)+' ✅'); refreshAll()})}
 
 /* La ficha del paciente: todo lo suyo en una sola pantalla — datos, aviso
    médico, plan en curso, próxima cita y cada visita que hizo. Es lo que
