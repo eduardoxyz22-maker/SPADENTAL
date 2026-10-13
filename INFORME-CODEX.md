@@ -243,3 +243,55 @@ Se reemplazó el módulo financiero propuesto por Codex (no pasó la auditoría)
 - **Permisos**: Cosmetic registran dueña y recepción (`ANTICIPO_DOCTORAS=false`); Spa también las doctoras (`true`), solo para pacientes propios o nuevos, y borran solo los que cargaron ellas.
 - **Límites conocidos** (requieren validar en el servidor, pendiente con la seguridad): dos equipos usando el mismo saldo en el mismo segundo, o uno sin conexión usando un saldo que otro borra, pueden dejar el saldo negativo (la ficha lo marca en rojo). El servidor numera los anticipos en el N° del día. En la hoja, la columna "A cuenta" incluye anticipos y lo pagado con saldo a favor.
 - Pruebas: `s09-anticipos.js` (harness con el .gs real en memoria) más auditorías audit9/audit10 (dinero, sincronización, UI y permisos).
+
+## Seguridad del servidor (v6) y "Corregir cobro"
+
+Rama de trabajo `correccion-cobro`, publicada sobre `claude/vibrant-gauss-rvd0wb`. Cambian los dos `pacientes.html` y los dos `.gs`; hay que pegar los `.gs` nuevos en Google.
+
+- **Identidad en el servidor.**
+  - Los verificadores de las claves viven en las propiedades del script (`VERIF_CLAVES`). La primera vez se copian de la config vieja.
+  - La config que se manda al panel (`cfgPublica`) ya no lleva `adminHash`, `passHash` ni `clavesProf`.
+  - La config guardada conserva los hashes vigentes, así se puede volver a la v5.
+- **Sesiones.**
+  - `login` con la clave → token de 30 minutos en CacheService, que se renueva con el uso.
+  - Sin sesión, el servidor rechaza todas las escrituras y también `list` (no se pueden bajar los pacientes).
+  - Siguen públicos `cfgGet` (sin claves) e `info`. `doGet` solo devuelve `info`.
+  - Freno de 40 intentos fallidos cada 10 minutos.
+- **Permisos en el servidor.**
+  - Doctoras: no tocan atenciones de otra doctora (con o sin base); "Separada" sigue funcionando.
+  - Doctoras: anticipos solo los propios y solo en Spa; sin `bulk`, egresos, config, claves ni correcciones.
+  - `bulk`: solo la dueña.
+  - Las claves se cambian solo con la acción `clave`: la dueña cualquiera, recepción la suya diciendo la actual. El mensaje genérico `clave_no_permitida` evita usarla para adivinar otras claves.
+  - Las claves de fábrica sirven para entrar, pero no para corregir cobros ni como clave nueva.
+- **Corregir cobro** (`corregirCobro`).
+  - Corrige el cobro del día de la atención con `fDesarmar`/`fArmar`.
+  - Respeta los cobros posteriores, el saldo a favor y el descuento manual (`__perdon`).
+  - Pide motivo y controla la versión (conflicto si cambió) y la idempotencia (hoja `_Correcciones`, columna "Clave de pedido").
+  - No permite cobrar más de lo que se debía. Con "Sin dato" (pagos `null`) no se inventa la forma de pago.
+  - Historia en `correccionesCobro` del registro (solo la escribe esta acción; `save` y `bulk` la conservan) y en la hoja `_Correcciones`.
+  - Responsable: "Dueña (clave de administradora)" o "Recepción (clave compartida del equipo)", nunca una persona.
+  - Quién puede: Cosmetic `['admin','equipo']`; Spa `['admin']` (constante `CORRIGEN` en el panel y en el `.gs`).
+- **Panel.**
+  - `api()` adjunta la sesión. La clave queda solo en la memoria de la pestaña para renovarla.
+  - Si hace falta y no está en memoria, aparece una franja "volvé a escribir tu clave" y después se vacía la cola.
+  - Con la v5 todo sigue como antes (`SRV_AUTH=false`). "Corregir cobro" avisa que falta actualizar el script.
+  - Ajustes cambia las claves por el servidor.
+- **Pruebas** (con datos ficticios y el `.gs` real en memoria):
+  - `s10-corregir-cobro.js`: 52 comprobaciones por clínica (al alza, a la baja, a cero, importados sin desglose, saldo a favor, cobros posteriores, motivo vacío, doble clic, reintento, desconexión, conflicto, equipo viejo, bulk, permisos, sesión vencida).
+  - `s09-anticipos.js`, `s08b-v6.js` y la compatibilidad con la v5.
+  - Las suites de siempre: 128, 858 y 802.
+  - Todos los repros anteriores comparados contra la versión publicada.
+  - Dos auditorías con agentes (seguridad, y plata/UI): sus hallazgos están corregidos.
+- **Riesgos que quedan.**
+  - El freno de intentos es global (sin IP en Apps Script): 40 claves erróneas bloquean a todos por 10 minutos.
+  - Los hashes anteriores estuvieron públicos en la config: conviene cambiar las claves.
+  - Una doctora con sesión todavía puede bajar la lista completa (no se filtra por doctora).
+  - La dueña y recepción pueden seguir cambiando "A cuenta" por `save` desde un cliente propio: queda auditado solo lo que pasa por "Corregir cobro".
+  - Volver a la v5 vuelve a abrir las escrituras anónimas.
+- **Despliegue.**
+  1. Publicar los paneles (funcionan con la v5).
+  2. Recargar todas las pestañas.
+  3. Descargar un respaldo.
+  4. Pegar los dos `.gs` y publicar una versión nueva de cada implementación.
+  5. Verificar que `info` muestre `seguridad: 1` y que `list` sin sesión responda `sin_sesion`.
+  - Para volver atrás: en "Administrar implementaciones", elegir la versión anterior.

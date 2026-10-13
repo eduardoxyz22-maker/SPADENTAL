@@ -402,13 +402,14 @@ var K_CFG = 'CFG_COSMETIC';
 
 function doGuardarCfg(cfg, base) {
   if (!cfg || !cfg.precios || !cfg.canales) return { ok: false, error: 'cfg_invalida' };
-  var guardada = leerCfg();
+  var guardada = leerCfg() || {};
   cfg = cfgSinClaves(cfg, guardada);
   if (base) base = cfgSinClaves(base, guardada);
   /* con base, los ajustes de dos equipos se juntan acá adentro, sin carrera */
   if (base) {
     var actual = leerCfg();
     if (actual) cfg = fusion3(base, cfg, actual, '', []);
+    cfg = cfgSinClaves(cfg, guardada);
   }
   var props = PropertiesService.getScriptProperties();
   var texto = JSON.stringify(cfg);
@@ -480,6 +481,7 @@ function doSave(r, base, ses) {
       var ids = {}, cpA = fCobrosPost(actual), q;
       for (q = 0; q < cpA.length; q++) if (cpA[q] && cpA[q].id) ids[cpA[q].id] = 1;
       var dm = fDesarmar(r), propios = [];
+      delete dm.correccionesCobro;
       var cpM = fCobrosPost(r);
       for (q = 0; q < cpM.length; q++) if (!(cpM[q] && cpM[q].id && ids[cpM[q].id])) propios.push(cpM[q]);
       dm.cobrosPosteriores = propios;
@@ -520,9 +522,10 @@ function doSave(r, base, ses) {
     r.nroDia = Math.max(cuantas, maxNro) + 1;
   }
 
-  /* la historia de correcciones solo la escribe "Corregir cobro" */
-  if (previa0 && previa0.correccionesCobro) r.correccionesCobro = previa0.correccionesCobro;
-  else delete r.correccionesCobro;
+  /* la historia de correcciones solo la escribe "Corregir cobro"; al restaurar
+     un respaldo (alta nueva) la dueña la puede traer de vuelta */
+  if (previa0) { if (previa0.correccionesCobro) r.correccionesCobro = previa0.correccionesCobro; else delete r.correccionesCobro; }
+  else if (!(ses && ses.rol === 'admin' && fEsLista(r.correccionesCobro))) delete r.correccionesCobro;
   var fila = filaDeRegistro(r);
   if (destino) sh.getRange(destino, 1, 1, COLS.length).setValues([fila]);
   else sh.appendRow(fila);
@@ -554,7 +557,8 @@ function doBulk(lista, ses) {
     if (filaPorId[r.id]) {
       /* una carga masiva no borra la historia de correcciones */
       var vieja = registroDeFila(filasViejas[filaPorId[r.id] - 2]);
-      if (vieja.correccionesCobro) { r = JSON.parse(JSON.stringify(r)); r.correccionesCobro = vieja.correccionesCobro; }
+      r = JSON.parse(JSON.stringify(r));
+      if (vieja.correccionesCobro) r.correccionesCobro = vieja.correccionesCobro; else delete r.correccionesCobro;
     }
     var fila = filaDeRegistro(r);
     if (filaPorId[r.id]) {
@@ -1056,10 +1060,13 @@ function cfgSinClaves(cfg, guardada) {
   for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
   delete o.credServidor; delete o.clavesProfHay;
   delete o.adminHash; delete o.passHash; delete o.clavesProf;
-  if (guardada) {
-    if (guardada.adminHash) o.adminHash = guardada.adminHash;
-    if (guardada.passHash) o.passHash = guardada.passHash;
-    if (guardada.clavesProf) o.clavesProf = guardada.clavesProf;
+  if (guardada !== undefined) {
+    /* la config guardada lleva siempre las claves vigentes: si algún día se
+       vuelve a la versión anterior del script, las de todas siguen andando */
+    var v = leerVerif(), cp = {};
+    o.adminHash = v.admin; o.passHash = v.equipo;
+    for (k in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, k)) cp[k] = v.prof[k];
+    o.clavesProf = cp;
   }
   return o;
 }
@@ -1103,9 +1110,11 @@ function doLogin(body) {
    (diciendo la actual). Nunca dos personas con la misma clave. */
 function doCambiarClave(body, ses) {
   var quien = body.quien, nueva = String(body.clave || ''), v = leerVerif();
+  var c = cache(), fallas = Number(c.get('LOGIN_FALLAS') || 0), propia = quien === 'equipo' && ses.rol === 'equipo';
   if (nueva.length < 6) return { ok: false, error: 'clave_corta' };
-  if (quien === 'equipo' && ses.rol === 'equipo') {
-    if (shaHex(String(body.vieja || '')) !== v.equipo) return { ok: false, error: 'clave_incorrecta' };
+  if (propia) {
+    if (fallas >= 40) return { ok: false, error: 'muchos_intentos' };
+    if (shaHex(String(body.vieja || '')) !== v.equipo) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_incorrecta' }; }
   } else if (ses.rol !== 'admin') return { ok: false, error: 'sin_permiso' };
   var h = shaHex(nueva);
   if (esDeFabrica(h)) return { ok: false, error: 'clave_de_fabrica' };
@@ -1113,7 +1122,12 @@ function doCambiarClave(body, ses) {
   if (quien !== 'admin') usadas.push(v.admin);
   if (quien !== 'equipo') usadas.push(v.equipo);
   for (var p in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, p) && !(quien === 'prof' && p === body.prof)) usadas.push(v.prof[p]);
-  if (usadas.indexOf(h) >= 0) return { ok: false, error: 'clave_repetida' };
+  if (usadas.indexOf(h) >= 0) {
+    /* a recepción no se le dice de quién es: sería una forma de adivinar
+       la clave de la dueña. Cuenta como intento fallido. */
+    if (propia) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_no_permitida' }; }
+    return { ok: false, error: 'clave_repetida' };
+  }
   var cfg = leerCfg() || {};
   if (quien === 'admin') { v.admin = h; cfg.adminHash = h; }
   else if (quien === 'equipo') { v.equipo = h; cfg.passHash = h; }
@@ -1122,7 +1136,7 @@ function doCambiarClave(body, ses) {
   } else return { ok: false, error: 'pedido_invalido' };
   guardarVerif(v);
   /* la config vieja guarda el mismo hash, por si hay que volver a la versión anterior */
-  if (cfg.precios && cfg.canales) PropertiesService.getScriptProperties().setProperty(K_CFG, JSON.stringify(cfg));
+  if (cfg.precios && cfg.canales) PropertiesService.getScriptProperties().setProperty(K_CFG, JSON.stringify(cfgSinClaves(cfg, cfg)));
   return { ok: true };
 }
 
@@ -1149,6 +1163,7 @@ function doctoraPuedeGuardar(r, actual, ses, separa) {
    hoja _Correcciones, que ninguna otra acción toca.
    ===================================================================== */
 var HOJA_CORR = '_Correcciones';
+var METODOS_CAJA = ['Efectivo', 'QR', 'Tarjeta', 'Transferencia'];
 var COLS_CORR = ['Corregido', 'Clave de pedido', 'ID atención', 'Paciente', 'Fecha atención',
   'Cobrado antes', 'Cobrado después', 'Forma antes', 'Forma después', 'Motivo', 'Responsable'];
 function hojaCorr() {
@@ -1185,8 +1200,8 @@ function doCorregirCobro(c, ses) {
   if (!c || !c.id || !c.idem) return { ok: false, error: 'pedido_invalido' };
   var motivo = String(c.motivo || '').trim();
   if (motivo.length < 5) return { ok: false, error: 'falta_motivo' };
-  var monto = Number(c.monto);
-  if (!isFinite(monto) || monto < 0) return { ok: false, error: 'monto_invalido' };
+  if (typeof c.monto !== 'number' || !isFinite(c.monto) || c.monto < 0) return { ok: false, error: 'monto_invalido' };
+  var monto = c.monto;
   monto = fR(monto);
   var sh = getSheet(), fila = filaPorId(sh, c.id);
   if (!fila) return { ok: false, error: 'borrada', id: c.id };
@@ -1195,8 +1210,11 @@ function doCorregirCobro(c, ses) {
   if (correccionYaHecha(c.idem)) return { ok: true, repetida: true, registro: actual };
   if (actual.estado !== 'Atendido') return { ok: false, error: 'no_corregible', registro: actual };
   /* versión: si otro equipo cobró o corrigió desde que se abrió, no se pisa */
+  /* las atenciones viejas tienen un único método suelto: se leen igual que en el panel */
+  var pagosV = fEsLista(actual.pagos) && actual.pagos.length ? actual.pagos
+    : (actual.metodo && actual.metodo !== 'Mixto' && fNum(actual.acuenta) > 0 ? [{ metodo: actual.metodo, monto: fNum(actual.acuenta) }] : []);
   var ver = { acuenta: fR(fNum(actual.acuenta)), saldo: fR(fNum(actual.saldo)),
-    pagos: fListaMetodos(fPorMetodo(actual.pagos || [], 1, {})), ncp: fCobrosPost(actual).length,
+    pagos: fListaMetodos(fPorMetodo(pagosV, 1, {})), ncp: fCobrosPost(actual).length,
     ncorr: (actual.correccionesCobro || []).length };
   if (!c.version || !fIgual(ver, c.version)) return { ok: false, error: 'conflicto', registro: actual };
   var d = fDesarmar(actual), ant = d.__cobro;
@@ -1207,14 +1225,16 @@ function doCorregirCobro(c, ses) {
   if (desg !== null && !fEsLista(desg)) return { ok: false, error: 'pedido_invalido' };
   if (desg) for (i = 0; i < desg.length; i++) {
     var p = desg[i], m = fR(fNum(p && p.monto));
-    if (!p || !p.metodo || p.metodo === 'Saldo a favor' || m < 0) return { ok: false, error: 'pedido_invalido' };
+    if (!p || METODOS_CAJA.indexOf(p.metodo) < 0 || typeof p.monto !== 'number' || !isFinite(p.monto) || m < 0) return { ok: false, error: 'pedido_invalido' };
     if (m > 0) { nuevos.push({ metodo: String(p.metodo), monto: m }); suma = fR(suma + m); }
   }
   if (desg && Math.abs(suma - monto) > 0.009) return { ok: false, error: 'desglose_no_cuadra' };
   if (favor > 0) nuevos.push({ metodo: 'Saldo a favor', monto: favor });
   d.__cobro = { monto: fR(monto + favor), pagos: fListaMetodos(fPorMetodo(nuevos, 1, {})), metodo: '' };
-  var r = fArmar(d);
-  if (fNum(r.saldo) < -0.009) return { ok: false, error: 'supera_total', registro: actual };
+  var r = fArmar(d), sumaCp = 0, cps = fCobrosPost(actual);
+  for (i = 0; i < cps.length; i++) sumaCp = fR(sumaCp + fNum(cps[i] && cps[i].monto));
+  /* no se puede cobrar más de lo que debía pagar (el total menos el descuento) */
+  if (fR(monto + favor + sumaCp) > fR(fNum(r.total) - Math.max(0, fNum(d.__perdon))) + 0.009) return { ok: false, error: 'supera_total', registro: actual };
   var antes = { cobrado: fR(fNum(ant.monto) - favor), forma: textoPagos({ pagos: (function () {
     var o = []; for (var j = 0; j < ant.pagos.length; j++) if (ant.pagos[j].metodo !== 'Saldo a favor') o.push(ant.pagos[j]); return o; })(), metodo: ant.metodo }),
     acuenta: fNum(actual.acuenta), saldo: fNum(actual.saldo) };
@@ -1244,22 +1264,25 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents || '{}');
     var reg = body.registro || body.pedido || {};
-    if (body.action === 'list') return json(doList());
     if (body.action === 'info') return json(doInfo());
     if (body.action === 'login') return json(doLogin(body));
     /* Solo la configuracion: el list arrastra miles de atenciones y tarda
        segundos. Sin material de claves. */
     if (body.action === 'cfgGet') return json({ ok: true, cfg: cfgPublica(leerCfg()) });
-    /* De acá para abajo todo escribe: sin sesión válida no se toca nada (un
-       panel viejo, o alguien que encontró la dirección, queda afuera). */
+    /* De acá para abajo, leer pacientes o escribir: sin sesión válida no se
+       ve ni se toca nada (un panel viejo, o alguien que encontró la dirección,
+       queda afuera). */
     var ses = sesionDe(body.token);
     if (!ses) return json({ ok: false, error: 'sin_sesion' });
+    /* los pacientes tampoco se leen sin sesión */
+    if (body.action === 'list') return json(doList());
     /* base ausente = panel de una versión anterior: escribe como siempre.
        base null = alta nueva (o cola vieja): se junta igual con lo que haya. */
     var base = Object.prototype.hasOwnProperty.call(body, 'base') ? body.base : undefined;
     if (body.action === 'save') return json(doSave(reg, base, ses));
     if (body.action === 'delete') return json(doDelete(reg, base, ses));
     if (body.action === 'bulk') return json(doBulk(body.registros || [], ses));
+    if (body.action === 'cfg' && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg, base));
     if (body.action === 'clave') return json(doCambiarClave(body, ses));
     if (body.action === 'corregirCobro') return json(doCorregirCobro(body.correccion, ses));

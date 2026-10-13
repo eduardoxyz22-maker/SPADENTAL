@@ -1690,7 +1690,9 @@ function initGate(){
     var v=$('#gate-pass').value;
     var h=sha256(v);
     var local=h===adminHash()?{rol:'admin',prof:''}:(profDeHash(h)?{rol:'doctora',prof:profDeHash(h)}:(h===passHash()?{rol:'equipo',prof:''}:null));
-    var entrar=function(rol,prof){ROL=rol; PROF_ACTUAL=prof||''; CLAVE_MEM=v; $('#gate-err').textContent=''; desbloquear(); sonidoTemporada()};
+    var entrar=function(rol,prof){ROL=rol; PROF_ACTUAL=prof||''; CLAVE_MEM=v; $('#gate-err').textContent=''; desbloquear(); sonidoTemporada();
+      /* con el servidor nuevo los pacientes recién se bajan con la sesión abierta */
+      if(CONNECTED&&credSrv())pullServer().then(function(ok){if(ok)refreshAll()})};
     /* Con el servidor nuevo, la clave la confirma él (las de este equipo
        pueden haber cambiado en otro). Sin respuesta, vale lo de este equipo. */
     if(CONNECTED&&credSrv()){
@@ -2013,7 +2015,8 @@ function olvidarSesion(){SESION={token:'',exp:0,rol:'',prof:'',fabrica:false}; C
 /* ¿El servidor guarda las claves? (versión 6 en adelante) */
 function credSrv(){return !!(CFG&&CFG.credServidor)||SRV_AUTH===true}
 function sesionViva(){return !!SESION.token&&SESION.exp>Date.now()+30000}
-var LECTURAS={list:1,cfgGet:1,info:1,login:1};
+/* la lista de pacientes también pide sesión (con el servidor nuevo) */
+var LECTURAS={cfgGet:1,info:1,login:1};
 function fetchApi(cuerpo){
   return fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
     body:JSON.stringify(cuerpo)}).then(function(r){return r.json()})}
@@ -2091,6 +2094,7 @@ function olvidarClaveLocal(h){
 /* Cambiar una clave con el servidor nuevo: la guarda él, no la configuración. */
 var ERR_CLAVE={clave_corta:'Mínimo 6 caracteres',clave_de_fabrica:'Esa es la clave de fábrica: elegí otra',
   clave_repetida:'Ya la usa otra persona: elegí otra',clave_incorrecta:'La clave actual no coincide',
+  clave_no_permitida:'Esa clave no se puede usar: elegí otra',muchos_intentos:'Demasiados intentos: esperá unos minutos',
   sin_permiso:'Eso lo cambia la dueña',sin_sesion:'Volvé a escribir tu clave y probá de nuevo'};
 function cambiarClaveServidor(quien,prof,clave,vieja){
   return api('clave',null,undefined,undefined,{quien:quien,prof:prof||'',clave:clave,vieja:vieja||''})
@@ -6630,6 +6634,7 @@ var CC={id:'',idem:'',enviando:false};
 function corregirCobro(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   if(!puedeCorregirCobro(r)){toast('Corregir cobros es de '+(CORRIGEN.length>1?'la dueña o recepción':'la dueña')+' 🔐',1);return}
+  if(SRV_AUTH===false){toast('Falta actualizar el Apps Script del consultorio para corregir cobros',1);return}
   if(SESION.fabrica&&sesionViva()){toast('Con la clave de fábrica no se corrigen cobros: cambiala en Ajustes y volvé a entrar.',1);return}
   if(hayPendiente(id)){toast('Esta atención tiene cambios sin subir: esperá a que se suban y probá de nuevo.',1);return}
   var pc=partesCobro(r), unico=pc.desg.length===1?pc.desg[0].metodo:(pc.desg.length>1?'Mixto':'Sin dato');
@@ -6681,7 +6686,7 @@ function leerCorreccion(r){
   else pagos=m>0?[{metodo:met,monto:m}]:[];
   var pc=partesCobro(r), dif=fR(m-pc.inicial);
   var saldoN=fR(num(r.total)-(num(r.acuenta)+dif)-pc.perdon);
-  if(saldoN<-0.009)return {err:'Con ese cobro se pagaría más que el total ('+bs(r.total)+')'};
+  if(saldoN<-0.009)return {err:pc.perdon>0.009?'Con ese cobro se pagaría más de lo que debía: '+bs(num(r.total)-pc.perdon)+' (total menos el descuento)':'Con ese cobro se pagaría más que el total ('+bs(r.total)+')'};
   return {monto:m,pagos:pagos,motivo:motivo,dif:dif,antes:pc.inicial,saldoAntes:num(r.saldo),saldoDespues:Math.max(0,saldoN),
     forma:met==='Sin dato'?'sin forma de pago (como estaba anotado)':(pagos.length?pagos.map(function(p){return p.metodo+' '+n0(p.monto)}).join(' + '):'—')}}
 
@@ -6700,7 +6705,7 @@ function revisarCorreccion(){
 
 var ERR_CORR={sin_permiso:'No tenés permiso para corregir cobros 🔐',clave_de_fabrica:'Con la clave de fábrica no se corrigen cobros: cambiala en Ajustes y volvé a entrar.',
   falta_motivo:'Escribí el motivo de la corrección',monto_invalido:'El monto no es válido',desglose_no_cuadra:'El desglose no suma el cobro',
-  supera_total:'Con ese cobro se pagaría más que el total',no_corregible:'Esa atención ya no está como atendida: revisala',
+  supera_total:'Con ese cobro se pagaría más de lo que debía pagar',no_corregible:'Esa atención ya no está como atendida: revisala',
   pedido_invalido:'El pedido no es válido',sin_sesion:'Volvé a escribir tu clave (arriba) y confirmá de nuevo'};
 function confirmarCorreccion(){
   if(CC.enviando)return;
@@ -6735,7 +6740,7 @@ function htmlCorrecciones(r){
     l.map(function(x){
       var a=x.antes||{}, d=x.despues||{};
       return '<div class="mrow" style="display:block"><div><b>'+bs(a.cobrado)+' → '+bs(d.cobrado)+'</b> · '+esc(d.forma||'')+'</div>'+
-        '<div class="mini">'+(x.ts?fmtF(String(x.ts).slice(0,10)):'')+' · '+esc(x.por||'')+' · motivo: '+esc(x.motivo||'')+'</div></div>'}).join('')}
+        '<div class="mini">'+(x.ts?fmtF(iso(new Date(x.ts))):'')+' · '+esc(x.por||'')+' · motivo: '+esc(x.motivo||'')+'</div></div>'}).join('')}
 
 /* La ficha del paciente: todo lo suyo en una sola pantalla — datos, aviso
    médico, plan en curso, próxima cita y cada visita que hizo. Es lo que
