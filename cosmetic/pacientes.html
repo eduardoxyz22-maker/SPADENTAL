@@ -3327,7 +3327,11 @@ function recalcSaldo(){
       tag.innerHTML=(s-u>0.009?'<span class="pill warn">⏳ Después del saldo a favor debe '+bs(s-u)+'</span>'
                               :'<span class="pill ok">✅ Queda pagado con su saldo a favor</span>')+
         ' <span class="pill lime">💜 Al guardar se descuentan '+bs(u)+' de su saldo a favor ('+bs(cr)+')</span>';
-    else tag.innerHTML+=' <span class="pill lime">💜 Tiene '+bs(cr)+' a favor</span>'}}
+    else tag.innerHTML+=' <span class="pill lime">💜 Tiene '+bs(cr)+' a favor</span>'}
+  /* al editar una atención ya cobrada, lo que se suma es un pago de hoy */
+  var pe=EDIT_ID?DATA.filter(function(x){return x.id===EDIT_ID})[0]:null;
+  if(pe&&pe.estado==='Atendido'&&a>num(pe.acuenta)+0.009)
+    tag.innerHTML+=' <span class="pill lime">➕ '+bs(Math.round((a-num(pe.acuenta))*100)/100)+' nuevos: entran a la caja de hoy. Marcá cómo pagó lo nuevo.</span>'}
 
 /* Texto corto de la forma de pago, para tablas y fichas */
 function metodoText(r){
@@ -3667,6 +3671,26 @@ function submitAtencion0(){
       return}
     guardarAtencion()})}
 
+/* Subir "A cuenta" al editar una atención ya atendida es un pago nuevo (el
+   paciente decidió hacerse algo más y pagó): la diferencia entra a la caja de
+   hoy como cobro posterior, igual que con Registrar pago. Lo anotado antes no
+   se toca; bajarlo o cambiar cómo se pagó sigue siendo ✏️ Corregir cobro.
+   Devuelve lo nuevo por forma de pago, o null si no es solo un aumento. */
+function pagoNuevoDeEdicion(prev){
+  var dif=Math.round((num($('#f-acuenta').value)-num(prev.acuenta))*100)/100;
+  var m=getRadio('metodo');
+  if(dif<=0.009||!m)return null;
+  if(m!=='Mixto')return [{metodo:m,monto:dif}];
+  var ant={}, nue={}, out=[], suma=0, malo=false;
+  pagosDe(prev).forEach(function(p){if(p.metodo!==SALDO_FAVOR)ant[p.metodo]=(ant[p.metodo]||0)+num(p.monto)});
+  leerPagos().forEach(function(p){if(p.metodo!==SALDO_FAVOR)nue[p.metodo]=(nue[p.metodo]||0)+num(p.monto)});
+  Object.keys(ant).forEach(function(k){if((nue[k]||0)<ant[k]-0.009)malo=true});
+  Object.keys(nue).forEach(function(k){
+    var d=Math.round((nue[k]-(ant[k]||0))*100)/100;
+    if(d>0.009){out.push({metodo:k,monto:d}); suma+=d}});
+  if(malo||Math.abs(suma-dif)>0.01)return null;
+  return out}
+
 function guardarAtencion(){
   var bad=validar();
   if(bad.length){toast('Falta: '+bad.join(', '),1);return}
@@ -3680,9 +3704,11 @@ function guardarAtencion(){
   if(!prev&&esDoctora()&&pacAjeno($('#f-paciente').value)){
     toast('Ese paciente es de otra doctora 🔐 Pedile a recepción que lo agende con vos.',1);return}
   if(!validarIdentidadPaciente($('#f-paciente').value,$('#f-nac').value,prev))return;
-  if(prev&&prev.estado==='Atendido'&&num($('#f-acuenta').value)!==num(prev.acuenta)){
-    toast('Para agregar un cobro usá Registrar pago en la ficha de la atención. Para arreglar un cobro mal anotado: ✏️ Corregir cobro, en esa misma ficha'+(CORRIGEN.indexOf(ROL)<0?' ('+(CORRIGEN.length>1?'la dueña o recepción':'la dueña')+')':'')+'.',1);return}
-  if(prev&&(prev.cobrosPosteriores||[]).length&&
+  var pagoNuevo=null;
+  if(prev&&prev.estado==='Atendido'&&num($('#f-acuenta').value)!==num(prev.acuenta)&&
+      !(getRadio('estado')==='Atendido'&&(pagoNuevo=pagoNuevoDeEdicion(prev)))){
+    toast('Lo ya cobrado no se baja desde acá. Si pagó algo más, subí "A cuenta" y marcá cómo pagó lo nuevo. Para arreglar un cobro mal anotado: ✏️ Corregir cobro, en esa misma ficha'+(CORRIGEN.indexOf(ROL)<0?' ('+(CORRIGEN.length>1?'la dueña o recepción':'la dueña')+')':'')+'.',1);return}
+  if(!pagoNuevo&&prev&&(prev.cobrosPosteriores||[]).length&&
       (num($('#f-acuenta').value)!==num(prev.acuenta)||
        JSON.stringify(agruparPagos(leerPagos()))!==JSON.stringify(agruparPagos(pagosDe(prev))))){
     toast('Esta atención tiene cobros fechados. Usá Registrar pago; para arreglar un cobro mal anotado, ✏️ Corregir cobro en la ficha de la atención.',1);return}
@@ -3742,6 +3768,13 @@ function guardarAtencion(){
     contactado:(prev&&prev.prox===$('#f-prox').value)?!!prev.contactado:false,
     contactadoTs:(prev&&prev.prox===$('#f-prox').value)?(prev.contactadoTs||''):''
   };
+  if(pagoNuevo){
+    /* lo anotado el día de la atención queda igual; lo nuevo entra hoy */
+    var hoyP=hoyISO();
+    rec.pagos=agruparPagos(pagosDe(prev).concat(pagoNuevo));
+    rec.metodo=rec.pagos.length>1?'Mixto':rec.pagos[0].metodo;
+    pagoNuevo.forEach(function(p){rec.cobrosPosteriores.push({id:uid(),fecha:hoyP,metodo:p.metodo,monto:p.monto})});
+    rec.obs=(rec.obs?rec.obs+'\n':'')+pagoNuevo.map(function(p){return 'Pago de '+bs(p.monto)+' en '+p.metodo+' el '+fmtF(hoyP)}).join('\n')}
   var favorUsado=0;
   if(pacAjeno(rec.paciente))FAVOR_TOPE=0;
   if(rec.estado==='Atendido'&&!(prev&&prev.estado==='Atendido')&&num(rec.saldo)>0.009){
@@ -3777,7 +3810,7 @@ function guardarAtencion(){
   } else {queue('save',rec,EDIT_ID?(baseForm===undefined?undefined:baseForm):null)}
   var cita=crearCitaDesde(rec);
   var era=EDIT_ID; clearForm(true); fillDatalists(); updateNavRem();
-  toast(era?'Atención actualizada':'Atención guardada ✅');
+  toast(era?(pagoNuevo?'Atención actualizada · pago de '+bs(sumaPagos(pagoNuevo))+' registrado hoy ✅':'Atención actualizada'):'Atención guardada ✅');
   if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
     :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
   showWhatsappModal(rec,cita,favorUsado)}
