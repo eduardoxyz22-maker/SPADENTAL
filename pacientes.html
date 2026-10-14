@@ -566,6 +566,95 @@ nav .nav-cnt{background:var(--paper);color:var(--gray);border:1px solid var(--li
 #gate .err{color:var(--clay);font-size:13px;font-weight:600;min-height:18px;margin:0 0 4px}
 #gate .err .sync{color:var(--lime-dk);font-weight:600;display:block;line-height:1.4}
 body.locked{overflow:hidden}
+/* ===== 🦷 Sonri, el asistente del panel (va igual en los dos paneles) ===== */
+#asis{position:fixed;right:14px;bottom:14px;z-index:55;font-size:14px;line-height:1.4}
+body.locked #asis{display:none}
+#asis [hidden]{display:none!important}
+.asis-yo{border:0;background:none;padding:0;cursor:pointer;position:relative;display:block;width:78px;height:104px;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.13));-webkit-tap-highlight-color:transparent}
+.asis-yo svg{width:78px;height:104px;display:block;transition:transform .2s}
+.asis-yo:hover svg,.asis-yo:focus-visible svg{transform:translateY(-3px) rotate(-3deg)}
+.asis-yo:focus-visible{outline:3px solid var(--lime);outline-offset:2px;border-radius:14px}
+.asis-salta svg{animation:asisSalta .65s}
+@keyframes asisSalta{0%,100%{transform:none}30%{transform:translateY(-14px)}60%{transform:translateY(0) scale(1.05,.95)}}
+.asis-brazo{transform-box:view-box;transform-origin:27px 72px;animation:asisSaluda 3.2s ease-in-out infinite}
+@keyframes asisSaluda{0%,62%,100%{transform:rotate(0)}70%{transform:rotate(-16deg)}78%{transform:rotate(6deg)}86%{transform:rotate(-12deg)}}
+.asis-chispa{transform-box:view-box;transform-origin:98px 27px;animation:asisBrilla 2.8s ease-in-out infinite}
+@keyframes asisBrilla{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+.asis-n{position:absolute;top:0;right:0;min-width:22px;height:22px;border-radius:11px;background:var(--clay);color:#fff;
+  font:700 12px/22px 'Archivo',Arial,sans-serif;text-align:center;padding:0 6px;box-shadow:0 0 0 2px #fff}
+.asis-globo{position:absolute;right:74px;bottom:66px;width:min(300px,calc(100vw - 110px));background:#fff;color:var(--ink);
+  border:1px solid var(--line);border-radius:14px 14px 4px 14px;box-shadow:0 8px 28px rgba(0,0,0,.16);padding:11px 13px;cursor:pointer;
+  animation:asisAparece .25s ease-out}
+@keyframes asisAparece{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+.asis-globo b{display:block;margin-bottom:3px;font-size:14px}
+.asis-globo span{display:block;color:var(--gray);font-size:13px}
+.asis-globo .asis-acc{margin-top:9px}
+.asis-panel{position:absolute;right:0;bottom:112px;width:min(410px,calc(100vw - 28px));max-height:min(74vh,660px);display:flex;
+  flex-direction:column;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 12px 44px rgba(0,0,0,.2);overflow:hidden;animation:asisAparece .2s ease-out}
+.asis-h{display:flex;gap:10px;align-items:center;padding:10px 8px 9px 12px;background:var(--lime-sf);border-bottom:1px solid var(--lime-bd)}
+.asis-h svg{width:40px;height:54px;flex:none}
+.asis-h div{flex:1;min-width:0}
+.asis-h b{display:block;font-size:15px}
+.asis-h small{display:block;color:var(--gray);font-size:12px}
+.asis-x{border:0;background:transparent;font-size:18px;width:44px;height:44px;border-radius:10px;cursor:pointer;flex:none;color:var(--ink)}
+.asis-x:hover{background:rgba(0,0,0,.05)}
+.asis-tabs{display:flex;border-bottom:1px solid var(--line)}
+.asis-tabs button{flex:1;border:0;background:none;padding:12px 6px;min-height:44px;font:600 14px 'Archivo',Arial,sans-serif;cursor:pointer;
+  color:var(--gray);border-bottom:3px solid transparent}
+.asis-tabs button.on{color:var(--ink);border-bottom-color:var(--lime)}
+.asis-tabs span{background:var(--clay);color:#fff;border-radius:9px;padding:0 6px;font-size:11px;margin-left:3px}
+.asis-cuerpo{overflow:auto;padding:10px 12px 14px;flex:1;overscroll-behavior:contain}
+.asis-av{border:1px solid var(--line);border-left:4px solid var(--info);border-radius:12px;padding:10px 11px;margin-bottom:9px}
+.asis-av.ro{border-left-color:var(--clay)}
+.asis-av.am{border-left-color:var(--warn)}
+.asis-av.ok{border-left-color:var(--ok)}
+.asis-av b{display:block;font-size:14px}
+.asis-av>span{display:block;color:var(--gray);font-size:13px;margin-top:3px}
+.asis-acc{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.asis-b{border:1px solid var(--line);background:#fff;border-radius:10px;min-height:40px;padding:7px 12px;
+  font:600 13px 'Archivo',Arial,sans-serif;cursor:pointer;color:var(--ink)}
+.asis-b:hover{border-color:var(--lime-bd);background:var(--lime-sf)}
+.asis-b.si{background:var(--lime);border-color:var(--lime);color:#1B1D17}
+.asis-b.si:hover{filter:brightness(.96)}
+.asis-acc2{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px}
+.asis-b.asis-luego{min-height:34px;padding:4px 8px;font-size:12px;border-color:transparent;background:transparent;color:var(--gray)}
+.asis-b.asis-luego:hover{color:var(--ink);background:var(--lime-sf)}
+.asis-li{margin-top:8px;border-top:1px dashed var(--line)}
+.asis-li button{display:flex;width:100%;gap:8px;align-items:center;text-align:left;border:0;background:none;padding:9px 2px;
+  border-bottom:1px solid var(--line);cursor:pointer;font:inherit;color:var(--ink);min-height:44px}
+.asis-li button:hover{background:var(--lime-sf)}
+.asis-li i{font-style:normal;flex:1;min-width:0}
+.asis-li i b{font-size:13.5px}
+.asis-li small{display:block;color:var(--gray);font-size:12px}
+.asis-li em{font-style:normal;font-weight:700;color:var(--clay);font-size:13px;white-space:nowrap}
+.asis-li u{text-decoration:none;color:var(--lime-dk);font-weight:700;font-size:12px;white-space:nowrap}
+.asis-mas{color:var(--gray);font-size:12px;padding:8px 2px}
+.asis-vacio{padding:18px 8px;text-align:center;color:var(--gray)}
+.asis-q{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:15px 'Archivo',Arial,sans-serif;background:#fff;color:var(--ink)}
+.asis-q:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+.asis-pr{border:1px solid var(--line);border-radius:12px;margin-top:8px;overflow:hidden}
+.asis-pq{display:block;width:100%;text-align:left;border:0;background:#fff;padding:11px 12px;min-height:44px;
+  font:600 14px 'Archivo',Arial,sans-serif;cursor:pointer;color:var(--ink)}
+.asis-pr.on{border-color:var(--lime-bd);background:var(--lime-sf)}
+.asis-pr.on .asis-pq{background:transparent}
+.asis-pr ol{margin:0 12px 10px 30px;padding:0;font-size:13.5px}
+.asis-pr li{margin:3px 0}
+.asis-pr .asis-b{margin:0 12px 12px}
+.asis-pie{border-top:1px solid var(--line);padding:8px 12px;font-size:12px;color:var(--gray);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.asis-pie a{color:var(--lime-dk);font-weight:700;cursor:pointer}
+.asis-foco{outline:3px solid var(--lime)!important;outline-offset:3px;border-radius:8px;animation:asisLate 1.1s ease-in-out 3}
+@keyframes asisLate{50%{outline-offset:8px}}
+@media (prefers-reduced-motion:reduce){.asis-brazo,.asis-chispa,.asis-salta svg,.asis-foco,.asis-globo,.asis-panel{animation:none}}
+@media (max-width:640px){
+  #asis{right:8px;bottom:8px}
+  .asis-yo,.asis-yo svg{width:58px;height:78px}
+  .asis-panel{position:fixed;left:8px;right:8px;bottom:94px;width:auto;max-height:72vh}
+  .asis-globo{right:56px;bottom:50px;width:min(280px,calc(100vw - 80px))}
+}
+@media print{#asis{display:none}}
+/* ===== fin de Sonri ===== */
 </style>
 </head>
 <body class="locked">
@@ -1679,13 +1768,15 @@ function desbloquear(){
      con los montos de quien acababa de salir hasta que alguien tocara otra
      pestaña. */
   try{refreshAll()}catch(e){}
-  saludoTemporada()}
+  saludoTemporada();
+  try{asisMontar()}catch(e){}}
 function bloquear(){
   ROL='equipo'; PROF_ACTUAL=''; olvidarSesion();
   try{sessionStorage.removeItem(K_UNLOCK);localStorage.removeItem(K_UNLOCK)}catch(e){}
   document.body.classList.add('locked');
   $('#gate').classList.remove('off');
-  $('#gate-pass').value=''}
+  $('#gate-pass').value='';
+  try{asisCerrar(); var gA=$('#asis-globo'); if(gA)gA.hidden=true}catch(e){}}
 var INTENTAR_GATE=null;
 function initGate(){
   var r=rolGuardado();
@@ -3792,7 +3883,8 @@ function guardarAtencion(){
   toast(era?(pagoNuevo?'Atención actualizada · pago de '+bs(sumaPagos(pagoNuevo))+' registrado hoy ✅':'Atención actualizada'):'Atención guardada ✅');
   if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
     :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
-  showWhatsappModal(rec,cita,favorUsado)}
+  showWhatsappModal(rec,cita,favorUsado);
+  try{asisAlGuardar(rec)}catch(e){}}
 
 function borrar(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
@@ -9758,7 +9850,8 @@ function saludoTemporada(){
 function refreshAll(){
   fillDatalists(); updateNavRem();
   var v=($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset;
-  if(v&&v.v)show(v.v)}
+  if(v&&v.v)show(v.v);
+  try{asisRefrescar()}catch(e){}}
 
 function initFechas(){
   var h=hoyISO(),ym=h.slice(0,7);
@@ -10134,6 +10227,386 @@ function reintentarCola(){
     flushQueue().then(pullServer).then(function(ok){ultimoPull=+new Date(); if(ok)refreshAll()});
     initRefresco()}
 })();
+/* =====================================================================
+   🦷 SONRI, EL ASISTENTE DEL PANEL
+   Como Eduardo en el panel de Multiespumas: una muela en la esquina que
+   avisa lo pendiente de quien está usando el panel, contesta «¿Cómo
+   hago…?» y lleva al lugar con «Mostrame dónde». La primera vez en cada
+   aparato ofrece un recorrido guiado.
+   SOLO MIRA Y SEÑALA: no guarda, no cambia nada y no frena nada. Cada
+   aviso sale de las cuentas que el panel ya hace (citas, saldos, cuotas,
+   planes frenados, saldos que no cuadran, cambios sin subir) y respeta lo
+   que cada una puede ver (una doctora, lo suyo). «Entendido», «En 1 hora»,
+   «Mañana» y 🔇 quedan en este aparato. En las pruebas automáticas no
+   aparece salvo window.ASIS_PRUEBA (si no, taparía botones).
+   Va idéntico en los dos paneles; los colores salen de --lime.
+   ===================================================================== */
+var ASIS={montado:false,abierto:false,tab:'avisos',alGuardar:[],firma:'',primera:true,audio:null,anunciados:{},q:'',lista:'',abierta:-1,tic:null};
+var ASIS_NOMBRE='Sonri', ASIS_PFX=String(K_DATA).split('_')[0]+'_ASIS_';
+var ASIS_LS_VISTOS=ASIS_PFX+'VISTOS', ASIS_LS_MUDO=ASIS_PFX+'MUDO', ASIS_LS_TOUR=ASIS_PFX+'TOUR';
+var ASIS_LISTA_MAX=40;
+function asisActivo(){
+  if(window.ASIS_PRUEBA)return true;
+  var n=window.navigator||{};
+  return !n.webdriver&&!/jsdom/i.test(n.userAgent||'')}
+function asisLS(k,v){
+  try{
+    if(v===undefined){var s=localStorage.getItem(k); return s==null?null:JSON.parse(s)}
+    localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+function asisMudo(){return asisLS(ASIS_LS_MUDO)===1}
+function asisVistos(){var v=asisLS(ASIS_LS_VISTOS); return v&&typeof v==='object'?v:{}}
+function asisOculto(k){return Date.now()<(num(asisVistos()[k])||0)}
+function asisVista(){var b=$$('nav button').filter(function(x){return x.classList.contains('on')})[0]; return b?b.dataset.v:'midia'}
+function asisSinTildes(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
+function asisPl(n,uno,varios){return n+' '+(n===1?uno:varios)}
+/* quien usa el panel en este momento */
+function asisQuien(){return esDoctora()?PROF_ACTUAL:(ROL==='admin'?'Dueña':'Recepción')}
+function asisQuienCorrige(){return CORRIGEN.length>1?'la dueña o recepción':'la dueña'}
+/* el avatar: una muela con estetoscopio, con el color de la clínica */
+function asisSvg(){
+  return '<svg viewBox="0 0 120 160" aria-hidden="true" focusable="false">'+
+    '<ellipse cx="60" cy="153" rx="30" ry="5" fill="rgba(0,0,0,.16)"/>'+
+    '<g class="asis-brazo"><path d="M27 72 C14 66 10 52 14 42" fill="none" stroke="#2b2f27" stroke-width="3.2" stroke-linecap="round"/>'+
+      '<circle cx="14" cy="40" r="5.5" fill="#fff" stroke="#2b2f27" stroke-width="2.6"/></g>'+
+    '<path d="M93 74 C102 80 104 90 100 98" fill="none" stroke="#2b2f27" stroke-width="3.2" stroke-linecap="round"/>'+
+    '<circle cx="100" cy="100" r="5.5" fill="#fff" stroke="#2b2f27" stroke-width="2.6"/>'+
+    '<path d="M60 22 C47 11 22 12 21 38 C20 58 27 72 30 92 C33 116 36 140 45 141 C54 142 52 118 56 106 C58 100 62 100 64 106 C68 118 66 142 75 141 C84 140 87 116 90 92 C93 72 100 58 99 38 C98 12 73 11 60 22 Z" fill="#fff" stroke="#2b2f27" stroke-width="3"/>'+
+    '<path d="M28 44 C28 30 38 24 48 26" fill="none" stroke="#E8ECF2" stroke-width="5" stroke-linecap="round"/>'+
+    '<path d="M34 88 C46 98 74 98 86 88" fill="none" stroke="var(--lime)" stroke-width="4" stroke-linecap="round"/>'+
+    '<path d="M60 96 L60 112" stroke="var(--lime)" stroke-width="3.5" stroke-linecap="round"/>'+
+    '<circle cx="60" cy="116" r="6" fill="var(--lime-dk)" stroke="#2b2f27" stroke-width="2"/><circle cx="60" cy="116" r="2.4" fill="#fff"/>'+
+    '<ellipse cx="47" cy="55" rx="4.2" ry="5.6" fill="#2b2f27"/><ellipse cx="73" cy="55" rx="4.2" ry="5.6" fill="#2b2f27"/>'+
+    '<circle cx="48.4" cy="53" r="1.5" fill="#fff"/><circle cx="74.4" cy="53" r="1.5" fill="#fff"/>'+
+    '<ellipse cx="38" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/><ellipse cx="82" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/>'+
+    '<path d="M49 66 C53 74 67 74 71 66" fill="#fff" stroke="#2b2f27" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<path class="asis-chispa" d="M98 16 L101 24 L109 27 L101 30 L98 38 L95 30 L87 27 L95 24 Z" fill="var(--lime)"/></svg>'}
+
+/* ---------- los avisos ----------
+   {k: clave (cambia si cambia lo que dice), sev: 'ro'|'am'|'', ico, t, x,
+    b: [texto, función], lista: [{t, s, m, ir: función}], tm: aviso de un
+    guardado (dura 10 min)} */
+function asisAvisos(){
+  var A=[], hoy=hoyISO(), doc=esDoctora(), mios=doc?pacientesMios():null;
+  var suyo=function(nombre){return !mios||!!mios[keyPac(nombre)]};
+  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return Date.now()-a.tm<10*60000});
+  ASIS.alGuardar.forEach(function(a){A.push(a)});
+  try{
+    var n=pend().length;
+    if(n)A.push({k:'pend|'+n, sev:'am', ico:'📶', t:asisPl(n,'cambio guardado','cambios guardados')+' en este aparato, sin subir',
+      x:'Se suben solos cuando vuelve la conexión. Hasta entonces no cierres la sesión ni borres los datos del navegador.',
+      b:['🔄 Intentar ahora', function(){try{flushQueue()}catch(e){} setTimeout(function(){asisRefrescar()},1500)}]})}catch(e){}
+  try{
+    var cit=citasPend().filter(function(c){return esMia(c.r)});
+    var hoyC=cit.filter(function(c){return c.dias===0}).sort(function(a,b){return String(a.r.hora||'').localeCompare(String(b.r.hora||''))});
+    if(hoyC.length)A.push({k:'hoy|'+hoy+'|'+hoyC.length, sev:'', ico:'📅',
+      t:'Hoy '+(doc?'tenés ':'hay ')+asisPl(hoyC.length,'paciente agendado','pacientes agendados'),
+      x:'Cuando llegue, en 🏠 Mi día tocá «🦷 Atender»: se abre la atención con sus datos.',
+      b:['Ir a Mi día', function(){asisIr('midia','#m-lista')}],
+      lista:hoyC.map(function(c){return {t:c.r.paciente||'—', s:(c.r.hora||'sin hora')+(c.r.proxMotivo||c.r.motivo?' · '+(c.r.proxMotivo||c.r.motivo):'')+(doc?'':' · '+(c.r.profesional||'')), m:'', ir:asisCitaDia(c.r)}})});
+    var venc=cit.filter(function(c){return c.dias<0});
+    if(venc.length)A.push({k:'venc|'+venc.length+'|'+(venc[0]&&venc[0].r.id), sev:'ro', ico:'⏰',
+      t:asisPl(venc.length,'cita que ya pasó sigue','citas que ya pasaron siguen')+' sin marcar',
+      x:'Marcá si vino (cargá la atención), «✖ No vino» o «🔁 Reprogramar». Así los recordatorios y la agenda dicen la verdad.',
+      lista:venc.map(function(c){return {t:c.r.paciente||'—', s:'Era el '+fmtF(c.r.fecha)+(c.r.hora?' · '+c.r.hora:'')+(doc?'':' · '+(c.r.profesional||'')), m:'', ir:asisCitaDia(c.r)}})})}catch(e){}
+  try{
+    var sal=saldosPend(doc?PROF_ACTUAL:'');
+    if(sal.length){var tot=sal.reduce(function(a,p){return a+num(p.saldo)},0);
+      A.push({k:'sal|'+sal.length+'|'+Math.round(tot), sev:'', ico:'💳',
+        t:asisPl(sal.length,'paciente','pacientes')+(doc?' tuyo'+(sal.length===1?'':'s'):'')+' con saldo pendiente',
+        x:'Suman '+bs(tot)+'. Cuando pague, abrí la atención y tocá «💰 Registrar pago»: entra a la caja de ese día.',
+        lista:sal.map(function(p){return {t:p.paciente, s:asisPl(p.n,'atención','atenciones')+(p.ult?' · última el '+fmtF(p.ult):''), m:bs(p.saldo), ir:function(){verPaciente(p.paciente)}}})})}}catch(e){}
+  try{
+    var cuo=cuotasVencidas().filter(function(x){return suyo(x.paciente)});
+    if(cuo.length)A.push({k:'cuo|'+cuo.length+'|'+Math.round(cuo.reduce(function(a,x){return a+x.monto},0)), sev:'ro', ico:'📆',
+      t:asisPl(cuo.length,'plan con cuotas vencidas','planes con cuotas vencidas'),
+      x:'Abrí el plan: con «💰 Registrar pago» se marca la cuota sola. Para avisarle, en 🔔 Recordatorios sale el WhatsApp armado.',
+      lista:cuo.map(function(x){return {t:x.paciente, s:x.plan.nombre+' · '+asisPl(x.cuotas.length,'cuota','cuotas')+' · venció hace '+asisPl(x.dias,'día','días'), m:bs(x.monto), ir:function(){verPlan(x.paciente,x.plan.id)}}})})}catch(e){}
+  try{
+    var fre=planesFrenados().filter(function(x){return suyo(x.paciente)});
+    if(fre.length)A.push({k:'fre|'+fre.length, sev:'am', ico:'🦷',
+      t:asisPl(fre.length,'tratamiento quedó','tratamientos quedaron')+' a medio hacer',
+      x:'No tienen la próxima sesión agendada. Abrí el plan para ver qué sigue o escribile desde 🔔 Recordatorios.',
+      lista:fre.map(function(x){return {t:x.paciente, s:x.plan.nombre+' · sigue: '+(x.ses?(x.ses.desc||('etapa '+x.ses.n)):'—')+(x.ult?' · última visita el '+fmtF(x.ult):''), m:'', ir:function(){verPlan(x.paciente,x.plan.id)}}})})}catch(e){}
+  try{
+    var nc=saldosNoCuadran().filter(function(r){return esMia(r)});
+    if(nc.length)A.push({k:'nc|'+nc.length+'|'+nc[0].id, sev:'am', ico:'🧮',
+      t:asisPl(nc.length,'atención con un saldo que no cuadra','atenciones con saldos que no cuadran'),
+      x:'El total, lo cobrado y el saldo no coinciden. Abrila: ahí mismo está el botón para dejarla bien.',
+      lista:nc.map(function(r){return {t:r.paciente||'—', s:'Atención del '+fmtF(r.fecha)+' · total '+bs(r.total)+' · cobrado '+bs(r.acuenta), m:bs(r.saldo), ir:function(){verFicha(r.id)}}})})}catch(e){}
+  return A.filter(function(a){return a.tm||!asisOculto(a.k)})}
+/* una cita: la agenda de ese día */
+function asisCitaDia(r){return function(){var d=$('#q-dia'); if(d)d.value=r.fecha; show('cita'); setTimeout(function(){asisFoco(['#q-lista-dia','#q-dia'])},250)}}
+/* después de guardar una atención que quedó debiendo */
+function asisAlGuardar(rec){
+  if(!ASIS.montado||!rec||rec.estado!=='Atendido'||!(num(rec.saldo)>0.009))return;
+  var id=rec.id;
+  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return a.k!=='g|'+id});
+  ASIS.alGuardar.push({k:'g|'+id, tm:Date.now(), sev:'am', ico:'💳',
+    t:(rec.paciente||'El paciente').split(' ')[0]+' quedó debiendo '+bs(rec.saldo),
+    x:'Cuando pague, abrí la atención y tocá «💰 Registrar pago». Si hoy decide hacerse algo más: «✏️ Editar», agregá el tratamiento y subí «A cuenta».',
+    b:['Abrir la atención', function(){verFicha(id)}]});
+  asisRefrescar(true)}
+
+/* ---------- «¿Cómo hago…?» ----------
+   v: la pestaña, f: lo que se señala (el primero que se vea), solo:'adm'
+   para lo de la dueña y recepción. */
+var ASIS_AYUDA=[
+  {q:'¿Cómo cargo una atención nueva?', k:'atencion nueva cargar paciente consulta registrar guardar visita', v:'atencion', f:'#f-paciente',
+   p:['Tocá «＋ Nueva atención».','Escribí el paciente: si ya vino, sus datos se completan solos.','Elegí el tratamiento y el precio (podés agregar más de uno).','Anotá lo que dejó en «A cuenta hoy» y marcá cómo pagó.','Tocá «Guardar atención».']},
+  {q:'¿Cómo anoto lo que pagó?', k:'pago cobro a cuenta efectivo qr tarjeta transferencia mixto pagar', v:'atencion', f:['#f-acuenta'],
+   p:['En «Cobro», poné lo que dejó en «A cuenta hoy»: el saldo se calcula solo.','Marcá cómo pagó. Si pagó de dos formas, elegí «Mixto» y repartí el monto.','Si no pagó nada, dejalo en 0: queda debiendo y aparece en Recordatorios.']},
+  {q:'¿Cómo cobro un saldo que quedó debiendo?', k:'saldo deuda debe cobrar registrar pago despues posterior pagar resto', v:'lista', f:'#l-q',
+   p:['Entrá a 📋 Atenciones y buscá al paciente.','Tocá la atención que tiene saldo.','Tocá «💰 Registrar pago», poné el monto y cómo pagó.','Entra a la caja de hoy, aunque la atención sea de otro día.']},
+  {q:'Ya pagó la consulta y decidió hacerse algo más', k:'agregar tratamiento algo mas editar atencion cobrada decidio sumar servicio indeciso', v:'lista', f:'#l-q',
+   p:['Abrí la atención (📋 Atenciones → tocala) y tocá «✏️ Editar».','Agregá el tratamiento nuevo con su precio.','Subí «A cuenta» a lo que pagó en total y marcá cómo pagó lo nuevo.','Guardá: lo nuevo entra a la caja de hoy y lo de antes queda igual.']},
+  {q:'¿Cómo corrijo un cobro mal anotado?', k:'corregir cobro error equivoque mal anotado monto metodo cambiar arreglar', v:'lista', f:'#l-q',
+   p:['Abrí la atención y tocá «✏️ Corregir cobro» (lo hace QUIEN).','Poné el monto correcto del día de la atención, cómo se pagó y el motivo.','Queda anotado quién lo cambió y por qué. Cambia la caja del día de la atención, no la de hoy.']},
+  {q:'¿Cómo agendo una cita?', k:'agendar cita turno reservar hora agenda nueva', v:'cita', f:'#q-paciente',
+   p:['Entrá a 📅 Agenda.','Elegí fecha, hora y doctora, y escribí el paciente y el motivo.','Tocá «Agendar». Antes del día aparece en Recordatorios para confirmarla por WhatsApp.']},
+  {q:'Llegó el paciente agendado: ¿cómo lo atiendo?', k:'atender cita llego vino paciente agendado hoy', v:'midia', f:'#m-lista',
+   p:['En 🏠 Mi día están los agendados de hoy.','Tocá «🦷 Atender»: se abre la atención con sus datos.','Completá el tratamiento y el cobro, y guardá.']},
+  {q:'No vino o hay que reprogramar la cita', k:'no vino asistio falto reprogramar cambiar dia cita cancelo mover', v:'cita', f:['#q-lista-dia','#q-dia'],
+   p:['En 📅 Agenda elegí el día de la cita.','Tocá «✖ No vino» o «🔁 Reprogramar» y elegí la fecha nueva.','Las citas que ya pasaron sin marcar te las aviso yo.']},
+  {q:'¿Cómo armo un plan de tratamiento (por ejemplo, ortodoncia)?', k:'plan tratamiento ortodoncia presupuesto etapas cuotas armar crear brackets', v:'pacientes', f:'#pc-q',
+   p:['Abrí al paciente (👤 Pacientes → buscalo) y tocá «🦷 Planes».','«＋ Crear plan de tratamiento»: elegí una plantilla (por ejemplo Ortodoncia) o uno en blanco.','Ajustá etapas, cantidades e importes. Un control incluido va en 0.','Si paga en cuotas, poné cuántas y cada cuántos días.','Tocá «💾 Guardar plan». Mandarlo por WhatsApp es aparte y opcional.']},
+  {q:'¿Cómo registro la atención de una etapa del plan?', k:'etapa plan control registrar atencion sesion seguimiento ortodoncia marcar', v:'pacientes', f:'#pc-q',
+   p:['Abrí el plan (paciente → 🦷 Planes → «Abrir plan»).','Tocá «＋ Registrar atención» en la etapa que toca.','Poné la fecha, lo que se hizo y la plata que trajo, si trajo.','La etapa queda marcada y el plan se actualiza solo.']},
+  {q:'¿Cómo cobro una cuota o un pago del plan?', k:'cuota plan pago mensual pagar abono adelantado mensualidad', v:'pacientes', f:'#pc-q',
+   p:['Abrí el plan y tocá «💰 Registrar pago».','Viene sugerida la cuota que toca: corregí el monto si hace falta y marcá cómo pagó.','Entra a la caja de hoy y se descuenta solo de las etapas que se atiendan.']},
+  {q:'¿Qué es el saldo a favor (anticipo)?', k:'anticipo saldo favor adelanto dejo plata cuenta credito', v:'pacientes', f:'#pc-q',
+   p:['Es plata que el paciente deja antes, para usar después.','Se registra desde la ficha del paciente con «💜 Anticipo».','Cuando se atiende, se descuenta sola y el panel dice cuánto queda debiendo.','Lo pagado a un plan es aparte: lo usa solo ese plan.']},
+  {q:'¿Cómo dejo anotado un tratamiento que le recomendé?', k:'recomendado recomendar presupuesto pendiente decidir despues indeciso', v:'atencion', f:'#pre-list',
+   p:['En la atención, en «¿Le recomendaste algo más?», elegí el tratamiento y su presupuesto.','Queda en Recordatorios para hacerle seguimiento.','Si después decide hacerlo por etapas, tocá «🦷 Armar plan» desde Recordatorios.']},
+  {q:'¿Cómo mando un recordatorio por WhatsApp?', k:'whatsapp recordatorio mensaje avisar confirmar cita saldo escribir', v:'agenda', f:'#rem-list',
+   p:['Entrá a 🔔 Recordatorios.','Elegí qué mirar: citas, saldos, cumpleaños, controles, planes…','Tocá «WhatsApp» en cada paciente: el mensaje sale armado.']},
+  {q:'¿Cómo busco a un paciente y su historia?', k:'buscar paciente historia historial ficha encontrar', v:'pacientes', f:'#pc-q',
+   p:['Entrá a 👤 Pacientes y escribí el nombre, el celular o el CI.','Tocalo para ver su historia, saldos, planes y ficha médica.']},
+  {q:'¿Dónde cargo la ficha médica (alergias)?', k:'ficha medica alergia antecedentes enfermedad diabetes embarazo', v:'atencion', f:['#btn-ficha-med','#f-paciente'],
+   p:['En la atención, después de escribir el paciente, tocá «🩺 Ficha médica».','Marcá antecedentes y alergias: avisa sola en cada visita.']},
+  {q:'¿Dónde veo la caja del día?', k:'caja dia cierre cuanto entro efectivo qr total ingreso', solo:'adm', v:'caja', f:'#cj-kpis',
+   p:['Entrá a 💰 Caja y elegí el día.','Arriba ves el total y cada forma de pago; abajo, cada cobro.','Los pagos de saldos y de planes entran el día que se pagan.']},
+  {q:'Me pide la clave otra vez', k:'clave contrasena sesion volve escribir entrar vencio', v:'midia', f:['#ses-pedir','#nav-duena'],
+   p:['La sesión se cierra sola después de 30 minutos sin uso.','Si arriba aparece «Volvé a escribir tu clave», escribila ahí: no se pierde nada de lo cargado.']},
+  {q:'¿Me mostrás el panel? (recorrido guiado)', k:'recorrido guiado tutorial empezar nueva nuevo ayuda aprender mostrar panel', v:'midia', f:'#asis-yo', tour:1,
+   p:['Te llevo por lo principal del panel, pestaña por pestaña.','Tarda un minuto y lo podés cortar cuando quieras.']}
+];
+/* cómo habla la gente: cada palabra suma las del panel que quiere decir */
+var ASIS_SINONIMOS={plata:'pago cobro',cobrar:'pago cobro',cobre:'pago cobro',pagar:'pago',pago:'cobro',pagaron:'pago',
+  deposito:'pago qr',transferencia:'pago qr',deuda:'saldo',debe:'saldo',debia:'saldo',cuota:'plan cuota',cuotas:'plan cuota',
+  ortodoncia:'plan',brackets:'plan',tratamiento:'plan',turno:'cita',reservar:'cita agendar',reserva:'cita agendar',falto:'vino reprogramar',
+  cancelar:'reprogramar',postergar:'reprogramar',whatsapp:'recordatorio',wasap:'whatsapp recordatorio',whats:'whatsapp recordatorio',
+  anticipo:'saldo favor',adelanto:'anticipo',alergia:'ficha medica',alergias:'ficha medica',error:'corregir',equivoque:'corregir',
+  equivoco:'corregir',borrar:'corregir',contrasena:'clave',password:'clave',aprender:'recorrido guiado',ayuda:'recorrido guiado',
+  historia:'historial',ficha:'historia',agregar:'algo mas',sumar:'algo mas'};
+var ASIS_COMUNES=['como','hago','que','el','la','los','las','un','una','de','del','mi','mis','por','para','en','se','me','lo','al','yo','con','le','y','o','es'];
+function asisDist(a,b,max){
+  if(Math.abs(a.length-b.length)>max)return max+1;
+  var p=[],i,j; for(j=0;j<=b.length;j++)p[j]=j;
+  for(i=1;i<=a.length;i++){var c=[i],min=i;
+    for(j=1;j<=b.length;j++){c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); if(c[j]<min)min=c[j]}
+    if(min>max)return max+1; p=c}
+  return p[b.length]}
+function asisVeAdm(){return esAdmin()}
+function asisBuscar(q){
+  var t=asisSinTildes(q).replace(/[¿?¡!.,;:()«»"]/g,' ').split(/\s+/).filter(function(w){return w.length>1&&ASIS_COMUNES.indexOf(w)<0});
+  var veAdm=asisVeAdm(), vis=asisVista();
+  /* palabra entera > parte de una palabra > sinónimo > error de tipeo; si está en la pregunta, suma un poco más */
+  var vale=function(w,h,hw,hq){
+    var s=hw.indexOf(w)>=0?1.2:(h.indexOf(w)>=0?1:0);
+    if(!s){var sin=ASIS_SINONIMOS[w]; if(sin&&sin.split(' ').some(function(x){return h.indexOf(x)>=0}))s=.9}
+    if(!s&&w.length>=4){var max=w.length>=7?2:1; if(hw.some(function(x){return x.length>=4&&asisDist(w,x,max)<=max}))s=.8}
+    return s&&hq.indexOf(w)>=0?s+.3:s};
+  return ASIS_AYUDA.map(function(a,i){
+      if(a.solo==='adm'&&!veAdm)return {i:i,s:0};
+      var h=asisSinTildes(a.q+' '+a.k), hw=h.replace(/[¿?¡!.,()«»]/g,' ').split(/\s+/), hq=asisSinTildes(a.q);
+      return {i:i, s:t.length?t.reduce(function(s2,w){return s2+vale(w,h,hw,hq)},0):1, aca:a.v===vis?1:0}})
+    .filter(function(x){return x.s>0})
+    .sort(function(a,b){return b.s-a.s||b.aca-a.aca||a.i-b.i}).map(function(x){return x.i})}
+
+/* ---------- señalar algo en la pantalla ---------- */
+var ASIS_FOCO=null;
+function asisSeVe(el){if(!el||!el.getBoundingClientRect)return false; var r=el.getBoundingClientRect(); return r.width>0&&r.height>0}
+function asisPrimero(sels){var L=[].concat(sels||[]); for(var i=0;i<L.length;i++){var el=document.querySelector(L[i]); if(asisSeVe(el))return el} return null}
+function asisFoco(sel,fijo){
+  if(ASIS_FOCO){ASIS_FOCO.classList.remove('asis-foco'); ASIS_FOCO=null}
+  var el=(sel&&sel.nodeType===1)?sel:asisPrimero(sel); if(!el)return null;
+  ASIS_FOCO=el; el.classList.add('asis-foco');
+  try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))setTimeout(function(){try{el.focus({preventScroll:true})}catch(e){}},400);
+  if(!fijo)setTimeout(function(){if(ASIS_FOCO===el){el.classList.remove('asis-foco'); ASIS_FOCO=null}},4500);
+  return el}
+function asisIr(v,sel){asisCerrar(); if(v&&asisVista()!==v)show(v); setTimeout(function(){asisFoco(sel)},300)}
+function asisMostrar(i){
+  var a=ASIS_AYUDA[i]; if(!a||(a.solo==='adm'&&!asisVeAdm()))return;
+  asisCerrar();
+  if(a.tour){asisTourEmpezar(); return}
+  if(a.v==='atencion'&&asisVista()!=='atencion'){show('atencion')}
+  else if(asisVista()!==a.v)show(a.v);
+  setTimeout(function(){
+    var el=asisFoco(a.f);
+    if(!el){asisFoco('nav button[data-v="'+a.v+'"]')}
+    if(a.v==='atencion'&&/btn-ficha-med/.test([].concat(a.f).join(' '))&&!asisSeVe(document.querySelector('#btn-ficha-med')))
+      asisGlobo({ico:'👤',t:'Primero escribí el paciente',x:'Después aparece «🩺 Ficha médica» al lado.'},true,true)},300)}
+
+/* ---------- el sonido: un «pop» corto hecho con el navegador ---------- */
+function asisAudio(){
+  if(ASIS.audio)return ASIS.audio;
+  try{var C=window.AudioContext||window.webkitAudioContext; if(C)ASIS.audio=new C()}catch(e){}
+  return ASIS.audio}
+function asisPop(){
+  if(asisMudo()||!asisActivo())return;
+  var C=asisAudio(); if(!C)return;
+  try{
+    if(C.state==='suspended')C.resume();
+    var t=C.currentTime+0.01, o=C.createOscillator(), g=C.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(700,t); o.frequency.exponentialRampToValueAtTime(1400,t+0.08);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.14,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+    o.connect(g); g.connect(C.destination); o.start(t); o.stop(t+0.25)}catch(e){}}
+
+/* ---------- la muela, el globito y la ventana ---------- */
+function asisMontar(){
+  if(!asisActivo()||!document.body)return;
+  if(!ASIS.montado){
+    ASIS.montado=true;
+    var d=document.createElement('div'); d.id='asis';
+    d.innerHTML='<div id="asis-globo" class="asis-globo" hidden></div>'+
+      '<div id="asis-panel" class="asis-panel" role="dialog" aria-label="'+ASIS_NOMBRE+', el asistente" hidden></div>'+
+      '<button type="button" id="asis-yo" class="asis-yo" aria-label="Abrir a '+ASIS_NOMBRE+', el asistente" title="'+ASIS_NOMBRE+', tu asistente">'+
+        asisSvg()+'<span id="asis-n" class="asis-n" hidden></span></button>';
+    document.body.appendChild(d);
+    $('#asis-yo').onclick=asisToggle;
+    /* el navegador deja sonar recién después de un toque */
+    var desbloquear=function(){var C=asisAudio(); try{if(C&&C.state==='suspended')C.resume()}catch(e){} document.removeEventListener('pointerdown',desbloquear,true)};
+    document.addEventListener('pointerdown',desbloquear,true);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ASIS.abierto)asisCerrar()});
+    ASIS.tic=setInterval(function(){asisRefrescar()},60000)}
+  ASIS.primera=true; ASIS.anunciados={};
+  asisRefrescar();
+  setTimeout(asisTourOfrecer,1200)}
+function asisRefrescar(nuevoYa){
+  if(!ASIS.montado||document.body.classList.contains('locked'))return;
+  var A=asisAvisos(), n=A.length, firma=A.map(function(a){return a.k}).join('#');
+  var nb=$('#asis-n'); if(nb){nb.hidden=!n; nb.textContent=String(n)}
+  var nuevos=A.filter(function(a){return !ASIS.anunciados[a.k]});
+  A.forEach(function(a){ASIS.anunciados[a.k]=1});
+  var cambio=firma!==ASIS.firma; ASIS.firma=firma;
+  if(ASIS.abierto){if(cambio)asisPanelPintar()}
+  else if(nuevos.length&&!ASIS_TOUR)asisGlobo(nuevos[0],ASIS.primera&&!nuevoYa);
+  ASIS.primera=false}
+var ASIS_GLOBO_T=0;
+function asisGlobo(a,calladito,solo,html){
+  var gl=$('#asis-globo'), yo=$('#asis-yo'); if(!gl)return;
+  gl.innerHTML=html||('<b>'+(a.ico?a.ico+' ':'')+esc(a.t)+'</b><span>'+esc(a.x||'')+'</span>');
+  gl.hidden=false;
+  gl.onclick=html?null:(solo?function(){gl.hidden=true}:function(){if(a.lista)ASIS.lista=a.k; asisAbrir('avisos')});
+  if(yo){yo.classList.remove('asis-salta'); void yo.offsetWidth; yo.classList.add('asis-salta')}
+  if(!calladito)asisPop();
+  clearTimeout(ASIS_GLOBO_T);
+  if(!html)ASIS_GLOBO_T=setTimeout(function(){gl.hidden=true},a.ms||8000)}
+function asisToggle(){if(ASIS_TOUR){asisTourFin(); return} if(ASIS.abierto)asisCerrar(); else asisAbrir(ASIS.firma?'avisos':'ayuda')}
+function asisAbrir(tab){ASIS.abierto=true; ASIS.tab=tab||ASIS.tab; var gl=$('#asis-globo'); if(gl)gl.hidden=true; asisPanelPintar()}
+function asisCerrar(){ASIS.abierto=false; var p=$('#asis-panel'); if(p)p.hidden=true}
+function asisTab(t){ASIS.tab=t; asisPanelPintar(); if(t==='ayuda'){var q=$('#asis-q'); if(q)try{q.focus()}catch(e){}}}
+function asisPosponer(k,ms){
+  var v=asisVistos(), ahora=Date.now();
+  Object.keys(v).forEach(function(x){if(num(v[x])<=ahora)delete v[x]});
+  v[k]=ahora+ms; asisLS(ASIS_LS_VISTOS,v);
+  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return a.k!==k}); asisRefrescar(); asisPanelPintar()}
+function asisManana(){var d=new Date(); d.setDate(d.getDate()+1); d.setHours(8,0,0,0); return Math.max(3600000,d.getTime()-Date.now())}
+function asisMudoCambiar(){asisLS(ASIS_LS_MUDO,asisMudo()?0:1); if(!asisMudo())asisPop(); asisPanelPintar()}
+/* los botones de la ventana llaman por número al aviso de ESTE momento */
+var ASIS_PINTADOS=[];
+function asisAccion(i){var a=ASIS_PINTADOS[i]; if(!a||!a.b)return; asisCerrar(); try{a.b[1]()}catch(e){}}
+function asisAbrirItem(i,j){var a=ASIS_PINTADOS[i], it=a&&a.lista&&a.lista[j]; if(!it)return; asisCerrar(); try{it.ir()}catch(e){}}
+function asisVerLista(i){var a=ASIS_PINTADOS[i]; if(!a)return; ASIS.lista=(ASIS.lista===a.k?'':a.k); asisPanelPintar()}
+function asisLuego(i,cuanto){var a=ASIS_PINTADOS[i]; if(!a)return;
+  asisPosponer(a.k,cuanto==='h'?3600000:(cuanto==='m'?asisManana():24*3600000))}
+function asisPanelPintar(){
+  var p=$('#asis-panel'); if(!p)return;
+  if(!ASIS.abierto){p.hidden=true; return}
+  var _q=$('#asis-q'), _foco=!!_q&&document.activeElement===_q, _cu=p.querySelector('.asis-cuerpo'), _scroll=_cu?_cu.scrollTop:0;
+  var A=asisAvisos(); ASIS_PINTADOS=A;
+  var h=new Date().getHours(), quien=asisQuien();
+  var saludo=(h<12?'Buen día':(h<19?'Buenas tardes':'Buenas noches'))+(esDoctora()?', '+esc(quien):'');
+  var cuerpo;
+  if(ASIS.tab==='avisos'){
+    cuerpo=A.length?A.map(function(a,i){
+      var abierta=a.lista&&ASIS.lista===a.k, L=a.lista||[];
+      return '<div class="asis-av '+(a.sev||'')+'"><b>'+a.ico+' '+esc(a.t)+'</b>'+(a.x?'<span>'+esc(a.x)+'</span>':'')+
+        (abierta?'<div class="asis-li">'+L.slice(0,ASIS_LISTA_MAX).map(function(r,j){
+          return '<button type="button" onclick="asisAbrirItem('+i+','+j+')"><i><b>'+esc(r.t)+'</b><small>'+esc(r.s||'')+'</small></i>'+
+            (r.m?'<em>'+esc(r.m)+'</em>':'')+'<u>Abrir ›</u></button>'}).join('')+
+          (L.length>ASIS_LISTA_MAX?'<div class="asis-mas">…y '+(L.length-ASIS_LISTA_MAX)+' más en 🔔 Recordatorios.</div>':'')+'</div>':'')+
+        '<div class="asis-acc">'+
+          (a.b?'<button type="button" class="asis-b si" onclick="asisAccion('+i+')">'+esc(a.b[0])+'</button>':'')+
+          (L.length?'<button type="button" class="asis-b si" onclick="asisVerLista('+i+')">'+(abierta?'Ocultar':'Ver cuáles ('+L.length+')')+'</button>':'')+
+          '</div><div class="asis-acc2">'+
+          (a.tm?'':'<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'h\')">⏰ En 1 hora</button>'+
+            '<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'m\')">🌙 Mañana</button>')+
+          '<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'d\')">✓ Entendido</button></div></div>'}).join('')
+      :'<div class="asis-vacio">✅ Todo en orden por acá.<br>Si necesitás algo, preguntame en «¿Cómo hago…?».</div>'}
+  else{
+    cuerpo='<input type="search" id="asis-q" class="asis-q" placeholder="Ej.: saldo, cuota, ortodoncia, reprogramar…" autocomplete="off" value="'+esc(ASIS.q)+'" oninput="ASIS.q=this.value;ASIS.abierta=-1;asisAyudaLista()">'+
+      '<div id="asis-lista">'+asisAyudaHtml(asisBuscar(ASIS.q))+'</div>'}
+  p.innerHTML='<div class="asis-h">'+asisSvg()+'<div><b>'+saludo+' 👋</b><small>Soy '+ASIS_NOMBRE+', tu asistente del panel</small></div>'+
+      '<button type="button" class="asis-x" title="'+(asisMudo()?'Activar el sonido':'Silenciar')+'" aria-label="'+(asisMudo()?'Activar el sonido':'Silenciar')+'" onclick="asisMudoCambiar()">'+(asisMudo()?'🔇':'🔊')+'</button>'+
+      '<button type="button" class="asis-x" aria-label="Cerrar" onclick="asisCerrar()">✕</button></div>'+
+    '<div class="asis-tabs"><button type="button" class="'+(ASIS.tab==='avisos'?'on':'')+'" onclick="asisTab(\'avisos\')">🔔 Avisos'+(A.length?'<span>'+A.length+'</span>':'')+'</button>'+
+      '<button type="button" class="'+(ASIS.tab==='ayuda'?'on':'')+'" onclick="asisTab(\'ayuda\')">❓ ¿Cómo hago…?</button></div>'+
+    '<div class="asis-cuerpo">'+cuerpo+'</div>'+
+    '<div class="asis-pie">Solo te aviso y te muestro: no cambio nada. <a onclick="asisTourEmpezar()">🧭 Recorrido guiado</a></div>';
+  p.hidden=false;
+  var cu=p.querySelector('.asis-cuerpo'); if(cu&&_scroll)cu.scrollTop=_scroll;
+  var q=$('#asis-q'); if(q&&_foco)try{q.focus({preventScroll:true}); q.setSelectionRange(q.value.length,q.value.length)}catch(e){}}
+function asisAyudaHtml(idx){
+  if(!idx.length)return '<div class="asis-vacio">Todavía no tengo esa respuesta. Probá con otra palabra (por ejemplo «saldo», «cuota» o «cita»).</div>';
+  return idx.map(function(i){
+    var a=ASIS_AYUDA[i], on=i===ASIS.abierta;
+    return '<div class="asis-pr'+(on?' on':'')+'"><button type="button" class="asis-pq" onclick="ASIS.abierta=('+i+'===ASIS.abierta?-1:'+i+');asisAyudaLista()">'+esc(a.q)+'</button>'+
+      (on?'<ol>'+a.p.map(function(s){return '<li>'+esc(s.replace('QUIEN',asisQuienCorrige()))+'</li>'}).join('')+'</ol>'+
+        '<button type="button" class="asis-b si" onclick="asisMostrar('+i+')">'+(a.tour?'🧭 Empezar':'👉 Mostrame dónde')+'</button>':'')+'</div>'}).join('')}
+function asisAyudaLista(){var l=$('#asis-lista'); if(l)l.innerHTML=asisAyudaHtml(asisBuscar(ASIS.q))}
+
+/* ---------- el recorrido guiado ---------- */
+var ASIS_TOUR=null;
+var ASIS_TOUR_PASOS=[
+  {v:'midia', t:'🏠 Mi día', x:'Lo de hoy: los pacientes agendados, a quién falta atender y lo cobrado. Cuando llega un paciente, tocá «🦷 Atender».'},
+  {v:'atencion', t:'＋ Nueva atención', x:'Acá se carga cada visita: el paciente, el tratamiento y lo que pagó. Si queda debiendo, te lo recuerdo yo.'},
+  {v:'cita', t:'📅 Agenda', x:'Las citas del día y de la semana. Desde acá agendás y marcás si vino, si no vino o si se reprograma.'},
+  {v:'agenda', t:'🔔 Recordatorios', x:'A quién escribirle hoy: citas, saldos, controles, planes y cuotas, con el WhatsApp ya armado.'},
+  {v:'lista', t:'📋 Atenciones', x:'Todas las atenciones. Tocá una para cobrar un saldo, editarla o ver su historial.'},
+  {v:'pacientes', t:'👤 Pacientes', x:'Cada paciente con su historia, ficha médica, planes de tratamiento y saldo a favor.'},
+  {v:'caja', solo:'adm', t:'💰 Caja', x:'Lo que entró cada día, por forma de pago. Los pagos de saldos y planes entran el día que se pagan.'},
+  {v:'', t:'🦷 Y acá estoy yo', x:'Te aviso lo pendiente (con un globito y un «pop») y te explico cómo hacer cada cosa. Tocame cuando quieras.'}
+];
+function asisTourPasos(){return ASIS_TOUR_PASOS.filter(function(P){
+  if(P.solo==='adm'&&!asisVeAdm())return false;
+  return !P.v||asisSeVe(document.querySelector('nav button[data-v="'+P.v+'"]'))})}
+function asisTourEmpezar(){asisCerrar(); asisLS(ASIS_LS_TOUR,1); ASIS_TOUR={i:0}; asisTourPaso(0)}
+function asisTourFin(){
+  ASIS_TOUR=null; if(ASIS_FOCO){ASIS_FOCO.classList.remove('asis-foco'); ASIS_FOCO=null}
+  var gl=$('#asis-globo'); if(gl)gl.hidden=true;
+  show('midia')}
+function asisTourPaso(d){
+  if(!ASIS_TOUR)return;
+  var L=asisTourPasos(); ASIS_TOUR.i=Math.max(0,ASIS_TOUR.i+(d||0));
+  var P=L[ASIS_TOUR.i]; if(!P){asisTourFin(); return}
+  if(P.v)show(P.v);
+  setTimeout(function(){
+    asisFoco(P.v?'nav button[data-v="'+P.v+'"]':'#asis-yo',true);
+    var ult=ASIS_TOUR.i===L.length-1;
+    asisGlobo(null,true,false,'<b>'+esc(P.t)+' <small style="color:var(--gray);font-weight:500">'+(ASIS_TOUR.i+1)+' de '+L.length+'</small></b><span>'+esc(P.x)+'</span>'+
+      '<div class="asis-acc">'+(ASIS_TOUR.i?'<button type="button" class="asis-b" onclick="asisTourPaso(-1)">‹ Atrás</button>':'')+
+      '<button type="button" class="asis-b si" onclick="asisTourPaso(1)">'+(ult?'¡Listo! ✓':'Siguiente ›')+'</button>'+
+      (ult?'':'<button type="button" class="asis-b" onclick="asisTourFin()">Saltar</button>')+'</div>')},200)}
+/* la primera vez en este aparato */
+function asisTourOfrecer(){
+  if(!ASIS.montado||ASIS_TOUR||asisLS(ASIS_LS_TOUR)||document.body.classList.contains('locked'))return;
+  var gl=$('#asis-globo'); if(!gl)return;
+  asisGlobo(null,true,false,'<b>¡Hola! Soy '+ASIS_NOMBRE+' 🦷</b><span>Soy tu asistente del panel: te aviso lo pendiente y te explico cómo hacer cada cosa. ¿Te muestro el panel? Es un minuto.</span>'+
+    '<div class="asis-acc"><button type="button" class="asis-b si" onclick="asisTourEmpezar()">🧭 Sí, mostrame</button>'+
+    '<button type="button" class="asis-b" onclick="asisLS(ASIS_LS_TOUR,1);$(\'#asis-globo\').hidden=true">Ahora no</button></div>')}
+/* ===== fin de Sonri ===== */
 </script>
 </body>
 </html>
