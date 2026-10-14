@@ -587,7 +587,7 @@ function doDelete(r, base, ses) {
          borra: se devuelve cómo está para que la revisen */
       var actual = registroDeFila(sh.getRange(i + 2, 1, 1, COLS.length).getValues()[0]);
       if (ses && ses.rol === 'doctora' && (actual.estado === 'Anticipo'
-          ? !(ANTICIPO_DOCTORAS && actual.anticipoPor === ses.prof) : profDeOtra(actual, ses)))
+          ? !anticipoDeDoctora(actual, ses) : profDeOtra(actual, ses)))
         return { ok: false, error: 'sin_permiso', registro: actual };
       if (base) {
         if (fCambioParaBorrar(base, actual)) return { ok: false, error: 'cambio', registro: actual };
@@ -1051,6 +1051,7 @@ function cfgPublica(cfg) {
   for (k in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, k)) con.push(k);
   o.credServidor = true;
   o.clavesProfHay = con;
+  o.pagoPlanDoctoras = true;
   return o;
 }
 /* Una configuración que llega del panel no puede tocar las claves. */
@@ -1058,7 +1059,7 @@ function cfgSinClaves(cfg, guardada) {
   if (!cfg) return cfg;
   var o = {}, k;
   for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
-  delete o.credServidor; delete o.clavesProfHay;
+  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras;
   delete o.adminHash; delete o.passHash; delete o.clavesProf;
   if (guardada !== undefined) {
     /* la config guardada lleva siempre las claves vigentes: si algún día se
@@ -1103,7 +1104,8 @@ function doLogin(body) {
   if (!s) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_incorrecta' }; }
   s.h = h; s.fabrica = esDeFabrica(h);
   var tok = nuevaSesion(s);
-  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica };
+  /* pagoPlan: este script acepta los pagos de plan que carga la doctora */
+  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true };
 }
 
 /* Cambiar una clave: la dueña cambia cualquiera; recepción, la suya
@@ -1141,6 +1143,11 @@ function doCambiarClave(body, ses) {
 }
 
 /* ---- qué puede tocar una doctora ---- */
+/* Un anticipo suyo, a su nombre. El pago de un plan lo puede cargar
+   siempre: es plata de ese tratamiento, no un anticipo suelto. */
+function anticipoDeDoctora(r, ses) {
+  return !!r && r.anticipoPor === ses.prof && (ANTICIPO_DOCTORAS || !!r.planId);
+}
 function profDeOtra(r, ses) {
   var p = String((r && r.profesional) || '');
   return !!p && p !== 'Por definir' && p !== ses.prof;
@@ -1148,7 +1155,7 @@ function profDeOtra(r, ses) {
 function doctoraPuedeGuardar(r, actual, ses, separa) {
   if (ses.rol !== 'doctora') return true;
   if (r.estado === 'Anticipo' || (actual && actual.estado === 'Anticipo')) {
-    return ANTICIPO_DOCTORAS && r.anticipoPor === ses.prof && (!actual || actual.anticipoPor === ses.prof);
+    return anticipoDeDoctora(r, ses) && (!actual || anticipoDeDoctora(actual, ses));
   }
   if (separa) return !profDeOtra(r, ses);           // la segunda doctora de una misma cita: queda como visita propia
   if (actual && profDeOtra(actual, ses)) return false;

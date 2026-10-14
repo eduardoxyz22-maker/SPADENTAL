@@ -2049,7 +2049,7 @@ function abrirSesion(clave){
   return fetchApi({action:'login',clave:clave}).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
     if(r&&r.ok&&r.token){
-      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica};
+      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan};
       CLAVE_MEM=clave; guardarSesion(); return r}
     if(r&&r.error==='accion_desconocida')SRV_AUTH=false;
     if(r&&r.error==='clave_incorrecta'&&CLAVE_MEM===clave)CLAVE_MEM='';
@@ -5023,6 +5023,13 @@ var ANTICIPO_DOCTORAS=false; /* en Cosmetic los registran solo la dueña y recep
 function esAnticipo(r){return !!r&&r.estado==='Anticipo'}
 function sinAnticipos(a){return a.filter(function(r){return !esAnticipo(r)})}
 function puedeAnticipo(){return esAdmin()||(ANTICIPO_DOCTORAS&&esDoctora())}
+/* El pago de un plan lo carga también la doctora del plan: es plata de ese
+   tratamiento, no un anticipo suelto. Hace falta el Apps Script que lo acepta. */
+function puedePagoPlan(nombre,planId){
+  if(puedeAnticipo())return true;
+  if(!esDoctora()||!planId||!((CFG&&CFG.pagoPlanDoctoras)||SESION.pagoPlan))return false;
+  var p=planesDe(nombre).filter(function(x){return x.id===planId})[0];
+  return !!p&&planEsMio(p)}
 /* Al guardar una visita atendida, lo que queda debiendo se descuenta solo del
    saldo a favor: nadie tiene que acordarse ni sacar cuentas. Solo al cargarla
    (o al pasar una cita a atendida); corregir una atención vieja no lo toca. */
@@ -5053,6 +5060,18 @@ function creditosEn(lista,nombre){
   return {general:R(gen),planes:plan,total:R(tot)}}
 function creditoEn(lista,nombre){return creditosEn(lista,nombre).total}
 function creditoDe(nombre){return creditoEn(DATA,nombre)}
+/* Lo pagado a un plan es para ese plan: a favor queda solo lo que pasa de
+   su presupuesto. */
+function sobrantePlan(c,p){
+  var q=c.planes[p.id]||0; return Math.max(0,Math.min(q,Math.round((cobradoPlan(p)-num(p.total))*100)/100))}
+/* El saldo a favor que se le muestra al paciente: lo general más lo que
+   sobra de cada plan (si el plan ya no existe, todo lo suyo). */
+function creditoLibre(nombre){
+  var c=creditosEn(DATA,nombre), t=c.general, ps=planesDe(nombre);
+  Object.keys(c.planes).forEach(function(id){
+    var p=ps.filter(function(x){return x.id===id})[0];
+    t+=p?sobrantePlan(c,p):c.planes[id]});
+  return Math.round(t*100)/100}
 /* lo que puede usar una atención: lo general más lo pagado a su plan */
 function creditoParaEn(lista,nombre,planId){
   var c=creditosEn(lista,nombre); return Math.round((c.general+(planId?(c.planes[planId]||0):0))*100)/100}
@@ -5091,10 +5110,10 @@ function usosSaldoDe(nombre){
   return out}
 
 function nuevoAnticipo(nombre,planId,etapa){
-  if(!puedeAnticipo()){toast(ANTICIPO_DOCTORAS?'No tenés permiso para registrar pagos adelantados 🔐':'Los pagos adelantados los registra recepción o la dueña 🔐',1);return}
+  if(planId?!puedePagoPlan(nombre,planId):!puedeAnticipo()){toast(ANTICIPO_DOCTORAS?'No tenés permiso para registrar pagos adelantados 🔐':'Los pagos adelantados los registra recepción o la dueña 🔐',1);return}
   nombre=nombre||'';
   if(nombre&&bloqueaAjeno(nombre))return;
-  var disp=nombre?creditoDe(nombre):0;
+  var disp=nombre?creditoLibre(nombre):0;
   var plan=planId?planesDe(nombre).filter(function(x){return x.id===planId})[0]:null;
   var sug='';
   if(plan&&etapa){var fe=filasPlan(nombre,plan).filter(function(f){return f.s.n===etapa})[0]; if(fe&&fe.saldo>0)sug=fe.saldo}
@@ -5121,7 +5140,7 @@ function nuevoAnticipo(nombre,planId,etapa){
     '<button class="btn sec" onclick="'+(plan?'verPlan(\''+jss(nombre)+'\',\''+plan.id+'\')':'closeModal()')+'">Cancelar</button></div>')}
 
 function guardarAnticipo(nombre,planId){
-  if(!puedeAnticipo()){toast('No tenés permiso para registrar anticipos 🔐',1);return}
+  if(planId?!puedePagoPlan(nombre,planId):!puedeAnticipo()){toast('No tenés permiso para registrar anticipos 🔐',1);return}
   var pac=(nombre||($('#an-pac')?$('#an-pac').value:'')).trim();
   if(!pac){toast('Escribí el nombre del paciente',1);return}
   if(identidadAmbigua(pac)){toast(AVISO_IDENTIDAD,1);return}
@@ -5152,13 +5171,13 @@ function guardarAnticipo(nombre,planId){
       x.ts&&Date.now()-Date.parse(x.ts)<8000})){closeModal(); return}   // doble clic
   DATA.push(rec); persist(rec);
   if(planId){toast('Pago de '+bs(m)+' registrado en el plan ✅'); refreshAll(); verPlan(pac,planId); return}
-  closeModal(); toast('Anticipo de '+bs(m)+' registrado · a favor '+bs(creditoDe(pac))+' 💜'); refreshAll()}
+  closeModal(); toast('Anticipo de '+bs(m)+' registrado · a favor '+bs(creditoLibre(pac))+' 💜'); refreshAll()}
 
 /* Un anticipo mal cargado se borra mientras no se haya usado. No hay
    devoluciones: si ya se usó, el saldo quedaría negativo. */
 function borrarAnticipo(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||!esAnticipo(r))return;
-  if(!puedeAnticipo()){toast('No tenés permiso para borrar anticipos 🔐',1);return}
+  if(r.planId?!puedePagoPlan(r.paciente,r.planId):!puedeAnticipo()){toast('No tenés permiso para borrar anticipos 🔐',1);return}
   if(esDoctora()&&r.anticipoPor!==PROF_ACTUAL){toast('Ese anticipo lo registró otra persona: lo borra recepción o la dueña 🔐',1);return}
   if(!CONNECTED){toast('Para borrar un anticipo hace falta conexión: hay que ver si otro equipo ya lo usó.',1);return}
   if(bolsilloDe(creditosEn(DATA,r.paciente),r)-num(r.acuenta)<-0.009){toast('Ese anticipo ya se usó en una atención: no se puede borrar.',1);return}
@@ -5175,8 +5194,8 @@ function borrarAnticipo(id){
 function htmlSaldoFavor(nom){
   var ants=anticiposDe(nom), usos=usosSaldoDe(nom);
   if(!ants.length&&!usos.length)return '';
-  var cred=creditoDe(nom);
-  var bols=creditosEn(DATA,nom);
+  var cred=creditoLibre(nom);
+  var bols=creditosEn(DATA,nom), enPlanes=Math.round((bols.total-cred)*100)/100;
   var movs=ants.map(function(a){
       var pl=a.planId?planesDe(nom).filter(function(x){return x.id===a.planId})[0]:null;
       return {fecha:a.fecha,txt:(a.planId?'Pago al plan '+(pl?'«'+pl.nombre+'»':''):'Anticipo')+(a.obs?' · '+a.obs:'')+' · '+metodoText(a),monto:num(a.acuenta),a:a}})
@@ -5185,9 +5204,10 @@ function htmlSaldoFavor(nom){
   return '<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">💜 Saldo a favor · '+
       '<span style="color:'+(cred<-0.009?'var(--clay)':'var(--ok)')+'">'+bs(cred)+'</span></h4>'+
     (cred<-0.009?'<p class="mini" style="color:var(--clay)">Se usó más de lo que dejó (dos equipos cobraron a la vez). Revisalo.</p>':'')+
+    (enPlanes>0.009?'<p class="mini">Además hay '+bs(enPlanes)+' pagados a sus planes: se descuentan de las etapas de cada plan.</p>':'')+
     '<div class="tw" style="margin:0"><table style="min-width:0"><tbody>'+
     movs.map(function(x){
-      var puede=x.a&&puedeAnticipo()&&(!esDoctora()||x.a.anticipoPor===PROF_ACTUAL)&&bolsilloDe(bols,x.a)-num(x.a.acuenta)>-0.009;
+      var puede=x.a&&(x.a.planId?puedePagoPlan(nom,x.a.planId):puedeAnticipo())&&(!esDoctora()||x.a.anticipoPor===PROF_ACTUAL)&&bolsilloDe(bols,x.a)-num(x.a.acuenta)>-0.009;
       return '<tr><td>'+fmtFcorta(x.fecha)+'</td><td>'+esc(x.txt)+'</td>'+
         '<td class="num" style="color:'+(x.monto<0?'var(--clay)':'var(--ok)')+'">'+(x.monto<0?'−':'+')+n0(Math.abs(x.monto))+'</td>'+
         '<td>'+(puede?'<button class="btn danger sm" onclick="borrarAnticipo(\''+x.a.id+'\')">Borrar</button>':'')+'</td></tr>'}).join('')+
@@ -6873,7 +6893,7 @@ function verPaciente(nombre){
   if(!rs.length&&!citas.length&&pacVacia(f)&&!ants.length){toast('Sin historial',1);return}
 
   var nom=(rs[0]&&rs[0].paciente)||(citas[0]&&citas[0].paciente)||(ants[0]&&ants[0].paciente)||f.nombre||String(nombre||'');
-  var cred=creditoDe(nom);
+  var cred=creditoLibre(nom);
   var nj=jss(nom);
   ODON_PAC=nom;
   var mapa=odontoDe(nom), nPiezas=Object.keys(mapa).length, conTemp=tieneTemporales(mapa);
@@ -6936,7 +6956,7 @@ function verPaciente(nombre){
       (esAdmin()?'<div class="kpi"><div class="k">Facturado</div><div class="v" style="font-size:19px">'+bs(tot)+'</div></div>':'')+
       '<div class="kpi"><div class="k">Saldo</div><div class="v" style="font-size:19px;color:'+
         (sal>0?'var(--clay)':'var(--ok)')+'">'+bs(sal)+'</div></div>'+
-      (ants.length||Math.abs(cred)>0.009?'<div class="kpi"><div class="k">💜 A favor</div><div class="v" style="font-size:19px;color:'+
+      (ants.some(function(x){return !x.planId})||Math.abs(cred)>0.009?'<div class="kpi"><div class="k">💜 A favor</div><div class="v" style="font-size:19px;color:'+
         (cred<-0.009?'var(--clay)':'var(--ok)')+'">'+bs(cred)+'</div></div>':'')+
     '</div>'+
     (prox?'<div class="rem '+(prox.f===hoy?'today':'soon')+'" style="margin-bottom:10px"><div>'+
@@ -6983,7 +7003,7 @@ function nuevaParaPaciente(nombre){
   setRadio('tipo',rs?'Recurrente':'Nuevo'); refrescarFichaForm(''); show('atencion'); refreshNro()}
 
 function showWhatsappModal(r,cita,fav){
-  fav=num(fav); var quedaFav=fav>0?creditoDe(r.paciente):0;
+  fav=num(fav); var quedaFav=fav>0?creditoLibre(r.paciente):0;
   var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Gracias por su visita a *'+clinica()+'*.\n\n';
   t+='📅 '+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+'\n';
   if((r.servicios||[]).length)t+='🦷 '+srvText(r)+'\n';
@@ -7262,7 +7282,7 @@ function verPlan(nombre,id){
   if(!p){toast('Ese plan ya no está',1);abrirPlanes(nombre);return}
   if(!planVisible(p)){noEsTuya();return}
   var nj=jss(nombre), a=avancePlan(p), cob=cobradoPlan(p), sal=saldoPlan(p), mio=planEsMio(p),
-      favor=Math.max(0,creditoPara(nombre,p.id)), filas=filasPlan(nombre,p), prox=proxSesion(p);
+      favor=Math.max(0,creditosEn(DATA,nombre).general+sobrantePlan(creditosEn(DATA,nombre),p)), filas=filasPlan(nombre,p), prox=proxSesion(p);
   var kpi=function(k,v,c){return '<div class="kpi"><div class="k">'+k+'</div><div class="v" style="font-size:18px'+(c?';color:'+c:'')+'">'+v+'</div></div>'};
   var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===p.id})
     .sort(function(x,y){return (y.fecha||'').localeCompare(x.fecha||'')});
@@ -7275,14 +7295,14 @@ function verPlan(nombre,id){
     '<div class="barra" style="margin:0 0 10px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="row-btn" style="margin-top:0">'+
       (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+prox.n+')">＋ Registrar atención · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
-      (puedeAnticipo()?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\')">💰 Registrar pago</button>':'')+
+      (puedePagoPlan(nombre,p.id)?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\')">💰 Registrar pago</button>':'')+
       '<button class="btn sec" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📲 Enviar presupuesto por WhatsApp</button></div>'+
     '<h4 style="margin:14px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Etapas</h4>'+
     (filas.length?filas.map(function(f){
         var s=f.s, acc=[];
         if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar atención</button>');
         if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+f.a.id+'\')">Registrar pago</button>');
-        else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedeAnticipo())acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar pago</button>');
+        else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar pago</button>');
         if(f.a)acc.push('<button class="btn sec sm" onclick="verFicha(\''+f.a.id+'\')">Ver historial</button>');
         var dato=function(k,v,st){return '<div><div class="mini">'+k+'</div><b'+(st?' style="'+st+'"':'')+'>'+v+'</b></div>'};
         return '<div class="pl-fila" style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px'+(s.hecha?';background:rgba(120,160,90,.06)':'')+'">'+
@@ -7388,10 +7408,12 @@ function atencionDePlan(nombre,planId,n){
   var info=function(){
     var m=num($('#ap-monto').value), fav=Math.max(0,creditoPara(nombre,planId)), deuda=Math.max(0,precio-m);
     var usa=Math.min(deuda,fav);
-    $('#ap-info').innerHTML=(precio<=0&&m<=0?'Esta etapa no se cobra aparte: queda registrada sin deuda.':
+    var cu=proxCuota(p), txtCu=cu?'<div style="margin-bottom:4px">📅 Cuota '+cu.n+' del plan: <b>'+bs(Math.round((cu.monto-cu.cubierto)*100)/100)+'</b>'+
+      (cu.vencida?' · <span style="color:var(--clay)">venció el '+fmtF(cu.fecha)+'</span>':' · vence el '+fmtF(cu.fecha))+'. Si la trae, anotala en "Dinero recibido".</div>':'';
+    $('#ap-info').innerHTML=txtCu+(precio<=0&&m<=0?'Esta etapa está incluida en el presupuesto: queda registrada sin deuda.':
       (usa>0?'💜 Se descuentan '+bs(usa)+' del saldo a favor / pago adelantado. ':'')+
       (precio>0?(deuda-usa>0.009?'Queda debiendo <b>'+bs(deuda-usa)+'</b> de esta etapa.':'Esta etapa queda pagada.'):'')+
-      (m>precio&&precio>=0?' Lo que sobra ('+bs(m-precio)+') queda como pago al plan.':''))};
+      (m>precio&&precio>=0?(precio>0?' Lo que pasa del importe ('+bs(m-precio)+')':' Los '+bs(m))+' quedan como pago al plan: cuentan para las cuotas.':''))};
   $('#ap-monto').oninput=info; info()}
 
 function guardarAtencionPlan(){
@@ -7407,7 +7429,7 @@ function guardarAtencionPlan(){
   if(!prof){toast('Elegí la doctora',1);return}
   if(montoRaro(txt)||m<0){toast('El monto tiene letras: escribilo solo con números',1);return}
   if(m>0&&!met){toast('Marcá cómo pagó',1);return}
-  if(m>0&&!puedeAnticipo()&&m>num(s.precio)+0.009){toast('Lo que sobra sería un pago al plan: lo registra '+(ANTICIPO_DOCTORAS?'quien tenga permiso':'recepción o la dueña')+'. Cobrá solo el importe de la etapa.',1);return}
+  if(m>0&&!puedePagoPlan(nombre,p.id)&&m>num(s.precio)+0.009){toast('Lo que sobra sería un pago al plan: lo registra la doctora del plan, recepción o la dueña. Cobrá solo el importe de la etapa.',1);return}
   c.guardando=true; var b=$('#ap-ok'); if(b){b.disabled=true; b.textContent='Guardando…'}
   var seguir=function(tope){
     var precio=num(s.precio), alPlan=Math.max(0,Math.round((m-precio)*100)/100), cash=Math.round((m-alPlan)*100)/100;
@@ -7439,7 +7461,7 @@ function guardarAtencionPlan(){
     if(cita){DATA=DATA.map(function(r){return r.id===rec.id?rec:r})}else DATA.push(rec);
     persist(rec);
     marcarSesionPlan(rec);
-    if(alPlan>0)registrarPagoPlan(rec.paciente,p.id,alPlan,met,fecha,'Sobrante de la atención del '+fmtF(fecha));
+    if(alPlan>0)registrarPagoPlan(rec.paciente,p.id,alPlan,met,fecha,'Pagado en la atención del '+fmtF(fecha));
     AT_PLAN=null;
     toast('Atención guardada ✅'+(fav>0?' · '+bs(fav)+' del pago adelantado':'')+(rec.saldo>0?' · debe '+bs(rec.saldo):''));
     refreshAll(); verPlan(nombre,p.id)};
