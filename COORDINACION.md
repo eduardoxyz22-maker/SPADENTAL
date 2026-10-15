@@ -56,3 +56,16 @@ Lo de arriba es el antecedente del 2/10. Desde entonces el `.gs` cambió: la ver
 - `node tests/sonri-y-permisos.cjs`: 35 comprobaciones. Cubre los permisos del servidor con sesiones de prueba sobre el `.gs` real en memoria (`tests/apps-script-en-memoria.cjs`, actualizado a la versión 6), y la lógica de Sonri cargada del HTML real.
 
 Los cambios del `.gs` exigen pegar cada script y publicarlo como **"Nueva versión"** en su implementación existente.
+
+### Segunda revisión del 15/10 (Fable, sobre `f3690aa`) — corregido
+- **Cola compartida:** cada cambio pendiente guarda quién lo cargó (`quienCola`). Solo lo sube esa persona o la dueña, y si el servidor lo rechaza por permisos ya no se borra.
+- **Lo cobrado no baja con un guardado** (`cobroBaja` → `cobro_baja`), para ningún rol. Para eso está «Corregir cobro», que deja historia. Una doctora no borra una atención con plata cobrada, ni se agenda o carga un paciente de otra.
+- **Pagos de doctoras a planes:** el plan tiene que existir y ser suyo (`planDeLaDoctora`). Un anticipo ya usado como saldo a favor no se borra (`anticipo_usado`).
+- **Paciente compartido:** solo se marcan o desmarcan etapas con atenciones propias. Un plan sin dueña clara (`duenoPlanSrv`) queda protegido.
+- **Saldo a favor:** lo de un plan borrado y lo que sobra del presupuesto de un plan pasan a lo general y se pueden usar. Una etapa «aparte» no usa lo del plan.
+- **`cfgGet` sin sesión** sale sin metas ni comisiones, marcado `parcial`; el panel lo completa con lo suyo.
+- **Sonri:** pide lo que falta antes de preguntar por el plan, y no guarda una etapa cuyo precio no coincide.
+- **«Cancelar» mientras guarda** ahora cancela.
+- **`info` muestra `version`** (`VERSION_SCRIPT`) para confirmar sin clave qué está publicado.
+
+Pruebas: `node tests/sonri-y-permisos.cjs` → 59.

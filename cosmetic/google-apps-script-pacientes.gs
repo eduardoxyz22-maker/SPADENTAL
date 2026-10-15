@@ -198,7 +198,7 @@ function doGuardarPac(p, base, ses) {
   }
   var conf = [], final = p;
   if (actual && base !== undefined) final = fusion3(base || {}, p, actual, '', conf);
-  if (doctora && actual) final.planes = planesSinTocarAjenos(actual.planes, final.planes, ses.prof);
+  if (doctora && actual) final.planes = planesSinTocarAjenos(actual.planes, final.planes, ses.prof, fClavePac(p.nombre));
   final.nombre = p.nombre;
   var fila = filaDePaciente(final);
   if (destinos.length) {
@@ -210,23 +210,47 @@ function doGuardarPac(p, base, ses) {
 /* Igual que el panel (pacAjeno): el paciente es de otra doctora si tiene
    visitas con doctora asignada y ninguna es de esta. Un paciente nuevo, sin
    visitas, no es de nadie todavía. */
-function pacienteDeOtra(clave, prof) {
-  var sh = getSheet(), n = sh.getLastRow();
-  if (n < 2 || !clave) return false;
-  var filas = sh.getRange(2, 1, n - 1, 19).getValues(), suyas = 0, mias = 0;
+/* Las visitas de un paciente (id, doctora, estado), sin anticipos ni citas por definir. */
+function filasPacSrv(clave) {
+  var sh = getSheet(), n = sh.getLastRow(), out = [];
+  if (n < 2 || !clave) return out;
+  var filas = sh.getRange(2, 1, n - 1, 19).getValues();
   for (var i = 0; i < filas.length; i++) {
     var pr = String(filas[i][5] || ''), est = String(filas[i][18] || '');
     if (!pr || pr === 'Por definir' || est === 'Anticipo') continue;
     if (fClavePac(filas[i][6]) !== clave) continue;
-    suyas++; if (pr === prof) mias++;
+    out.push({ id: filas[i][0], prof: pr, estado: est });
   }
-  return suyas > 0 && mias === 0;
+  return out;
 }
-/* El plan de otra doctora queda como estaba: no se cambia, no se borra y no se
-   crean planes a su nombre. Si esta doctora atendió una etapa en reemplazo,
-   solo se toma la marca de la etapa (hecha, fecha y atención). */
-function planesSinTocarAjenos(viejos, nuevos, prof) {
-  var ajeno = function (p) { return !!(p && p.prof && p.prof !== prof); };
+/* Igual que el panel (pacAjeno): el paciente es de otra doctora si tiene
+   visitas con doctora asignada y ninguna es de esta. Un paciente nuevo, sin
+   visitas, no es de nadie todavía. */
+function pacienteDeOtra(clave, prof) {
+  var fs = filasPacSrv(clave);
+  return fs.length > 0 && !fs.some(function (f) { return f.prof === prof; });
+}
+/* La dueña de un plan: la anotada; si es un plan viejo sin doctora, la que
+   atendió más etapas; sin etapas atendidas, la única doctora del paciente.
+   Si no se puede saber, no es de ninguna doctora (lo cambia la dueña). */
+function duenoPlanSrv(p, filas) {
+  if (p && p.prof) return p.prof;
+  var idProf = {}, cuenta = {}, mejor = '', max = 0, profs = {};
+  (filas || []).forEach(function (f) { idProf[f.id] = f.prof; profs[f.prof] = 1; });
+  ((p && p.sesiones) || []).forEach(function (s) { var d = s && s.atencionId && idProf[s.atencionId]; if (d) cuenta[d] = (cuenta[d] || 0) + 1; });
+  for (var d in cuenta) if (cuenta[d] > max) { max = cuenta[d]; mejor = d; }
+  if (mejor) return mejor;
+  var ks = Object.keys(profs);
+  return ks.length === 1 ? ks[0] : '';
+}
+/* El plan de otra doctora (o sin dueña clara) queda como estaba: no se
+   cambia, no se borra y no se crean planes a su nombre. Si esta doctora
+   atendió una etapa en reemplazo, se toma solo la marca de esa etapa, y solo
+   si la atención es suya. */
+function planesSinTocarAjenos(viejos, nuevos, prof, clave) {
+  var filas = filasPacSrv(clave), idProf = {};
+  filas.forEach(function (f) { idProf[f.id] = f.prof; });
+  var ajeno = function (p) { return !!p && duenoPlanSrv(p, filas) !== prof; };
   var porId = {}, vistos = {}, out = [];
   (viejos || []).forEach(function (p) { if (p && p.id) porId[p.id] = p; });
   (nuevos || []).forEach(function (p) {
@@ -236,12 +260,17 @@ function planesSinTocarAjenos(viejos, nuevos, prof) {
       var q = JSON.parse(JSON.stringify(v));
       q.sesiones = (v.sesiones || []).map(function (s) {
         var ns = (p.sesiones || []).filter(function (x) { return x && x.n === s.n; })[0], c = JSON.parse(JSON.stringify(s));
-        if (ns) { c.hecha = !!ns.hecha; c.fecha = ns.fecha || ''; c.atencionId = ns.atencionId || ''; }
+        var marca = ns && ns.hecha && ns.atencionId && idProf[ns.atencionId] === prof;
+        var desmarca = ns && !ns.hecha && s.atencionId && idProf[s.atencionId] === prof;
+        if (marca || desmarca) { c.hecha = !!ns.hecha; c.fecha = ns.fecha || ''; c.atencionId = ns.atencionId || ''; }
         return c;
       });
       out.push(q); vistos[p.id] = 1; return;
     }
-    if (!v && ajeno(p)) return;
+    if (!v) {
+      if (p.prof && p.prof !== prof) return;                 // no se crean planes a nombre de otra
+      if (!p.prof) { p = JSON.parse(JSON.stringify(p)); p.prof = prof; }
+    }
     out.push(p); if (p.id) vistos[p.id] = 1;
   });
   (viejos || []).forEach(function (p) { if (p && p.id && ajeno(p) && !vistos[p.id]) out.push(p); });
@@ -517,6 +546,9 @@ function doSave(r, base, ses) {
   if (!destino && base !== undefined && fueBorrado(r.id)) return { ok: false, error: 'borrada', id: r.id };
   if (!destino && base && !esAlta) return { ok: false, error: 'borrada', id: r.id };
   var previa0 = destino ? registroDeFila(sh.getRange(destino, 1, 1, COLS.length).getValues()[0]) : null;
+  /* una doctora no agenda ni carga nada nuevo para un paciente de otra (igual que el panel) */
+  if (ses && ses.rol === 'doctora' && !previa0 && pacienteDeOtra(fClavePac(r.paciente), ses.prof))
+    return { ok: false, error: 'sin_permiso', id: r.id };
   if (ses && !doctoraPuedeGuardar(r, previa0, ses, !!(previa0 && base && fOtraDoctora(fSinAlta(base), r, previa0))))
     return { ok: false, error: 'sin_permiso', id: r.id };
   if (destino && base !== undefined) {
@@ -553,6 +585,9 @@ function doSave(r, base, ses) {
     }
     r = fusionRegistro(b0, r, actual, conf);
   }
+  /* Lo cobrado no se baja ni se borra con un guardado: para eso está
+     «Corregir cobro», que deja la historia en _Correcciones. */
+  if (previa0 && cobroBaja(previa0, r)) return { ok: false, error: 'cobro_baja', registro: previa0 };
 
   // N° del día: lo asigna el servidor para que no se repita entre celulares.
   // Es el mayor entre (cuántas atenciones ya hay ese día) y (el N° más alto usado).
@@ -635,6 +670,12 @@ function doDelete(r, base, ses) {
       if (ses && ses.rol === 'doctora' && (actual.estado === 'Anticipo'
           ? !anticipoDeDoctora(actual, ses) : profDeOtra(actual, ses)))
         return { ok: false, error: 'sin_permiso', registro: actual };
+      /* con plata cobrada (no saldo a favor), la borra recepción o la dueña: igual que el panel */
+      if (ses && ses.rol === 'doctora' && actual.estado !== 'Anticipo' && efectivoCobrado(actual) > 0.009)
+        return { ok: false, error: 'sin_permiso', registro: actual };
+      /* un anticipo (o pago a un plan) que ya se usó como saldo a favor no se borra: el saldo quedaría negativo */
+      if (actual.estado === 'Anticipo' && creditoPacienteSrv(fClavePac(actual.paciente)) - (Number(actual.acuenta) || 0) < -0.009)
+        return { ok: false, error: 'anticipo_usado', registro: actual };
       if (base) {
         if (fCambioParaBorrar(base, actual)) return { ok: false, error: 'cambio', registro: actual };
       }
@@ -1047,6 +1088,9 @@ var ANTICIPO_DOCTORAS = false;
    marcado con la otra clínica se rechaza: si alguna vez se cruzan una
    dirección o un respaldo, no se mezclan las planillas. Lo viejo sin
    etiqueta se acepta como siempre. */
+/* Qué versión de este archivo está publicada: se ve en «info», sin clave,
+   para confirmar que se pegó y se publicó como «Nueva versión». */
+var VERSION_SCRIPT = '2026-10-15-b';
 var CLINICA_ID = 'cosmetic';
 function deOtraClinica(r) { return !!(r && r.clinicaId && r.clinicaId !== CLINICA_ID); }
 /* =====================================================================
@@ -1094,6 +1138,15 @@ function guardarVerif(v) { PropertiesService.getScriptProperties().setProperty(K
 function esDeFabrica(h) { return h === ADMIN_FABRICA || h === EQUIPO_FABRICA; }
 
 /* Lo que se le manda al panel: sin ningún material de claves. */
+/* Antes de entrar (sin sesión): sin metas ni comisiones. Va marcada
+   «parcial» para que el panel no la tome como si se hubieran borrado. */
+var CFG_PRIVADOS = ['metaMes', 'comision', 'comisionDefault', 'comisionDescuentaLab'];
+function cfgSinSesion(cfg) {
+  var o = cfgPublica(cfg); if (!o) return o;
+  for (var i = 0; i < CFG_PRIVADOS.length; i++) delete o[CFG_PRIVADOS[i]];
+  o.parcial = true;
+  return o;
+}
 function cfgPublica(cfg) {
   if (!cfg) return cfg;
   var o = {}, k;
@@ -1111,7 +1164,7 @@ function cfgSinClaves(cfg, guardada) {
   if (!cfg) return cfg;
   var o = {}, k;
   for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
-  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras;
+  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras; delete o.parcial;
   delete o.adminHash; delete o.passHash; delete o.clavesProf;
   if (guardada !== undefined) {
     /* la config guardada lleva siempre las claves vigentes: si algún día se
@@ -1198,7 +1251,48 @@ function doCambiarClave(body, ses) {
 /* Un anticipo suyo, a su nombre. El pago de un plan lo puede cargar
    siempre: es plata de ese tratamiento, no un anticipo suelto. */
 function anticipoDeDoctora(r, ses) {
-  return !!r && r.anticipoPor === ses.prof && (ANTICIPO_DOCTORAS || !!r.planId);
+  if (!r || r.anticipoPor !== ses.prof) return false;
+  /* el pago a un plan: el plan tiene que existir en la ficha de ese paciente y ser suyo */
+  if (r.planId) return planDeLaDoctora(r, ses.prof);
+  return ANTICIPO_DOCTORAS;
+}
+function planDeLaDoctora(r, prof) {
+  var clave = fClavePac(r.paciente), sh = getSheetPac(), n = sh.getLastRow();
+  if (n < 2 || !clave) return false;
+  var filas = sh.getRange(2, 1, n - 1, COLS_PAC.length).getValues();
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0] || fClavePac(filas[i][0]) !== clave) continue;
+    var ps = pacienteDeFila(filas[i]).planes || [];
+    for (var j = 0; j < ps.length; j++) if (ps[j] && ps[j].id === r.planId) return duenoPlanSrv(ps[j], filasPacSrv(clave)) === prof;
+  }
+  return false;
+}
+function efectivoCobrado(r) {
+  var favor = 0, ps = (r && r.pagos) || [];
+  for (var i = 0; i < ps.length; i++) if (ps[i] && ps[i].metodo === 'Saldo a favor') favor += Number(ps[i].monto) || 0;
+  return (Number(r && r.acuenta) || 0) - favor;
+}
+/* Lo que le queda a favor a un paciente en total: lo que dejó (anticipos y
+   pagos a planes) menos lo que usó con «Saldo a favor». */
+function creditoPacienteSrv(clave) {
+  var sh = getSheet(), n = sh.getLastRow(), t = 0;
+  if (n < 2 || !clave) return 0;
+  var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0] || fClavePac(filas[i][6]) !== clave) continue;
+    var r = registroDeFila(filas[i]);
+    if (r.estado === 'Anticipo') { t += Number(r.acuenta) || 0; continue; }
+    var ps = r.pagos || [];
+    for (var j = 0; j < ps.length; j++) if (ps[j] && ps[j].metodo === 'Saldo a favor') t -= Number(ps[j].monto) || 0;
+  }
+  return Math.round(t * 100) / 100;
+}
+function cobroBaja(prev, nuevo) {
+  if ((Number(nuevo.acuenta) || 0) < (Number(prev.acuenta) || 0) - 0.009) return true;
+  var ids = {}, cn = fCobrosPost(nuevo), cp = fCobrosPost(prev), i;
+  for (i = 0; i < cn.length; i++) if (cn[i] && cn[i].id) ids[cn[i].id] = 1;
+  for (i = 0; i < cp.length; i++) if (cp[i] && cp[i].id && !ids[cp[i].id]) return true;
+  return false;
 }
 function profDeOtra(r, ses) {
   var p = String((r && r.profesional) || '');
@@ -1327,7 +1421,7 @@ function doPost(e) {
     if (body.action === 'login') return json(doLogin(body));
     /* Solo la configuracion: el list arrastra miles de atenciones y tarda
        segundos. Sin material de claves. */
-    if (body.action === 'cfgGet') return json({ ok: true, cfg: cfgPublica(leerCfg()) });
+    if (body.action === 'cfgGet') return json({ ok: true, cfg: sesionDe(body.token) ? cfgPublica(leerCfg()) : cfgSinSesion(leerCfg()) });
     /* De acá para abajo, leer pacientes o escribir: sin sesión válida no se
        ve ni se toca nada (un panel viejo, o alguien que encontró la dirección,
        queda afuera). */
@@ -1366,7 +1460,7 @@ function doGet(e) {
 
 function doInfo() {
   var ss = getSpreadsheet();
-  return { ok: true, planilla: ss.getName(), filas: Math.max(0, getSheet().getLastRow() - 1), seguridad: AUTH_V };
+  return { ok: true, planilla: ss.getName(), filas: Math.max(0, getSheet().getLastRow() - 1), seguridad: AUTH_V, version: VERSION_SCRIPT };
 }
 
 /**

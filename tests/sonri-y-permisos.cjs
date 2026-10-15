@@ -49,6 +49,55 @@ for (const [file, mia, otra] of [['google-apps-script-pacientes.gs', 'spadental'
     assert.ok(!H(TD, { action: 'list' }).registros.some(r => /Cruzado|^L[12]$/.test(r.paciente)));
   });
   check(file + ': lo viejo sin etiqueta de clínica se sigue aceptando', () => { const r = at({ paciente: 'Viejo', profesional: 'Dra. A' }); delete r.clinicaId; assert.equal(H(TD, { action: 'save', registro: r, base: null }).ok, true); });
+  /* auditoría de Fable (15/10) */
+  const reg = id => H(TD, { action: 'list' }).registros.find(r => r.id === id);
+  const cob = at({ id: 'COB', paciente: 'Paciente De A', profesional: 'Dra. A', total: 500, acuenta: 300, saldo: 200, pagos: [{ metodo: 'Efectivo', monto: 300 }] });
+  H(TD, { action: 'save', registro: cob, base: null });
+  const conPost = Object.assign({}, reg('COB'), { acuenta: 500, saldo: 0, cobrosPosteriores: [{ id: 'CP1', fecha: '2026-10-11', metodo: 'QR', monto: 200 }], pagos: [{ metodo: 'Efectivo', monto: 300 }, { metodo: 'QR', monto: 200 }] });
+  H(TD, { action: 'save', registro: conPost, base: reg('COB') });
+  check(file + ': nadie baja lo cobrado con un guardado (doctora, recepción, dueña; con y sin base)', () => {
+    for (const t of [TA, TD]) {
+      const b0 = reg('COB'), baja = Object.assign({}, b0, { acuenta: 50, saldo: 450, cobrosPosteriores: [], pagos: [{ metodo: 'Efectivo', monto: 50 }] });
+      assert.equal(H(t, { action: 'save', registro: baja, base: b0 }).error, 'cobro_baja');
+      assert.equal(H(t, { action: 'save', registro: baja }).error, 'cobro_baja');
+    }
+    assert.equal(reg('COB').acuenta, 500); assert.equal(reg('COB').cobrosPosteriores.length, 1);
+  });
+  check(file + ': subir lo cobrado o editar otra cosa sigue andando', () => { const b0 = reg('COB'); assert.equal(H(TA, { action: 'save', registro: Object.assign({}, b0, { obs: 'control ok' }), base: b0 }).ok, true); });
+  check(file + ': una doctora no borra una atención con plata cobrada (la dueña sí)', () => {
+    assert.equal(H(TA, { action: 'delete', registro: { id: 'COB' }, base: reg('COB') }).error, 'sin_permiso'); assert.ok(reg('COB'));
+  });
+  check(file + ': una doctora no se agenda sola un paciente de otra', () => {
+    assert.equal(H(TB, { action: 'save', registro: at({ paciente: 'Paciente De A', profesional: 'Dra. B', estado: 'Agendada', total: 0, acuenta: 0, pagos: [] }), base: null }).error, 'sin_permiso');
+  });
+  check(file + ': el pago de una doctora a un plan tiene que ser a un plan suyo', () => {
+    const ant = o => at(Object.assign({ estado: 'Anticipo', profesional: '', servicios: [], total: 0, acuenta: 350, saldo: 0, metodo: 'QR', pagos: [{ metodo: 'QR', monto: 350 }] }, o));
+    assert.equal(H(TA, { action: 'save', registro: ant({ paciente: 'Paciente Compartido', planId: 'no-existe', anticipoPor: 'Dra. A' }), base: null }).error, 'sin_permiso');
+    assert.equal(H(TB, { action: 'save', registro: ant({ paciente: 'Paciente Compartido', planId: 'PA', anticipoPor: 'Dra. B' }), base: null }).error, 'sin_permiso');
+    assert.equal(H(TA, { action: 'save', registro: ant({ id: 'PAGOA', paciente: 'Paciente Compartido', planId: 'PA', anticipoPor: 'Dra. A' }), base: null }).ok, true);
+  });
+  check(file + ': un anticipo ya usado como saldo a favor no se borra', () => {
+    const uso = at({ id: 'USO', paciente: 'Paciente Compartido', profesional: 'Dra. A', total: 300, acuenta: 300, saldo: 0, pagos: [{ metodo: 'Saldo a favor', monto: 300 }], planId: 'PA' });
+    assert.equal(H(TD, { action: 'save', registro: uso, base: null }).ok, true);
+    assert.equal(H(TD, { action: 'delete', registro: { id: 'PAGOA' }, base: reg('PAGOA') }).error, 'anticipo_usado');
+  });
+  check(file + ': en un plan ajeno solo se marcan o desmarcan etapas con atenciones propias; un plan sin dueña clara no se borra', () => {
+    const f0 = ficha('Paciente Compartido'), t = JSON.parse(JSON.stringify(f0));
+    t.planes = t.planes.map(p => p.id === 'PA' ? Object.assign({}, p, { sesiones: [{ n: 1, desc: 'Control 1', hecha: false }] }) : p);
+    H(TD, { action: 'pac', registro: Object.assign(JSON.parse(JSON.stringify(f0)), { planes: f0.planes.map(p => p.id === 'PA' ? Object.assign({}, p, { sesiones: [{ n: 1, desc: 'Control 1', hecha: true, fecha: '2026-10-12', atencionId: 'R2' }] }) : p).concat([{ id: 'PV', nombre: 'Viejo sin doctora', total: 100, sesiones: [], cuotas: [] }]) }), base: f0 });
+    const f1 = ficha('Paciente Compartido'), t1 = JSON.parse(JSON.stringify(f1));
+    t1.planes = t1.planes.filter(p => p.id !== 'PV').map(p => p.id === 'PA' ? Object.assign({}, p, { sesiones: [{ n: 1, desc: 'Control 1', hecha: false }] }) : p);
+    H(TB, { action: 'pac', registro: t1, base: f1 });
+    const f2 = ficha('Paciente Compartido');
+    assert.equal(f2.planes.find(p => p.id === 'PA').sesiones[0].hecha, true);
+    assert.ok(f2.planes.find(p => p.id === 'PV'));
+  });
+  check(file + ': sin sesión la configuración sale sin metas ni comisiones (y marcada parcial)', () => {
+    H(TD, { action: 'cfg', cfg: Object.assign({}, H(TD, { action: 'cfgGet' }).cfg || {}, { metaMes: 90000, comision: { 'Dra. A': 30 }, precios: [], canales: ['Facebook'] }) });
+    const sin = s.handle({ action: 'cfgGet' }).cfg || {}, con = H(TD, { action: 'cfgGet' }).cfg || {};
+    assert.equal(sin.metaMes, undefined); assert.equal(sin.comision, undefined); assert.equal(sin.parcial, true);
+    assert.equal(con.metaMes, 90000); assert.equal(con.parcial, undefined);
+  });
 }
 
 /* ---------------- Sonri: el código real del HTML con un DOM mínimo ---------------- */
@@ -87,6 +136,37 @@ for (const file of ['pacientes.html', 'cosmetic/pacientes.html']) {
     let n = 0; c.submitAtencion = () => { n++; }; vm.runInContext('ASIS.planResp=""', c);
     el('#f-paciente').value = 'Alguien'; el('#f-fecha').value = '2026-10-15';
     c.asisRespuestaPlan(''); c.asisRespuestaPlan(''); assert.equal(n, 1);
+  });
+  check(file + ': lo de un plan borrado y lo que sobra de un plan se usa en cualquier atención', () => {
+    vm.runInContext('ROL="admin";PROF_ACTUAL=""', c);
+    c.PAC = {}; const k = c.keyPac('Pac Credito'); c.PAC[k] = c.pacBlanco('Pac Credito'); c.PAC[k].nombre = 'Pac Credito';
+    c.PAC[k].planes = [c.planNormalize({ id: 'P1', nombre: 'Orto', total: 1000, sesiones: [{ n: 1, desc: 'Etapa', precio: 1000 }] })];
+    c.DATA = [{ id: 'A1', paciente: 'Pac Credito', estado: 'Anticipo', acuenta: 1000, planId: 'BORRADO', pagos: [], fecha: '2026-10-01' },
+      { id: 'A2', paciente: 'Pac Credito', estado: 'Anticipo', acuenta: 1300, planId: 'P1', pagos: [], fecha: '2026-10-01' }];
+    assert.equal(c.creditoPara('Pac Credito', ''), 1300);
+    assert.equal(c.creditoLibre('Pac Credito'), 1300);
+    assert.equal(c.creditosEn(c.DATA, 'Pac Credito').planes.P1, 1000);
+  });
+  check(file + ': una etapa «aparte» no usa lo pagado al plan', () => {
+    const k = c.keyPac('Pac Aparte'); c.PAC[k] = c.pacBlanco('Pac Aparte'); c.PAC[k].nombre = 'Pac Aparte';
+    c.PAC[k].planes = [c.planNormalize({ id: 'P2', nombre: 'Orto', total: 1000, sesiones: [{ n: 1, desc: 'Etapa', precio: 1000 }, { n: 2, desc: 'Radiografía', precio: 200, aparte: true, atencionId: 'X2' }] })];
+    c.DATA = [{ id: 'A3', paciente: 'Pac Aparte', estado: 'Anticipo', acuenta: 1000, planId: 'P2', pagos: [], fecha: '2026-10-01' }];
+    assert.equal(c.creditoPara('Pac Aparte', ''), 0);
+    c.DATA.push({ id: 'X2', paciente: 'Pac Aparte', estado: 'Atendido', planId: 'P2', planEtapa: 2, total: 200, acuenta: 200, saldo: 0, pagos: [{ metodo: 'Saldo a favor', monto: 200 }], fecha: '2026-10-02', servicios: [] });
+    assert.equal(c.creditosEn(c.DATA, 'Pac Aparte').planes.P2, 1000);
+    assert.equal(c.cobradoPlan(c.PAC[k].planes[0]), 1000);
+  });
+  check(file + ': la cola sabe quién cargó cada cambio y no lo sube otra sesión', () => {
+    vm.runInContext('ROL="equipo";PROF_ACTUAL=""', c);
+    const it = { action: 'save', rec: { id: 'Q1' }, por: c.quienCola() };
+    vm.runInContext('ROL="doctora";PROF_ACTUAL="Dra. B"', c); assert.equal(c.colaEsMia(it), false);
+    vm.runInContext('ROL="admin";PROF_ACTUAL=""', c); assert.equal(c.colaEsMia(it), true);
+    vm.runInContext('ROL="equipo";PROF_ACTUAL=""', c); assert.equal(c.colaEsMia(it), true);
+  });
+  check(file + ': una configuración parcial no borra metas ni comisiones', () => {
+    c.CFG.metaMes = 90000; c.CFG.comision = { 'Dra. A': 30 };
+    const o = c.cfgCompletarParcial({ parcial: true, precios: [], canales: [] });
+    assert.equal(o.metaMes, 90000); assert.equal(o.comision['Dra. A'], 30); assert.equal(o.parcial, undefined);
   });
   check(file + ': el pie dice lo que hace de verdad', () => { assert.ok(/Solo se guarda lo que vos confirmás/.test(bloque(file))); assert.ok(!/no cambio nada/.test(bloque(file))); });
 }
