@@ -35,3 +35,24 @@ Ejecutar desde la raíz: `node tests/pacientes-regression.cjs`. Requiere Node, s
 Base revisada: `7d2e538463f1390c66132afdabd405daa06df975`. Al publicar, conservar cualquier cambio concurrente: actualizar sin `force` y verificar las versiones de los archivos afectados. No revertir páginas ajenas.
 
 Antes de uso operativo, recargar ambos paneles en los equipos: una pestaña antigua puede sobrescribir campos nuevos al editar una atención. El saneamiento de históricos y los cambios de autenticación siguen pendientes de aprobación independiente.
+
+## Estado al 15 de octubre de 2026 (después de la auditoría técnica)
+
+Lo de arriba es el antecedente del 2/10. Desde entonces el `.gs` cambió: la versión 6 exige sesión de 30 minutos para leer y escribir, guarda las claves fuera de la configuración pública y registra las correcciones de cobro (ver `INFORME-CODEX.md`). La auditoría del 15/10 (sobre `6c575ab`) encontró y esta versión corrige:
+
+- **Sonri mostraba avisos del usuario anterior** en una computadora compartida. Ahora los avisos al guardar llevan quién los generó, solo se ven a esa persona y se borran al cerrar sesión o cambiar de usuario (`asisOlvidar`).
+- **Una doctora podía cambiar la ficha de un paciente de otra** (`pac`). El servidor aplica la misma regla que el panel (`pacienteDeOtra`): con visitas de otra doctora y ninguna suya, se rechaza. En un paciente compartido, el plan de otra doctora no se cambia, no se borra ni se crean planes a su nombre; solo se toma la marca de la etapa que atendió en reemplazo (`planesSinTocarAjenos`).
+- **El servidor aceptaba registros de la otra clínica.** Cada `.gs` tiene su `CLINICA_ID` y rechaza `save`, `delete`, `pac`, `egreso` y `bulk` con otra etiqueta (`otra_clinica`). Lo viejo sin etiqueta se acepta.
+- **Los egresos se mandaban a las doctoras.** `list` ya no los incluye para ese rol.
+- **El pie de Sonri decía "no cambio nada"**, pero "Subir ahora" sincroniza y la respuesta del plan guarda. Ahora dice lo que hace, y la respuesta del plan no guarda dos veces.
+- **Las fallas al guardar la copia del aparato se callaban** (`setPend`, `savePacLocal`). Ahora se avisan una vez.
+
+**Pendiente de decisión (no implementado):**
+1. Qué ve cada rol al **leer**. `list` todavía devuelve a una doctora todas las atenciones y fichas, y el panel las oculta. Cortarlas en el servidor afecta cuentas que hoy necesitan datos de todo el paciente: saldo a favor, deuda, homónimos, agenda y número del día.
+2. Qué hacer con la copia local en computadoras compartidas al cerrar sesión. Borrarla rompe el trabajo sin conexión y puede perder lo que falta subir.
+
+**Pruebas** (desde la raíz, sin red, solo datos ficticios):
+- `node tests/pacientes-regression.cjs`: 130 comprobaciones.
+- `node tests/sonri-y-permisos.cjs`: 35 comprobaciones. Cubre los permisos del servidor con sesiones de prueba sobre el `.gs` real en memoria (`tests/apps-script-en-memoria.cjs`, actualizado a la versión 6), y la lógica de Sonri cargada del HTML real.
+
+Los cambios del `.gs` exigen pegar cada script y publicarlo como **"Nueva versión"** en su implementación existente.

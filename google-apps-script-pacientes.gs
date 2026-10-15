@@ -179,8 +179,10 @@ function doListPac() {
    tildes ni espacios dobles ("María Pérez" = "Maria Perez"). Si quedaron
    dos filas de la misma persona, se juntan y las dos quedan iguales. Con
    base, lo que mandó este equipo se junta con lo que ya había. */
-function doGuardarPac(p, base) {
+function doGuardarPac(p, base, ses) {
   if (!p || !p.nombre) return { ok: false, error: 'sin_nombre' };
+  var doctora = !!(ses && ses.rol === 'doctora');
+  if (doctora && pacienteDeOtra(fClavePac(p.nombre), ses.prof)) return { ok: false, error: 'sin_permiso' };
   var sh = getSheetPac();
   var n = sh.getLastRow();
   var clave = fClavePac(p.nombre);
@@ -196,12 +198,54 @@ function doGuardarPac(p, base) {
   }
   var conf = [], final = p;
   if (actual && base !== undefined) final = fusion3(base || {}, p, actual, '', conf);
+  if (doctora && actual) final.planes = planesSinTocarAjenos(actual.planes, final.planes, ses.prof);
   final.nombre = p.nombre;
   var fila = filaDePaciente(final);
   if (destinos.length) {
     for (var d = 0; d < destinos.length; d++) sh.getRange(destinos[d], 1, 1, COLS_PAC.length).setValues([fila]);
   } else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_PAC.length).setValues([fila]);
   return { ok: true, paciente: pacienteDeFila(fila), conflictos: conf };
+}
+
+/* Igual que el panel (pacAjeno): el paciente es de otra doctora si tiene
+   visitas con doctora asignada y ninguna es de esta. Un paciente nuevo, sin
+   visitas, no es de nadie todavía. */
+function pacienteDeOtra(clave, prof) {
+  var sh = getSheet(), n = sh.getLastRow();
+  if (n < 2 || !clave) return false;
+  var filas = sh.getRange(2, 1, n - 1, 19).getValues(), suyas = 0, mias = 0;
+  for (var i = 0; i < filas.length; i++) {
+    var pr = String(filas[i][5] || ''), est = String(filas[i][18] || '');
+    if (!pr || pr === 'Por definir' || est === 'Anticipo') continue;
+    if (fClavePac(filas[i][6]) !== clave) continue;
+    suyas++; if (pr === prof) mias++;
+  }
+  return suyas > 0 && mias === 0;
+}
+/* El plan de otra doctora queda como estaba: no se cambia, no se borra y no se
+   crean planes a su nombre. Si esta doctora atendió una etapa en reemplazo,
+   solo se toma la marca de la etapa (hecha, fecha y atención). */
+function planesSinTocarAjenos(viejos, nuevos, prof) {
+  var ajeno = function (p) { return !!(p && p.prof && p.prof !== prof); };
+  var porId = {}, vistos = {}, out = [];
+  (viejos || []).forEach(function (p) { if (p && p.id) porId[p.id] = p; });
+  (nuevos || []).forEach(function (p) {
+    if (!p) return;
+    var v = p.id ? porId[p.id] : null;
+    if (v && ajeno(v)) {
+      var q = JSON.parse(JSON.stringify(v));
+      q.sesiones = (v.sesiones || []).map(function (s) {
+        var ns = (p.sesiones || []).filter(function (x) { return x && x.n === s.n; })[0], c = JSON.parse(JSON.stringify(s));
+        if (ns) { c.hecha = !!ns.hecha; c.fecha = ns.fecha || ''; c.atencionId = ns.atencionId || ''; }
+        return c;
+      });
+      out.push(q); vistos[p.id] = 1; return;
+    }
+    if (!v && ajeno(p)) return;
+    out.push(p); if (p.id) vistos[p.id] = 1;
+  });
+  (viejos || []).forEach(function (p) { if (p && p.id && ajeno(p) && !vistos[p.id]) out.push(p); });
+  return out;
 }
 
 function getSheetEgr() {
@@ -426,17 +470,19 @@ function leerCfg() {
 }
 
 /* ---------------------------------------------------------------- acciones */
-function doList() {
+function doList(ses) {
+  /* los egresos de la clínica son de la dueña y recepción: a una doctora no se le mandan */
+  var egr = (ses && ses.rol === 'doctora') ? [] : doListEgr();
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [], cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: doListEgr() };
+  if (n < 2) return { ok: true, registros: [], cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: egr };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out, cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: doListEgr() };
+  return { ok: true, registros: out, cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: egr };
 }
 
 function doSave(r, base, ses) {
@@ -997,6 +1043,12 @@ var EQUIPO_FABRICA = 'd5f70f16d1284a10785f81bfdb3ce58c629c9137ebf5db3f1ebe7ab151
 var CORRIGEN = ['admin'];
 /* En Spadental también las doctoras registran anticipos (de sus pacientes). */
 var ANTICIPO_DOCTORAS = true;
+/* La clínica de este script (la misma etiqueta que usa su panel). Un registro
+   marcado con la otra clínica se rechaza: si alguna vez se cruzan una
+   dirección o un respaldo, no se mezclan las planillas. Lo viejo sin
+   etiqueta se acepta como siempre. */
+var CLINICA_ID = 'spadental';
+function deOtraClinica(r) { return !!(r && r.clinicaId && r.clinicaId !== CLINICA_ID); }
 /* =====================================================================
    IDENTIDAD Y PERMISOS (versión 6)
    Antes las claves se comparaban solo en el navegador y el servidor
@@ -1282,10 +1334,13 @@ function doPost(e) {
     var ses = sesionDe(body.token);
     if (!ses) return json({ ok: false, error: 'sin_sesion' });
     /* los pacientes tampoco se leen sin sesión */
-    if (body.action === 'list') return json(doList());
+    if (body.action === 'list') return json(doList(ses));
     /* base ausente = panel de una versión anterior: escribe como siempre.
        base null = alta nueva (o cola vieja): se junta igual con lo que haya. */
     var base = Object.prototype.hasOwnProperty.call(body, 'base') ? body.base : undefined;
+    if (['save', 'delete', 'pac', 'egreso', 'egresoDel'].indexOf(body.action) >= 0 && deOtraClinica(reg))
+      return json({ ok: false, error: 'otra_clinica' });
+    if (body.action === 'bulk' && (body.registros || []).some(deOtraClinica)) return json({ ok: false, error: 'otra_clinica' });
     if (body.action === 'save') return json(doSave(reg, base, ses));
     if (body.action === 'delete') return json(doDelete(reg, base, ses));
     if (body.action === 'bulk') return json(doBulk(body.registros || [], ses));
@@ -1293,7 +1348,7 @@ function doPost(e) {
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg, base));
     if (body.action === 'clave') return json(doCambiarClave(body, ses));
     if (body.action === 'corregirCobro') return json(doCorregirCobro(body.correccion, ses));
-    if (body.action === 'pac') return json(doGuardarPac(reg, base));
+    if (body.action === 'pac') return json(doGuardarPac(reg, base, ses));
     if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg, base));

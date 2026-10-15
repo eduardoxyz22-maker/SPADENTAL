@@ -1776,7 +1776,7 @@ function bloquear(){
   document.body.classList.add('locked');
   $('#gate').classList.remove('off');
   $('#gate-pass').value='';
-  try{asisCerrar(); var gA=$('#asis-globo'); if(gA)gA.hidden=true}catch(e){}}
+  try{asisOlvidar()}catch(e){}}
 var INTENTAR_GATE=null;
 function initGate(){
   var r=rolGuardado();
@@ -2092,6 +2092,12 @@ function aplicarCfgServidor(remota){
   if($('#v-config').classList.contains('on'))renderConfig();
   return true}
 function loadLocal(){try{var a=JSON.parse(localStorage.getItem(K_DATA));return Array.isArray(a)?a:[]}catch(e){return []}}
+/* Si el navegador no deja guardar la copia (memoria llena, modo privado), se
+   dice una vez: lo que falta subir vive solo en esta pestaña hasta que suba. */
+var AVISO_MEM=false;
+function avisoMemoriaLlena(){
+  if(AVISO_MEM)return; AVISO_MEM=true;
+  try{toast('⚠️ Este aparato no pudo guardar su copia (memoria del navegador llena o modo privado). No cierres esta pestaña hasta ver «Conectado»: lo que falta subir está solo acá.',1)}catch(e){}}
 function saveLocal(){try{localStorage.setItem(K_DATA,JSON.stringify(DATA))}catch(e){toast('No se pudo guardar en este dispositivo',1)}}
 
 /* ---------- backend opcional (Google Sheets) ---------- */
@@ -2205,7 +2211,7 @@ function cambiarClaveServidor(quien,prof,clave,vieja){
       return r})}
 
 function pend(){try{var a=JSON.parse(localStorage.getItem(K_PEND));return Array.isArray(a)?a:[]}catch(e){return []}}
-function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){}}
+function setPend(a){try{localStorage.setItem(K_PEND,JSON.stringify(a))}catch(e){avisoMemoriaLlena()}}
 /* =====================================================================
    FUSIÓN DE CAMBIOS (va idéntica en el panel y en el Apps Script)
    Dos equipos tocan la misma atención o la misma ficha: cada uno manda lo
@@ -2678,9 +2684,10 @@ function mandarYa(k){
     if(r&&r.v>=FUSION_V)SRV_FUSIONA=true;
     if(r&&r.ok){confirmado(k,item,enviado,r);return r}
     if(r&&(r.error==='cambio'||r.error==='borrada')){rechazado(k,item,r);return r}
-    if(r&&r.error==='sin_permiso'){
+    if(r&&(r.error==='sin_permiso'||r.error==='otra_clinica')){
       setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
-      toast('El servidor no permitió ese cambio: no te corresponde. Se recargan los datos.',1);
+      toast(r.error==='otra_clinica'?'Ese registro es de la otra clínica: no se guardó en esta. Se recargan los datos.'
+        :'El servidor no permitió ese cambio: no te corresponde. Se recargan los datos.',1);
       pullServer().then(function(){refreshAll()}); return r}
     return null}).catch(function(){return null})}
 
@@ -4478,7 +4485,7 @@ function loadPacLocal(){
     if(o&&typeof o==='object')Object.keys(o).forEach(function(k){
       var n=pacNormalize(o[k]), kk=keyPac(n.nombre)||k; out[kk]=n})}catch(e){}
   return out}
-function savePacLocal(){try{localStorage.setItem(K_PAC,JSON.stringify(PAC))}catch(e){}}
+function savePacLocal(){try{localStorage.setItem(K_PAC,JSON.stringify(PAC))}catch(e){avisoMemoriaLlena()}}
 
 function pacDe(nombre){
   var k=keyPac(nombre); if(!k)return pacBlanco('');
@@ -10290,13 +10297,15 @@ function asisSvg(){
 function asisAvisos(){
   var A=[], hoy=hoyISO(), doc=esDoctora(), mios=doc?pacientesMios():null;
   var suyo=function(nombre){return !mios||!!mios[keyPac(nombre)]};
-  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return Date.now()-a.tm<10*60000});
+  /* solo los de quien está usando el panel ahora (en una compu compartida no se ven los del anterior) */
+  var yo=asisQuien();
+  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return Date.now()-a.tm<10*60000&&a.quien===yo});
   ASIS.alGuardar.forEach(function(a){A.push(a)});
   try{
     var n=pend().length;
     if(n)A.push({k:'pend|'+n, sev:'am', ico:'📶', t:asisPl(n,'cambio guardado','cambios guardados')+' en este aparato, sin subir',
       x:'Se suben solos cuando vuelve la conexión. Hasta entonces no cierres la sesión ni borres los datos del navegador.',
-      b:['🔄 Intentar ahora', function(){try{flushQueue()}catch(e){} setTimeout(function(){asisRefrescar()},1500)}]})}catch(e){}
+      b:['🔄 Subir ahora', function(){try{flushQueue()}catch(e){} setTimeout(function(){asisRefrescar()},1500)}]})}catch(e){}
   try{
     var cit=citasPend().filter(function(c){return esMia(c.r)});
     var hoyC=cit.filter(function(c){return c.dias===0}).sort(function(a,b){return String(a.r.hora||'').localeCompare(String(b.r.hora||''))});
@@ -10376,7 +10385,8 @@ function asisAlGuardar(rec){
   var pre=(rec.presu||[]).filter(function(p){return p.nom&&!p.estado});
   if(pre.length)nuevos.push({k:'gr|'+id, sev:'ok', ico:'💬', t:'Quedó anotado lo que le recomendaste',
     x:pre.map(function(p){return p.nom+(num(p.monto)>0?' ('+bs(p.monto)+')':'')}).join(', ')+'. Te lo recuerdo en 🔔 Recordatorios. Si decide hacerlo por etapas, ahí está «🦷 Armar plan».'});
-  nuevos.forEach(function(a){a.tm=Date.now(); ASIS.alGuardar.push(a)});
+  var quien=asisQuien();
+  nuevos.forEach(function(a){a.tm=Date.now(); a.quien=quien; ASIS.alGuardar.push(a)});
   if(nuevos.length)asisRefrescar(true)}
 /* Agendar la próxima cita sin volver a escribir los datos */
 function asisAgendar(rec,motivo){
@@ -10440,6 +10450,8 @@ function asisAntesDeGuardar(){
     '<div class="row-btn"><button class="btn sec" onclick="asisRespuestaPlan(\'\')">No, es una visita suelta</button></div>');
   return true}
 function asisRespuestaPlan(id){
+  /* doble toque o una respuesta tardía: el guardado ya salió con la primera */
+  if(ASIS.planResp===asisFirmaForm()){closeModal(); return}
   ASIS.planResp=asisFirmaForm(); closeModal();
   if(id){$('#f-plan').value=id; try{planHint()}catch(e){}}
   submitAtencion()}
@@ -10590,6 +10602,18 @@ function asisPop(){
     o.connect(g); g.connect(C.destination); o.start(t); o.stop(t+0.25)}catch(e){}}
 
 /* ---------- la muela, el globito y la ventana ---------- */
+/* Al cerrar la sesión o cambiar de usuario se olvida todo lo del anterior:
+   avisos de guardado, listas abiertas, búsqueda, el globito y la ventana. */
+function asisOlvidar(){
+  ASIS.alGuardar=[]; ASIS.anunciados={}; ASIS.firma=''; ASIS.lista=''; ASIS.q=''; ASIS.abierta=-1; ASIS.planResp='';
+  ASIS_PINTADOS=[]; ASIS_FALTAN=[];
+  if(ASIS.espera){clearInterval(ASIS.espera); ASIS.espera=null}
+  if(ASIS_TOUR){ASIS_TOUR=null}
+  if(ASIS_FOCO){ASIS_FOCO.classList.remove('asis-foco'); ASIS_FOCO=null}
+  asisCerrar();
+  var gl=$('#asis-globo'); if(gl){gl.hidden=true; gl.innerHTML=''}
+  var p=$('#asis-panel'); if(p)p.innerHTML='';
+  var nb=$('#asis-n'); if(nb){nb.hidden=true; nb.textContent=''}}
 function asisMontar(){
   if(!asisActivo()||!document.body)return;
   if(!ASIS.montado){
@@ -10606,7 +10630,7 @@ function asisMontar(){
     document.addEventListener('pointerdown',desbloquear,true);
     document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ASIS.abierto)asisCerrar()});
     ASIS.tic=setInterval(function(){asisRefrescar()},60000)}
-  ASIS.primera=true; ASIS.anunciados={};
+  asisOlvidar(); ASIS.primera=true;
   asisRefrescar();
   setTimeout(asisTourOfrecer,1200)}
 function asisRefrescar(nuevoYa){
@@ -10686,7 +10710,7 @@ function asisPanelPintar(){
     '<div class="asis-tabs"><button type="button" class="'+(ASIS.tab==='avisos'?'on':'')+'" onclick="asisTab(\'avisos\')">🔔 Avisos'+(A.length?'<span>'+A.length+'</span>':'')+'</button>'+
       '<button type="button" class="'+(ASIS.tab==='ayuda'?'on':'')+'" onclick="asisTab(\'ayuda\')">❓ ¿Cómo hago…?</button></div>'+
     '<div class="asis-cuerpo">'+cuerpo+'</div>'+
-    '<div class="asis-pie">Solo te aviso y te muestro: no cambio nada. <a onclick="asisTourEmpezar()">🧭 Recorrido guiado</a></div>';
+    '<div class="asis-pie">Te aviso y te llevo a cada lugar. Solo se guarda lo que vos confirmás. <a onclick="asisTourEmpezar()">🧭 Recorrido guiado</a></div>';
   p.hidden=false;
   var cu=p.querySelector('.asis-cuerpo'); if(cu&&_scroll)cu.scrollTop=_scroll;
   var q=$('#asis-q'); if(q&&_foco)try{q.focus({preventScroll:true}); q.setSelectionRange(q.value.length,q.value.length)}catch(e){}}
