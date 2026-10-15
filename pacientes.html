@@ -3722,6 +3722,8 @@ function conAtencionFresca(id,fn){
 
 var FAVOR_TOPE=null;
 function submitAtencion(){
+  /* Sonri pregunta antes si la visita es una etapa del plan (ver asisAntesDeGuardar) */
+  try{if(asisAntesDeGuardar())return}catch(e){}
   var pac=$('#f-paciente').value;
   FAVOR_TOPE=null;
   var planF=$('#wrap-plan').style.display==='none'?'':$('#f-plan').value;
@@ -3763,7 +3765,7 @@ function pagoNuevoDeEdicion(prev){
 
 function guardarAtencion(){
   var bad=validar();
-  if(bad.length){toast('Falta: '+bad.join(', '),1);return}
+  if(bad.length){toast('Falta: '+bad.join(', '),1);try{asisErrores(bad,'atencion')}catch(e){}return}
   /* El canal no entra en validar() con los demás: merece su propia
      explicación, porque el que lo deja vacío no es el que después no puede
      medir la publicidad. */
@@ -4013,7 +4015,7 @@ function guardarCita(){
   [['q-fecha','fecha'],['q-paciente','paciente'],['q-cel','celular']]
     .forEach(function(p){var e=$('#'+p[0]),ok=!!e.value.trim();
       e.classList.toggle('bad',!ok); if(!ok)bad.push(p[1])});
-  if(bad.length){toast('Falta: '+bad.join(', '),1);return}
+  if(bad.length){toast('Falta: '+bad.join(', '),1);try{asisErrores(bad,'cita')}catch(e){}return}
   var ag=getRadio('qagenda');
   if(!ag){avisoCanal('marcar por dónde agendó la cita','seg-q-agendapor');return}
   /* a un paciente conocido no se le vuelve a preguntar cómo nos encontró:
@@ -10333,19 +10335,143 @@ function asisAvisos(){
       t:asisPl(nc.length,'atención con un saldo que no cuadra','atenciones con saldos que no cuadran'),
       x:'El total, lo cobrado y el saldo no coinciden. Abrila: ahí mismo está el botón para dejarla bien.',
       lista:nc.map(function(r){return {t:r.paciente||'—', s:'Atención del '+fmtF(r.fecha)+' · total '+bs(r.total)+' · cobrado '+bs(r.acuenta), m:bs(r.saldo), ir:function(){verFicha(r.id)}}})})}catch(e){}
-  return A.filter(function(a){return a.tm||!asisOculto(a.k)})}
+  try{asisNovedades().forEach(function(n){
+    A.push({k:'nov|'+n.id, nov:n.id, sev:'ok', ico:'✨', t:'Novedad: '+n.t, x:n.x,
+      b:n.ayuda?['Ver cómo', function(){asisVerAyuda(n.ayuda)}]:null})})}catch(e){}
+  return A.filter(function(a){return a.tm||a.nov||!asisOculto(a.k)})}
 /* una cita: la agenda de ese día */
 function asisCitaDia(r){return function(){var d=$('#q-dia'); if(d)d.value=r.fecha; show('cita'); setTimeout(function(){asisFoco(['#q-lista-dia','#q-dia'])},250)}}
 /* después de guardar una atención que quedó debiendo */
+/* (D) Después de guardar una atención: lo que todavía falta. Cada cosa es
+   un aviso de 10 minutos; el globito sale cuando se cierra el mensaje de
+   WhatsApp que abre el panel al guardar. */
+var ASIS_CONTROL=/endodon|conducto|extrac|exodon|cirug|implante|ortodon|bracket|periodon|curetaje|corona|protesis|carilla|injerto|cordal|tercer molar|blanque|botox|toxina|hialur|armoniz|relleno|capilar|mesoterap|peeling/;
+function asisTieneProxima(rec){
+  if(rec.prox)return true;
+  var k=keyPac(rec.paciente), hoy=hoyISO();
+  return DATA.some(function(r){return esCitaPendiente(r)&&keyPac(r.paciente)===k&&(r.fecha||'')>=hoy&&r.id!==rec.id})}
 function asisAlGuardar(rec){
-  if(!ASIS.montado||!rec||rec.estado!=='Atendido'||!(num(rec.saldo)>0.009))return;
-  var id=rec.id;
-  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return a.k!=='g|'+id});
-  ASIS.alGuardar.push({k:'g|'+id, tm:Date.now(), sev:'am', ico:'💳',
-    t:(rec.paciente||'El paciente').split(' ')[0]+' quedó debiendo '+bs(rec.saldo),
+  if(!ASIS.montado||!rec||rec.estado!=='Atendido')return;
+  ASIS.planResp='';
+  var id=rec.id, quien=(rec.paciente||'El paciente').split(' ')[0], nuevos=[];
+  ASIS.alGuardar=ASIS.alGuardar.filter(function(a){return a.k.split('|')[1]!==id});
+  if(num(rec.saldo)>0.009)nuevos.push({k:'g|'+id, sev:'am', ico:'💳',
+    t:quien+' quedó debiendo '+bs(rec.saldo),
     x:'Cuando pague, abrí la atención y tocá «💰 Registrar pago». Si hoy decide hacerse algo más: «✏️ Editar», agregá el tratamiento y subí «A cuenta».',
     b:['Abrir la atención', function(){verFicha(id)}]});
-  asisRefrescar(true)}
+  try{
+    if(!asisTieneProxima(rec)){
+      var pl=rec.planId?planesDe(rec.paciente).filter(function(p){return p.id===rec.planId})[0]:null, ses=pl&&pl.estado==='activo'?proxSesion(pl):null;
+      var srv=asisSinTildes((rec.servicios||[]).map(function(x){return x.nom+' '+(x.det||'')}).join(' ')), m=srv.match(ASIS_CONTROL);
+      if(ses)nuevos.push({k:'gp|'+id, sev:'', ico:'📅', t:'Sigue «'+(ses.desc||('etapa '+ses.n))+'» de su '+pl.nombre,
+        x:'Todavía no tiene la próxima cita. ¿La agendamos ahora, antes de que se vaya?', b:['📅 Agendar', function(){asisAgendar(rec,ses.desc||pl.nombre)}]});
+      else if(m)nuevos.push({k:'gc|'+id, sev:'', ico:'📅', t:'¿Agendamos el control de '+quien+'?',
+        x:'Este tratamiento suele llevar control y todavía no tiene la próxima cita.', b:['📅 Agendar', function(){asisAgendar(rec,'Control')}]})}}catch(e){}
+  try{
+    var fm=pacDe(rec.paciente).med||{}, vacia=!fm.alergias&&!fm.medicacion&&!(fm.antecedentes||[]).length&&!fm.notas;
+    var visitas=DATA.filter(function(r){return esAtencion(r)&&keyPac(r.paciente)===keyPac(rec.paciente)}).length;
+    if(vacia&&visitas<=1)nuevos.push({k:'gm|'+id, sev:'', ico:'🩺', t:'¿Le preguntaste por alergias?',
+      x:'Es la primera visita de '+quien+' y su ficha médica está vacía. Si toma medicación o es alérgico, anotalo: avisa solo en cada visita.',
+      b:['🩺 Abrir la ficha médica', function(){abrirFichaMed(rec.paciente)}]})}catch(e){}
+  var pre=(rec.presu||[]).filter(function(p){return p.nom&&!p.estado});
+  if(pre.length)nuevos.push({k:'gr|'+id, sev:'ok', ico:'💬', t:'Quedó anotado lo que le recomendaste',
+    x:pre.map(function(p){return p.nom+(num(p.monto)>0?' ('+bs(p.monto)+')':'')}).join(', ')+'. Te lo recuerdo en 🔔 Recordatorios. Si decide hacerlo por etapas, ahí está «🦷 Armar plan».'});
+  nuevos.forEach(function(a){a.tm=Date.now(); ASIS.alGuardar.push(a)});
+  if(nuevos.length)asisRefrescar(true)}
+/* Agendar la próxima cita sin volver a escribir los datos */
+function asisAgendar(rec,motivo){
+  asisCerrar(); show('cita');
+  setTimeout(function(){
+    var p=$('#q-paciente'); if(p){p.value=rec.paciente||''; try{autoCita()}catch(e){}}
+    if($('#q-cel')&&!$('#q-cel').value)$('#q-cel').value=rec.celular||'';
+    var pr=$('#q-prof'); if(pr&&!pr.disabled&&!pr.readOnly&&rec.profesional)pr.value=rec.profesional;
+    if($('#q-motivo'))$('#q-motivo').value=motivo||'';
+    var f=$('#q-fecha'); if(f)f.value='';
+    ['#q-paciente','#q-cel','#q-fecha'].forEach(function(x){var e=$(x); if(e)e.classList.remove('bad')});
+    asisFoco('#q-fecha');
+    asisGlobo({ico:'📅',t:'Elegí el día y la hora',x:'El paciente, el celular y el motivo ya están. Después tocá «Agendar».'},true,true)},250)}
+
+/* (I) Novedades: cada una se ve una vez por aparato, durante 45 días desde
+   que se publicó. «Entendido» la guarda para siempre. */
+var ASIS_LS_NOV=ASIS_PFX+'NOVEDADES';
+var ASIS_NOVEDADES=[
+  {id:'planes', f:'2026-10-14', t:'Planes de tratamiento en una sola pantalla',
+   x:'Cada etapa muestra su importe, lo pagado y el saldo. Desde el mismo plan registrás la atención de la etapa y los pagos o cuotas.', ayuda:/etapa del plan/},
+  {id:'cuotas', f:'2026-10-14', t:'Las cuotas del plan, desde el plan',
+   x:'«💰 Registrar pago» trae sugerida la cuota que toca y entra a la caja de hoy. Las cuotas se marcan solas.', ayuda:/cuota/,
+   si:function(){return !esDoctora()||puedeAnticipo()||!!((CFG&&CFG.pagoPlanDoctoras)||SESION.pagoPlan)}},
+  {id:'editar-suma', f:'2026-10-14', t:'¿Ya pagó y decidió hacerse algo más?',
+   x:'Editá la atención, agregá el tratamiento y subí «A cuenta»: lo nuevo entra como pago de hoy y lo de antes no cambia.', ayuda:/algo más/},
+  {id:'pregunta-plan', f:'2026-10-15', t:'Te pregunto si la visita es del plan',
+   x:'Si el paciente tiene un plan y cargás una atención suelta, antes de guardar te pregunto si es la etapa que sigue. Así queda vinculada sola.'}
+];
+function asisNovedades(){
+  var vistas=asisLS(ASIS_LS_NOV)||{}, hoy=hoyISO();
+  return ASIS_NOVEDADES.filter(function(n){
+    if(vistas[n.id]||diasEntre(n.f,hoy)>45)return false;
+    try{return !n.si||n.si()}catch(e){return false}})}
+function asisNovedadVista(id){var v=asisLS(ASIS_LS_NOV)||{}; v[id]=1; asisLS(ASIS_LS_NOV,v)}
+function asisVerAyuda(rx){
+  var i=-1; ASIS_AYUDA.some(function(a,j){if(rx.test(a.q)){i=j; return true} return false});
+  ASIS.q=''; ASIS.abierta=i; asisAbrir('ayuda')}
+
+/* (B) Antes de guardar: si el paciente tiene un plan con algo pendiente y la
+   atención va como visita suelta, pregunto si es la etapa que sigue. Una vez
+   por atención; con la respuesta, el guardado sigue solo. */
+function asisFirmaForm(){return (EDIT_ID||'nueva')+'|'+keyPac($('#f-paciente').value)+'|'+$('#f-fecha').value}
+function asisAntesDeGuardar(){
+  if(!ASIS.montado||!asisActivo())return false;
+  var wr=$('#wrap-plan'), sel=$('#f-plan');
+  if(!wr||wr.style.display==='none'||!sel||sel.value)return false;
+  if(getRadio('estado')!=='Atendido'||ASIS.planResp===asisFirmaForm())return false;
+  /* editar una atención vieja (para corregir algo) no es momento de preguntar */
+  if(EDIT_ID){var ant=DATA.filter(function(r){return r.id===EDIT_ID})[0]; if(!ant||ant.fecha!==hoyISO())return false}
+  var pac=$('#f-paciente').value.trim();
+  var ps=planesActivos(pac).filter(function(p){return planVisible(p)&&proxSesion(p)&&[].slice.call(sel.options).some(function(o){return o.value===p.id})});
+  if(!ps.length)return false;
+  openModal('<div style="display:flex;gap:12px;align-items:center"><div style="width:46px;flex:none">'+asisSvg()+'</div>'+
+      '<div><h3 style="margin:0">¿Es una etapa del plan?</h3><p class="mini" style="margin:2px 0 0">'+esc(pac)+' tiene un plan en curso</p></div></div>'+
+    '<p class="hint" style="margin:12px 0 4px">Si esta visita es parte del plan, la etapa queda marcada y lo que pague cuenta para el plan.</p>'+
+    ps.map(function(p){var s=proxSesion(p), a=avancePlan(p);
+      return '<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px">'+
+        '<b>'+esc(p.nombre)+'</b> <span class="mini">· '+a.hechas+'/'+a.total+'</span>'+
+        '<div class="mini">Sigue: <b>'+esc(s.desc||('etapa '+s.n))+'</b>'+(num(s.precio)>0?' · '+bs(s.precio):' · incluida')+'</div>'+
+        '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="asisRespuestaPlan(\''+p.id+'\')">Sí, es esa etapa</button></div></div>'}).join('')+
+    '<div class="row-btn"><button class="btn sec" onclick="asisRespuestaPlan(\'\')">No, es una visita suelta</button></div>');
+  return true}
+function asisRespuestaPlan(id){
+  ASIS.planResp=asisFirmaForm(); closeModal();
+  if(id){$('#f-plan').value=id; try{planHint()}catch(e){}}
+  submitAtencion()}
+
+/* (C) Lo que falta para guardar, explicado y señalado */
+var ASIS_FALTA=[
+  [/^fecha$/,'📅 La fecha','#f-fecha','#q-fecha'],
+  [/^profesional$|elegí la doctora/,'👩‍⚕️ Quién atendió','#f-prof'],
+  [/^paciente$/,'👤 El nombre del paciente','#f-paciente','#q-paciente'],
+  [/^celular$/,'📱 El celular: hace falta para los recordatorios por WhatsApp','#f-cel','#q-cel'],
+  [/^servicio$|fila que tiene precio|un precio|la cantidad|laboratorio/,'🦷 Qué se le hizo: elegí el tratamiento en cada fila con precio','#srv-list'],
+  [/forma de pago/,'💳 Cómo pagó: sin eso la caja no cuadra','#seg-metodo'],
+  [/desglose/,'🧮 En «Mixto», lo repartido tiene que sumar lo cobrado','#wrap-mixto'],
+  [/es más que el total|cobrado no puede ser negativo|acuenta/,'💰 Lo cobrado: revisá el monto o el precio','#f-acuenta'],
+  [/saldo/,'⏳ El saldo: dejalo vacío y se calcula solo','#f-saldo'],
+  [/total/,'💰 El total: escribilo solo con números','#f-total']
+];
+function asisErrores(bad,donde){
+  if(!ASIS.montado||!bad||!bad.length)return;
+  var cita=donde==='cita', items=[];
+  bad.forEach(function(b){
+    var m=ASIS_FALTA.filter(function(x){return x[0].test(b)})[0];
+    var sel=m?(cita?(m[3]||m[2]):m[2]):'';
+    items.push({t:m?m[1]:b, sel:sel})});
+  ASIS_FALTAN=items;
+  asisGlobo(null,false,false,'<b>Para guardar falta:</b>'+
+    '<div class="asis-li" style="border-top:0">'+items.map(function(it,i){
+      return '<button type="button" onclick="asisFaltaIr('+i+')"><i>'+esc(it.t)+'</i>'+(it.sel?'<u>Mostrame ›</u>':'')+'</button>'}).join('')+'</div>'+
+    '<div class="asis-acc"><button type="button" class="asis-b" onclick="$(\'#asis-globo\').hidden=true">Cerrar</button></div>');
+  if(items[0]&&items[0].sel)asisFoco(items[0].sel)}
+var ASIS_FALTAN=[];
+function asisFaltaIr(i){var it=ASIS_FALTAN[i]; if(it&&it.sel)asisFoco(it.sel)}
 
 /* ---------- «¿Cómo hago…?» ----------
    v: la pestaña, f: lo que se señala (el primero que se vea), solo:'adm'
@@ -10487,6 +10613,10 @@ function asisRefrescar(nuevoYa){
   if(!ASIS.montado||document.body.classList.contains('locked'))return;
   var A=asisAvisos(), n=A.length, firma=A.map(function(a){return a.k}).join('#');
   var nb=$('#asis-n'); if(nb){nb.hidden=!n; nb.textContent=String(n)}
+  /* con una ventana del panel abierta el globito quedaría tapado: espero a que se cierre */
+  if(asisModalAbierto()&&!ASIS.abierto){
+    if(!ASIS.espera)ASIS.espera=setInterval(function(){if(!asisModalAbierto()){clearInterval(ASIS.espera); ASIS.espera=null; asisRefrescar(true)}},700);
+    return}
   var nuevos=A.filter(function(a){return !ASIS.anunciados[a.k]});
   A.forEach(function(a){ASIS.anunciados[a.k]=1});
   var cambio=firma!==ASIS.firma; ASIS.firma=firma;
@@ -10503,6 +10633,7 @@ function asisGlobo(a,calladito,solo,html){
   if(!calladito)asisPop();
   clearTimeout(ASIS_GLOBO_T);
   if(!html)ASIS_GLOBO_T=setTimeout(function(){gl.hidden=true},a.ms||8000)}
+function asisModalAbierto(){var o=$('#ov'); return !!o&&o.classList.contains('on')}
 function asisToggle(){if(ASIS_TOUR){asisTourFin(); return} if(ASIS.abierto)asisCerrar(); else asisAbrir(ASIS.firma?'avisos':'ayuda')}
 function asisAbrir(tab){ASIS.abierto=true; ASIS.tab=tab||ASIS.tab; var gl=$('#asis-globo'); if(gl)gl.hidden=true; asisPanelPintar()}
 function asisCerrar(){ASIS.abierto=false; var p=$('#asis-panel'); if(p)p.hidden=true}
@@ -10520,6 +10651,7 @@ function asisAccion(i){var a=ASIS_PINTADOS[i]; if(!a||!a.b)return; asisCerrar();
 function asisAbrirItem(i,j){var a=ASIS_PINTADOS[i], it=a&&a.lista&&a.lista[j]; if(!it)return; asisCerrar(); try{it.ir()}catch(e){}}
 function asisVerLista(i){var a=ASIS_PINTADOS[i]; if(!a)return; ASIS.lista=(ASIS.lista===a.k?'':a.k); asisPanelPintar()}
 function asisLuego(i,cuanto){var a=ASIS_PINTADOS[i]; if(!a)return;
+  if(a.nov){asisNovedadVista(a.nov); asisRefrescar(); asisPanelPintar(); return}
   asisPosponer(a.k,cuanto==='h'?3600000:(cuanto==='m'?asisManana():24*3600000))}
 function asisPanelPintar(){
   var p=$('#asis-panel'); if(!p)return;
@@ -10541,7 +10673,7 @@ function asisPanelPintar(){
           (a.b?'<button type="button" class="asis-b si" onclick="asisAccion('+i+')">'+esc(a.b[0])+'</button>':'')+
           (L.length?'<button type="button" class="asis-b si" onclick="asisVerLista('+i+')">'+(abierta?'Ocultar':'Ver cuáles ('+L.length+')')+'</button>':'')+
           '</div><div class="asis-acc2">'+
-          (a.tm?'':'<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'h\')">⏰ En 1 hora</button>'+
+          (a.tm||a.nov?'':'<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'h\')">⏰ En 1 hora</button>'+
             '<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'m\')">🌙 Mañana</button>')+
           '<button type="button" class="asis-b asis-luego" onclick="asisLuego('+i+',\'d\')">✓ Entendido</button></div></div>'}).join('')
       :'<div class="asis-vacio">✅ Todo en orden por acá.<br>Si necesitás algo, preguntame en «¿Cómo hago…?».</div>'}
