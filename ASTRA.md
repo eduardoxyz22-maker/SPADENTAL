@@ -1,0 +1,154 @@
+# Traspaso para ASTRA: paneles de pacientes Spadental y Cosmetic
+
+Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para seguir el trabajo sin romper nada. Leelo entero antes de tocar código.
+
+---
+
+## 1. Reglas del dueño (no negociables)
+
+- **No publicar nada sin su "ok" explícito.** Antes de publicar: mostrarle cómo queda (capturas) y probar todo.
+- **Las pruebas nunca tocan los servidores reales** (Apps Script de producción ni GitHub Pages). Lo único permitido contra producción: consultas de solo lectura **sin clave** (`info`, `cfgGet`, `list` → tiene que responder `sin_sesion`). Nunca usar claves reales.
+- **No commitear claves en texto plano.** No recordarle que cambie claves (lo pidió explícitamente).
+- No crear usuarios ni claves para doctoras de Cosmetic. No cambiar IDs de planillas. No pedir de nuevo accesos de Google ni correos.
+- "Corregir cobro": solo con sesión válida; las claves de fábrica no habilitan correcciones ni mover plata. Si hay accesos compartidos, no atribuir la acción a una persona concreta.
+- No cambiar ningún cobro real durante pruebas o publicación.
+- Responder en español rioplatense (voseo), corto y concreto.
+
+## 2. Qué es cada cosa
+
+| Archivo | Qué es |
+|---|---|
+| `pacientes.html` | Panel de **Spadental** (claves de almacenamiento `SP_`). |
+| `cosmetic/pacientes.html` | Panel de **Cosmetic** (claves `CD_`). |
+| `google-apps-script-pacientes.gs` | Backend de Spadental (Apps Script sobre Google Sheets). |
+| `cosmetic/google-apps-script-pacientes.gs` | Backend de Cosmetic. |
+| `COORDINACION.md` | Historia de decisiones y cambios. |
+| `tests/*.cjs` | Pruebas del repo (ver §7). |
+
+- Los dos paneles son **un solo archivo HTML cada uno, JavaScript ES5**, y comparten casi todo el código. Todo cambio va **en los dos** (los bloques de planes, paquetes y Sonri son idénticos).
+- Los dos `.gs` son idénticos salvo constantes de cada clínica: `K_CFG`, colores, `ADMIN_FABRICA`/`EQUIPO_FABRICA`, `CORRIGEN` (Spa `['admin']`, Cosmetic `['admin','equipo']`), `ANTICIPO_DOCTORAS` (Spa `true`, Cosmetic `false`), `CLINICA_ID`.
+- La librería de fusión (`fusion3`, `fusionarFichas`, `fClavePac`…) tiene que ser **idéntica** en los 4 archivos.
+- La dirección del Apps Script de cada clínica está en `SHEETS_URL` dentro de cada HTML.
+
+## 3. Publicar
+
+- **Rama de GitHub Pages: `claude/vibrant-gauss-rvd0wb`** (es la única rama remota). Trabajar en una rama local y, con el ok del dueño:
+  `git fetch origin claude/vibrant-gauss-rvd0wb` → rebase → `git checkout claude/vibrant-gauss-rvd0wb` → `git merge --ff-only <rama>` → `git push -u origin claude/vibrant-gauss-rvd0wb` → verificar el SHA remoto con `git ls-remote`.
+- Pages tarda 1–2 minutos; en las compus hay que recargar con Ctrl+F5.
+- **Apps Script**: el dueño lo pega a mano (Implementar → Administrar implementaciones → ✏️ → Nueva versión). La app de Claude no abre `.gs` en el chat: mandarle una copia `.txt` de cada uno. Cada `.gs` va en el proyecto de su clínica; no cruzarlos (se nota porque la cantidad de filas de `info` cambia).
+- Versión actual de ambos scripts: **`2026-10-19-a`** (`VERSION_SCRIPT`, visible en `info`). Si cambiás un `.gs`, subí la versión.
+- Si el cambio es solo del panel, **no hace falta pegar ningún Apps Script**: decírselo.
+
+## 4. Datos y servidor (lo mínimo para no romper)
+
+- **`DATA`**: filas de la hoja de atenciones. Hay tres tipos:
+  - **Atenciones**: `estado` `Atendido`, `No asistió`, `Canceló` o `Reprogramó`.
+  - **Citas**: `estado` `Agendada`.
+  - **Anticipos y pagos a planes**: `estado` `Anticipo`. Si llevan `planId`, es pago a un plan.
+- Campos desconocidos de una fila van a la columna `_extra_json`.
+- **`PAC`**: fichas de pacientes (`nac`, `med`, `planes`), en la hoja de Pacientes. Los planes van en `_planes_json`.
+- **Borrar es definitivo** (`deleteRow`). `_Borrados` solo guarda el id y la fecha. Para recuperar algo hay que usar el historial de versiones de la planilla.
+- **Borrar las atenciones o los pagos de un paciente NO borra sus planes** (viven en la ficha). Esto ya causó un paquete repetido.
+- **Sesiones del servidor (v6)**:
+  - `login` devuelve un token de 30 minutos guardado en CacheService. Roles: `admin`, `equipo`, `doctora`.
+  - Sin token, `list` devuelve `sin_sesion` y `cfgGet` devuelve una config parcial, sin metas, comisiones ni claves.
+  - `cfgPublica` agrega las marcas `pagoPlanDoctoras` y `paquetes`; el `login` las devuelve también.
+- **Lo que el servidor frena**:
+  - una doctora que toca lo de otra (`doctoraPuedeGuardar`, `pacienteDeOtra`, `planesSinTocarAjenos`);
+  - bajar lo cobrado de una atención con un guardado común (`cobroBaja` → `cobro_baja`; para eso está `corregirCobro`, que queda en la hoja `_Correcciones`);
+  - borrar un anticipo ya usado (`anticipo_usado`);
+  - escribir en la otra clínica (`otra_clinica`).
+- **Cola del panel** (`queue`/`enviar`/`mandar`/`confirmado`): todo se encola primero y se manda serializado por clave. Una ficha que cambia mientras viaja se manda después con base = lo enviado.
+
+## 5. Planes y paquetes (el circuito que más problemas dio)
+
+### Modelo
+
+- Plan (en la ficha):
+  - `sesiones[{n, desc, precio, aparte, hecha, fecha, atencionId}]`
+  - `total` (precio acordado), `cuotas`, `prof` (doctora dueña), `estado` (`activo`/`terminado`/`cancelado`)
+  - `paquete: true` (opcional)
+  - `deClinica: true` (opcional): sin doctora fija; lo ve cualquier doctora y cada una marca la sesión que hace. Solo la dueña o recepción lo editan o borran.
+- **Atención de una sesión**: lleva `planId` y `planEtapa`. Su `total` es el precio de esa sesión, y eso es lo que cuenta para la comisión (`liquidacion` usa `total` de las filas `Atendido`; los anticipos no generan comisión).
+- **Pago al plan / adelanto**: una fila `Anticipo` con `planId`. Entra a la caja el día que se paga. Las sesiones siguientes lo usan como "Saldo a favor".
+
+### Cuentas (funciones clave)
+
+| Función | Qué hace |
+|---|---|
+| `cobradoDeSesion(plan, r)` | De una atención, cuenta para el plan **solo lo de su sesión**. Lo cobrado paga primero lo demás de esa atención (la consulta) y recién después la sesión. Una sesión con precio 0 (planes viejos) cuenta todo lo cobrado. |
+| `cobradoPlan` | Lo pagado del plan. Si no se respetara la regla de arriba, la consulta cobrada junto con la sesión 1 aparecía como pago del plan y como "saldo a favor" falso. |
+| `cuentasPlan(plan)` / `cuentasPlanHtml` | En atenciones / adelantado / usado / queda. Es el recuadro "💰 Cuentas del paquete". |
+| `creditosEn` | Bolsillos de saldo a favor: general y uno por plan. |
+| `creditoLibre` | Saldo a favor general. |
+| `creditoPara(nombre, planId)` | Lo que puede usar una sesión: general + su plan. |
+
+### Cómo se carga hoy (lo que el dueño quiere: pocos pasos)
+
+1. **En "Nueva atención", en la misma fila del servicio** (`paquetesDeFilas`):
+   - Un servicio cuyo nombre dice "N sesiones" (o que coincide con un paquete de Ajustes) se marca solo como paquete (`SRV[i].ses`). A cualquier otro se le toca "📦 Es de varias sesiones".
+   - En la fila se elige "Hoy se hizo la sesión 1" o "Hoy solo paga".
+   - Al guardar se crea el paquete. **Si ya hay uno igual sin empezar, se usa ese** (`paqueteSinEmpezar`).
+   - La fila pasa a valer la sesión 1. La atención se enlaza al plan, y lo que pagó de más se separa como pago del plan, con la misma forma de pago y el mismo día (`excesoAlPlanOk` + `separarExceso` en `guardarAtencion`).
+   - Ejemplo: consulta 150 + paquete 700, pagó 850 → atención 384 (150 + 234) + adelanto 466.
+2. **"✓ Marcar realizada"** (`atencionDePlan`/`guardarAtencionPlan`):
+   - Desde el plan o la ficha, eligiendo "¿Quién la hizo?".
+   - Crea la atención de esa sesión por su precio y la paga sola con el adelanto.
+3. **Ajustes → 📦 Paquetes** (`guardarPaqueteTipo`, en `CFG.planesTipo` con `paquete: true`): plantillas. El precio se reparte solo con `repartirPrecio`: 700 en 3 = 234 + 233 + 233.
+4. **Planes → 📦 un toque** (`crearPaquete`):
+   - Si se usa desde la atención vacía, pregunta "¿Hoy se hizo la sesión 1?" (`preguntaSesionHoy`).
+   - Si la respuesta es "solo paga", abre el pago y no se guarda atención.
+5. **Atención ya guardada con el paquete entero**:
+   - Al editarla y elegir el plan, pregunta (`paqueteAntesDeGuardar`).
+   - En la sesión 1 del plan aparece "📦 Pasar al paquete". Usa la acción del servidor `pasarAlPlan`, que es atómica: baja la atención al precio de la sesión, crea un pago al plan por cada día y forma de pago, deja la caja igual y anota en `_Correcciones`. No funciona con clave de fábrica.
+6. **Pacientes sin visitas** (`pacientesSinVisitas`): un paciente con ficha o pagos sigue en la lista y en el buscador aunque se le borren todas las atenciones.
+7. **Avisos**: si hay dos planes iguales activos, la ficha y Planes avisan (`planesRepetidosHtml`). "🗑 Borrar plan" está en la lista de planes y dentro del plan.
+
+### Lo que salió mal y no hay que repetir
+
+- **Probar con el servidor instantáneo esconde problemas.** Google tarda 1–4 segundos. El arnés acepta `server.latency = 1500`: usarlo en todo flujo nuevo de plata o fichas.
+- Un paquete repetido (uno viejo sin empezar + uno nuevo) hizo marcar la sesión en el equivocado: el paciente quedó debiendo y no se veía el adelanto. Ya está cubierto, pero cualquier flujo nuevo que cree planes tiene que buscar uno igual primero.
+- Los textos que ve el usuario tienen que decir qué pasa con la plata: cuánto entra a la caja, cuánto queda adelantado y cuánto debe.
+
+## 6. Sonri (asistente)
+
+- Es un bloque idéntico en los dos paneles, entre las marcas `/* =====...\n   🦷 SONRI` y `/* ===== fin de Sonri ===== */`. El CSS empieza en `/* ===== 🦷 Sonri`.
+- Tiene preguntas frecuentes (`ASIS_AYUDA`), novedades que se muestran 45 días (`ASIS_NOVEDADES`), avisos y una pregunta antes de guardar si la visita es de un plan (`asisAntesDeGuardar`).
+- **El dueño pide que Sonri explique cada función nueva.** Si cambiás un circuito, actualizá sus pasos.
+- No aparece en navegadores automatizados salvo que exista `window.ASIS_PRUEBA`.
+
+## 7. Pruebas
+
+En el repo hay tres suites. Correr siempre con un guardián que bloquee la red real:
+
+| Suite | Verificaciones |
+|---|---|
+| `tests/pacientes-regression.cjs` | 130 |
+| `tests/sonri-y-permisos.cjs` | 61 (permisos del servidor por clínica, Sonri, cola) |
+| `tests/apps-script-en-memoria.cjs` | el `.gs` real corriendo en memoria |
+
+Fuera del repo (en el entorno de Claude, no subidas) hay más pruebas:
+- auditoría del panel: s12–s22, que cubren planes, pagos de doctoras, editar sumando pago, servidor, paquetes, script viejo, paquete desde la atención, sin visitas, borrar pago, paquete en la fila y el caso real con latencia;
+- un recorrido completo en Chromium real (`e2e-circuito`).
+
+Si las necesitás, pedile al dueño que te las pase, o pedí que se agreguen al repo. Todas pasaban en las dos clínicas al publicar `0a3be26`.
+
+Chromium para Playwright: `/opt/pw-browsers/chromium`, con `--disable-background-networking --disable-component-update`. Hay que rutear `script.google.com` al `.gs` en memoria y abortar el resto de la red.
+
+## 8. Pendiente y decisiones abiertas
+
+- **Paciente de prueba con dos "BLANQUEAMIENTO"**: el dueño tiene que borrar la visita de 234 con saldo 234 y el plan que dice "pagado Bs 0". Confirmar con él que quedó bien.
+- **Viviana Moreno**: sus atenciones y pagos borrados solo se recuperan con el historial de versiones de la planilla (copiar sus filas de una versión anterior y pegarlas al final). Ofrecerle guiarlo.
+- Propuestas sin decidir:
+  - **A**: avisar al borrar lo último de un paciente.
+  - **B**: papelera para restaurar lo borrado. Necesita cambiar el Apps Script.
+- Decisiones del dueño pendientes desde antes:
+  - si cada doctora debería recibir solo sus pacientes (hoy `list` manda todo y el panel filtra);
+  - qué hacer con la copia local en compus compartidas.
+- Opciones de paquetes no elegidas: **D** (pagado y no atendido) y **E** (sesiones incluidas en 0 para la comisión).
+
+## 9. Cómo trabajar con este dueño
+
+- Prueba en serio antes de mostrar, con su caso exacto y con la demora de Google.
+- Mostrale capturas del panel con datos ficticios, explicá en pocas líneas qué cambia para la doctora o recepción, y pedí el ok.
+- Si algo sale mal, reconocelo directo, explicá la causa en una frase y decile cómo arreglar los datos que quedaron mal.
