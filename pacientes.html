@@ -5364,14 +5364,16 @@ function borrarAnticipo(id){
   if(esDoctora()&&r.anticipoPor!==PROF_ACTUAL){toast('Ese anticipo lo registró otra persona: lo borra recepción o la dueña 🔐',1);return}
   if(!CONNECTED){toast('Para borrar un anticipo hace falta conexión: hay que ver si otro equipo ya lo usó.',1);return}
   if(bolsilloDe(creditosEn(DATA,r.paciente),r)-num(r.acuenta)<-0.009){toast('Ese anticipo ya se usó en una atención: no se puede borrar.',1);return}
-  listaFresca().then(function(l){
-  var c=Math.min(bolsilloDe(creditosEn(DATA,r.paciente),r),l?bolsilloDe(creditosEn(l,r.paciente),r):Infinity);
-  if(c-num(r.acuenta)<-0.009){toast('Ese anticipo ya se usó en una atención (desde otro equipo): no se puede borrar.',1);refreshAll();return}
-  if(!confirm('¿Borrar el anticipo de '+bs(r.acuenta)+' de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?\n\n'+
+  /* antes se bajaba la lista entera para revisar (tardaba y no mostraba nada):
+     el servidor ya revisa al borrar y, si otro equipo lo usó, no lo borra y avisa */
+  if(!confirm('¿Borrar '+(r.planId?'el pago al plan':'el anticipo')+' de '+bs(r.acuenta)+' de '+(r.paciente||'')+' del '+fmtF(r.fecha)+'?\n\n'+
       'Esa plata sale de la caja de ese día. Hacelo solo si fue un error de carga.'))return;
+  var nom=r.paciente;
   DATA=DATA.filter(function(x){return x.id!==id}); saveLocal();
-  enviar('delete',{id:id});
-  closeModal(); toast('Anticipo borrado'); refreshAll()})}
+  var que=(r.planId?'Pago al plan':'Anticipo')+' de '+bs(r.acuenta);
+  enviar('delete',{id:id}).then(function(res){if(!res||res.ok!==false)toast(que+' borrado ✅')},function(){});
+  closeModal(); toast('Borrando '+que.charAt(0).toLowerCase()+que.slice(1)+'…'); refreshAll();
+  try{if(DATA.some(function(x){return keyPac(x.paciente)===keyPac(nom)})||!pacVacia(pacDe(nom)))verPaciente(nom)}catch(e){}}
 
 /* El bloque de la ficha: cuánto tiene a favor y de dónde sale. */
 function htmlSaldoFavor(nom){
@@ -6691,14 +6693,13 @@ function fichaVisibleSinVisitas(f){
   return (f.planes||[]).some(function(p){return p&&((p.deClinica&&p.estado==='activo')||p.prof===PROF_ACTUAL)})}
 function pacientesSinVisitas(){
   var hay={}, out={}, orden=[];
-  datosVisibles().forEach(function(r){var k=keyPac(r.paciente); if(k)hay[k]=1});
+  datosVisibles().concat(anticiposVisibles()).forEach(function(r){var k=keyPac(r.paciente); if(k)hay[k]=1});
   var add=function(k,nom,r){
     if(!k||hay[k])return;
     if(!out[k]){out[k]={paciente:String(nom||'').trim(),celular:'',canal:'',visitas:0,gasto:0,cobrado:0,saldo:0,ult:'',prim:'',prox:'',sinVisitas:true}; orden.push(k)}
     if(r&&r.celular&&!out[k].celular)out[k].celular=r.celular;
     if(r&&r.canal&&!out[k].canal)out[k].canal=r.canal};
-  anticiposVisibles().forEach(function(r){add(keyPac(r.paciente),r.paciente,r)});
-  Object.keys(PAC).forEach(function(k){var f=PAC[k]; if(fichaVisibleSinVisitas(f))add(k,f.nombre||k,null)});
+  Object.keys(PAC).forEach(function(k){var f=PAC[k]; if(fichaVisibleSinVisitas(f))add(keyPac(f.nombre||k)||k,f.nombre||k,null)});
   return orden.map(function(k){return out[k]})}
 function renderPacientes(){
   var q=$('#pc-q').value.trim().toLowerCase(), ord=$('#pc-ord').value;
@@ -6710,7 +6711,7 @@ function renderPacientes(){
   arr.sort(cmp[ord]||cmp.ult);
   $('#pc-body').innerHTML=arr.length?arr.map(function(p){
     return '<tr onclick="verPaciente(\''+jss(p.paciente)+'\')">'+
-      '<td><b>'+esc(p.paciente)+'</b>'+(p.sinVisitas?' <span class="pill">sin visitas</span>':'')+'</td><td>'+esc(p.celular||'—')+'</td><td>'+esc(p.canal||'—')+'</td>'+
+      '<td><b>'+esc(p.paciente)+'</b>'+(!p.visitas&&!p.prox?' <span class="pill">sin visitas</span>':'')+'</td><td>'+esc(p.celular||'—')+'</td><td>'+esc(p.canal||'—')+'</td>'+
       '<td class="num">'+p.visitas+'</td>'+
       (esAdmin()?'<td class="num">'+n0(p.gasto)+'</td>':'')+
       '<td class="num"'+(p.saldo>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(p.saldo)+'</td>'+
@@ -7461,7 +7462,8 @@ function planResumenHtml(nombre,p){
     '<div class="barra" style="margin:11px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="mini">'+a.hechas+' de '+a.total+' etapas · presupuesto '+bs(p.total)+' · pagado '+bs(cob)+
       ' · <span style="color:'+(sal>0?'var(--clay)':'var(--ok)')+'">pendiente '+bs(sal)+'</span></div>'+
-    '<div class="row-btn"><button class="btn sm" onclick="verPlan(\''+jss(nombre)+'\',\''+p.id+'\')">Abrir plan</button></div></div>'}
+    '<div class="row-btn"><button class="btn sm" onclick="verPlan(\''+jss(nombre)+'\',\''+p.id+'\')">Abrir plan</button>'+
+      (planEsMio(p)?'<button class="btn danger sm" onclick="borrarPlan(\''+jss(nombre)+'\',\''+p.id+'\')">🗑 Borrar plan</button>':'')+'</div></div>'}
 
 /* ---------- lo que pasa con cada etapa ---------- */
 function atencionDeEtapa(s){
@@ -7538,8 +7540,9 @@ function verPlan(nombre,id){
       (mio?'<button class="btn sec sm" onclick="agregarControl(\''+nj+'\',\''+p.id+'\')">＋ Agregar control</button>':'')+
       (soloEquipoSilencioso()?'<button class="btn sec sm" onclick="guardarPlantilla(\''+nj+'\',\''+p.id+'\')">💾 Guardar como plantilla</button>':'')+
       (mio&&p.estado==='activo'?'<button class="btn sec sm" onclick="cerrarPlan(\''+nj+'\',\''+p.id+'\')">✅ Dar por terminado</button>':'')+
-      (mio?'<button class="btn danger sm" onclick="borrarPlan(\''+nj+'\',\''+p.id+'\')">Borrar</button>':'')+
-      '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">Volver</button></div>')}
+      (mio?'<button class="btn danger sm" onclick="borrarPlan(\''+nj+'\',\''+p.id+'\')">🗑 Borrar plan</button>':'')+
+      '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">Volver</button></div>'+
+    (mio?'':'<p class="mini" style="margin-top:6px">✏️ Editar o 🗑 borrar este '+(p.deClinica?'paquete':'plan')+' lo hace '+(p.deClinica?'recepción o la dueña':'su doctora, recepción o la dueña')+'.</p>'))}
 function soloEquipoSilencioso(){return !esDoctora()}
 
 /* El presupuesto como se lo mandamos al paciente. Es una acción aparte:
@@ -10974,6 +10977,8 @@ var ASIS_AYUDA=[
    p:['Cada sesión marcada queda como una atención de la doctora que la hizo, por su parte del precio (700 en 3 = 234 + 233 + 233).','La comisión de cada una sale de sus sesiones, no del pago entero.','Un paquete «de la clínica» lo ve cualquier doctora: cada una marca la sesión que atiende.']},
   {q:'Cargué el paquete entero como una sola atención, ¿cómo lo arreglo?', k:'paquete entero una sola atencion 700 arreglar sesion 1 cobro todo junto pasar', v:'pacientes', f:'#pc-q',
    p:['Al guardar te pregunto si fue la sesión 1 del paquete: decí que sí.','Si ya estaba guardada: elegí el plan en esa atención (o creá el paquete desde ella) y volvé a guardar.','En el plan, en la sesión 1, tocá «📦 Pasar al paquete»: la atención queda en el precio de la sesión y lo demás queda pagando las próximas.','La caja no cambia: entra lo mismo, el mismo día.']},
+  {q:'¿Cómo borro un plan o un paquete?', k:'borrar plan paquete eliminar quitar equivocado mal cargado', v:'pacientes', f:'#pc-q',
+   p:['Abrí al paciente → «🦷 Planes».','En el plan, tocá «🗑 Borrar plan» (también está al final, adentro del plan).','Lo borra la dueña o recepción; un plan a nombre de una doctora también lo puede borrar ella.','Las atenciones ya cargadas no se tocan y lo pagado al plan queda como saldo a favor.']},
   {q:'¿Cómo cobro una cuota o un pago del plan?', k:'cuota plan pago mensual pagar abono adelantado mensualidad', v:'pacientes', f:'#pc-q',
    p:['Abrí el plan y tocá «💰 Registrar pago».','Viene sugerida la cuota que toca: corregí el monto si hace falta y marcá cómo pagó.','Entra a la caja de hoy y se descuenta solo de las etapas que se atiendan.']},
   {q:'¿Qué es el saldo a favor (anticipo)?', k:'anticipo saldo favor adelanto dejo plata cuenta credito', v:'pacientes', f:'#pc-q',
