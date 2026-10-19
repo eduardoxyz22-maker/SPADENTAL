@@ -10753,7 +10753,13 @@ var ASIS_NOVEDADES=[
   {id:'editar-suma', f:'2026-10-14', t:'¿Ya pagó y decidió hacerse algo más?',
    x:'Editá la atención, agregá el tratamiento y subí «A cuenta»: lo nuevo entra como pago de hoy y lo de antes no cambia.', ayuda:/algo más/},
   {id:'pregunta-plan', f:'2026-10-15', t:'Te pregunto si la visita es del plan',
-   x:'Si el paciente tiene un plan y cargás una atención suelta, antes de guardar te pregunto si es la etapa que sigue. Así queda vinculada sola.'}
+   x:'Si el paciente tiene un plan y cargás una atención suelta, antes de guardar te pregunto si es la etapa que sigue. Así queda vinculada sola.'},
+  {id:'paquetes', f:'2026-10-19', t:'📦 Paquetes: varias sesiones, un precio',
+   x:'Ej. blanqueamiento de 3 sesiones por Bs 700. Se crea en el paciente con un toque (🦷 Planes) y el precio se reparte solo entre las sesiones.', ayuda:/cargo un paquete/},
+  {id:'marcar-realizada', f:'2026-10-19', t:'✓ Marcá cada sesión realizada y quién la hizo',
+   x:'En el plan o en la ficha: «✓ Marcar realizada». Cada sesión cuenta para la comisión de la doctora que la hizo, aunque el paciente haya pagado todo al principio.', ayuda:/sesión del paquete la hace/},
+  {id:'paquete-entero', f:'2026-10-19', t:'¿Cargaste el paquete entero en una atención?',
+   x:'Al guardar te pregunto si fue la sesión 1: la atención queda en el precio de esa sesión y lo demás queda pagando las próximas. La caja no cambia.', ayuda:/paquete entero/}
 ];
 function asisNovedades(){
   var vistas=asisLS(ASIS_LS_NOV)||{}, hoy=hoyISO();
@@ -10763,7 +10769,10 @@ function asisNovedades(){
 function asisNovedadVista(id){var v=asisLS(ASIS_LS_NOV)||{}; v[id]=1; asisLS(ASIS_LS_NOV,v)}
 function asisVerAyuda(rx){
   var i=-1; ASIS_AYUDA.some(function(a,j){if(rx.test(a.q)){i=j; return true} return false});
-  ASIS.q=''; ASIS.abierta=i; asisAbrir('ayuda')}
+  ASIS.q=''; ASIS.abierta=i; asisAbrir('ayuda');
+  /* la respuesta abierta, a la vista (si no, quedaba más abajo en la lista) */
+  try{var el=document.querySelector('#asis .asis-pr.on'), cu=document.querySelector('#asis .asis-cuerpo');
+    if(el&&cu)cu.scrollTop=Math.max(0,el.offsetTop-cu.offsetTop-8)}catch(e){}}
 
 /* (B) Antes de guardar: si el paciente tiene un plan con algo pendiente y la
    atención va como visita suelta, pregunto si es la etapa que sigue. Una vez
@@ -10863,7 +10872,7 @@ var ASIS_AYUDA=[
   {q:'¿Cómo registro la atención de una etapa del plan?', k:'etapa plan control registrar atencion sesion seguimiento ortodoncia marcar', v:'pacientes', f:'#pc-q',
    p:['Abrí el plan (paciente → 🦷 Planes → «Abrir plan»), o en la ficha tocá «✓ Marcar realizada».','Tocá «✓ Marcar realizada» en la sesión que toca.','Elegí quién la hizo, la fecha y la plata que trajo, si trajo.','La sesión queda marcada, con su doctora, y el plan se actualiza solo.']},
   {q:'¿Cómo cargo un paquete (por ejemplo, blanqueamiento de 3 sesiones)?', k:'paquete blanqueamiento sesiones pago adelantado precio cerrado combo promo tres', v:'pacientes', f:'#pc-q',
-   p:['Una vez: en ⚙️ Ajustes → 📦 Paquetes cargá nombre, sesiones y precio (ej. Blanqueamiento · 3 · Bs 700). El precio se reparte solo.','Con el paciente: 🦷 Planes → tocá «📦 Blanqueamiento». Queda creado.','Si pagó todo: «💰 Registrar pago» con los 700. Entra a la caja hoy.','Cada vez que viene: «✓ Marcar realizada» y elegí quién la hizo. Se paga sola con lo que dejó.']},
+   p:['La dueña o recepción, una sola vez: en ⚙️ Ajustes → 📦 Paquetes carga nombre, sesiones y precio (ej. Blanqueamiento · 3 · Bs 700). El precio se reparte solo.','Con el paciente: 🦷 Planes → tocá «📦 Blanqueamiento». Queda creado.','Si pagó todo: «💰 Registrar pago» con los 700. Entra a la caja hoy.','Cada vez que viene: «✓ Marcar realizada» y elegí quién la hizo. Se paga sola con lo que dejó.']},
   {q:'Si cada sesión del paquete la hace una doctora distinta, ¿cómo va la comisión?', k:'comision paquete sesion doctora distinta otra mirna shirley reparte quien atendio', v:'pacientes', f:'#pc-q',
    p:['Cada sesión marcada queda como una atención de la doctora que la hizo, por su parte del precio (700 en 3 = 234 + 233 + 233).','La comisión de cada una sale de sus sesiones, no del pago entero.','Un paquete «de la clínica» lo ve cualquier doctora: cada una marca la sesión que atiende.']},
   {q:'Cargué el paquete entero como una sola atención, ¿cómo lo arreglo?', k:'paquete entero una sola atencion 700 arreglar sesion 1 cobro todo junto pasar', v:'pacientes', f:'#pc-q',

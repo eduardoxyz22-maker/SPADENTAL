@@ -69,3 +69,13 @@ Los cambios del `.gs` exigen pegar cada script y publicarlo como **"Nueva versi�
 - **`info` muestra `version`** (`VERSION_SCRIPT`) para confirmar sin clave qué está publicado.
 
 Pruebas: `node tests/sonri-y-permisos.cjs` → 59.
+
+## Paquetes (19/10/2026)
+
+- **Ajustes → 📦 Paquetes**: nombre, sesiones y precio; el precio se reparte solo (700 en 3 = 234 + 233 + 233). En el paciente, 🦷 Planes → un toque.
+- **Paquete de la clínica** (`plan.deClinica`): sin doctora fija; cualquier doctora lo ve y marca la sesión que hace («✓ Marcar realizada» → «¿Quién la hizo?»). La comisión va por sesión. Solo la dueña o recepción lo editan o borran. Mientras está activo, el paciente no es «de otra doctora».
+- **Paquete entero en una sola atención**: al guardar pregunta si fue la sesión 1. Si sí, la acción `pasarAlPlan` (Apps Script) deja la atención en el precio de la sesión y pasa lo cobrado de más a pagos del plan, uno por día y forma de pago. La caja de cada día no cambia; queda en `_Correcciones`. Con la clave de fábrica no se hace. Para lo ya cargado: «📦 Pasar al paquete» en la sesión 1 del plan.
+- Un plan creado desde la atención que se está cargando queda elegido en ella.
+- Apps Script `2026-10-19-a` en las dos clínicas (marca `paquetes:true`). Con el script anterior el panel funciona y avisa que falta pegarlo.
+- Sonri: 3 preguntas y 3 novedades de paquetes.
+- Reversión: volver al commit `62cee2e` (panel) y pegar el Apps Script de ese commit.
