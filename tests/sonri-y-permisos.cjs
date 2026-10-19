@@ -168,6 +168,10 @@ for (const file of ['pacientes.html', 'cosmetic/pacientes.html']) {
     const o = c.cfgCompletarParcial({ parcial: true, precios: [], canales: [] });
     assert.equal(o.metaMes, 90000); assert.equal(o.comision['Dra. A'], 30); assert.equal(o.parcial, undefined);
   });
+  check(file + ': Sonri arranca también al recargar con la sesión iniciada (no antes de cargarse)', () => {
+    assert.match(html, /setTimeout\(function\(\)\{try\{asisMontar\(\)\}catch\(e\)\{\}\},0\)\}/);
+    assert.match(bloque(file), /Sonri arranca recién cuando todo está listo/);
+  });
   check(file + ': el pie dice lo que hace de verdad', () => { assert.ok(/Solo se guarda lo que vos confirmás/.test(bloque(file))); assert.ok(!/no cambio nada/.test(bloque(file))); });
 }
 console.log(JSON.stringify({ passed: count, networkRequests: 0, evidence }, null, 2));

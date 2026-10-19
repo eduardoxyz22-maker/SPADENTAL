@@ -1773,7 +1773,8 @@ function desbloquear(){
      pestaña. */
   try{refreshAll()}catch(e){}
   saludoTemporada();
-  try{asisMontar()}catch(e){}}
+  /* Sonri arranca cuando terminó de cargarse (al recargar, esto corre antes) */
+  setTimeout(function(){try{asisMontar()}catch(e){}},0)}
 function bloquear(){
   ROL='equipo'; PROF_ACTUAL=''; olvidarSesion();
   try{sessionStorage.removeItem(K_UNLOCK);localStorage.removeItem(K_UNLOCK)}catch(e){}
@@ -10841,6 +10842,11 @@ function asisTourOfrecer(){
   asisGlobo(null,true,false,'<b>¡Hola! Soy '+ASIS_NOMBRE+' 🦷</b><span>Soy tu asistente del panel: te aviso lo pendiente y te explico cómo hacer cada cosa. ¿Te muestro el panel? Es un minuto.</span>'+
     '<div class="asis-acc"><button type="button" class="asis-b si" onclick="asisTourEmpezar()">🧭 Sí, mostrame</button>'+
     '<button type="button" class="asis-b" onclick="asisLS(ASIS_LS_TOUR,1);$(\'#asis-globo\').hidden=true">Ahora no</button></div>')}
+
+/* Si el panel abre con la sesión ya iniciada (al recargar o volver a la
+   pestaña), desbloquear() corre antes de que este bloque termine de
+   cargarse: Sonri arranca recién cuando todo está listo. */
+setTimeout(function(){try{if(document.body&&!document.body.classList.contains('locked'))asisMontar()}catch(e){}},0);
 /* ===== fin de Sonri ===== */
 </script>
 </body>
