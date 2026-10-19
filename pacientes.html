@@ -6682,9 +6682,27 @@ function sonDistintos(a,b){
   toast('Anotado: son dos personas distintas');
   renderRepetidos()}
 
+/* Un paciente sin ninguna visita (se borraron, o solo pagó un paquete) no
+   desaparece si tiene ficha (ficha médica, nacimiento o planes) o pagos: sigue
+   en la lista y en el buscador. */
+function fichaVisibleSinVisitas(f){
+  if(!f||!f.med||pacVacia(f))return false;
+  if(!esDoctora())return true;
+  return (f.planes||[]).some(function(p){return p&&((p.deClinica&&p.estado==='activo')||p.prof===PROF_ACTUAL)})}
+function pacientesSinVisitas(){
+  var hay={}, out={}, orden=[];
+  datosVisibles().forEach(function(r){var k=keyPac(r.paciente); if(k)hay[k]=1});
+  var add=function(k,nom,r){
+    if(!k||hay[k])return;
+    if(!out[k]){out[k]={paciente:String(nom||'').trim(),celular:'',canal:'',visitas:0,gasto:0,cobrado:0,saldo:0,ult:'',prim:'',prox:'',sinVisitas:true}; orden.push(k)}
+    if(r&&r.celular&&!out[k].celular)out[k].celular=r.celular;
+    if(r&&r.canal&&!out[k].canal)out[k].canal=r.canal};
+  anticiposVisibles().forEach(function(r){add(keyPac(r.paciente),r.paciente,r)});
+  Object.keys(PAC).forEach(function(k){var f=PAC[k]; if(fichaVisibleSinVisitas(f))add(k,f.nombre||k,null)});
+  return orden.map(function(k){return out[k]})}
 function renderPacientes(){
   var q=$('#pc-q').value.trim().toLowerCase(), ord=$('#pc-ord').value;
-  var arr=agrupaPacientes().filter(function(p){
+  var arr=agrupaPacientes().concat(pacientesSinVisitas()).filter(function(p){
     return !q||((p.paciente+' '+p.celular).toLowerCase().indexOf(q)>=0)});
   var cmp={ult:function(a,b){return (b.ult||'').localeCompare(a.ult||'')},
     saldo:function(a,b){return b.saldo-a.saldo}, gasto:function(a,b){return b.gasto-a.gasto},
@@ -6692,7 +6710,7 @@ function renderPacientes(){
   arr.sort(cmp[ord]||cmp.ult);
   $('#pc-body').innerHTML=arr.length?arr.map(function(p){
     return '<tr onclick="verPaciente(\''+jss(p.paciente)+'\')">'+
-      '<td><b>'+esc(p.paciente)+'</b></td><td>'+esc(p.celular||'—')+'</td><td>'+esc(p.canal||'—')+'</td>'+
+      '<td><b>'+esc(p.paciente)+'</b>'+(p.sinVisitas?' <span class="pill">sin visitas</span>':'')+'</td><td>'+esc(p.celular||'—')+'</td><td>'+esc(p.canal||'—')+'</td>'+
       '<td class="num">'+p.visitas+'</td>'+
       (esAdmin()?'<td class="num">'+n0(p.gasto)+'</td>':'')+
       '<td class="num"'+(p.saldo>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(p.saldo)+'</td>'+
@@ -7067,7 +7085,7 @@ function arreglarSaldo(id){
 function verPaciente(nombre){
   if(identidadAmbigua(nombre)){toast(AVISO_IDENTIDAD,1);return}
   var k=keyPac(nombre), hoy=hoyISO(), f=pacDe(nombre);
-  if(esDoctora()&&!pacientesMios()[k]&&!paqueteClinicaDe(nombre)&&!anticiposDe(nombre).some(function(a){return a.anticipoPor===PROF_ACTUAL})){toast('Ese paciente no tiene atenciones con vos 🔐',1);return}
+  if(esDoctora()&&!pacientesMios()[k]&&!paqueteClinicaDe(nombre)&&!fichaVisibleSinVisitas(f)&&!anticiposDe(nombre).some(function(a){return a.anticipoPor===PROF_ACTUAL})){toast('Ese paciente no tiene atenciones con vos 🔐',1);return}
   var mios=datosVisibles().filter(function(r){return keyPac(r.paciente)===k});
   var rs=mios.filter(esAtencion).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
   var citas=mios.filter(function(r){return esCitaPendiente(r)&&r.fecha>=hoy})
@@ -9246,6 +9264,10 @@ function pintarBusqueda(){
     var mios=vis.filter(function(x){return keyPac(x.paciente)===k});
     var ult=mios.filter(esAtencion).map(function(x){return x.fecha||''}).sort().pop()||'';
     out.push({nombre:r.paciente,cel:r.celular||'',ult:ult,n:mios.filter(esAtencion).length})});
+  pacientesSinVisitas().forEach(function(p){
+    var k=keyPac(p.paciente); if(!k||vistos[k])return; vistos[k]=1;
+    if(q&&claveServ(p.paciente).indexOf(q)<0)return;
+    out.push({nombre:p.paciente,cel:p.celular||'',ult:'',n:0})});
   out.sort(function(a,b){return b.ult.localeCompare(a.ult)});
   $('#bsq-res').innerHTML=q&&!out.length
     ? '<div class="empty">Nadie se llama así todavía.</div>'
