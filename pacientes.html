@@ -1348,6 +1348,7 @@ body.locked #asis{display:none}
     <p class="hint">Planes tipo para no escribir las sesiones cada vez. Se crean desde un plan que ya
       cargaste, con el botón <b>💾 Plantilla</b> en la ficha del paciente.</p>
     <div id="c-plantillas"></div>
+    <div id="c-paquetes"></div>
   </div>
   <div class="card solo-admin">
     <h2>Comisiones</h2>
@@ -1552,7 +1553,11 @@ function pacAjeno(nombre){
   if(!esDoctora())return false;
   var k=keyPac(nombre); if(!k)return false;
   var suyos=DATA.filter(function(r){return keyPac(r.paciente)===k&&r.profesional&&r.profesional!=='Por definir'&&!esAnticipo(r)});
-  return suyos.length>0&&!suyos.some(esMia)}
+  return suyos.length>0&&!suyos.some(esMia)&&!paqueteClinicaDe(nombre)}
+/* ¿Tiene un paquete de la clínica en curso? Mientras tanto lo atiende cualquiera. */
+function paqueteClinicaDe(nombre){
+  var f=PAC[keyPac(nombre)];
+  return !!f&&(f.planes||[]).some(function(p){return p&&p.deClinica&&p.estado==='activo'})}
 function bloqueaAjeno(nombre){
   if(pacAjeno(nombre)){toast('Ese paciente es de otra doctora 🔐',1);return true}
   return false}
@@ -1563,7 +1568,7 @@ function bloqueaAjeno(nombre){
    sesiones, la que más atendió al paciente. Una cita "por definir" o una
    reemplazante de un día no se quedan con el plan. */
 function duenaPlan(pl){
-  if(!pl)return '';
+  if(!pl||pl.deClinica)return '';
   if(pl.prof)return pl.prof;
   var real=function(r){return esAtencion(r)&&r.profesional&&r.profesional!=='Por definir'};
   var masVeces=function(l){
@@ -2126,7 +2131,7 @@ function abrirSesion(clave){
   return fetchApi({action:'login',clave:clave}).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
     if(r&&r.ok&&r.token){
-      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan};
+      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes};
       CLAVE_MEM=clave; guardarSesion(); return r}
     if(r&&r.error==='accion_desconocida')SRV_AUTH=false;
     if(r&&r.error==='clave_incorrecta'&&CLAVE_MEM===clave)CLAVE_MEM='';
@@ -3549,9 +3554,11 @@ function planHint(){
   var p=planesVisiblesDe($('#f-paciente').value.trim()).filter(function(x){return x.id===id})[0];
   if(!p){$('#plan-hint').textContent='';return}
   var ses=proxSesion(p);
+  var fav=ses&&num(ses.precio)>0&&!ses.aparte?Math.min(num(ses.precio),Math.max(0,creditoPara($('#f-paciente').value.trim(),p.id))):0;
   $('#plan-hint').innerHTML=ses
-    ? 'Al guardar se marca hecha la sesión '+ses.n+(ses.desc?' · <b>'+esc(ses.desc)+'</b>':'')+
-      '. Lo que cobres hoy va contra el saldo del plan.'
+    ? 'Al guardar se marca realizada la sesión '+ses.n+' de '+(p.sesiones||[]).length+(ses.desc?' · <b>'+esc(ses.desc)+'</b>':'')+
+      (num(ses.precio)>0?' · '+bs(ses.precio):'')+'.'+
+      (fav>0.009?' 💜 Ya tiene '+bs(fav)+' pagados para esta sesión.':' Lo que cobres hoy va contra el saldo del plan.')
     : 'Todas las sesiones del plan ya están marcadas como hechas.'}
 
 function refrescarFichaForm(selPlan){
@@ -3765,6 +3772,8 @@ var FAVOR_TOPE=null;
 function submitAtencion(){
   /* Sonri pregunta antes si la visita es una etapa del plan (ver asisAntesDeGuardar) */
   try{if(asisAntesDeGuardar())return}catch(e){}
+  /* el paquete entero cargado como una sola atención (ver PAQUETES) */
+  try{if(paqueteAntesDeGuardar())return}catch(e){}
   var pac=$('#f-paciente').value;
   FAVOR_TOPE=null;
   var planF=$('#wrap-plan').style.display==='none'?'':$('#f-plan').value;
@@ -3927,7 +3936,8 @@ function guardarAtencion(){
   if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
     :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
   showWhatsappModal(rec,cita,favorUsado);
-  try{asisAlGuardar(rec)}catch(e){}}
+  try{asisAlGuardar(rec)}catch(e){}
+  try{paqueteDespuesDeGuardar(rec)}catch(e){}}
 
 function borrar(id){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
@@ -4635,7 +4645,7 @@ function controles(){
    --------------------------------------------------------------------- */
 function planNormalize(p){
   p=p||{};
-  return {id:p.id||uid(), nombre:p.nombre||'Plan de tratamiento',
+  return Object.assign({id:p.id||uid(), nombre:p.nombre||'Plan de tratamiento',
     fecha:p.fecha||hoyISO(), estado:p.estado||'activo', total:num(p.total),
     sesiones:(Array.isArray(p.sesiones)?p.sesiones:[]).map(function(s,i){
       s=s||{};
@@ -4650,7 +4660,9 @@ function planNormalize(p){
     cuotas:(Array.isArray(p.cuotas)?p.cuotas:[]).map(function(c,i){
       c=c||{};
       return {n:i+1, fecha:c.fecha||'', monto:num(c.monto)}}),
-    notas:p.notas||'', prof:p.prof||''}}
+    notas:p.notas||'', prof:p.deClinica?'':(p.prof||'')},
+    /* paquete: varias sesiones con precio cerrado; deClinica: lo atiende cualquier doctora */
+    p.paquete?{paquete:true}:{}, p.deClinica?{deClinica:true}:{})}
 
 function planesDe(nombre){return pacDe(nombre).planes||[]}
 function planesActivos(nombre){
@@ -5176,7 +5188,7 @@ function puedePagoPlan(nombre,planId){
   if(puedeAnticipo())return true;
   if(!esDoctora()||!planId||!((CFG&&CFG.pagoPlanDoctoras)||SESION.pagoPlan))return false;
   var p=planesDe(nombre).filter(function(x){return x.id===planId})[0];
-  return !!p&&planEsMio(p)}
+  return !!p&&(planEsMio(p)||!!p.deClinica)}
 /* Al guardar una visita atendida, lo que queda debiendo se descuenta solo del
    saldo a favor: nadie tiene que acordarse ni sacar cuentas. Solo al cargarla
    (o al pasar una cita a atendida); corregir una atención vieja no lo toca. */
@@ -7040,7 +7052,7 @@ function arreglarSaldo(id){
 function verPaciente(nombre){
   if(identidadAmbigua(nombre)){toast(AVISO_IDENTIDAD,1);return}
   var k=keyPac(nombre), hoy=hoyISO(), f=pacDe(nombre);
-  if(esDoctora()&&!pacientesMios()[k]&&!anticiposDe(nombre).some(function(a){return a.anticipoPor===PROF_ACTUAL})){toast('Ese paciente no tiene atenciones con vos 🔐',1);return}
+  if(esDoctora()&&!pacientesMios()[k]&&!paqueteClinicaDe(nombre)&&!anticiposDe(nombre).some(function(a){return a.anticipoPor===PROF_ACTUAL})){toast('Ese paciente no tiene atenciones con vos 🔐',1);return}
   var mios=datosVisibles().filter(function(r){return keyPac(r.paciente)===k});
   var rs=mios.filter(esAtencion).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')});
   var citas=mios.filter(function(r){return esCitaPendiente(r)&&r.fecha>=hoy})
@@ -7087,7 +7099,7 @@ function verPaciente(nombre){
     var a=avancePlan(p), s2=proxSesion(p);
     return '<div style="border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:8px">'+
       '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
-        '<b>'+esc(p.nombre)+'</b>'+planPill(p.estado)+'</div>'+
+        '<b>'+esc(p.nombre)+(p.deClinica?' <span class="pill lime">📦 de la clínica</span>':'')+'</b>'+planPill(p.estado)+'</div>'+
       '<div class="barra" style="margin:9px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
       '<div class="mini">'+a.hechas+'/'+a.total+' etapas · presupuesto '+bs(p.total)+' · pagado '+bs(cobradoPlan(p))+
         ' · pendiente '+bs(saldoPlan(p))+(s2?' · sigue: <b>'+esc(s2.desc||('etapa '+s2.n))+'</b>':'')+'</div>'+
@@ -7097,6 +7109,7 @@ function verPaciente(nombre){
           : '💳 próxima cuota '+bs(c.monto)+' el '+fmtF(c.fecha))+'</div>'})()+
       '<div class="row-btn" style="margin-top:8px">'+
         '<button class="btn sm" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Abrir plan</button>'+
+        (s2&&p.estado==='activo'?'<button class="btn sec sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s2.n+')">✓ Marcar realizada · sesión '+s2.n+'</button>':'')+
       '</div></div>'}).join(''):'';
 
   openModal('<h3>'+esc(nom)+'</h3>'+
@@ -7381,7 +7394,7 @@ var PLANTILLAS_BASE=[
     {desc:'Retiro de brackets',cant:1,precio:0},
     {desc:'Retenedores',cant:1,precio:0}]}];
 function plantillasPlan(){
-  var propias=(CFG.planesTipo||[]).map(function(t){return {nombre:t.nombre,total:num(t.total),cuotas:t.cuotas||null,
+  var propias=(CFG.planesTipo||[]).map(function(t){return {nombre:t.nombre,total:num(t.total),cuotas:t.cuotas||null,paquete:!!t.paquete,deClinica:!!t.deClinica,
     etapas:Array.isArray(t.etapas)&&t.etapas.length?t.etapas:(t.sesiones||[]).map(function(d){return {desc:d,cant:1,precio:0}})}});
   var nombres={}; propias.forEach(function(t){nombres[String(t.nombre).toLowerCase()]=1});
   return propias.concat(PLANTILLAS_BASE.filter(function(t){return !nombres[t.nombre.toLowerCase()]}))}
@@ -7395,10 +7408,13 @@ function abrirPlanes(nombre){
     return (a.estado==='activo'?0:1)-(b.estado==='activo'?0:1)});
   openModal('<h3>🦷 Planes de tratamiento</h3><p class="mini">'+esc(nombre)+'</p>'+
     '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="nuevoPlan(\''+jss(nombre)+'\')">＋ Crear plan de tratamiento</button></div>'+
+    botonesPaquetes(nombre)+
     (ps.length?ps.map(function(p){return planResumenHtml(nombre,p)}).join('')
              :'<div class="empty" style="margin-top:12px">Todavía no tiene ningún plan. Creá uno: se puede armar hoy sin pagos ni atenciones y usarlo en las próximas visitas.</div>')+
     '<div class="row-btn"><button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
 
+function quienLleva(p){
+  return p.deClinica?' · <span class="pill lime">📦 de la clínica: lo atiende cualquier doctora</span>':(p.prof?' · '+esc(p.prof):'')}
 function planPill(estado){
   var c={activo:'lime',terminado:'ok',cancelado:'bad'}[estado]||'';
   return '<span class="pill '+c+'">'+esc(estado)+'</span>'}
@@ -7407,7 +7423,7 @@ function planResumenHtml(nombre,p){
   var a=avancePlan(p), cob=cobradoPlan(p), sal=saldoPlan(p);
   return '<div style="border:1px solid var(--line);border-radius:12px;padding:13px;margin:12px 0">'+
     '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">'+
-      '<div><b>'+esc(p.nombre)+'</b><div class="mini">Desde el '+fmtF(p.fecha)+(p.prof?' · '+esc(p.prof):'')+'</div></div>'+
+      '<div><b>'+esc(p.nombre)+'</b><div class="mini">Desde el '+fmtF(p.fecha)+quienLleva(p)+'</div></div>'+
       planPill(p.estado)+'</div>'+
     '<div class="barra" style="margin:11px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="mini">'+a.hechas+' de '+a.total+' etapas · presupuesto '+bs(p.total)+' · pagado '+bs(cob)+
@@ -7444,20 +7460,21 @@ function verPlan(nombre,id){
   var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===p.id})
     .sort(function(x,y){return (y.fecha||'').localeCompare(x.fecha||'')});
   openModal('<h3>🦷 '+esc(p.nombre)+' '+planPill(p.estado)+'</h3>'+
-    '<p class="mini">'+esc(nombre)+' · desde el '+fmtF(p.fecha)+(p.prof?' · '+esc(p.prof):'')+'</p>'+
+    '<p class="mini">'+esc(nombre)+' · desde el '+fmtF(p.fecha)+quienLleva(p)+'</p>'+
     '<div class="kpis" style="margin:12px 0">'+
       kpi('Presupuesto acordado',bs(p.total))+kpi('Pagado',bs(cob),'var(--ok)')+
       kpi('Pendiente de pago',bs(sal),sal>0?'var(--clay)':'var(--ok)')+
       kpi('💜 Saldo a favor',bs(favor))+kpi('Avance',a.hechas+'/'+a.total+' · '+a.pct+'%')+'</div>'+
     '<div class="barra" style="margin:0 0 10px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="row-btn" style="margin-top:0">'+
-      (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+prox.n+')">＋ Registrar atención · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
+      (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+prox.n+')">✓ Marcar realizada · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
       (puedePagoPlan(nombre,p.id)?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\')">💰 Registrar pago</button>':'')+
       '<button class="btn sec" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📲 Enviar presupuesto por WhatsApp</button></div>'+
     '<h4 style="margin:14px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Etapas</h4>'+
     (filas.length?filas.map(function(f){
         var s=f.s, acc=[];
-        if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar atención</button>');
+        if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s.n+')">✓ Marcar realizada</button>');
+        if(f.a&&puedePasarAlPaquete(f.a,p,s))acc.push('<button class="btn sm" onclick="pasarAlPaquete(\''+f.a.id+'\',\''+p.id+'\',0)">📦 Pasar al paquete</button>');
         if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+f.a.id+'\')">Registrar pago</button>');
         else if(f.a&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar pago</button>');
         else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar pago</button>');
@@ -7467,13 +7484,15 @@ function verPlan(nombre,id){
           '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
             '<div><b>'+(s.hecha?'✓':s.n+'.')+' '+esc(s.desc||('Etapa '+s.n))+'</b>'+
               (f.aparte?' <span class="pill warn">se cobra aparte</span>':'')+'</div>'+
-            '<div style="text-align:right;flex:none">'+(f.estado==='hecha'?'<span class="pill ok">atendida '+fmtFcorta(f.a.fecha)+'</span>'
+            '<div style="text-align:right;flex:none">'+(f.estado==='hecha'?'<span class="pill ok">realizada '+fmtFcorta(f.a.fecha)+'</span>'+
+              (f.a.profesional?'<div class="mini">'+esc(f.a.profesional)+'</div>':'')
               :(f.estado==='marcada'?'<span class="pill ok">hecha'+(s.fecha?' '+fmtFcorta(s.fecha):'')+'</span><div class="mini">sin atención cargada</div>'
               :'<span class="pill">pendiente</span>'))+'</div></div>'+
           '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px">'+
             dato('Importe',f.precio>0?bs(f.precio):'incluido')+
             dato('Abonado',f.abonado===null?'—':bs(f.abonado),f.abonado>0?'color:var(--ok)':'')+
             dato('Saldo',f.saldo===null?'—':bs(f.saldo),f.saldo>0&&f.estado==='hecha'?'color:var(--clay)':'')+'</div>'+
+          (f.a&&puedePasarAlPaquete(f.a,p,s)?'<p class="mini" style="margin:8px 0 0;color:var(--clay)">Esta atención se cargó con el paquete entero ('+bs(f.a.total)+'). «📦 Pasar al paquete» la deja en '+bs(s.precio)+' y lo cobrado de más queda pagando las próximas sesiones. La caja no cambia.</p>':'')+
           (acc.length?'<div class="row-btn" style="margin-top:8px">'+acc.join('')+'</div>':'')+'</div>'}).join('')+
       '<p class="mini" style="margin:6px 0 0">En las etapas pendientes, "Abonado" es lo que ya cubre el pago adelantado del plan.</p>'
     :'<div class="empty">El plan no tiene etapas.</div>')+
@@ -7546,22 +7565,22 @@ function atencionDePlan(nombre,planId,n){
   var precio=num(s.precio), profDef=esDoctora()?PROF_ACTUAL:(p.prof||duenaPlanDeducida(p,nombre)||'');
   var profs=(CFG.prof||[]).filter(function(x){return x&&x!=='Por definir'});
   if(profDef&&profs.indexOf(profDef)<0)profs.push(profDef);
-  openModal('<h3>＋ Registrar atención</h3>'+
+  openModal('<h3>✓ Sesión realizada</h3>'+
     '<div class="avisomed nota" style="margin-top:8px"><b>'+esc(nombre)+'</b> · '+esc(p.nombre)+
       '<div>Etapa '+s.n+': <b>'+esc(s.desc||('Etapa '+s.n))+'</b> · '+(precio>0?bs(precio):'incluida en el presupuesto')+
       (s.aparte?' · se cobra aparte':'')+'</div></div>'+
     '<div class="grid g2" style="margin-top:12px">'+
       '<div><label>Fecha <span class="req">*</span></label><input type="date" id="ap-fecha" value="'+hoyISO()+'"></div>'+
-      '<div><label>Doctora <span class="req">*</span></label>'+(esDoctora()
+      '<div><label>¿Quién la hizo? <span class="req">*</span></label>'+(esDoctora()
         ?'<input id="ap-prof" value="'+esc(PROF_ACTUAL)+'" readonly>'
-        :'<select id="ap-prof">'+profs.map(function(x){return '<option'+(x===profDef?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>')+'</div></div>'+
+        :'<select id="ap-prof"><option value="">— elegí la doctora —</option>'+profs.map(function(x){return '<option'+(x===profDef?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>')+'</div></div>'+
     '<div style="margin-top:12px"><label>Observaciones</label><textarea id="ap-obs" rows="2" placeholder="Lo que se hizo, cómo respondió…"></textarea></div>'+
     '<div class="grid g2" style="margin-top:12px">'+
       '<div><label>Dinero recibido hoy (Bs)</label><input id="ap-monto" inputmode="decimal" placeholder="0"></div>'+
       '<div><label>¿Cómo pagó?</label><div class="seg lime" id="ap-seg">'+METODOS.map(function(m){
         return '<label><input type="radio" name="apmet" value="'+m+'"><span>'+m+'</span></label>'}).join('')+'</div></div></div>'+
     '<div id="ap-info" class="mini" style="margin-top:10px"></div>'+
-    '<div class="row-btn"><button class="btn" id="ap-ok" onclick="guardarAtencionPlan()">Guardar atención</button>'+
+    '<div class="row-btn"><button class="btn" id="ap-ok" onclick="guardarAtencionPlan()">✓ Guardar sesión realizada</button>'+
     '<button class="btn sec" onclick="AT_PLAN=null;verPlan(\''+jss(nombre)+'\',\''+planId+'\')">Cancelar</button></div>');
   var info=function(){
     var m=num($('#ap-monto').value), fav=Math.max(0,creditoPara(nombre,s.aparte?'':planId)), deuda=Math.max(0,precio-m);
@@ -7584,7 +7603,7 @@ function guardarAtencionPlan(){
   var txt=$('#ap-monto').value, m=Math.round(num(txt)*100)/100, met=getRadio('apmet');
   if(!fecha){toast('Poné la fecha',1);return}
   if(fecha>hoyISO()){toast('La fecha no puede ser futura',1);return}
-  if(!prof){toast('Elegí la doctora',1);return}
+  if(!prof){toast('Elegí la doctora que hizo la sesión',1);return}
   if(montoRaro(txt)||m<0){toast('El monto tiene letras: escribilo solo con números',1);return}
   if(m>0&&!met){toast('Marcá cómo pagó',1);return}
   if(m>0&&!puedePagoPlan(nombre,p.id)&&m>num(s.precio)+0.009){toast('Lo que sobra sería un pago al plan: lo registra la doctora del plan, recepción o la dueña. Cobrá solo el importe de la etapa.',1);return}
@@ -7650,6 +7669,7 @@ function aplicarPlantilla(i){
   pintarEtapasEditor();
   if(num(t.total)>0){$('#pl-tot').value=num(t.total); $('#pl-tot').dataset.touched='1'}
   if(t.cuotas){$('#pl-ncuo').value=num(t.cuotas.n)||'';$('#pl-dcuo').value=num(t.cuotas.cada)||30}
+  if($('#pl-cli')&&t.paquete){$('#pl-cli').checked=!!t.deClinica; if($('#pl-prof'))$('#pl-prof').disabled=!!t.deClinica}
   toast('Plantilla "'+(t.nombre||'')+'" aplicada: ajustá etapas e importes')}
 
 function guardarPlantilla(nombre,id){
@@ -7700,6 +7720,24 @@ function pintarEtapasEditor(){
       if(k==='aparte')e.aparte=inp.checked; else if(k==='desc')e.desc=inp.value; else e[k]=inp.value;
       var t=$('#pl-tot'); if(t&&!t.dataset.touched)t.value=sumaEtapas()||'';
       var sm=$('#pl-etapas .mini b'); if(sm)sm.textContent=bs(sumaEtapas())}})}
+/* El presupuesto acordado, repartido parejo entre las sesiones incluidas que
+   todavía no se hicieron (cada una cuenta para la comisión de quien la hace). */
+function repartirEnEditor(){
+  var tot=num($('#pl-tot').value), ya=0, libres=[];
+  PL_ETAPAS.forEach(function(e){if(e.aparte)return; var n=e.fija?1:Math.max(1,Math.round(num(e.cant)||1));
+    if(e.hecha)ya+=num(e.precio)*n; else libres.push(e)});
+  var cuantas=libres.reduce(function(a,e){return a+(e.fija?1:Math.max(1,Math.round(num(e.cant)||1)))},0);
+  if(tot<=0){toast('Primero poné el presupuesto acordado',1);return}
+  if(!cuantas){toast('No quedan sesiones sin hacer para repartir',1);return}
+  if(tot-ya<=0){toast('Lo ya hecho cubre todo el presupuesto',1);return}
+  /* cada fila con cantidad se abre en sesiones, así cada una tiene su precio */
+  var rep=repartirPrecio(tot-ya,cuantas), k=0, out=[];
+  PL_ETAPAS.forEach(function(e){
+    if(e.aparte||e.hecha){out.push(e);return}
+    var n=e.fija?1:Math.max(1,Math.round(num(e.cant)||1)), d=String(e.desc||'').trim();
+    for(var i=0;i<n;i++)out.push(Object.assign({},e,{cant:1,precio:rep[k++],desc:n>1&&d?d+' '+(i+1):e.desc,orig:n>1?null:e.orig}))});
+  PL_ETAPAS=out; $('#pl-tot').dataset.touched='1'; pintarEtapasEditor();
+  toast('Repartido: '+rep.map(function(x){return bs(x)}).join(' · '))}
 function agregarEtapaEditor(desc){PL_ETAPAS.push({desc:desc||'',cant:1,precio:''}); pintarEtapasEditor()}
 function quitarEtapa(i){PL_ETAPAS.splice(+i,1); pintarEtapasEditor(); var t=$('#pl-tot'); if(t&&!t.dataset.touched)t.value=sumaEtapas()||''}
 
@@ -7716,7 +7754,9 @@ function editorPlan(nombre,p,pre){
           var n=(t.etapas||[]).reduce(function(a,e){return a+(num(e.cant)||1)},0);
           return '<option value="'+i+'">'+esc(t.nombre)+' · '+n+' etapas'+(num(t.total)>0?' · '+bs(t.total):'')+'</option>'}).join('')+
         '</select></div>':'')+
-    (esDoctora()?'':'<div style="margin-top:12px"><label>Doctora del plan</label><select id="pl-prof">'+
+    (hayPaquetesSrv()?'<label class="mini" style="display:flex;gap:6px;align-items:center;margin-top:12px"><input type="checkbox" id="pl-cli" style="width:auto;margin:0"'+(p&&p.deClinica?' checked':'')+
+      (p&&!planEsMio(p)?' disabled':'')+' onchange="var s=$(\'#pl-prof\');if(s)s.disabled=this.checked"> 📦 Paquete de la clínica: lo atiende cualquier doctora y cada una marca la sesión que hace</label>':'')+
+    (esDoctora()?'':'<div style="margin-top:12px"><label>Doctora del plan</label><select id="pl-prof"'+(p&&p.deClinica?' disabled':'')+'>'+
       '<option value="">— lo ven todas —</option>'+
       (CFG.prof||[]).filter(function(x){return x&&x!=='Por definir'})
         .concat(p&&p.prof&&(CFG.prof||[]).indexOf(p.prof)<0?[p.prof]:[]).map(function(x){
@@ -7728,7 +7768,8 @@ function editorPlan(nombre,p,pre){
     '<div style="margin-top:12px"><label>Etapas · cantidad · importe de cada una</label>'+
       '<div id="pl-etapas"></div>'+
       '<div class="row-btn" style="margin-top:8px"><button class="btn sec sm" onclick="agregarEtapaEditor()">＋ Agregar etapa</button>'+
-      '<button class="btn sec sm" onclick="agregarEtapaEditor(\'Control\')">＋ Agregar control</button></div>'+
+      '<button class="btn sec sm" onclick="agregarEtapaEditor(\'Control\')">＋ Agregar control</button>'+
+      '<button class="btn sec sm" onclick="repartirEnEditor()">➗ Repartir el presupuesto entre las sesiones</button></div>'+
       '<p class="hint" style="margin:6px 0 0">Las etapas son las que defina la doctora: no es un protocolo obligatorio. '+
       'Se van marcando solas cuando se registra la atención de cada una.</p></div>'+
     '<div class="grid g2" style="margin-top:12px">'+
@@ -7773,6 +7814,9 @@ function guardarPlan(nombre,id){
     toast('Una etapa ya atendida no se puede quitar',1);return}
   if(!plan){plan=planNormalize({prof:esDoctora()?PROF_ACTUAL:''}); p.planes.push(plan)}
   if(!esDoctora()&&$('#pl-prof'))plan.prof=$('#pl-prof').value;
+  if($('#pl-cli')&&!$('#pl-cli').disabled){
+    if($('#pl-cli').checked){plan.deClinica=true; plan.paquete=true; plan.prof=''}
+    else if(plan.deClinica){delete plan.deClinica; if(esDoctora())plan.prof=PROF_ACTUAL}}
   plan.nombre=$('#pl-nom').value.trim()||'Plan de tratamiento';
   plan.fecha=$('#pl-fec').value||hoyISO();
   plan.total=$('#pl-tot').value.trim()!==''?num($('#pl-tot').value):sumaEtapas();
@@ -7782,8 +7826,10 @@ function guardarPlan(nombre,id){
     var v=e.orig||{};
     return {n:i+1,desc:e.desc,precio:e.precio,aparte:e.aparte,hecha:!!v.hecha,fecha:v.fecha||'',atencionId:v.atencionId||''}});
   if(plan.estado==='terminado'&&proxSesion(plan))plan.estado='activo';
-  savePac(p); toast('Plan guardado en la ficha ✅');
-  if(keyPac($('#f-paciente').value)===keyPac(nombre))renderPlanSel($('#f-plan').value||'');
+  savePac(p);
+  var tomo=!id&&tomarPlanEnForm(nombre,plan.id);
+  toast('Plan guardado en la ficha ✅'+(tomo?' · quedó elegido en la atención que estás cargando: al guardarla cuenta como la sesión 1':''));
+  if(!tomo&&keyPac($('#f-paciente').value)===keyPac(nombre))renderPlanSel($('#f-plan').value||'');
   verPlan(nombre,plan.id)}
 
 function agregarControl(nombre,id){
@@ -7829,6 +7875,250 @@ function planDesdeRecomendado(idAtencion,idPre){
   var pr=(r.presu||[]).filter(function(x){return x.id===idPre})[0]; if(!pr)return;
   nuevoPlan(r.paciente,{nombre:pr.nom,total:num(pr.monto)||'',etapas:[{desc:pr.nom,cant:1,precio:num(pr.monto)}],
     notas:'Recomendado el '+fmtF(r.fecha)+(r.profesional?' por '+r.profesional:'')})}
+
+/* ============================= PAQUETES ==============================
+   Un paquete es un plan de varias sesiones que el paciente suele pagar
+   entero al principio (ej. blanqueamiento: 3 sesiones, Bs 700). El precio
+   se reparte entre las sesiones: cada sesión que se marca realizada queda
+   como una atención de quien la hizo, por su parte del precio (eso es lo
+   que cuenta para su comisión), y se paga sola con lo que ya dejó pagado.
+   Un paquete «de la clínica» no tiene doctora fija: cualquiera lo ve y
+   marca la sesión que atiende.
+   ===================================================================== */
+function hayPaquetesSrv(){return !!((CFG&&CFG.paquetes)||SESION.paquetes)}
+/* 700 en 3 → 234 + 233 + 233: lo que no se reparte parejo va a la primera */
+function repartirPrecio(total,n){
+  n=Math.max(1,Math.round(num(n)||1));
+  var t=Math.round(num(total)*100), u=t%100===0?100:1, b=Math.floor(t/u/n)*u, out=[];
+  for(var i=0;i<n;i++)out.push((b+(i===0?t-b*n:0))/100);
+  return out}
+function paquetesTipo(){
+  return (CFG.planesTipo||[]).map(function(t,i){return {t:t,i:i}}).filter(function(x){return x.t&&x.t.paquete})}
+function nSesionesTipo(t){
+  return (t.etapas||[]).reduce(function(a,e){return a+(num(e.cant)||1)},0)||(t.sesiones||[]).length}
+function etapasPaquete(nombre,n,total){
+  return repartirPrecio(total,n).map(function(p,i){return {desc:nombre+' · sesión '+(i+1),cant:1,precio:p}})}
+function sinTildes(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim()}
+function mismoNombre(a,b){a=sinTildes(a); b=sinTildes(b); return !!a&&!!b&&(a===b||a.indexOf(b)>=0||b.indexOf(a)>=0)}
+
+/* ---------- Ajustes: los paquetes de la clínica ---------- */
+function paquetesConfigHtml(){
+  var ps=paquetesTipo();
+  return '<h3 style="margin:16px 0 4px;font-size:15px">📦 Paquetes</h3>'+
+    '<p class="hint" style="margin:0 0 8px">Un tratamiento de varias sesiones con precio cerrado. El precio se reparte solo entre las sesiones: '+
+      'cada sesión cuenta para la comisión de la doctora que la hace. Se crea en el paciente con un toque (🦷 Planes).</p>'+
+    (ps.length?tabla([{t:'Paquete'},{t:'Sesiones',num:1},{t:'Precio',num:1},{t:'Cada sesión'},{t:''}],
+      ps.map(function(x){var t=x.t;
+        return ['<b>'+esc(t.nombre)+'</b>'+(t.deClinica?' <span class="pill lime">de la clínica</span>':''),n0(nSesionesTipo(t)),n0(t.total),
+          '<span class="mini">'+(t.etapas||[]).map(function(e){return n0(e.precio)}).join(' · ')+'</span>',
+          '<button class="btn danger sm" onclick="borrarPlantilla('+x.i+')">✕</button>']}),480)
+     :'<div class="empty">Todavía no hay paquetes. Cargá el primero acá abajo.</div>')+
+    '<div class="grid g3" style="margin-top:10px">'+
+      '<div><label>Nombre del paquete</label><input id="pq-nom" placeholder="Ej. Blanqueamiento"></div>'+
+      '<div><label>Sesiones</label><input id="pq-n" inputmode="numeric" placeholder="3"></div>'+
+      '<div><label>Precio total Bs</label><input id="pq-tot" inputmode="decimal" placeholder="700"></div></div>'+
+    '<label class="mini" style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="pq-cli" style="width:auto;margin:0" checked> '+
+      'De la clínica: lo atiende cualquier doctora (cada una marca la sesión que hace)</label>'+
+    '<div id="pq-rep" class="mini" style="margin-top:6px"></div>'+
+    '<div class="row-btn" style="margin-top:8px"><button class="btn sm" onclick="guardarPaqueteTipo()">📦 Guardar paquete</button></div>'}
+function pintarRepartoPaquete(){
+  var el=$('#pq-rep'); if(!el)return;
+  var n=Math.round(num($('#pq-n').value)), t=num($('#pq-tot').value);
+  el.textContent=n>0&&t>0?'Cada sesión: '+repartirPrecio(t,n).map(function(p){return bs(p)}).join(' · '):''}
+function montarPaquetesConfig(){
+  var el=$('#c-paquetes'); if(!el)return;
+  el.innerHTML=paquetesConfigHtml();
+  ['#pq-n','#pq-tot'].forEach(function(s){var i=$(s); if(i)i.oninput=pintarRepartoPaquete})}
+function guardarPaqueteTipo(){
+  if(!soloEquipo())return;
+  var nom=$('#pq-nom').value.trim(), tn=$('#pq-n').value, tt=$('#pq-tot').value, n=Math.round(num(tn));
+  if(!nom){toast('Poné el nombre del paquete',1);return}
+  if(montoRaro(tn)||montoRaro(tt)){toast('Escribí las sesiones y el precio solo con números',1);return}
+  if(n<2||n>60){toast('Un paquete tiene de 2 a 60 sesiones',1);return}
+  if(num(tt)<=0){toast('Poné el precio del paquete',1);return}
+  var et=etapasPaquete(nom,n,num(tt));
+  CFG.planesTipo=(CFG.planesTipo||[]).filter(function(t){return sinTildes(t.nombre)!==sinTildes(nom)});
+  CFG.planesTipo.push({nombre:nom,total:num(tt),paquete:true,deClinica:!!$('#pq-cli').checked,
+    sesiones:et.map(function(e){return e.desc}),etapas:et,cuotas:null});
+  saveCfg(); renderConfig(); toast('📦 Paquete guardado: '+nom)}
+
+/* ---------- crear el paquete en un paciente, con un toque ---------- */
+function botonesPaquetes(nombre){
+  var ps=paquetesTipo(); if(!ps.length)return '';
+  return '<div style="margin-top:12px"><label>📦 Paquetes: un toque y queda creado</label><div class="row-btn" style="margin-top:4px">'+
+    ps.map(function(x){return '<button class="btn sec sm" onclick="crearPaquete(\''+jss(nombre)+'\','+x.i+')">📦 '+esc(x.t.nombre)+
+      ' · '+nSesionesTipo(x.t)+' sesiones · '+bs(x.t.total)+'</button>'}).join('')+'</div></div>'}
+function crearPaquete(nombre,i,silencioso){
+  nombre=String(nombre||'').trim();
+  if(!nombre){toast('Primero escribí el nombre del paciente',1);return null}
+  if(bloqueaAjeno(nombre))return null;
+  if(identidadAmbigua(nombre)){toast(AVISO_IDENTIDAD,1);return null}
+  var t=(CFG.planesTipo||[])[+i]; if(!t||!t.paquete)return null;
+  var cli=!!t.deClinica&&hayPaquetesSrv(), etapas=[];
+  (t.etapas||[]).forEach(function(e){
+    var n=Math.max(1,Math.round(num(e.cant)||1));
+    for(var k=0;k<n;k++)etapas.push({desc:n>1?e.desc+' '+(k+1):e.desc,precio:num(e.precio),aparte:!!e.aparte})});
+  var fp=keyPac($('#f-paciente').value)===keyPac(nombre)?$('#f-prof').value.trim():'';
+  if(/^por definir$/i.test(fp))fp='';
+  var f=pacDe(nombre); f.nombre=f.nombre||nombre;
+  var plan=planNormalize({nombre:t.nombre,total:num(t.total),paquete:true,deClinica:cli,
+    prof:cli?'':(esDoctora()?PROF_ACTUAL:(fp||duenaPlanDeducida({id:'',prof:''},nombre))),
+    sesiones:etapas});
+  f.planes.push(plan); savePac(f);
+  var tomo=tomarPlanEnForm(nombre,plan.id);
+  if(!silencioso){
+    toast('📦 Paquete creado'+(tomo?' · quedó elegido en la atención que estás cargando: al guardarla cuenta como la sesión 1':': registrá el pago y después cada sesión'));
+    verPlan(nombre,plan.id)}
+  return plan}
+
+/* Un plan recién creado desde la atención que se está cargando queda elegido
+   en esa atención: si no, se guardaba como visita suelta y el plan quedaba
+   sin ninguna sesión hecha. */
+function formEnUso(){
+  try{readSrv()}catch(e){}
+  return !!EDIT_ID||SRV.some(function(s){return s.nom})||num($('#f-acuenta').value)>0}
+function tomarPlanEnForm(nombre,planId){
+  if(!$('#f-paciente')||keyPac($('#f-paciente').value)!==keyPac(nombre))return false;
+  var usar=getRadio('estado')==='Atendido'&&formEnUso()&&!$('#f-plan').value;
+  renderPlanSel(usar?planId:($('#f-plan').value||''));
+  if(usar)$('#f-plan').value=planId;
+  try{planHint()}catch(e){}
+  return usar}
+
+/* Al elegir un plan en la atención, si todavía no hay nada cargado, viene la
+   sesión que toca con su precio. */
+function alElegirPlan(){
+  planHint();
+  var id=$('#f-plan').value; if(!id)return;
+  var p=planesVisiblesDe($('#f-paciente').value.trim()).filter(function(x){return x.id===id})[0]; if(!p)return;
+  readSrv(); if(SRV.some(function(s){return s.nom}))return;
+  var s=proxSesion(p); if(!s)return;
+  SRV=[{nom:s.desc||p.nombre,det:p.nombre,cant:1,precio:num(s.precio)}]; renderSrv(); planHint()}
+
+/* ---------- (C) el paquete entero cobrado como una sola atención ---------- */
+var PAQ_OK=null, PAQ_PASE=null, PAQ_Q=null;
+function firmaPaq(){return (EDIT_ID||'nueva')+'|'+keyPac($('#f-paciente').value)}
+function montoLinea(s){return num(s.precio)*(num(s.cant)||1)}
+/* la sesión que va a quedar marcada con esta atención */
+function sesionQueToca(plan,idAt){
+  return (plan.sesiones||[]).filter(function(s){return idAt&&s.atencionId===idAt})[0]||proxSesion(plan)}
+function sesionesEnCero(plan,idAt){
+  var ss=(plan.sesiones||[]).filter(function(s){return !s.aparte});
+  return ss.length>1&&ss.every(function(s){return num(s.precio)<=0&&(!s.hecha||s.atencionId===idAt)})}
+/* la fila del servicio que vale el paquete entero */
+function paqueteLinea(plan){
+  var i=-1;
+  if(!plan||num(plan.total)<=0||(plan.sesiones||[]).filter(function(s){return !s.aparte}).length<2)return -1;
+  try{readSrv()}catch(e){}
+  SRV.forEach(function(s,k){if(i<0&&s.nom&&Math.abs(montoLinea(s)-num(plan.total))<0.01)i=k});
+  return i}
+function paqueteAntesDeGuardar(){
+  if(getRadio('estado')!=='Atendido')return false;
+  var nombre=$('#f-paciente').value.trim(); if(!nombre||pacAjeno(nombre))return false;
+  if(PAQ_OK===firmaPaq())return false;
+  if(validar().length)return false;
+  var planId=$('#wrap-plan').style.display==='none'?'':$('#f-plan').value, o={nombre:nombre};
+  if(planId){
+    var plan=planesDe(nombre).filter(function(x){return x.id===planId})[0];
+    var linea=paqueteLinea(plan); if(linea<0)return false;
+    var ses=sesionQueToca(plan,EDIT_ID); if(!ses||ses.aparte)return false;
+    var cero=num(ses.precio)<=0&&sesionesEnCero(plan,EDIT_ID);
+    if(!cero&&(num(ses.precio)<=0||num(ses.precio)>=num(plan.total)-0.009))return false;
+    var nIncl=(plan.sesiones||[]).filter(function(s){return !s.aparte}).length;
+    o.plan=plan; o.linea=linea; o.cero=cero; o.n=ses.n; o.de=(plan.sesiones||[]).length;
+    o.precio=cero?repartirPrecio(plan.total,nIncl)[(plan.sesiones||[]).filter(function(s){return !s.aparte}).indexOf(ses)]:num(ses.precio);
+    o.nombrePaq=plan.nombre; o.total=num(plan.total)}
+  else{
+    readSrv();
+    var tps=paquetesTipo();
+    SRV.forEach(function(s,k){if(o.tipo)return;
+      tps.forEach(function(x){if(!o.tipo&&s.nom&&nSesionesTipo(x.t)>1&&mismoNombre(s.nom,x.t.nombre)&&Math.abs(montoLinea(s)-num(x.t.total))<0.01){o.tipo=x;o.linea=k}})});
+    if(!o.tipo)return false;
+    var et=[]; (o.tipo.t.etapas||[]).forEach(function(e){for(var k=0;k<Math.max(1,Math.round(num(e.cant)||1));k++)et.push(num(e.precio))});
+    o.n=1; o.de=et.length; o.precio=et[0]; o.nombrePaq=o.tipo.t.nombre; o.total=num(o.tipo.t.total)}
+  PAQ_Q=o; o.firma=firmaPaq();
+  var tot=num($('#f-total').value), nuevoTot=Math.max(0,tot-(montoLinea(SRV[o.linea])-o.precio)),
+      a=num($('#f-acuenta').value), pasa=Math.max(0,Math.round((a-nuevoTot)*100)/100), prof=$('#f-prof').value.trim();
+  var puede=hayPaquetesSrv()&&CONNECTED;
+  openModal('<h3>📦 ¿Hoy fue la sesión '+o.n+' de '+o.de+'?</h3>'+
+    '<p class="mini">'+esc(nombre)+' · «'+esc(o.nombrePaq)+'» de '+bs(o.total)+' es un paquete de <b>'+o.de+' sesiones</b>.</p>'+
+    '<div class="avisomed nota" style="margin-top:10px"><b>Si hoy se hizo solo una sesión:</b>'+
+      '<div>· Esta atención queda en <b>'+bs(nuevoTot)+'</b>: la sesión '+o.n+(prof?', y eso es lo que cuenta para la comisión de '+esc(prof):'')+'.</div>'+
+      (pasa>0?'<div>· Los <b>'+bs(pasa)+'</b> cobrados de más quedan como <b>pago del paquete</b>: las próximas sesiones se pagan solas, las haga quien las haga.</div>':
+        '<div>· Lo que falta del paquete queda pendiente en el plan.</div>')+
+      '<div>· La caja no cambia: entra lo mismo, el mismo día.</div>'+
+      (o.cero?'<div>· Las sesiones estaban en Bs 0: se reparte el precio entre las '+o.de+'.</div>':'')+'</div>'+
+    (puede?'':'<p class="mini" style="color:var(--clay);margin-top:8px">'+(hayPaquetesSrv()?'Sin internet ahora: la atención se guarda y, cuando vuelva la conexión, en el plan aparece «📦 Pasar al paquete».'
+      :'Falta pegar el Apps Script nuevo para pasar la plata al paquete. La atención se guarda y el paquete queda creado; después lo pasás desde el plan.')+'</p>')+
+    '<div class="row-btn"><button class="btn" onclick="paqueteRespuesta(1)">Sí, es la sesión '+o.n+' del paquete</button>'+
+    '<button class="btn sec" onclick="paqueteRespuesta(0)">No, se hizo todo hoy</button>'+
+    '<button class="btn sec" onclick="PAQ_Q=null;closeModal()">Volver</button></div>');
+  return true}
+function paqueteRespuesta(si){
+  var o=PAQ_Q; if(!o||o.firma!==firmaPaq()){closeModal();return}
+  PAQ_Q=null; closeModal(); PAQ_OK=o.firma;
+  if(si){
+    var plan=o.plan;
+    if(o.tipo){plan=crearPaquete(o.nombre,o.tipo.i,true); if(!plan){PAQ_OK=null;return}
+      renderPlanSel(plan.id); $('#f-plan').value=plan.id}
+    else if(o.cero){
+      var f=pacDe(o.nombre), pl=f.planes.filter(function(x){return x.id===plan.id})[0];
+      var incl=(pl.sesiones||[]).filter(function(s){return !s.aparte}), rep=repartirPrecio(pl.total,incl.length);
+      incl.forEach(function(s,k){s.precio=rep[k]}); savePac(f)}
+    PAQ_PASE={planId:plan.id}}
+  submitAtencion()}
+function paqueteDespuesDeGuardar(rec){
+  var x=PAQ_PASE; PAQ_PASE=null; PAQ_OK=null;
+  if(!x||!rec||rec.planId!==x.planId||rec.estado!=='Atendido')return;
+  pasarAlPaquete(rec.id,x.planId,8)}
+
+/* Lo nuevo de la atención: la fila del paquete pasa a valer la sesión. */
+function lineasPase(r,plan,ses){
+  var srv=(r.servicios||[]).map(function(s){return Object.assign({},s)}), i=-1;
+  srv.forEach(function(s,k){if(i<0&&s.nom&&Math.abs(montoLinea(s)-num(plan.total))<0.01)i=k});
+  if(i<0)return null;
+  srv[i].cant=1; srv[i].precio=num(ses.precio);
+  srv[i].det=(srv[i].det?srv[i].det+' · ':'')+'sesión '+ses.n+' de '+(plan.sesiones||[]).length+' del paquete';
+  return srv}
+/* ¿Esta atención trae el paquete entero y se puede pasar? */
+function puedePasarAlPaquete(r,plan,ses){
+  return !!(r&&plan&&ses&&!ses.aparte&&num(ses.precio)>0&&num(r.total)>num(ses.precio)+0.009&&
+    (r.servicios||[]).some(function(s){return Math.abs(montoLinea(s)-num(plan.total))<0.01})&&
+    (!esDoctora()||r.profesional===PROF_ACTUAL))}
+function pasarAlPaquete(atId,planId,reintentos){
+  var r=DATA.filter(function(x){return x.id===atId})[0]; if(!r)return;
+  var plan=planesDe(r.paciente).filter(function(x){return x.id===planId})[0]; if(!plan)return;
+  var ses=(plan.sesiones||[]).filter(function(s){return s.atencionId===r.id})[0]; if(!ses)return;
+  var srv=lineasPase(r,plan,ses);
+  if(!srv||!puedePasarAlPaquete(r,plan,ses)){if(!reintentos)toast('No encuentro en esa atención el servicio por '+bs(plan.total)+' del paquete',1);return}
+  if(!hayPaquetesSrv()){toast('Falta pegar el Apps Script nuevo para pasar la plata al paquete',1);return}
+  if(!CONNECTED){toast('Hace falta internet para pasarlo al paquete: probá de nuevo desde el plan',1);return}
+  var otraVez=function(){
+    if(reintentos>0)setTimeout(function(){pasarAlPaquete(atId,planId,reintentos-1)},800);
+    else toast('Todavía no se pudo pasar al paquete. Probá desde el plan: «📦 Pasar al paquete».',1)};
+  if(hayPendiente(r.id)){otraVez();return}
+  var idem=r.id+'-paq-'+plan.id;
+  api('pasarAlPlan',null,undefined,undefined,{pase:{id:r.id,idem:idem,planId:plan.id,etapa:ses.n,servicios:srv,
+      version:{acuenta:num(r.acuenta),ncp:(r.cobrosPosteriores||[]).length}}}).then(function(res){
+    if(res&&res.registro&&res.registro.id){
+      SNAP_R[res.registro.id]=JSON.stringify(res.registro);
+      reemplazarLocal(normalize(JSON.parse(JSON.stringify(res.registro))))}
+    (res&&res.anticipos||[]).forEach(function(a){
+      if(!a||!a.id)return; SNAP_R[a.id]=JSON.stringify(a);
+      var n=normalize(JSON.parse(JSON.stringify(a)));
+      if(DATA.some(function(x){return x.id===a.id}))reemplazarLocal(n); else DATA.push(n)});
+    saveLocal();
+    if(res&&res.ok){
+      var at=DATA.filter(function(x){return x.id===atId})[0]||r;
+      toast('📦 Listo: la atención quedó en '+bs(at.total)+(num(res.movido)>0?' y '+bs(res.movido)+' pasaron al paquete':'')+' ✅');
+      refreshAll(); return}
+    var e=res&&res.error;
+    if(e==='borrada'||e==='sin_plan'){otraVez();return}
+    if(e==='accion_desconocida'){toast('Falta pegar el Apps Script nuevo para pasar la plata al paquete',1);return}
+    if(e==='clave_de_fabrica'){toast('Con la clave de fábrica no se mueve plata: entrá con la clave propia',1);return}
+    if(e==='conflicto'){refreshAll();toast('Mientras tanto otro equipo cambió el cobro de esa atención. Ya está actualizada: probá de nuevo desde el plan.',1);return}
+    if(e==='sin_permiso'){toast('Eso lo hace la doctora de esa atención, recepción o la dueña 🔐',1);return}
+    toast('No se pudo pasar al paquete ('+(e||'sin respuesta')+')',1)},function(){otraVez()})}
 
 /* ======================================================================
    SUBIR A LA NUBE LO DE ESTE EQUIPO
@@ -9298,14 +9588,16 @@ function renderConfig(){
       '<td class="num"><input class="cc" data-p="'+esc(p)+'" inputmode="decimal" value="'+
       esc(v==null?'':v)+'" placeholder="'+num(CFG.comisionDefault)+'" style="text-align:right;padding:6px 8px"></td></tr>'}).join('');
   var pts=CFG.planesTipo||[];
-  $('#c-plantillas').innerHTML=pts.length
+  $('#c-plantillas').innerHTML=pts.some(function(t){return !t.paquete})
     ? tabla([{t:'Plantilla'},{t:'Sesiones',num:1},{t:'Cuotas',num:1},{t:'Total',num:1},{t:''}],
         pts.map(function(t,i){
+          if(t.paquete)return null;
           return ['<b>'+esc(t.nombre)+'</b>',n0((t.sesiones||[]).length),
             t.cuotas?n0(t.cuotas.n)+' · cada '+n0(t.cuotas.cada)+' días':'—',
             n0(t.total),
-            '<button class="btn danger sm" onclick="borrarPlantilla('+i+')">✕</button>']}),480)
+            '<button class="btn danger sm" onclick="borrarPlantilla('+i+')">✕</button>']}).filter(function(x){return x}),480)
     : '<div class="empty">Todavía no guardaste ninguna plantilla.</div>';
+  montarPaquetesConfig();
   $('#c-comision-def').value=CFG.comisionDefault;
   $('#c-comision-lab').checked=!!CFG.comisionDescuentaLab;
   $('#c-indicaciones').innerHTML=INDICACIONES_BASE.map(function(g){
@@ -9946,7 +10238,7 @@ function bind(){
   $('#f-fecha').onchange=refreshNro;
   $('#f-paciente').onchange=function(){autoPaciente(); refrescarFichaForm('')};
   $('#f-nac').onchange=verEdad;
-  $('#f-plan').onchange=planHint;
+  $('#f-plan').onchange=alElegirPlan;
   $('#btn-ficha-med').onclick=function(){abrirFichaMed($('#f-paciente').value.trim())};
   $('#btn-planes').onclick=function(){abrirPlanes($('#f-paciente').value.trim())};
   $('#btn-add-srv').onclick=function(){readSrv();SRV.push({nom:'',det:'',cant:1,precio:''});renderSrv()};
@@ -10508,7 +10800,9 @@ function asisRespuestaPlan(id){
     /* si la etapa vale distinto de lo cargado, primero se ajusta el precio:
        si no, la etapa quedaba «hecha» y nadie debía la diferencia */
     var p=planesDe($('#f-paciente').value.trim()).filter(function(x){return x.id===id})[0], st=p&&proxSesion(p), tot=num($('#f-total').value);
-    if(st&&num(st.precio)>0&&Math.abs(tot-num(st.precio))>0.009){
+    /* el paquete entero cargado de una vez: lo resuelve la pregunta del paquete */
+    var paq=false; try{paq=paqueteLinea(p)>=0}catch(e){}
+    if(!paq&&st&&num(st.precio)>0&&Math.abs(tot-num(st.precio))>0.009){
       asisFoco('#srv-list');
       asisGlobo({ico:'💰',t:'«'+(st.desc||('Etapa '+st.n))+'» vale '+bs(st.precio),
         x:'Esta atención suma '+bs(tot)+'. Ajustá el precio (o agregá lo que falta) y tocá «Guardar atención».'},false,true);
@@ -10567,7 +10861,13 @@ var ASIS_AYUDA=[
   {q:'¿Cómo armo un plan de tratamiento (por ejemplo, ortodoncia)?', k:'plan tratamiento ortodoncia presupuesto etapas cuotas armar crear brackets', v:'pacientes', f:'#pc-q',
    p:['Abrí al paciente (👤 Pacientes → buscalo) y tocá «🦷 Planes».','«＋ Crear plan de tratamiento»: elegí una plantilla (por ejemplo Ortodoncia) o uno en blanco.','Ajustá etapas, cantidades e importes. Un control incluido va en 0.','Si paga en cuotas, poné cuántas y cada cuántos días.','Tocá «💾 Guardar plan». Mandarlo por WhatsApp es aparte y opcional.']},
   {q:'¿Cómo registro la atención de una etapa del plan?', k:'etapa plan control registrar atencion sesion seguimiento ortodoncia marcar', v:'pacientes', f:'#pc-q',
-   p:['Abrí el plan (paciente → 🦷 Planes → «Abrir plan»).','Tocá «＋ Registrar atención» en la etapa que toca.','Poné la fecha, lo que se hizo y la plata que trajo, si trajo.','La etapa queda marcada y el plan se actualiza solo.']},
+   p:['Abrí el plan (paciente → 🦷 Planes → «Abrir plan»), o en la ficha tocá «✓ Marcar realizada».','Tocá «✓ Marcar realizada» en la sesión que toca.','Elegí quién la hizo, la fecha y la plata que trajo, si trajo.','La sesión queda marcada, con su doctora, y el plan se actualiza solo.']},
+  {q:'¿Cómo cargo un paquete (por ejemplo, blanqueamiento de 3 sesiones)?', k:'paquete blanqueamiento sesiones pago adelantado precio cerrado combo promo tres', v:'pacientes', f:'#pc-q',
+   p:['Una vez: en ⚙️ Ajustes → 📦 Paquetes cargá nombre, sesiones y precio (ej. Blanqueamiento · 3 · Bs 700). El precio se reparte solo.','Con el paciente: 🦷 Planes → tocá «📦 Blanqueamiento». Queda creado.','Si pagó todo: «💰 Registrar pago» con los 700. Entra a la caja hoy.','Cada vez que viene: «✓ Marcar realizada» y elegí quién la hizo. Se paga sola con lo que dejó.']},
+  {q:'Si cada sesión del paquete la hace una doctora distinta, ¿cómo va la comisión?', k:'comision paquete sesion doctora distinta otra mirna shirley reparte quien atendio', v:'pacientes', f:'#pc-q',
+   p:['Cada sesión marcada queda como una atención de la doctora que la hizo, por su parte del precio (700 en 3 = 234 + 233 + 233).','La comisión de cada una sale de sus sesiones, no del pago entero.','Un paquete «de la clínica» lo ve cualquier doctora: cada una marca la sesión que atiende.']},
+  {q:'Cargué el paquete entero como una sola atención, ¿cómo lo arreglo?', k:'paquete entero una sola atencion 700 arreglar sesion 1 cobro todo junto pasar', v:'pacientes', f:'#pc-q',
+   p:['Al guardar te pregunto si fue la sesión 1 del paquete: decí que sí.','Si ya estaba guardada: elegí el plan en esa atención (o creá el paquete desde ella) y volvé a guardar.','En el plan, en la sesión 1, tocá «📦 Pasar al paquete»: la atención queda en el precio de la sesión y lo demás queda pagando las próximas.','La caja no cambia: entra lo mismo, el mismo día.']},
   {q:'¿Cómo cobro una cuota o un pago del plan?', k:'cuota plan pago mensual pagar abono adelantado mensualidad', v:'pacientes', f:'#pc-q',
    p:['Abrí el plan y tocá «💰 Registrar pago».','Viene sugerida la cuota que toca: corregí el monto si hace falta y marcá cómo pagó.','Entra a la caja de hoy y se descuenta solo de las etapas que se atiendan.']},
   {q:'¿Qué es el saldo a favor (anticipo)?', k:'anticipo saldo favor adelanto dejo plata cuenta credito', v:'pacientes', f:'#pc-q',

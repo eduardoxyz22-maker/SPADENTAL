@@ -228,12 +228,29 @@ function filasPacSrv(clave) {
    visitas, no es de nadie todavía. */
 function pacienteDeOtra(clave, prof) {
   var fs = filasPacSrv(clave);
-  return fs.length > 0 && !fs.some(function (f) { return f.prof === prof; });
+  return fs.length > 0 && !fs.some(function (f) { return f.prof === prof; }) && !paqueteClinicaActivo(clave);
+}
+/* Un paquete de la clínica (lo atiende cualquier doctora) todavía en curso:
+   mientras tanto el paciente es de todas. Se mira la ficha guardada, no la
+   que manda el panel. */
+function planesGuardados(clave) {
+  var sh = getSheetPac(), n = sh.getLastRow(), out = [];
+  if (n < 2 || !clave) return out;
+  var filas = sh.getRange(2, 1, n - 1, COLS_PAC.length).getValues();
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0] || fClavePac(filas[i][0]) !== clave) continue;
+    out = out.concat(pacienteDeFila(filas[i]).planes || []);
+  }
+  return out;
+}
+function paqueteClinicaActivo(clave) {
+  return planesGuardados(clave).some(function (p) { return p && p.deClinica && p.estado !== 'cancelado' && p.estado !== 'terminado'; });
 }
 /* La dueña de un plan: la anotada; si es un plan viejo sin doctora, la que
    atendió más etapas; sin etapas atendidas, la única doctora del paciente.
    Si no se puede saber, no es de ninguna doctora (lo cambia la dueña). */
 function duenoPlanSrv(p, filas) {
+  if (p && p.deClinica) return '';
   if (p && p.prof) return p.prof;
   var idProf = {}, cuenta = {}, mejor = '', max = 0, profs = {};
   (filas || []).forEach(function (f) { idProf[f.id] = f.prof; profs[f.prof] = 1; });
@@ -269,7 +286,8 @@ function planesSinTocarAjenos(viejos, nuevos, prof, clave) {
     }
     if (!v) {
       if (p.prof && p.prof !== prof) return;                 // no se crean planes a nombre de otra
-      if (!p.prof) { p = JSON.parse(JSON.stringify(p)); p.prof = prof; }
+      if (!p.prof && !p.deClinica) { p = JSON.parse(JSON.stringify(p)); p.prof = prof; }
+      if (p.deClinica && p.prof) { p = JSON.parse(JSON.stringify(p)); p.prof = ''; }
     }
     out.push(p); if (p.id) vistos[p.id] = 1;
   });
@@ -1090,7 +1108,7 @@ var ANTICIPO_DOCTORAS = false;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-15-b';
+var VERSION_SCRIPT = '2026-10-19-a';
 var CLINICA_ID = 'cosmetic';
 function deOtraClinica(r) { return !!(r && r.clinicaId && r.clinicaId !== CLINICA_ID); }
 /* =====================================================================
@@ -1157,6 +1175,7 @@ function cfgPublica(cfg) {
   o.credServidor = true;
   o.clavesProfHay = con;
   o.pagoPlanDoctoras = true;
+  o.paquetes = true;
   return o;
 }
 /* Una configuración que llega del panel no puede tocar las claves. */
@@ -1164,7 +1183,7 @@ function cfgSinClaves(cfg, guardada) {
   if (!cfg) return cfg;
   var o = {}, k;
   for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
-  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras; delete o.parcial;
+  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras; delete o.paquetes; delete o.parcial;
   delete o.adminHash; delete o.passHash; delete o.clavesProf;
   if (guardada !== undefined) {
     /* la config guardada lleva siempre las claves vigentes: si algún día se
@@ -1210,7 +1229,7 @@ function doLogin(body) {
   s.h = h; s.fabrica = esDeFabrica(h);
   var tok = nuevaSesion(s);
   /* pagoPlan: este script acepta los pagos de plan que carga la doctora */
-  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true };
+  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true };
 }
 
 /* Cambiar una clave: la dueña cambia cualquiera; recepción, la suya
@@ -1263,7 +1282,7 @@ function planDeLaDoctora(r, prof) {
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0] || fClavePac(filas[i][0]) !== clave) continue;
     var ps = pacienteDeFila(filas[i]).planes || [];
-    for (var j = 0; j < ps.length; j++) if (ps[j] && ps[j].id === r.planId) return duenoPlanSrv(ps[j], filasPacSrv(clave)) === prof;
+    for (var j = 0; j < ps.length; j++) if (ps[j] && ps[j].id === r.planId) return !!ps[j].deClinica || duenoPlanSrv(ps[j], filasPacSrv(clave)) === prof;
   }
   return false;
 }
@@ -1404,6 +1423,102 @@ function doCorregirCobro(c, ses) {
   return { ok: true, registro: registroDeFila(sh.getRange(fila, 1, 1, COLS.length).getValues()[0]) };
 }
 
+/* =====================================================================
+   PASAR AL PAQUETE
+   Una atención se cargó con el paquete entero (ej. blanqueamiento de 3
+   sesiones, Bs 700) y en realidad fue la sesión 1. La atención queda con el
+   precio de esa sesión y lo cobrado de más pasa a ser pago del paquete: un
+   pago al plan por cada día y forma de pago en que entró. La caja de cada día
+   no cambia; la comisión de esa doctora es solo por su sesión. Todo en una
+   sola llamada (con el candado), y queda en _Correcciones.
+   ===================================================================== */
+function doPasarAlPlan(c, ses) {
+  if (!c || !c.id || !c.idem || !c.planId || !fEsLista(c.servicios) || !c.servicios.length) return { ok: false, error: 'pedido_invalido' };
+  if (ses.fabrica) return { ok: false, error: 'clave_de_fabrica' };
+  var sh = getSheet(), fila = filaPorId(sh, c.id);
+  if (correccionYaHecha(c.idem)) {
+    var ya = [], n0 = sh.getLastRow();
+    if (n0 >= 2) {
+      var l0 = sh.getRange(2, 1, n0 - 1, COLS.length).getValues();
+      for (var y = 0; y < l0.length; y++) if (String(l0[y][0]).indexOf(c.idem + '-') === 0) ya.push(registroDeFila(l0[y]));
+    }
+    return { ok: true, repetida: true, registro: fila ? registroDeFila(sh.getRange(fila, 1, 1, COLS.length).getValues()[0]) : null, anticipos: ya };
+  }
+  if (!fila) return { ok: false, error: 'borrada', id: c.id };
+  var actual = registroDeFila(sh.getRange(fila, 1, 1, COLS.length).getValues()[0]);
+  if (deOtraClinica(actual)) return { ok: false, error: 'otra_clinica' };
+  if (actual.estado !== 'Atendido') return { ok: false, error: 'no_corregible', registro: actual };
+  if (ses.rol === 'doctora' && actual.profesional !== ses.prof) return { ok: false, error: 'sin_permiso' };
+  var clave = fClavePac(actual.paciente), plan = null;
+  planesGuardados(clave).forEach(function (p) { if (p && p.id === c.planId) plan = p; });
+  if (!plan) return { ok: false, error: 'sin_plan' };
+  if (ses.rol === 'doctora' && !plan.deClinica && duenoPlanSrv(plan, filasPacSrv(clave)) !== ses.prof) return { ok: false, error: 'sin_permiso' };
+  /* versión: si otro equipo cobró o corrigió desde que se abrió, no se pisa */
+  if (c.version && (fR(fNum(actual.acuenta)) !== fR(fNum(c.version.acuenta)) || fCobrosPost(actual).length !== fNum(c.version.ncp)))
+    return { ok: false, error: 'conflicto', registro: actual };
+  var srv = [];
+  for (var i = 0; i < c.servicios.length; i++) {
+    var x = c.servicios[i];
+    if (!x || !x.nom || !isFinite(Number(x.precio)) || Number(x.precio) < 0 || !isFinite(Number(x.cant || 1)) || Number(x.cant || 1) <= 0) return { ok: false, error: 'pedido_invalido' };
+    srv.push(x);
+  }
+  var d = fDesarmar(actual);
+  d.servicios = srv;
+  d.planId = c.planId;
+  if (c.etapa) d.planEtapa = Number(c.etapa) || '';
+  var r = fArmar(d);
+  if (fNum(r.total) > fNum(actual.total) + 0.009) return { ok: false, error: 'sube_total', registro: actual };
+  var perdon = Math.max(0, fNum(d.__perdon));
+  var resto = fR(fNum(r.acuenta) - (fNum(r.total) - perdon)), trozos = [];
+  if (resto > 0.009) {
+    var cps = fCobrosPost(d).map(function (p, k) { var o = JSON.parse(JSON.stringify(p)); o.__k = k; return o; });
+    var ini = d.__cobro.pagos.map(function (p) { return { metodo: p.metodo, monto: fNum(p.monto) }; });
+    var tomar = function (o, fecha) {
+      var t = fR(Math.min(resto, fNum(o.monto))); if (t <= 0) return;
+      o.monto = fR(fNum(o.monto) - t); resto = fR(resto - t);
+      if (o.metodo !== 'Saldo a favor') trozos.push({ fecha: fecha, metodo: o.metodo, monto: t });
+    };
+    /* primero lo pagado con saldo a favor (vuelve solo a donde estaba) */
+    ini.forEach(function (o) { if (resto > 0.009 && o.metodo === 'Saldo a favor') tomar(o, actual.fecha); });
+    cps.forEach(function (o) { if (resto > 0.009 && o.metodo === 'Saldo a favor') tomar(o, o.fecha); });
+    /* después lo más nuevo: los cobros posteriores, y al final el del día */
+    cps.slice().sort(function (a, b) { return String(b.fecha || '').localeCompare(String(a.fecha || '')) || b.__k - a.__k; })
+      .forEach(function (o) { if (resto > 0.009) tomar(o, o.fecha || actual.fecha); });
+    ini.slice().reverse().forEach(function (o) { if (resto > 0.009) tomar(o, actual.fecha); });
+    if (resto > 0.009) return { ok: false, error: 'no_cuadra', registro: actual };
+    var sacadoIni = 0;
+    d.__cobro.pagos.forEach(function (p, k) { sacadoIni = fR(sacadoIni + fNum(p.monto) - ini[k].monto); });
+    d.__cobro = { monto: fR(fNum(d.__cobro.monto) - sacadoIni), pagos: ini.filter(function (p) { return p.monto > 0.004; }), metodo: d.__cobro.metodo };
+    d.cobrosPosteriores = cps.filter(function (p) { return fNum(p.monto) > 0.004; }).map(function (p) { delete p.__k; return p; });
+    r = fArmar(d);
+  }
+  if (fNum(r.saldo) < -0.009) return { ok: false, error: 'no_cuadra', registro: actual };
+  /* un pago al plan por día y forma de pago */
+  var porDia = {}, orden = [];
+  trozos.forEach(function (t) { var k = t.fecha + '|' + t.metodo; if (!porDia[k]) { porDia[k] = { fecha: t.fecha, metodo: t.metodo, monto: 0 }; orden.push(k); } porDia[k].monto = fR(porDia[k].monto + t.monto); });
+  var ts = new Date().toISOString(), resp = responsableDe(ses), movido = 0, nuevos = [];
+  orden.forEach(function (k, j) {
+    var t = porDia[k]; movido = fR(movido + t.monto);
+    nuevos.push({ id: c.idem + '-' + (j + 1), clinicaId: CLINICA_ID, ts: ts, fecha: t.fecha, hora: actual.hora || '',
+      profesional: '', paciente: actual.paciente, celular: actual.celular || '', estado: 'Anticipo', origen: '',
+      servicios: [], total: 0, acuenta: t.monto, saldo: 0, metodo: t.metodo, pagos: [{ metodo: t.metodo, monto: t.monto }],
+      cobrosPosteriores: [], cobroInicialFechado: true, planId: c.planId, desdeAtencion: actual.id,
+      anticipoPor: actual.profesional || (ses.rol === 'admin' ? 'Dueña' : (ses.rol === 'equipo' ? 'Recepción' : ses.prof)),
+      obs: 'Venía junto con la atención del ' + String(actual.fecha || '').split('-').reverse().join('/') });
+  });
+  var motivo = 'Pasado al paquete «' + String(plan.nombre || '') + '»: la atención queda en Bs ' + fNum(r.total) +
+    (movido > 0 ? ' y Bs ' + movido + ' quedan como pago del paquete' : '');
+  var antes = { cobrado: fNum(actual.acuenta), forma: textoPagos(actual), acuenta: fNum(actual.acuenta), saldo: fNum(actual.saldo) };
+  var despues = { cobrado: fNum(r.acuenta), forma: textoPagos(r), acuenta: fNum(r.acuenta), saldo: fNum(r.saldo) };
+  r.correccionesCobro = (actual.correccionesCobro || []).concat([{ id: c.idem, ts: ts, por: resp, motivo: motivo, antes: antes, despues: despues, paquete: true }]);
+  sh.getRange(fila, 1, 1, COLS.length).setValues([filaDeRegistro(r)]);
+  nuevos.forEach(function (a) { sh.appendRow(filaDeRegistro(a)); });
+  hojaCorr().appendRow([ts, String(c.idem), actual.id, actual.paciente || '', actual.fecha || '',
+    antes.cobrado, despues.cobrado, antes.forma, despues.forma, motivo, resp]);
+  return { ok: true, registro: registroDeFila(sh.getRange(fila, 1, 1, COLS.length).getValues()[0]),
+    anticipos: nuevos.map(function (a) { return registroDeFila(filaDeRegistro(a)); }), movido: movido };
+}
+
 /* ------------------------------------------------------------------ HTTP */
 function json(obj) {
   if (obj && typeof obj === 'object') { obj.v = FUSION_V; obj.auth = AUTH_V; }
@@ -1442,6 +1557,7 @@ function doPost(e) {
     if (body.action === 'cfg') return json(doGuardarCfg(body.cfg, base));
     if (body.action === 'clave') return json(doCambiarClave(body, ses));
     if (body.action === 'corregirCobro') return json(doCorregirCobro(body.correccion, ses));
+    if (body.action === 'pasarAlPlan') return json(doPasarAlPlan(body.pase, ses));
     if (body.action === 'pac') return json(doGuardarPac(reg, base, ses));
     if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
