@@ -32,9 +32,9 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
   const w = D.w, hoy = w.hoyISO();
   OK('1 anticipo suelto: igual que antes según clínica', w.puedeAnticipo() === SPA, w.puedeAnticipo());
   OK('1 su plan: puede registrar pagos', w.puedePagoPlan('Pac Brenda', pB.id) === true);
-  OK('1 plan de otra doctora: ' + (SPA ? 'Spa ya podía (frena bloqueaAjeno)' : 'no'), w.puedePagoPlan('Pac Mirna', pM.id) === SPA);
+  OK('1 plan de otra doctora: no (en ninguna clínica: el servidor lo rechaza)', w.puedePagoPlan('Pac Mirna', pM.id) === false);
   w.verPlan('Pac Brenda', pB.id);
-  OK('2 la pantalla del plan muestra "Registrar pago"', D.$$('#modal button').some(b => /Registrar pago/.test(b.textContent)));
+  OK('2 la pantalla del plan muestra "Pago adelantado o cuota"', D.$$('#modal button').some(b => /Pago adelantado o cuota/.test(b.textContent)));
   close(D);
   // pago al plan desde la pantalla
   w.pagoAlPlan('Pac Brenda', pB.id);

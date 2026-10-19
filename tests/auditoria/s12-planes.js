@@ -31,7 +31,7 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
   const p1 = w.planesDe('Orto Sinpago')[0];
   OK('1 se guardó en la ficha (servidor) con 16 etapas', !!p1 && srvPlan('Orto Sinpago', p1.id) && srvPlan('Orto Sinpago', p1.id).sesiones.length === 16, p1 && p1.sesiones.length);
   OK('1 abre la pantalla del plan: 0 pagado, 4500 pendiente, 0/16', /Presupuesto acordado/.test(A.$('#modal').textContent) && w.cobradoPlan(p1) === 0 && w.saldoPlan(p1) === 4500 && w.avancePlan(p1).hechas === 0);
-  OK('1 cada etapa tiene Registrar atención / Registrar pago', A.$$('#modal button').filter(b => /Marcar realizada$/.test(b.textContent)).length === 16 && A.$$('#modal button').filter(b => /^Registrar pago$/.test(b.textContent)).length >= 1);
+  OK('1 cada etapa tiene Registrar atención / Registrar pago', A.$$('#modal button').filter(b => /Marcar realizada$/.test(b.textContent)).length === 16 && A.$$('#modal button').filter(b => /Pago adelantado o cuota|Adelantar esta sesión/.test(b.textContent)).length >= 1);
   const nCalls0 = server.log.length;
   w.verPresupuesto('Orto Sinpago', p1.id);
   OK('1 WhatsApp es aparte: abrirlo no guarda nada', server.log.length === nCalls0 && /no lo acepta ni lo cobra/.test(A.$('#modal').textContent));
@@ -48,7 +48,7 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
   // ---- 3 pago parcial de esa etapa
   w.verPlan('Orto Sinpago', p1.id);
   const bPago = A.$$('#modal .pl-fila').find(tr => /Evaluación/.test(tr.textContent)).querySelectorAll('button');
-  [...bPago].find(b => /Registrar pago/.test(b.textContent)).click(); await A.tick(5);
+  [...bPago].find(b => /Cobrar lo que debe/.test(b.textContent)).click(); await A.tick(5);
   A.setVal('#cp-m', '100'); A.radio('cpmet', 'Efectivo'); w.guardarPago(at1[0].id); await A.tick(60); close(A);
   OK('3 abona 100: la atención debe 100', server.registros[at1[0].id].saldo === 100 && caja() === c0 + 100);
   // ---- 4 pago al plan (cuota) que cubre varias etapas

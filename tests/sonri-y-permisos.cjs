@@ -102,10 +102,11 @@ for (const [file, mia, otra] of [['google-apps-script-pacientes.gs', 'spadental'
 
 /* ---------------- Sonri: el código real del HTML con un DOM mínimo ---------------- */
 const MARCA = '/* =====================================================================\n   🦷 SONRI', FIN = '/* ===== fin de Sonri ===== */';
-const bloque = f => { const s = fs.readFileSync(path.join(raiz, f), 'utf8'), a = s.indexOf(MARCA); return s.slice(a, s.indexOf(FIN, a)); };
+const leer = f => fs.readFileSync(path.join(raiz, f), 'utf8').replace(/\r\n/g, '\n');   // un checkout de Windows trae CRLF
+const bloque = f => { const s = leer(f), a = s.indexOf(MARCA); return s.slice(a, s.indexOf(FIN, a)); };
 check('Sonri es idéntico en los dos paneles', () => assert.equal(bloque('pacientes.html'), bloque('cosmetic/pacientes.html')));
 for (const file of ['pacientes.html', 'cosmetic/pacientes.html']) {
-  const html = fs.readFileSync(path.join(raiz, file), 'utf8'), nodes = new Map(), store = new Map();
+  const html = leer(file), nodes = new Map(), store = new Map();
   const el = s => { if (!nodes.has(s)) nodes.set(s, { value: '', hidden: true, innerHTML: '', textContent: '', style: {}, dataset: {}, options: [], classList: { toggle() {}, add() {}, remove() {}, contains() { return false; } }, addEventListener() {}, querySelectorAll() { return []; }, querySelector() { return null; } }); return nodes.get(s); };
   const ls = { getItem: k => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem: k => store.delete(k) };
   const c = { console, localStorage: ls, sessionStorage: ls, document: { querySelector: el, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, body: { classList: { add() {}, remove() {}, contains() { return false; } }, appendChild() {} }, createElement: () => el('nuevo' + Math.random()) },

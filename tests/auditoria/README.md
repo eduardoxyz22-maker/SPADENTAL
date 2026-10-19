@@ -11,7 +11,7 @@ PANEL=spa node -r ./netguard.js s21-paquete-en-la-fila.js   # una sola (PANEL=sp
 
 - `h.js` carga el panel en jsdom con un `fetch` falso que habla con el `.gs` en memoria. `server.latency = 1500` simula a Google tardando: úsenlo en todo flujo nuevo de plata o fichas.
 - `lib.js` tiene ayudas comunes (abrir, entrar, cargar una atención). Las claves de fábrica se leen del HTML.
-- `s08b`…`s22`: una prueba por tema (anticipos, corregir cobro, planes, pagos de doctoras, servidor, paquetes, script anterior, paquete desde la atención, pacientes sin visitas, borrar pagos, paquete en la fila, caso real con latencia).
+- `s08b`…`s22`: una prueba por tema (anticipos, corregir cobro, planes, pagos de doctoras, servidor, paquetes, script anterior, paquete desde la atención, pacientes sin visitas, borrar pagos, paquete en la fila, caso real con latencia, y s23 con los tres defectos del diagnóstico del 19/10).
 - `e2e-circuito.js`: recorrido completo con clics en Chromium real (planes, paquetes, pagos, doctora que marca una sesión, borrado). Necesita un Chromium (`CHROMIUM=/ruta`).
 - `viejo-spa.gs` / `viejo-cos.gs`: el Apps Script anterior (`2026-10-15-b`), para probar el panel nuevo con el script viejo.
 

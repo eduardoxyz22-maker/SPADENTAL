@@ -83,7 +83,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   await ev(() => verPaciente('E2E Orto')); await boton(P, /🦷 Planes/); await boton(P, /Crear plan de tratamiento/);
   await ev(() => { var i = plantillasPlan().findIndex(t => t.nombre === 'Ortodoncia'); $('#pl-tipo').value = String(i); aplicarPlantilla(i); PL_ETAPAS.forEach(e => { if (/Instalación/.test(e.desc)) e.precio = 3000; if (/Evaluación/.test(e.desc)) e.precio = 300 }); pintarEtapasEditor(); $('#pl-tot').value = sumaEtapas(); });
   await boton(P, /Guardar plan/); await P.waitForTimeout(400);
-  await boton(P, /Registrar pago/); await P.fill('#an-monto', '1000'); await ev(() => setRadio('anmet', 'Tarjeta')); await boton(P, /Guardar pago/); await P.waitForTimeout(400);
+  await boton(P, /Pago adelantado o cuota/); await P.fill('#an-monto', '1000'); await ev(() => setRadio('anmet', 'Tarjeta')); await boton(P, /Guardar pago/); await P.waitForTimeout(400);
   await boton(P, /Marcar realizada · Evaluación/); await boton(P, /Guardar sesión realizada/); await P.waitForTimeout(500);
   OK('6 plan orto: evaluación hecha, pagado 1000, pendiente 2300', await ev(() => { var p = planesDe('E2E Orto')[0]; return avancePlan(p).hechas === 1 && cobradoPlan(p) === 1000 && saldoPlan(p) === 2300 }), await ev(() => { var p = planesDe('E2E Orto')[0]; return [avancePlan(p).hechas, cobradoPlan(p), saldoPlan(p)] }));
   await ev(() => closeModal());

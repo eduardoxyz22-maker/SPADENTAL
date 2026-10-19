@@ -26,5 +26,5 @@ let f=0; const OK=(t,c,x)=>{if(!c)f++;console.log((c?'PASS ':'FAIL ')+t,x===unde
     OK('N2 sigue en pantalla y en cola', !!A.w.DATA.find(r => r.paciente === 'Cola Pendiente') && A.w.pend().length === 1);
     server.handle = h0; await A.w.refrescarSiCorresponde(true); await A.tick(60);
     OK('N2 se sube al liberarse', Object.values(server.registros).filter(r => r.paciente === 'Cola Pendiente').length === 1 && A.w.pend().length === 0); }
-  console.log(f ? 'FALLAS ' + f : 'TODO OK'); process.exit(0);
+  console.log(f ? 'FALLAS ' + f : 'TODO OK'); process.exit(f ? 1 : 0);
 })().catch(e => { console.error('FATAL', e); process.exit(2); });

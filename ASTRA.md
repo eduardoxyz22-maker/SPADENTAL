@@ -36,7 +36,7 @@ Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para segu
   `git fetch origin claude/vibrant-gauss-rvd0wb` → rebase → `git checkout claude/vibrant-gauss-rvd0wb` → `git merge --ff-only <rama>` → `git push -u origin claude/vibrant-gauss-rvd0wb` → verificar el SHA remoto con `git ls-remote`.
 - Pages tarda 1–2 minutos; en las compus hay que recargar con Ctrl+F5.
 - **Apps Script**: el dueño lo pega a mano (Implementar → Administrar implementaciones → ✏️ → Nueva versión). La app de Claude no abre `.gs` en el chat: mandarle una copia `.txt` de cada uno. Cada `.gs` va en el proyecto de su clínica; no cruzarlos (se nota porque la cantidad de filas de `info` cambia).
-- Versión actual de ambos scripts: **`2026-10-19-a`** (`VERSION_SCRIPT`, visible en `info`). Si cambiás un `.gs`, subí la versión.
+- Versión actual de ambos scripts: **`2026-10-19-b`** (`VERSION_SCRIPT`, visible en `info`). Si cambiás un `.gs`, subí la versión.
 - Si el cambio es solo del panel, **no hace falta pegar ningún Apps Script**: decírselo.
 
 ## 4. Datos y servidor (lo mínimo para no romper)
@@ -58,6 +58,8 @@ Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para segu
   - bajar lo cobrado de una atención con un guardado común (`cobroBaja` → `cobro_baja`; para eso está `corregirCobro`, que queda en la hoja `_Correcciones`);
   - borrar un anticipo ya usado (`anticipo_usado`);
   - escribir en la otra clínica (`otra_clinica`).
+- **El saldo a favor se usa una sola vez** (desde `2026-10-19-b`): en `doSave`, con el candado puesto, si la atención usa más saldo a favor del que le queda al paciente (`creditoPacienteSrv`), el servidor lo recorta (`recortarFavor`), guarda la diferencia como deuda y responde `ajusteFavor`. El panel avisa ("ya se había usado desde otro equipo").
+- **Dueña de un plan sin `prof`** (`duenaPlan` en el panel = `duenoPlanSrv` en el servidor, misma regla): la que atendió más sesiones del plan (si empatan, ninguna); sin sesiones atendidas, la única doctora que atendió al paciente; si hay varias, ninguna, y se le pide a la dueña o recepción que la asigne. Una doctora solo registra pagos de un plan suyo o de la clínica (`puedePagoPlan`, igual que `anticipoDeDoctora`).
 - **Cola del panel** (`queue`/`enviar`/`mandar`/`confirmado`): todo se encola primero y se manda serializado por clave. Una ficha que cambia mientras viaja se manda después con base = lo enviado.
 
 ## 5. Planes y paquetes (el circuito que más problemas dio)
@@ -76,6 +78,7 @@ Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para segu
 
 | Función | Qué hace |
 |---|---|
+| `favorDeSesion(plan, r)` / `creditoParaAtencion(r)` | **Regla única del saldo a favor:** el saldo a favor de una atención paga primero su sesión; lo adelantado a un plan **paga solo sesiones de ese plan**, nunca la consulta que vino junto. `creditoParaAtencion` es lo que puede usar una atención: lo suelto + lo del plan hasta lo que falta de su sesión. La usan el cobro automático al guardar, el aviso del formulario y "Cobrar lo que debe". |
 | `cobradoDeSesion(plan, r)` | De una atención, cuenta para el plan **solo lo de su sesión**. Lo cobrado paga primero lo demás de esa atención (la consulta) y recién después la sesión. Una sesión con precio 0 (planes viejos) cuenta todo lo cobrado. |
 | `cobradoPlan` | Lo pagado del plan. Si no se respetara la regla de arriba, la consulta cobrada junto con la sesión 1 aparecía como pago del plan y como "saldo a favor" falso. |
 | `cuentasPlan(plan)` / `cuentasPlanHtml` | En atenciones / adelantado / usado / queda. Es el recuadro "💰 Cuentas del paquete". |
@@ -136,6 +139,9 @@ En el repo hay tres suites. Correr siempre con un guardián que bloquee la red r
 Chromium para Playwright: `/opt/pw-browsers/chromium`, con `--disable-background-networking --disable-component-update`. Hay que rutear `script.google.com` al `.gs` en memoria y abortar el resto de la red.
 
 ## 8. Pendiente y decisiones abiertas
+
+- **Diagnóstico del 19/10 (ASTRA)**: corregidos el adelanto que pagaba la consulta, el doble uso del saldo a favor entre equipos y la dueña de plan viejo (prueba `tests/auditoria/s23-diagnostico.js`). Los botones ahora se distinguen: "💵 Cobrar lo que debe" (salda una atención) y "💰 Pago adelantado o cuota" (plata a cuenta del plan). "Atención guardada" avisa que se está subiendo; el aviso de arriba dice si quedó algo sin subir. Sigue sin ser atómico el alta de un paquete (atención + pago + ficha van por separado y la cola los reintenta): no lo presenten como atómico.
+- Las suites s08b–s21 corren con el servidor instantáneo; s22, s23 y el e2e usan demora. Para flujos nuevos de plata, probar con `server.latency`.
 
 - **Paciente de prueba con dos "BLANQUEAMIENTO"**: el dueño tiene que borrar la visita de 234 con saldo 234 y el plan que dice "pagado Bs 0". Confirmar con él que quedó bien.
 - **Viviana Moreno**: sus atenciones y pagos borrados solo se recuperan con el historial de versiones de la planilla (copiar sus filas de una versión anterior y pegarlas al final). Ofrecerle guiarlo.

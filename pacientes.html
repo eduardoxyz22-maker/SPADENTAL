@@ -1570,19 +1570,23 @@ function bloqueaAjeno(nombre){
 function duenaPlan(pl){
   if(!pl||pl.deClinica)return '';
   if(pl.prof)return pl.prof;
+  /* misma regla que el servidor (duenoPlanSrv): la que atendió más sesiones
+     del plan (si empatan, ninguna); sin sesiones atendidas, la única doctora
+     que atendió al paciente; si hay más de una, ninguna: la asigna la dueña o
+     recepción en ✏️ Editar plan */
   var real=function(r){return esAtencion(r)&&r.profesional&&r.profesional!=='Por definir'};
-  var masVeces=function(l){
-    var c={},primero={},mejor='';
-    l.slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')}).forEach(function(r,i){
-      c[r.profesional]=(c[r.profesional]||0)+1; if(!(r.profesional in primero))primero[r.profesional]=i});
-    Object.keys(c).forEach(function(p){if(!mejor||c[p]>c[mejor]||(c[p]===c[mejor]&&primero[p]<primero[mejor]))mejor=p});
-    return mejor};
-  var ses=DATA.filter(function(r){return r.planId===pl.id&&real(r)});
-  if(ses.length)return masVeces(ses);
+  var ids={}, c={};
+  (pl.sesiones||[]).forEach(function(s){if(s&&s.atencionId)ids[s.atencionId]=1});
+  DATA.forEach(function(r){if(ids[r.id]&&real(r))c[r.profesional]=(c[r.profesional]||0)+1});
+  var ds=Object.keys(c);
+  if(ds.length){var mejor='',max=0,empate=false;
+    ds.forEach(function(d){if(c[d]>max){max=c[d];mejor=d;empate=false}else if(c[d]===max)empate=true});
+    return empate?'':mejor}
   var k='';
   Object.keys(PAC).some(function(x){
     if((PAC[x].planes||[]).some(function(p){return p.id===pl.id})){k=x;return true}return false});
-  return masVeces(DATA.filter(function(r){return k&&keyPac(r.paciente)===k&&real(r)}))}
+  var profs={}; DATA.forEach(function(r){if(k&&keyPac(r.paciente)===k&&real(r))profs[r.profesional]=1});
+  var pk=Object.keys(profs); return pk.length===1?pk[0]:''}
 /* modificar un plan (editar, marcar, cerrar, borrar) es de su dueña o del equipo */
 function planEsMio(pl){return !esDoctora()||!!pl&&duenaPlan(pl)===PROF_ACTUAL}
 /* La doctora que atiende a ese paciente (su última visita atendida): es la
@@ -2747,6 +2751,9 @@ function confirmado(k,item,enviado,r){
     var sep=normalize(JSON.parse(JSON.stringify(r.separada)));
     DATA=DATA.filter(function(x){return x.id!==sep.id}).concat([sep]); saveLocal();
     toast('Esta cita la atendió también '+((r.registro&&r.registro.profesional)||'otra doctora')+': quedaron como dos visitas. Revisalas.',1)}
+  if(item.action==='save'&&num(r.ajusteFavor)>0.009){
+    var ra=r.registro||item.rec;
+    toast('⚠️ El saldo a favor de '+(ra.paciente||'este paciente')+' ya se había usado desde otro equipo: esta atención quedó debiendo '+bs(r.ajusteFavor)+'.',1)}
   if(item.action==='save'){
     var srv=(r.registro&&r.registro.id)?r.registro:item.rec;
     SNAP_R[srv.id]=JSON.stringify(srv);
@@ -3437,7 +3444,8 @@ function recalcSaldo(){
   else if(a>0){tag.innerHTML='<span class="pill warn">⏳ Pago parcial · debe '+bs(s)+'</span>'}
   else{tag.innerHTML='<span class="pill bad">⚠ Sin pago · debe '+bs(s)+'</span>'}
   if(FORM_SALDO>0)tag.innerHTML+=' <span class="pill lime">💜 '+bs(FORM_SALDO)+' pagados con saldo a favor</span>';
-  var cr=pacAjeno($('#f-paciente').value)?0:creditoPara($('#f-paciente').value,$('#wrap-plan').style.display==='none'?'':$('#f-plan').value);
+  var cr=pacAjeno($('#f-paciente').value)?0:creditoParaAtencion({id:EDIT_ID||'__nueva',paciente:$('#f-paciente').value.trim(),
+    planId:$('#wrap-plan').style.display==='none'?'':$('#f-plan').value,total:t,acuenta:a,pagos:leerPagos()});
   if(cr>0.009&&!FORM_SALDO){
     var u=Math.round(Math.min(Math.max(0,s),cr)*100)/100;
     if(favorAutomatico()&&u>0.009)
@@ -3913,7 +3921,7 @@ function guardarAtencion(){
   var favorUsado=0;
   if(pacAjeno(rec.paciente))FAVOR_TOPE=0;
   if(rec.estado==='Atendido'&&!(prev&&prev.estado==='Atendido')&&num(rec.saldo)>0.009){
-    var dispF=creditoPara(rec.paciente,rec.planId); if(FAVOR_TOPE!==null)dispF=Math.min(dispF,FAVOR_TOPE);
+    var dispF=creditoParaAtencion(rec); if(FAVOR_TOPE!==null)dispF=Math.min(dispF,FAVOR_TOPE);
     var uF=Math.round(Math.min(num(rec.saldo),Math.max(0,dispF))*100)/100;
     if(uF>0.009){
       rec.pagos=agruparPagos(rec.pagos.concat([{metodo:SALDO_FAVOR,monto:uF}]));
@@ -3947,7 +3955,7 @@ function guardarAtencion(){
   var cita=crearCitaDesde(rec);
   var era=EDIT_ID; clearForm(true); fillDatalists(); updateNavRem();
   toast(era?(pagoNuevo?'Atención actualizada · pago de '+bs(sumaPagos(pagoNuevo))+' registrado hoy ✅':'Atención actualizada'):
-    'Atención guardada ✅'+(alPlanF.length?' · '+bs(sumaPagos(alPlanF))+' quedaron como pago del plan':''));
+    'Atención guardada ✅'+(alPlanF.length?' · '+bs(sumaPagos(alPlanF))+' quedaron como pago del plan':'')+(CONNECTED?' · subiendo a la nube (mirá el aviso de arriba)':''));
   if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
     :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
   showWhatsappModal(rec,cita,favorUsado);
@@ -4691,17 +4699,38 @@ function cobradoPlan(plan){
   var ats=DATA.filter(function(r){return r.planId===plan.id&&esAtencion(r)});
   var enAt=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+cobradoDeSesion(plan,r)},0);
   var abonos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===plan.id}).reduce(function(a,r){return a+num(r.acuenta)},0);
-  var usado=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+Math.min(usoSaldoDe(r),cobradoDeSesion(plan,r))},0);
+  var usado=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+Math.min(favorDeSesion(plan,r),cobradoDeSesion(plan,r))},0);
   return Math.round((enAt+Math.max(0,abonos-usado))*100)/100}
 /* Una atención puede traer, además de su sesión, otra cosa (ej. la consulta):
    al plan le cuenta como mucho el importe de su sesión. Una sesión sin importe
    (planes viejos, en 0) cuenta todo lo cobrado, como antes. */
+function sesionDeAtencion(plan,r){
+  return (plan.sesiones||[]).filter(function(x){return x.atencionId===r.id})[0]||
+    (r.planEtapa?(plan.sesiones||[]).filter(function(x){return x.n===r.planEtapa})[0]:null)}
+function precioSesionDe(plan,r){var s=plan&&r?sesionDeAtencion(plan,r):null; return s&&!s.aparte?num(s.precio):0}
+/* Regla única (la usan las cuentas, el saldo a favor y el cobro automático):
+   el saldo a favor de una atención paga primero su sesión; la plata en mano
+   paga primero lo otro de la atención (la consulta) y después la sesión.
+   Así el adelanto de un paquete nunca paga la consulta. */
+function favorDeSesion(plan,r){var p=precioSesionDe(plan,r), f=usoSaldoDe(r); return p>0?Math.min(f,p):f}
 function cobradoDeSesion(plan,r){
-  var s=(plan.sesiones||[]).filter(function(x){return x.atencionId===r.id})[0]||
-    (r.planEtapa?(plan.sesiones||[]).filter(function(x){return x.n===r.planEtapa})[0]:null);
-  var p=s?num(s.precio):0;
-  /* lo cobrado paga primero lo otro de la atención (la consulta) y después la sesión */
-  return p>0?Math.max(0,Math.min(p,Math.round((num(r.acuenta)-Math.max(0,num(r.total)-p))*100)/100)):num(r.acuenta)}
+  var p=precioSesionDe(plan,r); if(!(p>0))return num(r.acuenta);
+  var R=function(x){return Math.round(x*100)/100};
+  var fav=usoSaldoDe(r), favS=Math.min(fav,p), cash=R(num(r.acuenta)-fav);
+  var otros=Math.max(0,R(num(r.total)-p-(fav-favS))), cashS=Math.max(0,Math.min(p-favS,R(cash-Math.min(cash,otros))));
+  return R(favS+cashS)}
+/* Lo que puede usar del saldo a favor una atención: lo suelto, más lo de su
+   plan solo hasta lo que falta pagar de su sesión. */
+function creditoParaAtencion(r){
+  var c=creditosEn(DATA,r.paciente), gen=Math.max(0,c.general);
+  if(!r.planId)return Math.round(gen*100)/100;
+  var plan=planesDe(r.paciente).filter(function(x){return x.id===r.planId})[0];
+  var pool=Math.max(0,num(c.planes[r.planId]||0)); if(!plan)return Math.round((gen+pool)*100)/100;
+  var s=sesionDeAtencion(plan,r)||(DATA.some(function(x){return x.id===r.id})?null:proxSesion(plan)), p=s&&!s.aparte?num(s.precio):0;
+  if(s&&s.aparte)return Math.round(gen*100)/100;
+  if(!(p>0))return Math.round((gen+pool)*100)/100;
+  var tmp=Object.assign({},r,{planEtapa:s.n}), falta=Math.max(0,p-cobradoDeSesion(plan,tmp));
+  return Math.round((gen+Math.min(pool,falta))*100)/100}
 function saldoPlan(plan){return Math.max(0,num(plan.total)-cobradoPlan(plan))}
 /* Las cuentas del plan en palabras: cuánto entró en las atenciones, cuánto
    por adelantado, cuánto del adelanto ya se usó y cuánto queda. */
@@ -4709,7 +4738,7 @@ function cuentasPlan(plan){
   var aparte={}; (plan.sesiones||[]).forEach(function(s){if(s.aparte&&s.atencionId)aparte[s.atencionId]=1});
   var ats=DATA.filter(function(r){return r.planId===plan.id&&esAtencion(r)&&!aparte[r.id]});
   var R=function(x){return Math.round(x*100)/100}, enAt=0, usado=0, nUsos=0;
-  ats.forEach(function(r){var c=cobradoDeSesion(plan,r), u=Math.min(usoSaldoDe(r),c); enAt+=c-u; usado+=u; if(u>0.009)nUsos++});
+  ats.forEach(function(r){var c=cobradoDeSesion(plan,r), u=Math.min(favorDeSesion(plan,r),c); enAt+=c-u; usado+=u; if(u>0.009)nUsos++});
   var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===plan.id}), adel=pagos.reduce(function(a,r){return a+num(r.acuenta)},0);
   return {enAtenciones:R(enAt), adelantado:R(adel), usado:R(usado), nUsos:nUsos, queda:R(Math.max(0,adel-usado)), pagos:pagos}}
 function cuentasPlanHtml(plan){
@@ -5230,8 +5259,10 @@ function puedeAnticipo(){return esAdmin()||(ANTICIPO_DOCTORAS&&esDoctora())}
 /* El pago de un plan lo carga también la doctora del plan: es plata de ese
    tratamiento, no un anticipo suelto. Hace falta el Apps Script que lo acepta. */
 function puedePagoPlan(nombre,planId){
-  if(puedeAnticipo())return true;
-  if(!esDoctora()||!planId||!((CFG&&CFG.pagoPlanDoctoras)||SESION.pagoPlan))return false;
+  if(!esDoctora()||!planId)return puedeAnticipo();
+  /* la doctora paga un plan solo si es suyo o de la clínica: igual que el servidor
+     (anticipoDeDoctora), también donde puede cargar anticipos sueltos */
+  if(!((CFG&&CFG.pagoPlanDoctoras)||SESION.pagoPlan))return puedeAnticipo();
   var p=planesDe(nombre).filter(function(x){return x.id===planId})[0];
   return !!p&&(planEsMio(p)||!!p.deClinica)}
 /* Al guardar una visita atendida, lo que queda debiendo se descuenta solo del
@@ -5254,12 +5285,16 @@ function anticiposDe(nombre){
 function creditosEn(lista,nombre){
   var k=keyPac(nombre), gen=0, plan={}, uso={}, R=function(x){return Math.round(x*100)/100};
   if(!k)return {general:0,planes:{},total:0};
+  var ps0=planesDe(nombre);
   lista.forEach(function(r){
     if(keyPac(r.paciente)!==k)return;
     if(esAnticipo(r)){if(r.planId)plan[r.planId]=(plan[r.planId]||0)+num(r.acuenta); else gen+=num(r.acuenta); return}
     var u=usoSaldoDe(r); if(!u)return;
     /* una etapa «aparte» no se paga con lo del plan: usa lo general */
-    if(r.planId&&!esEtapaAparte(r))uso[r.planId]=(uso[r.planId]||0)+u; else gen-=u});
+    if(r.planId&&!esEtapaAparte(r)){
+      var pl=ps0.filter(function(x){return x.id===r.planId})[0], pu=pl?favorDeSesion(pl,r):u;
+      uso[r.planId]=(uso[r.planId]||0)+pu; gen-=R(u-pu)}
+    else gen-=u});
   Object.keys(uso).forEach(function(p){var q=(plan[p]||0)-uso[p]; if(q<0){gen+=q; q=0} plan[p]=q});
   /* lo de un plan que ya no está, y lo que pasa del presupuesto de un plan,
      queda libre: se usa en cualquier atención (y es lo que dice la ficha) */
@@ -6889,7 +6924,7 @@ function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(!r
 function cobrarSaldo(id,conFavor){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   if(!esMia(r)){noEsTuya();return}
-  var cr=creditoPara(r.paciente,r.planId), usar=conFavor&&cr>0.009;
+  var cr=creditoParaAtencion(r), usar=conFavor&&cr>0.009;
   var metsPago=cr>0.009?METODOS.concat([SALDO_FAVOR]):METODOS;
   openModal('<h3>Registrar pago</h3><p class="mini">'+esc(r.paciente)+' · saldo actual '+bs(r.saldo)+
       (cr>0.009?' · <b>💜 tiene '+bs(cr)+' a favor</b>':'')+'</p>'+
@@ -6916,7 +6951,7 @@ function guardarPago(id){
   /* el pago se aplica sobre la versión del servidor: si otro equipo ya
      cobró algo, se suma a eso en lugar de pisarlo */
   if(met===SALDO_FAVOR){
-    creditoFresco(r0.paciente,r0.planId).then(function(c){
+    creditoFresco(r0.paciente,r0.planId).then(function(c){ c=Math.min(c,creditoParaAtencion(r0));
       if(m>c+0.001){closeModal(); toast('No le alcanza el saldo a favor: tiene '+bs(Math.max(0,c))+' (puede que otro equipo ya lo haya usado).',1); refreshAll(); return}
       conAtencionFresca(id,function(r){ if(r)aplicarPago(r,m,met)})});
     return}
@@ -6924,8 +6959,8 @@ function guardarPago(id){
 
 function aplicarPago(r,m,met){
   if(!esAtencion(r)||identidadAmbigua(r.paciente)){toast('Revisá la atención y la identidad antes de cobrar',1);return}
-  if(met===SALDO_FAVOR&&m>creditoPara(r.paciente,r.planId)+0.001){closeModal();
-    toast('No le alcanza el saldo a favor: tiene '+bs(Math.max(0,creditoPara(r.paciente,r.planId)))+'.',1);refreshAll();return}
+  if(met===SALDO_FAVOR&&m>creditoParaAtencion(r)+0.001){closeModal();
+    toast('No le alcanza el saldo a favor para esto: tiene '+bs(Math.max(0,creditoParaAtencion(r)))+(r.planId?' (lo adelantado a un plan paga solo sus sesiones)':'')+'.',1);refreshAll();return}
   if(m>num(r.saldo)+0.001){closeModal();
     toast('El pago supera el saldo pendiente ('+bs(r.saldo)+'). Puede que otro equipo ya haya cobrado parte.',1);refreshAll();return}
   r.cobrosPosteriores=(r.cobrosPosteriores||[]).slice();
@@ -7538,6 +7573,7 @@ function verPlan(nombre,id){
     .sort(function(x,y){return (y.fecha||'').localeCompare(x.fecha||'')});
   openModal('<h3>🦷 '+esc(p.nombre)+' '+planPill(p.estado)+'</h3>'+
     '<p class="mini">'+esc(nombre)+' · desde el '+fmtF(p.fecha)+quienLleva(p)+'</p>'+
+    (!esDoctora()&&!p.deClinica&&!p.prof&&!duenaPlan(p)?'<div class="avisomed nota" style="margin-top:8px">Este plan no tiene doctora clara (lo atendieron varias). Elegila en «✏️ Editar plan» o marcalo como paquete de la clínica: así la doctora puede registrar sus pagos.</div>':'')+
     '<div class="kpis" style="margin:12px 0">'+
       kpi('Presupuesto acordado',bs(p.total))+kpi('Pagado',bs(cob),'var(--ok)')+
       kpi('Pendiente de pago',bs(sal),sal>0?'var(--clay)':'var(--ok)')+
@@ -7547,16 +7583,16 @@ function verPlan(nombre,id){
     '<div class="barra" style="margin:0 0 10px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="row-btn" style="margin-top:0">'+
       (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+prox.n+')">✓ Marcar realizada · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
-      (puedePagoPlan(nombre,p.id)?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\')">💰 Registrar pago</button>':'')+
+      (puedePagoPlan(nombre,p.id)?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\')" title="Plata a cuenta del plan: se usa sola en las próximas sesiones">💰 Pago adelantado o cuota</button>':'')+
       '<button class="btn sec" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📲 Enviar presupuesto por WhatsApp</button></div>'+
     '<h4 style="margin:14px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Etapas</h4>'+
     (filas.length?filas.map(function(f){
         var s=f.s, acc=[];
         if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s.n+')">✓ Marcar realizada</button>');
         if(f.a&&puedePasarAlPaquete(f.a,p,s))acc.push('<button class="btn sm" onclick="pasarAlPaquete(\''+f.a.id+'\',\''+p.id+'\',0)">📦 Pasar al paquete</button>');
-        if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+f.a.id+'\')">Registrar pago</button>');
-        else if(f.a&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar pago</button>');
-        else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">Registrar pago</button>');
+        if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+f.a.id+'\')">💵 Cobrar lo que debe</button>');
+        else if(f.a&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">💵 Cobrar lo que debe</button>');
+        else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">💰 Adelantar esta sesión</button>');
         if(f.a)acc.push('<button class="btn sec sm" onclick="verFicha(\''+f.a.id+'\')">Ver historial</button>');
         var dato=function(k,v,st){return '<div><div class="mini">'+k+'</div><b'+(st?' style="'+st+'"':'')+'>'+v+'</b></div>'};
         return '<div class="pl-fila" style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px'+(s.hecha?';background:rgba(120,160,90,.06)':'')+'">'+
@@ -10916,7 +10952,7 @@ function asisAvisos(){
     var cuo=cuotasVencidas().filter(function(x){return suyo(x.paciente)});
     if(cuo.length)A.push({k:'cuo|'+cuo.length+'|'+Math.round(cuo.reduce(function(a,x){return a+x.monto},0)), sev:'ro', ico:'📆',
       t:asisPl(cuo.length,'plan con cuotas vencidas','planes con cuotas vencidas'),
-      x:'Abrí el plan: con «💰 Registrar pago» se marca la cuota sola. Para avisarle, en 🔔 Recordatorios sale el WhatsApp armado.',
+      x:'Abrí el plan: con «💰 Pago adelantado o cuota» se marca la cuota sola. Para avisarle, en 🔔 Recordatorios sale el WhatsApp armado.',
       lista:cuo.map(function(x){return {t:x.paciente, s:x.plan.nombre+' · '+asisPl(x.cuotas.length,'cuota','cuotas')+' · venció hace '+asisPl(x.dias,'día','días'), m:bs(x.monto), ir:function(){verPlan(x.paciente,x.plan.id)}}})})}catch(e){}
   try{
     var fre=planesFrenados().filter(function(x){return suyo(x.paciente)});
@@ -10994,7 +11030,7 @@ var ASIS_NOVEDADES=[
   {id:'planes', f:'2026-10-14', t:'Planes de tratamiento en una sola pantalla',
    x:'Cada etapa muestra su importe, lo pagado y el saldo. Desde el mismo plan registrás la atención de la etapa y los pagos o cuotas.', ayuda:/etapa del plan/},
   {id:'cuotas', f:'2026-10-14', t:'Las cuotas del plan, desde el plan',
-   x:'«💰 Registrar pago» trae sugerida la cuota que toca y entra a la caja de hoy. Las cuotas se marcan solas.', ayuda:/cuota/,
+   x:'«💰 Pago adelantado o cuota» trae sugerida la cuota que toca y entra a la caja de hoy. Las cuotas se marcan solas.', ayuda:/cuota/,
    si:function(){return !esDoctora()||puedeAnticipo()||!!((CFG&&CFG.pagoPlanDoctoras)||SESION.pagoPlan)}},
   {id:'editar-suma', f:'2026-10-14', t:'¿Ya pagó y decidió hacerse algo más?',
    x:'Editá la atención, agregá el tratamiento y subí «A cuenta»: lo nuevo entra como pago de hoy y lo de antes no cambia.', ayuda:/algo más/},
@@ -11126,7 +11162,7 @@ var ASIS_AYUDA=[
   {q:'¿Cómo borro un plan o un paquete?', k:'borrar plan paquete eliminar quitar equivocado mal cargado', v:'pacientes', f:'#pc-q',
    p:['Abrí al paciente → «🦷 Planes».','En el plan, tocá «🗑 Borrar plan» (también está al final, adentro del plan).','Lo borra la dueña o recepción; un plan a nombre de una doctora también lo puede borrar ella.','Las atenciones ya cargadas no se tocan y lo pagado al plan queda como saldo a favor.']},
   {q:'¿Cómo cobro una cuota o un pago del plan?', k:'cuota plan pago mensual pagar abono adelantado mensualidad', v:'pacientes', f:'#pc-q',
-   p:['Abrí el plan y tocá «💰 Registrar pago».','Viene sugerida la cuota que toca: corregí el monto si hace falta y marcá cómo pagó.','Entra a la caja de hoy y se descuenta solo de las etapas que se atiendan.']},
+   p:['Abrí el plan y tocá «💰 Pago adelantado o cuota».','Viene sugerida la cuota que toca: corregí el monto si hace falta y marcá cómo pagó.','Entra a la caja de hoy y se descuenta solo de las etapas que se atiendan.']},
   {q:'¿Qué es el saldo a favor (anticipo)?', k:'anticipo saldo favor adelanto dejo plata cuenta credito', v:'pacientes', f:'#pc-q',
    p:['Es plata que el paciente deja antes, para usar después.','Se registra desde la ficha del paciente con «💜 Anticipo».','Cuando se atiende, se descuenta sola y el panel dice cuánto queda debiendo.','Lo pagado a un plan es aparte: lo usa solo ese plan.']},
   {q:'¿Cómo dejo anotado un tratamiento que le recomendé?', k:'recomendado recomendar presupuesto pendiente decidir despues indeciso', v:'atencion', f:'#pre-list',

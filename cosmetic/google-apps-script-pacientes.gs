@@ -252,11 +252,19 @@ function paqueteClinicaActivo(clave) {
 function duenoPlanSrv(p, filas) {
   if (p && p.deClinica) return '';
   if (p && p.prof) return p.prof;
-  var idProf = {}, cuenta = {}, mejor = '', max = 0, profs = {};
-  (filas || []).forEach(function (f) { idProf[f.id] = f.prof; profs[f.prof] = 1; });
+  /* misma regla que el panel (duenaPlan): la que atendió más sesiones del plan
+     (si empatan, ninguna); sin sesiones atendidas, la única doctora que atendió
+     al paciente; si hay más de una, ninguna (lo asigna la dueña o recepción) */
+  var noAt = ['Agendada', 'Canceló', 'Reprogramó', 'Anticipo'];
+  var idProf = {}, cuenta = {}, profs = {};
+  (filas || []).forEach(function (f) { if (noAt.indexOf(f.estado) >= 0) return; idProf[f.id] = f.prof; profs[f.prof] = 1; });
   ((p && p.sesiones) || []).forEach(function (s) { var d = s && s.atencionId && idProf[s.atencionId]; if (d) cuenta[d] = (cuenta[d] || 0) + 1; });
-  for (var d in cuenta) if (cuenta[d] > max) { max = cuenta[d]; mejor = d; }
-  if (mejor) return mejor;
+  var ds = Object.keys(cuenta);
+  if (ds.length) {
+    var mejor = '', max = 0, empate = false;
+    ds.forEach(function (d) { if (cuenta[d] > max) { max = cuenta[d]; mejor = d; empate = false; } else if (cuenta[d] === max) empate = true; });
+    return empate ? '' : mejor;
+  }
   var ks = Object.keys(profs);
   return ks.length === 1 ? ks[0] : '';
 }
@@ -606,6 +614,17 @@ function doSave(r, base, ses) {
   /* Lo cobrado no se baja ni se borra con un guardado: para eso está
      «Corregir cobro», que deja la historia en _Correcciones. */
   if (previa0 && cobroBaja(previa0, r)) return { ok: false, error: 'cobro_baja', registro: previa0 };
+  /* El saldo a favor se usa una sola vez. Con el candado puesto se mira cuánto
+     le queda al paciente: si otro equipo ya lo usó, lo que esta atención paga
+     con saldo a favor se recorta a lo que queda y la diferencia queda debiendo. */
+  var ajusteFavor = 0;
+  if (r.estado !== 'Anticipo') {
+    var favN = favorDeSrv(r), favP = previa0 ? favorDeSrv(previa0) : 0;
+    if (favN > favP + 0.009) {
+      var falta = fR((favN - favP) - Math.max(0, creditoPacienteSrv(fClavePac(r.paciente))));
+      if (falta > 0.009) { ajusteFavor = fR(Math.min(falta, favN - favP)); r = recortarFavor(r, ajusteFavor); }
+    }
+  }
 
   // N° del día: lo asigna el servidor para que no se repita entre celulares.
   // Es el mayor entre (cuántas atenciones ya hay ese día) y (el N° más alto usado).
@@ -629,7 +648,30 @@ function doSave(r, base, ses) {
   if (destino) sh.getRange(destino, 1, 1, COLS.length).setValues([fila]);
   else sh.appendRow(fila);
 
-  return { ok: true, registro: registroDeFila(fila), conflictos: conf };
+  return ajusteFavor ? { ok: true, registro: registroDeFila(fila), conflictos: conf, ajusteFavor: ajusteFavor }
+    : { ok: true, registro: registroDeFila(fila), conflictos: conf };
+}
+function favorDeSrv(r) {
+  var t = 0, ps = (r && r.pagos) || [];
+  for (var i = 0; i < ps.length; i++) if (ps[i] && ps[i].metodo === 'Saldo a favor') t += Number(ps[i].monto) || 0;
+  return fR(t);
+}
+/* Saca 'quitar' de lo pagado con saldo a favor (primero lo más nuevo). */
+function recortarFavor(r, quitar) {
+  var d = fDesarmar(r), q = fR(quitar), i;
+  var cps = fCobrosPost(d).map(function (p) { return JSON.parse(JSON.stringify(p)); });
+  for (i = cps.length - 1; i >= 0 && q > 0.009; i--) {
+    if (!cps[i] || cps[i].metodo !== 'Saldo a favor') continue;
+    var t = fR(Math.min(q, fNum(cps[i].monto))); cps[i].monto = fR(fNum(cps[i].monto) - t); q = fR(q - t);
+  }
+  d.cobrosPosteriores = cps.filter(function (p) { return p && fNum(p.monto) > 0.004; });
+  var ini = (d.__cobro.pagos || []).map(function (p) { return { metodo: p.metodo, monto: fNum(p.monto) }; }), sacado = 0;
+  for (i = ini.length - 1; i >= 0 && q > 0.009; i--) {
+    if (ini[i].metodo !== 'Saldo a favor') continue;
+    var u = fR(Math.min(q, ini[i].monto)); ini[i].monto = fR(ini[i].monto - u); q = fR(q - u); sacado = fR(sacado + u);
+  }
+  d.__cobro = { monto: fR(fNum(d.__cobro.monto) - sacado), pagos: ini.filter(function (p) { return p.monto > 0.004; }), metodo: d.__cobro.metodo };
+  return fArmar(d);
 }
 
 /**
@@ -1108,7 +1150,7 @@ var ANTICIPO_DOCTORAS = false;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-19-a';
+var VERSION_SCRIPT = '2026-10-19-b';
 var CLINICA_ID = 'cosmetic';
 function deOtraClinica(r) { return !!(r && r.clinicaId && r.clinicaId !== CLINICA_ID); }
 /* =====================================================================
