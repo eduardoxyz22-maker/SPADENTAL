@@ -3359,7 +3359,8 @@ function srvRowHtml(i,s){
         esc(s.lab==null||s.lab===''?labDeLista(s.nom):s.lab)+'"></div>':'')+
     '</div>'+
     '<div class="srv-pz"><button type="button" class="btn sec sm s-pz" data-i="'+i+'">🦷 '+
-      (pz.length?'Piezas: '+pz.join(', '):'Marcar piezas')+'</button></div>'+
+      (pz.length?'Piezas: '+pz.join(', '):'Marcar piezas')+'</button> '+(s.ses?'':paqFilaHtml(i,s))+'</div>'+
+    (s.ses?paqFilaHtml(i,s):'')+
     '</div>'}
 
 function renderSrv(){
@@ -3377,7 +3378,7 @@ function readSrv(){
     return {nom:el.querySelector('.s-nom').value,det:el.querySelector('.s-det').value,
       cant:num(el.querySelector('.s-cant').value)||1,precio:num(el.querySelector('.s-precio').value),
       lab:lab?num(lab.value):(prev.lab==null?'':prev.lab),
-      piezas:(prev.piezas||[]).slice()}})}
+      piezas:(prev.piezas||[]).slice(), ses:prev.ses||0, solo:!!prev.solo, noPaq:!!prev.noPaq}})}
 
 function totalSrv(){return SRV.reduce(function(a,s){return a+num(s.precio)*(num(s.cant)||1)},0)}
 
@@ -3796,6 +3797,8 @@ function conAtencionFresca(id,fn){
 var FAVOR_TOPE=null;
 function submitAtencion(){
   /* Sonri pregunta antes si la visita es una etapa del plan (ver asisAntesDeGuardar) */
+  /* una fila marcada como paquete crea el paquete antes de guardar (ver PAQUETES) */
+  try{if(paquetesDeFilas())return}catch(e){}
   try{if(asisAntesDeGuardar())return}catch(e){}
   /* el paquete entero cargado como una sola atención (ver PAQUETES) */
   try{if(paqueteAntesDeGuardar())return}catch(e){}
@@ -4707,11 +4710,41 @@ function cobradoPlan(plan){
   if(!plan)return 0;
   var aparte={}; (plan.sesiones||[]).forEach(function(s){if(s.aparte&&s.atencionId)aparte[s.atencionId]=1});
   var ats=DATA.filter(function(r){return r.planId===plan.id&&esAtencion(r)});
-  var enAt=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+num(r.acuenta)},0);
+  var enAt=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+cobradoDeSesion(plan,r)},0);
   var abonos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===plan.id}).reduce(function(a,r){return a+num(r.acuenta)},0);
-  var usado=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+usoSaldoDe(r)},0);
+  var usado=ats.filter(function(r){return !aparte[r.id]}).reduce(function(a,r){return a+Math.min(usoSaldoDe(r),cobradoDeSesion(plan,r))},0);
   return Math.round((enAt+Math.max(0,abonos-usado))*100)/100}
+/* Una atención puede traer, además de su sesión, otra cosa (ej. la consulta):
+   al plan le cuenta como mucho el importe de su sesión. Una sesión sin importe
+   (planes viejos, en 0) cuenta todo lo cobrado, como antes. */
+function cobradoDeSesion(plan,r){
+  var s=(plan.sesiones||[]).filter(function(x){return x.atencionId===r.id})[0]||
+    (r.planEtapa?(plan.sesiones||[]).filter(function(x){return x.n===r.planEtapa})[0]:null);
+  var p=s?num(s.precio):0;
+  /* lo cobrado paga primero lo otro de la atención (la consulta) y después la sesión */
+  return p>0?Math.max(0,Math.min(p,Math.round((num(r.acuenta)-Math.max(0,num(r.total)-p))*100)/100)):num(r.acuenta)}
 function saldoPlan(plan){return Math.max(0,num(plan.total)-cobradoPlan(plan))}
+/* Las cuentas del plan en palabras: cuánto entró en las atenciones, cuánto
+   por adelantado, cuánto del adelanto ya se usó y cuánto queda. */
+function cuentasPlan(plan){
+  var aparte={}; (plan.sesiones||[]).forEach(function(s){if(s.aparte&&s.atencionId)aparte[s.atencionId]=1});
+  var ats=DATA.filter(function(r){return r.planId===plan.id&&esAtencion(r)&&!aparte[r.id]});
+  var R=function(x){return Math.round(x*100)/100}, enAt=0, usado=0, nUsos=0;
+  ats.forEach(function(r){var c=cobradoDeSesion(plan,r), u=Math.min(usoSaldoDe(r),c); enAt+=c-u; usado+=u; if(u>0.009)nUsos++});
+  var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===plan.id}), adel=pagos.reduce(function(a,r){return a+num(r.acuenta)},0);
+  return {enAtenciones:R(enAt), adelantado:R(adel), usado:R(usado), nUsos:nUsos, queda:R(Math.max(0,adel-usado)), pagos:pagos}}
+function cuentasPlanHtml(plan){
+  var c=cuentasPlan(plan), cob=cobradoPlan(plan), sal=saldoPlan(plan);
+  var li=function(t,v,st){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>'+t+'</span><b'+(st?' style="'+st+'"':'')+'>'+v+'</b></div>'};
+  return '<div class="avisomed nota" style="margin:0 0 10px"><b>💰 Cuentas del '+(plan.paquete?'paquete':'plan')+'</b>'+
+    li('Precio acordado',bs(plan.total))+
+    li('Pagado en las atenciones (sus sesiones)',bs(c.enAtenciones))+
+    li('Pagado por adelantado',bs(c.adelantado))+
+    (c.adelantado>0||c.usado>0?li('↳ ya usado en '+c.nUsos+' sesi'+(c.nUsos===1?'ón':'ones'),'−'+bs(c.usado)):'')+
+    (c.adelantado>0?li('↳ 💜 queda adelantado para las próximas',bs(c.queda),'color:var(--ok)'):'')+
+    li('Total pagado',bs(cob),'color:var(--ok)')+
+    li('Falta pagar',bs(sal),sal>0?'color:var(--clay)':'color:var(--ok)')+
+    '<div class="mini" style="margin-top:4px">Lo que se cobró en la misma atención por otra cosa (ej. la consulta) no cuenta para el plan.</div></div>'}
 function avancePlan(plan){
   var ss=plan.sesiones||[], h=ss.filter(function(s){return s.hecha}).length;
   return {hechas:h, total:ss.length, pct:ss.length?Math.round(h/ss.length*100):0}}
@@ -5410,7 +5443,7 @@ function htmlSaldoFavor(nom){
   return '<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">💜 Saldo a favor · '+
       '<span style="color:'+(cred<-0.009?'var(--clay)':'var(--ok)')+'">'+bs(cred)+'</span></h4>'+
     (cred<-0.009?'<p class="mini" style="color:var(--clay)">Se usó más de lo que dejó (dos equipos cobraron a la vez). Revisalo.</p>':'')+
-    (enPlanes>0.009?'<p class="mini">Además hay '+bs(enPlanes)+' pagados a sus planes: se descuentan de las etapas de cada plan.</p>':'')+
+    (enPlanes>0.009?'<p class="mini">💜 Además tiene <b>'+bs(enPlanes)+' adelantados a sus planes o paquetes</b>: se usan solos en las próximas sesiones (ver cada plan).</p>':'')+
     '<div class="tw" style="margin:0"><table style="min-width:0"><tbody>'+
     movs.map(function(x){
       var puede=x.a&&(x.a.planId?puedePagoPlan(nom,x.a.planId):puedeAnticipo())&&(!esDoctora()||x.a.anticipoPor===PROF_ACTUAL)&&bolsilloDe(bols,x.a)-num(x.a.acuenta)>-0.009;
@@ -7157,7 +7190,8 @@ function verPaciente(nombre){
         '<b>'+esc(p.nombre)+(p.deClinica?' <span class="pill lime">📦 de la clínica</span>':'')+'</b>'+planPill(p.estado)+'</div>'+
       '<div class="barra" style="margin:9px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
       '<div class="mini">'+a.hechas+'/'+a.total+' etapas · presupuesto '+bs(p.total)+' · pagado '+bs(cobradoPlan(p))+
-        ' · pendiente '+bs(saldoPlan(p))+(s2?' · sigue: <b>'+esc(s2.desc||('etapa '+s2.n))+'</b>':'')+'</div>'+
+        ' · pendiente '+bs(saldoPlan(p))+(cuentasPlan(p).queda>0.009?' · 💜 adelanto sin usar '+bs(cuentasPlan(p).queda):'')+
+        (s2?' · sigue: <b>'+esc(s2.desc||('etapa '+s2.n))+'</b>':'')+'</div>'+
       (function(){var c=proxCuota(p); if(!c)return '';
         return '<div class="mini">'+(c.vencida
           ? '<span class="pill bad">cuota '+c.n+' vencida hace '+c.dias+' días · '+bs(c.monto-c.cubierto)+'</span>'
@@ -7498,7 +7532,8 @@ function filasPlan(nombre,p){
   return (p.sesiones||[]).map(function(s){
     var a=atencionDeEtapa(s), precio=num(s.precio), f={s:s,a:a,precio:precio,aparte:!!s.aparte};
     /* si la atención cobró menos que el importe de la etapa, lo que falta se ve acá (y se paga al plan) */
-    if(a){f.abonado=num(a.acuenta); f.saldo=Math.max(num(a.saldo),!f.aparte&&precio>0?Math.round((precio-num(a.acuenta))*100)/100:0); f.estado='hecha'}
+    if(a){f.abonado=precio>0&&!f.aparte?cobradoDeSesion(p,a):num(a.acuenta);
+      f.saldo=!f.aparte&&precio>0?Math.max(0,Math.round((precio-f.abonado)*100)/100):num(a.saldo); f.estado='hecha'}
     else if(s.hecha){f.abonado=null; f.saldo=null; f.estado='marcada'}
     else{
       var cub=f.aparte?0:Math.min(precio,resto); resto-=cub;
@@ -7520,7 +7555,9 @@ function verPlan(nombre,id){
     '<div class="kpis" style="margin:12px 0">'+
       kpi('Presupuesto acordado',bs(p.total))+kpi('Pagado',bs(cob),'var(--ok)')+
       kpi('Pendiente de pago',bs(sal),sal>0?'var(--clay)':'var(--ok)')+
-      kpi('💜 Saldo a favor',bs(favor))+kpi('Avance',a.hechas+'/'+a.total+' · '+a.pct+'%')+'</div>'+
+      kpi('💜 Adelanto sin usar',bs(cuentasPlan(p).queda))+kpi('Avance',a.hechas+'/'+a.total+' · '+a.pct+'%')+'</div>'+
+    cuentasPlanHtml(p)+
+    (favor>0.009?'<p class="mini" style="margin:-4px 0 10px">Además tiene '+bs(favor)+' de saldo a favor suelto (se usa en cualquier atención).</p>':'')+
     '<div class="barra" style="margin:0 0 10px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="row-btn" style="margin-top:0">'+
       (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+prox.n+')">✓ Marcar realizada · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
@@ -7548,6 +7585,9 @@ function verPlan(nombre,id){
             dato('Importe',f.precio>0?bs(f.precio):'incluido')+
             dato('Abonado',f.abonado===null?'—':bs(f.abonado),f.abonado>0?'color:var(--ok)':'')+
             dato('Saldo',f.saldo===null?'—':bs(f.saldo),f.saldo>0&&f.estado==='hecha'?'color:var(--clay)':'')+'</div>'+
+          (f.estado==='hecha'&&!f.aparte&&f.precio>0?(function(){var u=Math.min(usoSaldoDe(f.a),f.abonado), c=Math.round((f.abonado-u)*100)/100;
+            return '<div class="mini" style="margin-top:6px">'+(c>0?'💵 '+bs(c)+' pagados en la atención'+(u>0?' · ':''):'')+(u>0?'💜 '+bs(u)+' del adelanto':'')+
+              (!c&&!u?'Sin pagar todavía':'')+'</div>'})():'')+
           (f.a&&puedePasarAlPaquete(f.a,p,s)?'<p class="mini" style="margin:8px 0 0;color:var(--clay)">Esta atención se cargó con el paquete entero ('+bs(f.a.total)+'). «📦 Pasar al paquete» la deja en '+bs(s.precio)+' y lo cobrado de más queda pagando las próximas sesiones. La caja no cambia.</p>':'')+
           (acc.length?'<div class="row-btn" style="margin-top:8px">'+acc.join('')+'</div>':'')+'</div>'}).join('')+
       '<p class="mini" style="margin:6px 0 0">En las etapas pendientes, "Abonado" es lo que ya cubre el pago adelantado del plan.</p>'
@@ -7721,6 +7761,8 @@ function registrarPagoPlan(nombre,planId,monto,met,fecha,nota){
     servicios:[], total:0, acuenta:monto, saldo:0, metodo:met, pagos:[{metodo:met,monto:monto}],
     cobrosPosteriores:[], cobroInicialFechado:true, obs:nota||'', planId:planId,
     anticipoPor:esDoctora()?PROF_ACTUAL:(ROL==='admin'?'Dueña':'Recepción')};
+  if(!rec.celular&&keyPac($('#f-paciente').value)===k){
+    rec.celular=$('#f-cel').value.trim(); if(getRadio('canal'))rec.canal=getRadio('canal'); if($('#f-canal-det').value.trim())rec.canalDetalle=$('#f-canal-det').value.trim()}
   DATA.push(rec); persist(rec); return rec}
 
 /* ---------- plantillas ---------- */
@@ -8102,6 +8144,80 @@ function separarExceso(pagos,exc){
     ps[i].monto=Math.round((ps[i].monto-t)*100)/100; exc=Math.round((exc-t)*100)/100; out.push({metodo:ps[i].metodo,monto:t})}
   return {quedan:ps.filter(function(p){return p.monto>0.009}),alPlan:out,falta:exc}}
 
+/* ---------- (D) el paquete se marca en la misma fila del servicio ----------
+   Sin abrir Planes: se elige el servicio como siempre ("Blanqueamiento ·
+   3 sesiones" se reconoce solo; a cualquier otro se le marca «📦 Es de varias
+   sesiones»), se dice si hoy se hizo la sesión 1 o solo paga, y al guardar
+   queda creado el paquete. La consulta u otros servicios van en la misma
+   atención, como siempre. */
+var PAQ_PAGO_SOLO=null;
+function sesionesDeNombre(nom){var m=String(nom||'').match(/(\d+)\s*sesi[oó]n(es)?\b/i), n=m?+m[1]:0; return n>=2&&n<=60?n:0}
+function tipoPaqueteDe(nom){var t=null; paquetesTipo().forEach(function(x){if(!t&&mismoNombre(nom,x.t.nombre))t=x.t}); return t}
+function nombreBasePaquete(nom){return String(nom||'').replace(/\s*[·\-–(]?\s*\d+\s*sesi[oó]n(es)?\)?\s*$/i,'').trim()||String(nom||'')}
+function sesAuto(nom){var t=tipoPaqueteDe(nom); return t&&nSesionesTipo(t)>1?nSesionesTipo(t):sesionesDeNombre(nom)}
+function paqFilaHtml(i,s){
+  if(EDIT_ID||!s||!s.nom)return '';
+  if(!s.ses)return '<button type="button" class="btn sec sm s-paq" data-i="'+i+'">📦 Es de varias sesiones</button>';
+  var amt=montoLinea(s), rep=repartirPrecio(amt,s.ses);
+  return '<div class="avisomed nota" style="margin-top:8px">📦 <b>Paquete de '+s.ses+' sesiones</b>'+
+      (amt>0?' · '+bs(amt)+' · cada sesión '+rep.map(function(x){return bs(x)}).join(' · '):'')+
+    '<div class="seg lime" style="margin-top:6px">'+
+      '<label><input type="radio" class="s-hoy" name="s-hoy-'+i+'" data-i="'+i+'" value="1"'+(s.solo?'':' checked')+'><span>Hoy se hizo la sesión 1</span></label>'+
+      '<label><input type="radio" class="s-hoy" name="s-hoy-'+i+'" data-i="'+i+'" value="0"'+(s.solo?' checked':'')+'><span>Hoy solo paga</span></label></div>'+
+    '<div class="mini" style="margin-top:6px">'+(s.solo
+      ?'Al guardar queda creado el paquete con sus '+s.ses+' sesiones pendientes; lo que pague por el paquete queda como su pago.'
+      :'Al guardar queda creado el paquete: esta atención lleva la sesión 1'+(amt>0?' ('+bs(rep[0])+')':'')+' y lo que pague de más queda para las próximas sesiones.')+
+      ' Después, cada vez que venga: «✓ Marcar realizada».</div>'+
+    '<button type="button" class="btn sec sm s-paq" data-i="'+i+'" style="margin-top:6px">No es un paquete</button></div>'}
+function togglePaqFila(i){
+  readSrv(); var s=SRV[i]; if(!s)return;
+  if(s.ses){s.ses=0; s.solo=false; s.noPaq=true}
+  else{
+    var n=Math.round(num(prompt('¿En cuántas sesiones se hace? (ej. 3)','3')));
+    if(!n)return;
+    if(n<2||n>60){toast('Un paquete tiene de 2 a 60 sesiones',1);return}
+    s.ses=n; s.solo=false; s.noPaq=false}
+  renderSrv()}
+function paquetesDeFilas(){
+  if(EDIT_ID||getRadio('estado')!=='Atendido')return false;
+  try{readSrv()}catch(e){}
+  var i=-1; SRV.forEach(function(s,k){if(i<0&&s.nom&&s.ses>1&&montoLinea(s)>0)i=k}); if(i<0)return false;
+  var nombre=$('#f-paciente').value.trim(); if(!nombre||pacAjeno(nombre)||identidadAmbigua(nombre))return false;
+  if(validar().length||!getRadio('canal'))return false;      // primero lo que falta, con sus avisos de siempre
+  var planSel=$('#wrap-plan').style.display==='none'?'':$('#f-plan').value;
+  if(planSel)return false;                                  // ya eligió un plan: manda ese (y su pregunta)
+  var L=SRV[i], amt=montoLinea(L), rep=repartirPrecio(amt,L.ses), t=tipoPaqueteDe(L.nom);
+  var cli=hayPaquetesSrv()&&(t?!!t.deClinica:true), base=t?t.nombre:nombreBasePaquete(L.nom);
+  var fp=$('#f-prof').value.trim(); if(/^por definir$/i.test(fp))fp='';
+  var f=pacDe(nombre); f.nombre=f.nombre||nombre;
+  var plan=planNormalize({nombre:base,total:amt,paquete:true,deClinica:cli,prof:cli?'':(esDoctora()?PROF_ACTUAL:fp),
+    sesiones:rep.map(function(p,k){return {desc:base+' · sesión '+(k+1),precio:p}})});
+  f.planes.push(plan); savePac(f);
+  if(!L.solo){
+    SRV[i]={nom:L.nom,det:(L.det?L.det+' · ':'')+'sesión 1 de '+L.ses+' del paquete',cant:1,precio:rep[0],lab:L.lab,piezas:L.piezas};
+    renderSrv(); renderPlanSel(plan.id); $('#f-plan').value=plan.id; recalcTotal();
+    submitAtencion(); return true}
+  /* hoy solo paga */
+  var pagos=leerPagos().filter(function(p){return p.metodo!==SALDO_FAVOR}), otras=SRV.filter(function(s,k){return k!==i&&s.nom});
+  if(!otras.length){
+    var fecha=$('#f-fecha').value||hoyISO(), tot=sumaPagos(pagos);
+    pagos.forEach(function(p){registrarPagoPlan(nombre,plan.id,p.monto,p.metodo,fecha,'Pago del paquete')});
+    clearForm(); refreshAll(); verPlan(nombre,plan.id);
+    toast('📦 Paquete «'+base+'» creado'+(tot>0?' · pago de '+bs(tot)+' registrado':'')+'. No hace falta guardar atención: cada vez que venga, «✓ Marcar realizada»');
+    return true}
+  SRV.splice(i,1); renderSrv(); recalcTotal();
+  var tt=num($('#f-total').value), a=num($('#f-acuenta').value);
+  if(a>tt+0.009){
+    var sx=separarExceso(pagos,Math.round((a-tt)*100)/100);
+    PAQ_PAGO_SOLO={planId:plan.id,pagos:sx.alPlan,clave:keyPac(nombre)};
+    $('#f-acuenta').value=tt||'';
+    METODOS.forEach(function(k){$(MX[k]).value=''});
+    if(sx.quedan.length>1){setRadio('metodo','Mixto'); sx.quedan.forEach(function(p){if(MX[p.metodo])$(MX[p.metodo]).value=p.monto})}
+    else if(sx.quedan.length===1)setRadio('metodo',sx.quedan[0].metodo);
+    else $$('input[name="metodo"]').forEach(function(x){x.checked=false});
+    recalcSaldo()}
+  submitAtencion(); return true}
+
 /* Al elegir un plan en la atención, si todavía no hay nada cargado, viene la
    sesión que toca con su precio. */
 function alElegirPlan(){
@@ -8149,7 +8265,7 @@ function paqueteAntesDeGuardar(){
     readSrv();
     var tps=paquetesTipo();
     SRV.forEach(function(s,k){if(o.tipo)return;
-      tps.forEach(function(x){if(!o.tipo&&s.nom&&nSesionesTipo(x.t)>1&&mismoNombre(s.nom,x.t.nombre)&&Math.abs(montoLinea(s)-num(x.t.total))<0.01){o.tipo=x;o.linea=k}})});
+      tps.forEach(function(x){if(!o.tipo&&s.nom&&!s.noPaq&&nSesionesTipo(x.t)>1&&mismoNombre(s.nom,x.t.nombre)&&Math.abs(montoLinea(s)-num(x.t.total))<0.01){o.tipo=x;o.linea=k}})});
     if(!o.tipo)return false;
     var et=[]; (o.tipo.t.etapas||[]).forEach(function(e){for(var k=0;k<Math.max(1,Math.round(num(e.cant)||1));k++)et.push(num(e.precio))});
     o.n=1; o.de=et.length; o.precio=et[0]; o.nombrePaq=o.tipo.t.nombre; o.total=num(o.tipo.t.total)}
@@ -8185,6 +8301,9 @@ function paqueteRespuesta(si){
     PAQ_PASE={planId:plan.id}}
   submitAtencion()}
 function paqueteDespuesDeGuardar(rec){
+  var ps=PAQ_PAGO_SOLO; PAQ_PAGO_SOLO=null;
+  if(ps&&rec&&keyPac(rec.paciente)===ps.clave)ps.pagos.forEach(function(p){
+    registrarPagoPlan(rec.paciente,ps.planId,p.monto,p.metodo,rec.fecha,'Pago del paquete (junto con la atención del '+fmtF(rec.fecha)+')')});
   var x=PAQ_PASE; PAQ_PASE=null; PAQ_OK=null;
   if(!x||!rec||rec.planId!==x.planId||rec.estado!=='Atendido')return;
   pasarAlPaquete(rec.id,x.planId,8)}
@@ -10382,19 +10501,24 @@ function bind(){
   $('#srv-list').addEventListener('click',function(e){
     var bpz=e.target.closest?e.target.closest('.s-pz'):null;
     if(bpz){abrirPiezas(+bpz.dataset.i); return}
+    var bpq=e.target.closest?e.target.closest('.s-paq'):null;
+    if(bpq){togglePaqFila(+bpq.dataset.i); return}
     if(e.target.classList.contains('s-del')){
       readSrv(); var i=+e.target.closest('.srv').dataset.i;
       SRV.splice(i,1); if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}];
       soltarTotal(); renderSrv()}});
   $('#srv-list').addEventListener('change',function(e){
     var box=e.target.closest('.srv'); if(!box)return;
+    if(e.target.classList.contains('s-hoy')){readSrv(); var ih=+e.target.dataset.i; if(SRV[ih])SRV[ih].solo=e.target.value==='0'; renderSrv(); return}
     if(e.target.classList.contains('s-nom')){
       var p=CFG.precios.filter(function(x){return x.nom===e.target.value})[0];
       var pi=box.querySelector('.s-precio');
       if(p&&(!pi.value||!pi.dataset.touched))pi.value=p.precio||'';
       readSrv();
       /* el campo de laboratorio aparece o desaparece según el servicio */
-      if(SRV[+box.dataset.i]){SRV[+box.dataset.i].lab=p?num(p.lab):0}
+      if(SRV[+box.dataset.i]){SRV[+box.dataset.i].lab=p?num(p.lab):0;
+        /* "Blanqueamiento · 3 sesiones" (o un paquete de Ajustes) se reconoce solo */
+        SRV[+box.dataset.i].ses=EDIT_ID?0:sesAuto(e.target.value); SRV[+box.dataset.i].solo=false; SRV[+box.dataset.i].noPaq=false}
       soltarTotal(); renderSrv(); return}
     if(/\bs-(precio|cant)\b/.test(e.target.className))soltarTotal();
     readSrv(); recalcTotal()});
@@ -10992,8 +11116,8 @@ var ASIS_AYUDA=[
    p:['Abrí al paciente (👤 Pacientes → buscalo) y tocá «🦷 Planes».','«＋ Crear plan de tratamiento»: elegí una plantilla (por ejemplo Ortodoncia) o uno en blanco.','Ajustá etapas, cantidades e importes. Un control incluido va en 0.','Si paga en cuotas, poné cuántas y cada cuántos días.','Tocá «💾 Guardar plan». Mandarlo por WhatsApp es aparte y opcional.']},
   {q:'¿Cómo registro la atención de una etapa del plan?', k:'etapa plan control registrar atencion sesion seguimiento ortodoncia marcar', v:'pacientes', f:'#pc-q',
    p:['Abrí el plan (paciente → 🦷 Planes → «Abrir plan»), o en la ficha tocá «✓ Marcar realizada».','Tocá «✓ Marcar realizada» en la sesión que toca.','Elegí quién la hizo, la fecha y la plata que trajo, si trajo.','La sesión queda marcada, con su doctora, y el plan se actualiza solo.']},
-  {q:'¿Cómo cargo un paquete (por ejemplo, blanqueamiento de 3 sesiones)?', k:'paquete blanqueamiento sesiones pago adelantado precio cerrado combo promo tres', v:'pacientes', f:'#pc-q',
-   p:['La dueña o recepción, una sola vez: en ⚙️ Ajustes → 📦 Paquetes carga nombre, sesiones y precio (ej. Blanqueamiento · 3 · Bs 700). El precio se reparte solo.','Con el paciente (en Nueva atención o en su ficha): «🦷 Planes» → «📦 Blanqueamiento». Te pregunto si hoy se hizo la sesión 1.','Si hoy solo paga: «💰 Registrar pago» con los 700 y listo. No hace falta guardar ninguna atención.','Si hoy se hizo la sesión 1: queda cargada abajo en la atención. Poné lo que pagó (aunque sea el paquete entero) y guardá: lo que pasa de la sesión queda para las próximas.','Cada vez que viene: «✓ Marcar realizada» y elegí quién la hizo. Se paga sola con lo que dejó.']},
+  {q:'¿Cómo cargo un paquete (por ejemplo, blanqueamiento de 3 sesiones)?', k:'paquete blanqueamiento sesiones pago adelantado precio cerrado combo promo tres consulta junto', v:'atencion', f:'#srv-list',
+   p:['En «Nueva atención» cargá los servicios como siempre: la consulta y el tratamiento (ej. «Blanqueamiento · 3 sesiones»).','Si el nombre dice «3 sesiones» lo reconozco solo; si no, tocá «📦 Es de varias sesiones» en esa fila.','En la misma fila elegí «Hoy se hizo la sesión 1» o «Hoy solo paga».','Poné todo lo que pagó (ej. consulta 150 + paquete 700 = 850) y guardá: el paquete queda creado y lo de más queda adelantado para las próximas sesiones.','Cada vez que venga: «✓ Marcar realizada» en el paquete y elegí quién la hizo.']},
   {q:'Si cada sesión del paquete la hace una doctora distinta, ¿cómo va la comisión?', k:'comision paquete sesion doctora distinta otra mirna shirley reparte quien atendio', v:'pacientes', f:'#pc-q',
    p:['Cada sesión marcada queda como una atención de la doctora que la hizo, por su parte del precio (700 en 3 = 234 + 233 + 233).','La comisión de cada una sale de sus sesiones, no del pago entero.','Un paquete «de la clínica» lo ve cualquier doctora: cada una marca la sesión que atiende.']},
   {q:'Cargué el paquete entero como una sola atención, ¿cómo lo arreglo?', k:'paquete entero una sola atencion 700 arreglar sesion 1 cobro todo junto pasar', v:'pacientes', f:'#pc-q',
