@@ -7221,7 +7221,7 @@ function verPaciente(nombre){
       '<div class="who">'+(prox.cita?'📅 Cita agendada':'📌 Próximo contacto')+'</div>'+
       '<div class="meta">'+fmtF(prox.f)+(prox.h?' · '+prox.h:'')+(prox.mot?' · '+esc(prox.mot):'')+'</div>'+
       '</div><div class="acts"></div></div>':'')+
-    (hPlan?'<h4 style="margin:16px 0 0;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Plan de tratamiento</h4>'+hPlan:'')+
+    (hPlan?'<h4 style="margin:16px 0 0;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Plan de tratamiento</h4>'+planesRepetidosHtml(nom)+hPlan:'')+
     htmlSaldoFavor(nom)+
     '<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Odontograma</h4>'+
     (nPiezas?'<p class="mini" style="margin:0 0 4px">'+nPiezas+' pieza'+(nPiezas===1?'':'s')+
@@ -7498,12 +7498,19 @@ function abrirPlanes(nombre){
   openModal('<h3>🦷 Planes de tratamiento</h3><p class="mini">'+esc(nombre)+'</p>'+
     '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="nuevoPlan(\''+jss(nombre)+'\')">＋ Crear plan de tratamiento</button></div>'+
     botonesPaquetes(nombre)+
+    planesRepetidosHtml(nombre)+
     (ps.length?ps.map(function(p){return planResumenHtml(nombre,p)}).join('')
              :'<div class="empty" style="margin-top:12px">Todavía no tiene ningún plan. Creá uno: se puede armar hoy sin pagos ni atenciones y usarlo en las próximas visitas.</div>')+
     '<div class="row-btn"><button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
 
 function quienLleva(p){
   return p.deClinica?' · <span class="pill lime">📦 de la clínica: lo atiende cualquier doctora</span>':(p.prof?' · '+esc(p.prof):'')}
+/* Dos planes o paquetes activos con el mismo nombre: casi siempre uno sobra. */
+function planesRepetidosHtml(nombre){
+  var ps=planesVisibles(planesDe(nombre)).filter(function(p){return p.estado==='activo'}), out=[];
+  ps.forEach(function(p,i){ps.slice(i+1).forEach(function(q){if(mismoNombre(p.nombre,q.nombre)&&out.indexOf(p.nombre)<0)out.push(p.nombre)})});
+  return out.map(function(n){return '<div class="avisomed" style="margin-top:10px">⚠️ Tiene <b>dos «'+esc(n)+'» activos</b>. '+
+    'Uno sobra: dejá el que tiene la plata y las sesiones hechas, y borrá el otro con «🗑 Borrar plan». Si en el que sobra se marcó una sesión, borrá primero esa atención.</div>'}).join('')}
 function planPill(estado){
   var c={activo:'lime',terminado:'ok',cancelado:'bad'}[estado]||'';
   return '<span class="pill '+c+'">'+esc(estado)+'</span>'}
@@ -8059,6 +8066,13 @@ function crearPaquete(nombre,i,silencioso){
   if(bloqueaAjeno(nombre))return null;
   if(identidadAmbigua(nombre)){toast(AVISO_IDENTIDAD,1);return null}
   var t=(CFG.planesTipo||[])[+i]; if(!t||!t.paquete)return null;
+  var ya=paqueteSinEmpezar(nombre,t.nombre);
+  if(ya){
+    var tomo0=tomarPlanEnForm(nombre,ya.id);
+    if(!silencioso){
+      if(!tomo0&&desdeLaAtencion(nombre)){preguntaSesionHoy(nombre,ya);return ya}
+      toast('Ya tiene el paquete «'+ya.nombre+'» sin empezar: es ese (no se crea otro igual)'); verPlan(nombre,ya.id)}
+    return ya}
   var cli=!!t.deClinica&&hayPaquetesSrv(), etapas=[];
   (t.etapas||[]).forEach(function(e){
     var n=Math.max(1,Math.round(num(e.cant)||1));
@@ -8151,6 +8165,11 @@ function separarExceso(pagos,exc){
    queda creado el paquete. La consulta u otros servicios van en la misma
    atención, como siempre. */
 var PAQ_PAGO_SOLO=null;
+/* Un paquete con ese nombre que todavía no empezó: se usa ese, no se crea otro
+   igual (dos paquetes iguales confundían: se marcaba la sesión en el que no
+   tenía la plata y quedaba debiendo). */
+function paqueteSinEmpezar(nombre,nom){
+  return planesActivos(nombre).filter(function(p){return mismoNombre(p.nombre,nom)&&avancePlan(p).hechas===0&&(p.sesiones||[]).length>1})[0]||null}
 function sesionesDeNombre(nom){var m=String(nom||'').match(/(\d+)\s*sesi[oó]n(es)?\b/i), n=m?+m[1]:0; return n>=2&&n<=60?n:0}
 function tipoPaqueteDe(nom){var t=null; paquetesTipo().forEach(function(x){if(!t&&mismoNombre(nom,x.t.nombre))t=x.t}); return t}
 function nombreBasePaquete(nom){return String(nom||'').replace(/\s*[·\-–(]?\s*\d+\s*sesi[oó]n(es)?\)?\s*$/i,'').trim()||String(nom||'')}
@@ -8189,10 +8208,13 @@ function paquetesDeFilas(){
   var L=SRV[i], amt=montoLinea(L), rep=repartirPrecio(amt,L.ses), t=tipoPaqueteDe(L.nom);
   var cli=hayPaquetesSrv()&&(t?!!t.deClinica:true), base=t?t.nombre:nombreBasePaquete(L.nom);
   var fp=$('#f-prof').value.trim(); if(/^por definir$/i.test(fp))fp='';
-  var f=pacDe(nombre); f.nombre=f.nombre||nombre;
-  var plan=planNormalize({nombre:base,total:amt,paquete:true,deClinica:cli,prof:cli?'':(esDoctora()?PROF_ACTUAL:fp),
-    sesiones:rep.map(function(p,k){return {desc:base+' · sesión '+(k+1),precio:p}})});
-  f.planes.push(plan); savePac(f);
+  var plan=paqueteSinEmpezar(nombre,base)||paqueteSinEmpezar(nombre,L.nom);
+  if(plan){var s1=proxSesion(plan); if(s1&&num(s1.precio)>0)rep[0]=num(s1.precio); L.ses=(plan.sesiones||[]).length}
+  else{
+    var f=pacDe(nombre); f.nombre=f.nombre||nombre;
+    plan=planNormalize({nombre:base,total:amt,paquete:true,deClinica:cli,prof:cli?'':(esDoctora()?PROF_ACTUAL:fp),
+      sesiones:rep.map(function(p,k){return {desc:base+' · sesión '+(k+1),precio:p}})});
+    f.planes.push(plan); savePac(f)}
   if(!L.solo){
     SRV[i]={nom:L.nom,det:(L.det?L.det+' · ':'')+'sesión 1 de '+L.ses+' del paquete',cant:1,precio:rep[0],lab:L.lab,piezas:L.piezas};
     renderSrv(); renderPlanSel(plan.id); $('#f-plan').value=plan.id; recalcTotal();
