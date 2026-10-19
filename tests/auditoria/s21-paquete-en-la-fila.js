@@ -52,6 +52,20 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
   A.click('#btn-save'); await A.tick(200); close(A);
   const p5 = w.planesDe('Fila Cinco')[0], a5 = w.DATA.find(r => r.paciente === 'Fila Cinco' && w.esAtencion(r));
   OK('5 marcado a mano en 3 sesiones: 100 hoy y 200 al paquete', p5 && p5.sesiones.length === 3 && a5.total === 100 && w.DATA.some(r => r.paciente === 'Fila Cinco' && w.esAnticipo(r) && r.acuenta === 200), p5 && [p5.sesiones.length, a5.total]);
+  // 9 consulta + adelanto parcial, hoy la sesión 1: pagó 450 de 850
+  await cargar('Fila Nueve', [[consulta, 150], [blanq, 700, SPA]], 450, 'QR');
+  A.click('#btn-save'); await A.tick(250); close(A);
+  const a9 = w.DATA.find(r => r.paciente === 'Fila Nueve' && w.esAtencion(r)), p9 = w.planesDe('Fila Nueve')[0];
+  OK('9 parcial con sesión: atención 384 pagada, 66 adelantados, pagado 300, falta 400', a9 && a9.total === 384 && a9.saldo === 0 && w.cuentasPlan(p9).queda === 66 && w.cobradoPlan(p9) === 300 && w.saldoPlan(p9) === 400, a9 && [a9.total, a9.saldo, w.cuentasPlan(p9).queda, w.cobradoPlan(p9), w.saldoPlan(p9)]);
+  w.atencionDePlan('Fila Nueve', p9.id, 2); A.setVal('#ap-prof', 'Dra. Mirna'); w.guardarAtencionPlan(); await A.tick(250); close(A);
+  const s9 = w.DATA.find(r => r.paciente === 'Fila Nueve' && r.planEtapa === 2);
+  OK('9 sesión 2: usa los 66 y debe 167', s9 && s9.total === 233 && w.usoSaldoDe(s9) === 66 && s9.saldo === 167 && w.cuentasPlan(w.planesDe('Fila Nueve')[0]).queda === 0, s9 && [w.usoSaldoDe(s9), s9.saldo]);
+  // 10 consulta + adelanto parcial, hoy solo paga: pagó 450
+  await cargar('Fila Diez', [[consulta, 150], [blanq, 700, SPA, true]], 450, 'Efectivo');
+  A.click('#btn-save'); await A.tick(250); close(A);
+  const a10 = w.DATA.find(r => r.paciente === 'Fila Diez' && w.esAtencion(r)), p10 = w.planesDe('Fila Diez')[0];
+  OK('10 parcial sin sesión: atención consulta 150 pagada, 300 adelantados, falta 400', a10 && a10.total === 150 && a10.saldo === 0 && w.cuentasPlan(p10).queda === 300 && w.saldoPlan(p10) === 400 && w.avancePlan(p10).hechas === 0, a10 && [a10.total, w.cuentasPlan(p10).queda, w.saldoPlan(p10)]);
+  OK('9-10 caja: entró lo que pagaron (450 + 450)', w.totalCobros(w.filasCajaDia(hoy).filter(r => /Fila (Nueve|Diez)/.test(r.paciente))) === 900);
   // 7 el caso real: consulta 150 + paquete 700, pagó 850; después sesiones 2 y 3
   await cargar('Fila Siete', [[consulta, 150], [blanq, 700, SPA]], 850, 'Efectivo');
   A.click('#btn-save'); await A.tick(200); close(A);
