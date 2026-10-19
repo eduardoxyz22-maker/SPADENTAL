@@ -1,0 +1,23 @@
+#!/bin/sh
+# Corre todas las pruebas en las dos clínicas. La red real queda bloqueada (netguard.js):
+# el servidor es el .gs del repo corriendo en memoria y los datos son ficticios.
+# Uso: cd tests/auditoria && npm install && sh correr-todo.sh
+cd "$(dirname "$0")"
+fallas=0
+for f in s08b-v6 s09-anticipos s10-corregir-cobro s11-no-cuadra s12-planes s13-pago-plan-doctora s14-editar-suma-pago \
+         s15-auditoria-servidor s16-paquetes s17-script-viejo s18-paquete-desde-atencion s19-sin-visitas s20-borrar-pago \
+         s21-paquete-en-la-fila s22-caso-real; do
+  for p in spa cos; do
+    r=$(PANEL=$p node -r ./netguard.js $f.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     $f ($p)";; *) echo "FALLA  $f ($p): $r"; fallas=$((fallas+1));; esac
+  done
+done
+# recorrido completo en un Chromium real (si hay uno: variable CHROMIUM o /opt/pw-browsers/chromium)
+if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
+  for p in spa cos; do
+    r=$(PANEL=$p node -r ./netguard.js e2e-circuito.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-circuito ($p)";; *) echo "FALLA  e2e-circuito ($p): $r"; fallas=$((fallas+1));; esac
+  done
+else echo "(sin Chromium: se saltea e2e-circuito)"; fi
+echo; [ $fallas -eq 0 ] && echo "TODO OK" || echo "FALLAS: $fallas"
+exit $fallas

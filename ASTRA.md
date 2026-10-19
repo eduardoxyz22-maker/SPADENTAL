@@ -127,11 +127,11 @@ En el repo hay tres suites. Correr siempre con un guardián que bloquee la red r
 | `tests/sonri-y-permisos.cjs` | 61 (permisos del servidor por clínica, Sonri, cola) |
 | `tests/apps-script-en-memoria.cjs` | el `.gs` real corriendo en memoria |
 
-Fuera del repo (en el entorno de Claude, no subidas) hay más pruebas:
-- auditoría del panel: s12–s22, que cubren planes, pagos de doctoras, editar sumando pago, servidor, paquetes, script viejo, paquete desde la atención, sin visitas, borrar pago, paquete en la fila y el caso real con latencia;
-- un recorrido completo en Chromium real (`e2e-circuito`).
-
-Si las necesitás, pedile al dueño que te las pase, o pedí que se agreguen al repo. Todas pasaban en las dos clínicas al publicar `0a3be26`.
+**`tests/auditoria/`**: la auditoría completa del panel contra el `.gs` real en memoria, en las dos clínicas. Ver su `README.md`.
+- s08b–s22 cubren anticipos, corregir cobro, planes, pagos de doctoras, editar sumando pago, servidor, paquetes, script viejo, paquete desde la atención, sin visitas, borrar pago, paquete en la fila y el caso real con latencia.
+- `e2e-circuito.js` es un recorrido completo con clics en Chromium real.
+- Para correrlas: `cd tests/auditoria && npm install && sh correr-todo.sh`. Todo pasaba en las dos clínicas al publicar.
+- Las claves de fábrica se leen del HTML: no escribas claves en las pruebas.
 
 Chromium para Playwright: `/opt/pw-browsers/chromium`, con `--disable-background-networking --disable-component-update`. Hay que rutear `script.google.com` al `.gs` en memoria y abortar el resto de la red.
 
