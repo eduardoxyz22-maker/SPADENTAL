@@ -5836,7 +5836,17 @@ function cuentasPlan(plan){
   var R=function(x){return Math.round(x*100)/100}, enAt=0, usado=0, nUsos=0;
   ats.forEach(function(r){var c=cobradoDeSesion(plan,r), u=Math.min(favorDeSesion(plan,r),c); enAt+=c-u; usado+=u; if(u>0.009)nUsos++});
   var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===plan.id}), adel=pagos.reduce(function(a,r){return a+num(r.acuenta)},0);
+  /* sesiones hechas que no se cobraron en su atención: las paga el adelanto */
+  var cub=Math.min(Math.max(0,adel-usado),cubiertoHechas(plan));
+  if(cub>0.009){usado+=cub; nUsos+=(plan.sesiones||[]).filter(function(s){var a=s.hecha&&!s.aparte&&num(s.precio)>0&&atencionDeEtapa(s); return a&&!(num(a.saldo)>0.009)&&cobradoDeSesion(plan,a)<num(s.precio)-0.009}).length}
   return {enAtenciones:R(enAt), adelantado:R(adel), usado:R(usado), nUsos:nUsos, queda:R(Math.max(0,adel-usado)), pagos:pagos}}
+/* En qué se usó el adelanto, dicho como es: un plan de una sola etapa es el
+   tratamiento entero (ej. «sesiones blanqueamiento» por las 3 juntas). */
+function usadoEnTxt(plan,c){
+  var ss=(plan.sesiones||[]).filter(function(s){return !s.aparte});
+  if(ss.length===1)return '«'+(ss[0].desc||plan.nombre)+'» (todo el plan)';
+  var u=plan.paquete||plan.deClinica?'sesi':'etapa';
+  return c.nUsos+' '+(u==='sesi'?'sesi'+(c.nUsos===1?'ón':'ones'):'etapa'+(c.nUsos===1?'':'s'))}
 function cuentasPlanHtml(plan){
   var c=cuentasPlan(plan), cob=cobradoPlan(plan), sal=saldoPlan(plan);
   var li=function(t,v,st){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>'+t+'</span><b'+(st?' style="'+st+'"':'')+'>'+v+'</b></div>'};
@@ -5844,7 +5854,7 @@ function cuentasPlanHtml(plan){
     li('Precio acordado',bs(plan.total))+
     li('Pagado en las atenciones (sus sesiones)',bs(c.enAtenciones))+
     li('Pagado por adelantado',bs(c.adelantado))+
-    (c.adelantado>0||c.usado>0?li('↳ ya usado en '+c.nUsos+' sesi'+(c.nUsos===1?'ón':'ones'),'−'+bs(c.usado)):'')+
+    (c.adelantado>0||c.usado>0?li('↳ ya usado en '+usadoEnTxt(plan,c),'−'+bs(c.usado)):'')+
     (c.adelantado>0?li('↳ 💜 queda adelantado para las próximas',bs(c.queda),'color:var(--ok)'):'')+
     li('Total pagado',bs(cob),'color:var(--ok)')+
     li('Falta pagar',bs(sal),sal>0?'color:var(--clay)':'color:var(--ok)')+
@@ -8306,9 +8316,11 @@ function verPaciente(nombre){
         return '<div class="mini">'+(c.vencida
           ? '<span class="pill bad">cuota '+c.n+' vencida hace '+c.dias+' días · '+bs(c.monto-c.cubierto)+'</span>'
           : '💳 próxima cuota '+bs(c.monto)+' el '+fmtF(c.fecha))+'</div>'})()+
+      avisoSinMarcar(nom,p)+
       '<div class="row-btn" style="margin-top:8px">'+
         '<button class="btn sm" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Abrir plan</button>'+
         (s2&&p.estado==='activo'?'<button class="btn sec sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s2.n+')">✓ Marcar realizada · sesión '+s2.n+'</button>':'')+
+        (s2&&p.estado==='activo'&&visitasParaVincular(nom,p).length?'<button class="btn sec sm" onclick="vincularVisita(\''+nj+'\',\''+p.id+'\','+s2.n+')" title="La sesión se cargó como visita suelta: elegí esa visita">🔗 Ya se hizo en una visita</button>':'')+
       '</div></div>'}).join(''):'';
 
   openModal('<h3>'+esc(nom)+'</h3>'+
@@ -8646,16 +8658,34 @@ function atencionDeEtapa(s){
    cubierto aunque no se haya hecho. */
 function filasPlan(nombre,p){
   var resto=Math.max(0,num(creditosEn(DATA,nombre).planes[p.id]||0));
-  return (p.sesiones||[]).map(function(s){
+  var out=(p.sesiones||[]).map(function(s){
     var a=atencionDeEtapa(s), precio=num(s.precio), f={s:s,a:a,precio:precio,aparte:!!s.aparte};
     /* si la atención cobró menos que el importe de la etapa, lo que falta se ve acá (y se paga al plan) */
     if(a){f.abonado=precio>0&&!f.aparte?cobradoDeSesion(p,a):num(a.acuenta);
       f.saldo=!f.aparte&&precio>0?Math.max(0,Math.round((precio-f.abonado)*100)/100):num(a.saldo); f.estado='hecha'}
     else if(s.hecha){f.abonado=null; f.saldo=null; f.estado='marcada'}
-    else{
-      var cub=f.aparte?0:Math.min(precio,resto); resto-=cub;
-      f.abonado=cub; f.saldo=Math.max(0,precio-cub); f.estado='pendiente'}
-    return f})}
+    else f.estado='pendiente';
+    return f});
+  /* lo adelantado cubre primero las sesiones ya hechas que quedaron sin
+     cobrar (por ejemplo, cargadas en Bs 0) y después las que faltan */
+  out.forEach(function(f){
+    if(f.estado!=='hecha'||f.aparte||!(f.precio>0)||!(f.saldo>0.009)||num(f.a.saldo)>0.009)return;
+    var cub=Math.min(f.saldo,resto); if(!(cub>0.009))return;
+    resto=Math.round((resto-cub)*100)/100; f.cubre=cub;
+    f.abonado=Math.round((f.abonado+cub)*100)/100; f.saldo=Math.round((f.saldo-cub)*100)/100});
+  out.forEach(function(f){
+    if(f.estado!=='pendiente')return;
+    var cub=f.aparte?0:Math.min(f.precio,resto); resto-=cub;
+    f.abonado=cub; f.saldo=Math.max(0,f.precio-cub)});
+  return out}
+/* Lo que el adelanto cubre de sesiones hechas que no se cobraron en su atención. */
+function cubiertoHechas(plan){
+  var falta=0;
+  (plan.sesiones||[]).forEach(function(s){
+    if(!s.hecha||s.aparte||!(num(s.precio)>0))return;
+    /* si la atención misma quedó debiendo, eso se cobra en la atención */
+    var a=atencionDeEtapa(s); if(a&&!(num(a.saldo)>0.009))falta+=Math.max(0,num(s.precio)-cobradoDeSesion(plan,a))});
+  return Math.round(falta*100)/100}
 
 function verPlan(nombre,id){
   if(bloqueaAjeno(nombre))return;
@@ -8663,7 +8693,8 @@ function verPlan(nombre,id){
   if(!p){toast('Ese plan ya no está',1);abrirPlanes(nombre);return}
   if(!planVisible(p)){noEsTuya();return}
   var nj=jss(nombre), a=avancePlan(p), cob=cobradoPlan(p), sal=saldoPlan(p), mio=planEsMio(p),
-      favor=Math.max(0,creditosEn(DATA,nombre).general+sobrantePlan(creditosEn(DATA,nombre),p)), filas=filasPlan(nombre,p), prox=proxSesion(p);
+      favor=Math.max(0,creditosEn(DATA,nombre).general+sobrantePlan(creditosEn(DATA,nombre),p)), filas=filasPlan(nombre,p), prox=proxSesion(p),
+      vinc=visitasParaVincular(nombre,p).length>0;
   var kpi=function(k,v,c){return '<div class="kpi"><div class="k">'+k+'</div><div class="v" style="font-size:18px'+(c?';color:'+c:'')+'">'+v+'</div></div>'};
   var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===p.id})
     .sort(function(x,y){return (y.fecha||'').localeCompare(x.fecha||'')});
@@ -8674,6 +8705,7 @@ function verPlan(nombre,id){
       kpi('Presupuesto acordado',bs(p.total))+kpi('Pagado',bs(cob),'var(--ok)')+
       kpi('Pendiente de pago',bs(sal),sal>0?'var(--clay)':'var(--ok)')+
       kpi('💜 Adelanto sin usar',bs(cuentasPlan(p).queda))+kpi('Avance',a.hechas+'/'+a.total+' · '+a.pct+'%')+'</div>'+
+    avisoSinMarcar(nombre,p)+
     cuentasPlanHtml(p)+
     (favor>0.009?'<p class="mini" style="margin:-4px 0 10px">Además tiene '+bs(favor)+' de saldo a favor suelto (se usa en cualquier atención).</p>':'')+
     '<div class="barra" style="margin:0 0 10px"><span style="width:'+a.pct+'%"></span></div>'+
@@ -8685,6 +8717,7 @@ function verPlan(nombre,id){
     (filas.length?filas.map(function(f){
         var s=f.s, acc=[];
         if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s.n+')">✓ Marcar realizada</button>');
+        if(!s.hecha&&vinc)acc.push('<button class="btn sec sm" onclick="vincularVisita(\''+nj+'\',\''+p.id+'\','+s.n+')" title="La sesión se cargó como visita suelta: elegí esa visita">🔗 Ya se hizo en una visita</button>');
         if(f.a&&puedePasarAlPaquete(f.a,p,s))acc.push('<button class="btn sm" onclick="pasarAlPaquete(\''+f.a.id+'\',\''+p.id+'\',0)">📦 Pasar al paquete</button>');
         if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+f.a.id+'\')">💵 Cobrar lo que debe</button>');
         else if(f.a&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">💵 Cobrar lo que debe</button>');
@@ -8703,7 +8736,7 @@ function verPlan(nombre,id){
             dato('Importe',f.precio>0?bs(f.precio):'incluido')+
             dato('Abonado',f.abonado===null?'—':bs(f.abonado),f.abonado>0?'color:var(--ok)':'')+
             dato('Saldo',f.saldo===null?'—':bs(f.saldo),f.saldo>0&&f.estado==='hecha'?'color:var(--clay)':'')+'</div>'+
-          (f.estado==='hecha'&&!f.aparte&&f.precio>0?(function(){var u=Math.min(usoSaldoDe(f.a),f.abonado), c=Math.round((f.abonado-u)*100)/100;
+          (f.estado==='hecha'&&!f.aparte&&f.precio>0?(function(){var cb=f.cubre||0, u=Math.min(usoSaldoDe(f.a),f.abonado-cb)+cb, c=Math.round((f.abonado-u)*100)/100; u=Math.round(u*100)/100;
             return '<div class="mini" style="margin-top:6px">'+(c>0?'💵 '+bs(c)+' pagados en la atención'+(u>0?' · ':''):'')+(u>0?'💜 '+bs(u)+' del adelanto':'')+
               (!c&&!u?'Sin pagar todavía':'')+'</div>'})():'')+
           (f.a&&puedePasarAlPaquete(f.a,p,s)?'<p class="mini" style="margin:8px 0 0;color:var(--clay)">Esta atención se cargó con el paquete entero ('+bs(f.a.total)+'). «📦 Pasar al paquete» la deja en '+bs(s.precio)+' y lo cobrado de más queda pagando las próximas sesiones. La caja no cambia.</p>':'')+
@@ -9073,6 +9106,65 @@ function marcarSesion(nombre,id,n){
   ses.hecha=true; ses.fecha=hoyISO();
   if(!proxSesion(plan)&&saldoPlan(plan)<=0)plan.estado='terminado';
   savePac(p); verPlan(nombre,id)}
+
+/* Una sesión que se hizo pero se cargó como visita suelta (sin elegir el
+   plan en «¿Esta visita es una sesión de un plan?»): se elige esa visita y
+   queda como la sesión del plan. No cambia lo cobrado ni la caja; si esa
+   visita se pagó con el adelanto del plan, ahora le cuenta a su plan. */
+function visitasParaVincular(nombre,p){
+  if(!p||p.estado==='cancelado'||(esDoctora()&&!planEsMio(p)&&!p.deClinica))return [];
+  var k=keyPac(nombre), usadas={}, ids={};
+  planesDe(nombre).forEach(function(pl){ids[pl.id]=1; (pl.sesiones||[]).forEach(function(s){if(s.atencionId)usadas[s.atencionId]=1})});
+  /* sueltas, de este plan sin sesión marcada, o de un plan que ya no está */
+  return DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)&&r.estado==='Atendido'&&(!r.planId||r.planId===p.id||!ids[r.planId])&&!usadas[r.id]&&esMia(r)})
+    .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.hora||'').localeCompare(b.hora||'')})}
+function vincularVisita(nombre,planId,n){
+  if(bloqueaAjeno(nombre))return;
+  var p=planesDe(nombre).filter(function(x){return x.id===planId})[0], s=p&&(p.sesiones||[]).filter(function(x){return x.n===n})[0];
+  if(!p||!s||s.hecha){toast('Esa sesión ya está marcada',1);return}
+  var vs=visitasParaVincular(nombre,p), nj=jss(nombre);
+  openModal('<h3>🔗 ¿En qué visita se hizo?</h3><p class="mini">'+esc(nombre)+' · '+esc(p.nombre)+' · '+esc(s.desc||('etapa '+s.n))+'</p>'+
+    '<p class="hint" style="margin:10px 0 4px">Para cuando la sesión se cargó como visita suelta, sin elegir el plan. La visita que elijas queda como esta sesión: <b>no cambia lo cobrado ni la caja</b>.</p>'+
+    (vs.length?vs.map(function(r){
+      var sv=(r.servicios||[]).map(function(x){return x.nom+(x.det?' ('+x.det+')':'')}).filter(Boolean).join(' · ')||'sin servicio';
+      return '<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;display:flex;gap:10px;align-items:center;justify-content:space-between">'+
+        '<div><b>'+fmtF(r.fecha)+'</b>'+(r.profesional?' · '+esc(r.profesional):'')+'<div class="mini">'+esc(sv)+' · '+bs(r.total)+'</div></div>'+
+        '<button class="btn sm" style="flex:none" onclick="vincularVisitaOk(\''+nj+'\',\''+p.id+'\','+s.n+',\''+r.id+'\')">Es esta</button></div>'}).join('')
+      :'<div class="empty">No hay visitas atendidas sin plan para elegir.</div>')+
+    '<div class="row-btn"><button class="btn sec" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Volver</button></div>')}
+function vincularVisitaOk(nombre,planId,n,atId){
+  if(bloqueaAjeno(nombre))return;
+  var r=DATA.filter(function(x){return x.id===atId})[0];
+  if(!r||r.estado!=='Atendido'){toast('Esa visita ya no está libre',1);verPlan(nombre,planId);return}
+  if(!esMia(r)){noEsTuya();return}
+  var p=planesDe(nombre).filter(function(x){return x.id===planId})[0], s=p&&(p.sesiones||[]).filter(function(x){return x.n===n})[0];
+  if(!p||!s||s.hecha){toast('Esa sesión ya está marcada',1);verPlan(nombre,planId);return}
+  if(visitasParaVincular(nombre,p).indexOf(r)<0){noEsTuya();return}
+  if(r.planId!==p.id||r.planEtapa!==s.n){r.planId=p.id; r.planEtapa=s.n; persist(r)}
+  marcarSesionPlan(r);
+  toast('Listo: la visita del '+fmtF(r.fecha)+' quedó como «'+(s.desc||('etapa '+s.n))+'» ✅');
+  refreshAll(); verPlan(nombre,planId)}
+
+/* Visitas guardadas con este plan elegido cuya sesión no quedó marcada (hasta
+   el 20/10, con la clave de una doctora, la marca no llegaba a la hoja). */
+function visitasSinMarcar(nombre,p){
+  if(!p||p.estado==='cancelado')return [];
+  var k=keyPac(nombre), usadas={};
+  (p.sesiones||[]).forEach(function(s){if(s.atencionId)usadas[s.atencionId]=1});
+  return DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)&&r.estado==='Atendido'&&r.planId===p.id&&!usadas[r.id]&&esMia(r)})
+    .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.hora||'').localeCompare(b.hora||'')})}
+function avisoSinMarcar(nombre,p){
+  var vs=proxSesion(p)?visitasSinMarcar(nombre,p):[]; if(!vs.length)return '';
+  return '<div class="avisomed nota" style="margin:8px 0">⚠ <b>'+vs.length+(vs.length===1?' visita cargada':' visitas cargadas')+' con este plan</b> ('+
+    vs.map(function(r){return fmtFcorta(r.fecha)}).join(', ')+') sin su sesión marcada. '+
+    '<div class="row-btn" style="margin-top:6px"><button class="btn sm" onclick="marcarVisitasDelPlan(\''+jss(nombre)+'\',\''+p.id+'\')">✓ Marcar sus sesiones</button></div></div>'}
+function marcarVisitasDelPlan(nombre,id){
+  if(bloqueaAjeno(nombre))return;
+  var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
+  var vs=visitasSinMarcar(nombre,p), n=0;
+  vs.forEach(function(r){var antes=avancePlan(p).hechas; marcarSesionPlan(r); if(avancePlan(p).hechas>antes)n++});
+  toast(n?'Listo: '+n+(n===1?' sesión marcada':' sesiones marcadas')+' con sus visitas ✅':'No quedaba ninguna sesión para marcar',!n);
+  refreshAll(); verPlan(nombre,id)}
 
 function cerrarPlan(nombre,id){
   if(bloqueaAjeno(nombre))return;
@@ -12986,7 +13078,7 @@ function mdCuentasPlanHtml(plan){
         '<small>Lo que se cobró el mismo día de cada sesión.</small></div>'+
       '<div class="md-cp-caja"><div class="md-cp-k"><i class="ad"></i>Pagado por adelantado</div><b>'+bs(c.adelantado)+'</b>'+
         (c.adelantado>0.009||usado>0.009?'<ul>'+
-          (usado>0.009?'<li><i class="us"></i><span>Ya usado en '+c.nUsos+' sesi'+(c.nUsos===1?'ón':'ones')+'</span><b>−'+bs(usado)+'</b></li>'
+          (usado>0.009?'<li><i class="us"></i><span>Ya usado en '+esc(usadoEnTxt(plan,c))+'</span><b>−'+bs(usado)+'</b></li>'
             :'<li><i class="us"></i><span>Todavía no se usó en ninguna sesión</span><b>Bs 0</b></li>')+
           '<li class="md-cp-queda"><i class="qu"></i><span>💜 Queda adelantado para las próximas</span><b>'+bs(queda)+'</b></li></ul>'
           :'<small>Todavía no hay pagos adelantados.</small>')+'</div>'+
@@ -14445,6 +14537,8 @@ function mdLinksVideo(){
      x:'Hay cuatro videos cortos: cómo cargar una atención, un paquete, un tratamiento por etapas y cómo marcar las sesiones de un paquete cuando el paciente vuelve. Están en Nueva atención («▶ ¿Primera vez?»), en la ventana de Planes y en mis respuestas («▶ Ver el video»).', ayuda:/videos de ayuda/},
     {id:'md-sesionpaq', f:'2026-10-21', t:'Marcar la sesión de un paquete',
      x:'Cuando vuelve un paciente con paquete: en Nueva atención escribí su nombre y en «¿Esta visita es una sesión de un plan?» elegí el paquete. Se marca la sesión que sigue y se usa lo que ya pagó. También se puede desde su ficha con «Marcar realizada». Hay un video de 1 minuto.', ayuda:/sesión de un paquete/},
+    {id:'md-vincular', f:'2026-10-21', t:'Sesiones que no quedaron marcadas',
+     x:'Si un plan dice que falta una sesión que ya se hizo: abrí la ficha del paciente. Si la visita se guardó con el plan elegido, aparece «✓ Marcar sus sesiones». Si se cargó como visita suelta, tocá «🔗 Ya se hizo en una visita» y elegí esa visita. No cambia lo cobrado ni la caja.', ayuda:/ya se hizo/},
     {id:'md-calpar', f:'2026-10-21', t:'El calendario sin citas encimadas',
      x:'En 📅 Agenda › El calendario, dos citas con poca diferencia de hora ahora van una al lado de la otra en vez de taparse. Las rojas siguen siendo las que se pisan con la misma doctora.'});
   ASIS_AYUDA.push(
@@ -14478,6 +14572,8 @@ function mdLinksVideo(){
      p:['Entrá a 📅 Agenda y tocá «＋ Agendar cita»: se abre al costado.','Elegí el día y la doctora: abajo aparecen los horarios; los tachados ya están tomados.','Tocá un horario libre y completá paciente, celular y por dónde agendó.','El botón dice el día y la hora: tocalo y listo.']},
     {q:'¿Dónde están los videos de ayuda?', k:'video videos ayuda tutorial aprender como se carga mirar ver', v:'atencion', f:'#md-vid-at',
      p:['En ＋ Nueva atención, arriba: «▶ ¿Primera vez? Mirá cómo se carga».','En la ventana de 🦷 Planes de cada paciente: el video del paquete, el de marcar sus sesiones y el del tratamiento por etapas.','En mis respuestas de cómo cargar una atención, un paquete o un plan: «▶ Ver el video».','Cada video dura un minuto y se puede pausar.']},
+    {q:'El plan dice que falta una sesión que ya se hizo, ¿cómo lo arreglo?', k:'sesion ya se hizo no quedo marcada plan paquete dice primera sesion falta marcar visita suelta arreglar vincular', v:'pacientes', f:'#pc-q',
+     p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Si la visita se guardó con el plan elegido, en el plan sale «⚠ visitas cargadas con este plan»: tocá «✓ Marcar sus sesiones».','Si se cargó como visita suelta, tocá «🔗 Ya se hizo en una visita» y elegí la visita de ese día.','No cambia lo cobrado ni la caja: lo pagado por adelantado queda usado en esa sesión.']},
     {q:'¿Cómo marco la sesión de un paquete cuando el paciente vuelve?', k:'marcar sesion paquete vuelve segunda tercera realizada blanqueamiento plan adelanto pagado', v:'atencion', f:'#wrap-plan',
      p:['Entrá a ＋ Nueva atención y escribí el nombre del paciente.','Aparece «¿Esta visita es una sesión de un plan?»: elegí el paquete.','Abajo dice qué sesión se marca y si ya está pagada (se usa lo que dejó adelantado).','Tocá «Guardar atención». Otra forma: lupa → su ficha → «Marcar realizada».']});
 })();
