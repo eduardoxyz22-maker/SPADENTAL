@@ -1848,6 +1848,16 @@ body.md-ag-on{overflow:hidden}
 body.rol-pauta #md-barra{display:none!important}
 @media(max-width:700px){.md-pt-r{grid-template-columns:24px 34px minmax(0,1fr) 80px}.md-pt-r .md-pt-bb,.md-pt-r .md-pt-wa{display:none}.md-pt-pod{grid-template-columns:1fr}}
 .md-cmp-acc{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.md-pt-clic{cursor:pointer}
+.md-pt-t tr.md-pt-clic:hover td{background:rgba(0,0,0,.035)}
+.md-pt-t u,.md-pt-f u{text-decoration:underline dotted;text-underline-offset:3px}
+.md-pt-f.md-pt-clic:hover{background:rgba(0,0,0,.035);border-radius:8px}
+.md-pt-nota{margin:-4px 0 12px;padding:8px 12px;border-radius:10px;background:#FFF6DC;color:#6B5310}
+.md-pt-q{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto;margin-top:10px}
+.md-pt-qr{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid rgba(0,0,0,.08);border-radius:10px}
+.md-pt-qr small{display:block;color:#6b6b6b;margin-top:1px}
+.md-pt-qv{font-weight:700;white-space:nowrap}
+.md-pt-qr .md-pt-wa{padding:0 12px}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -15028,59 +15038,88 @@ function mdPautaCohortes(n){
     P.ats.push(r); P.cob[ym]=(P.cob[ym]||0)+num(r.acuenta)-usoSaldoDe(r)});
   var lista=Object.keys(pac).map(function(k){var P=pac[k]; if(!P.ats.length)return null;
     P.ats.sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.hora||'').localeCompare(b.hora||'')});
-    var r0=P.ats[0]; P.ym=r0.fecha.slice(0,7); P.red=mdRedOrigen(r0.canal); P.nombre=r0.paciente;
+    var r0=P.ats[0]; P.ym=r0.fecha.slice(0,7); P.nombre=r0.paciente;
+    /* si su primera visita en el panel no es «Nuevo», ya era paciente de antes: no cuenta como pauta */
+    P.pre=!!r0.tipo&&r0.tipo!=='Nuevo'; P.red=P.pre?'Ya era paciente':mdRedOrigen(r0.canal); P.srv=mdPrincipal([r0]);
     var tr=P.ats.filter(function(r){return (r.servicios||[]).some(function(x){return x.nom&&!mdEsConsulta(x.nom)})})[0];
     P.dias=tr?Math.max(0,diasEntre(r0.fecha,tr.fecha)):null;
     P.volvio=P.ats.length>1; return P}).filter(Boolean);
   var celdas={};
-  lista.forEach(function(P){if(meses.indexOf(P.ym)<0)return;
+  lista.forEach(function(P){if(P.pre||meses.indexOf(P.ym)<0)return;
     var key=P.ym+'|'+P.red, c=celdas[key]=celdas[key]||{ym:P.ym,red:P.red,n:0,m:[0,0,0],tot:0,vol:0,trat:0,dias:[],pacs:[]};
     c.n++; c.pacs.push(P); if(P.volvio)c.vol++; if(P.dias!==null){c.trat++; c.dias.push(P.dias)}
     for(var j=0;j<3;j++)c.m[j]+=P.cob[mdYm(P.ym,j)]||0;
     Object.keys(P.cob).forEach(function(ym){if(ym>=P.ym)c.tot+=P.cob[ym]})});
   /* los que volvieron el último mes, según por dónde habían llegado */
   var antiguos={};
-  lista.forEach(function(P){if(P.ym>=mesAct)return; var v=P.cob[mesAct]||0, vino=P.ats.some(function(r){return r.fecha.slice(0,7)===mesAct}); if(!vino)return;
-    var key=P.red+'|'+P.ym, a=antiguos[key]=antiguos[key]||{red:P.red,ym:P.ym,n:0,bs:0}; a.n++; a.bs+=v});
-  return {meses:meses,mesAct:mesAct,lista:lista,celdas:celdas,antiguos:Object.keys(antiguos).map(function(k){return antiguos[k]}).sort(function(a,b){return b.bs-a.bs})}}
+  lista.forEach(function(P){if(!P.pre&&P.ym>=mesAct)return; var vino=P.ats.some(function(r){return r.fecha.slice(0,7)===mesAct}); if(!vino)return;
+    var v=P.cob[mesAct]||0, ym=P.pre?'':P.ym, key=P.red+'|'+ym, a=antiguos[key]=antiguos[key]||{red:P.red,ym:ym,n:0,bs:0,pacs:[]}; a.n++; a.bs+=v; a.pacs.push(P)});
+  /* desde qué mes hay datos en el panel */
+  var primer=lista.reduce(function(m,P){return !m||P.ats[0].fecha<m?P.ats[0].fecha:m},'').slice(0,7);
+  return {meses:meses,mesAct:mesAct,lista:lista,celdas:celdas,primerMes:primer,antiguos:Object.keys(antiguos).map(function(k){return antiguos[k]}).sort(function(a,b){return b.bs-a.bs})}}
+/* servicio principal de unas visitas (el más caro que no sea la consulta) */
+function mdPrincipal(vs){var lin=[]; vs.forEach(function(r){(r.servicios||[]).forEach(function(x){if(x.nom)lin.push(x)})});
+  var sinC=lin.filter(function(x){return !mdEsConsulta(x.nom)}), pr=(sinC.length?sinC:lin).slice().sort(function(a,b){return montoLinea(b)-montoLinea(a)})[0];
+  return pr?mdLindo(mdSrvBase(pr.nom)):''}
+function mdDiasTxt(d){return d===0?'el mismo día':d===1?'1 día':d+' días'}
+/* tocar una fila de la pauta: quiénes son (filtro: '' todos, 'vol' los que volvieron, 'trat' los que se hicieron tratamiento) */
+function mdPautaQuienes(ym,red,filtro){
+  var C=mdPautaCohortes(MD_PT_N), c, tit, ant=ym==='ant';
+  if(ant){c=C.antiguos.filter(function(a){return a.red===red&&a.ym===filtro})[0]; if(!c)return;
+    tit='🔁 Volvieron en '+mdMesNom(C.mesAct)+' · '+(red==='Ya era paciente'?'ya eran pacientes antes del panel':red+' de '+mdMesNom(filtro)); filtro=''}
+  else{c=C.celdas[ym+'|'+red]; if(!c)return; tit=red+' · llegaron en '+mdMesNom(ym)+(filtro==='vol'?' · los que volvieron':filtro==='trat'?' · los que se hicieron tratamiento':'')}
+  var L=c.pacs.filter(function(P){return filtro==='vol'?P.volvio:filtro==='trat'?P.dias!==null:true});
+  var tot=function(P){return ant?(P.cob[C.mesAct]||0):Object.keys(P.cob).filter(function(m){return m>=P.ym}).reduce(function(a,m){return a+P.cob[m]},0)};
+  L.sort(function(a,b){return tot(b)-tot(a)});
+  var f=function(d){return d?d.slice(8,10)+'/'+d.slice(5,7):''};
+  openModal('<h3>'+esc(tit)+'</h3><p class="mini">'+L.length+' paciente'+(L.length===1?'':'s')+' · ordenados por lo que dejaron'+(ant?' este mes':'')+'</p><div class="md-pt-q">'+L.map(function(P){
+    var fechas=P.ats.map(function(r){return f(r.fecha)});
+    return '<div class="md-pt-qr"><div><b>'+esc(P.nombre)+'</b><small>'+(P.srv?esc(P.srv)+' · ':'')+P.ats.length+' visita'+(P.ats.length===1?'':'s')+': '+esc(fechas.join(', '))+'</small>'+
+      '<div class="md-pt-chs">'+(P.volvio?'<span class="md-pt-ch" style="--c:#2F6FA8">volvió</span>':'<span class="md-pt-ch gris">vino una vez</span>')+(P.dias!==null?'<span class="md-pt-ch" style="--c:#2E7D5B">tratamiento '+esc(P.dias?mdDiasTxt(P.dias)+' después':'el mismo día')+'</span>':'')+'</div></div>'+
+      '<span class="md-pt-qv">'+esc(bs(Math.round(tot(P))))+'</span>'+(P.cel?'<a class="md-pt-wa" target="_blank" rel="noopener" href="'+waLink(P.cel,'Hola '+String(P.nombre).split(' ')[0]+'! 👋')+'">WhatsApp</a>':'<span></span>')+'</div>'}).join('')+'</div>'+
+    '<div class="row" style="margin-top:12px"><button type="button" class="btn ghost" onclick="closeModal()">Cerrar</button></div>')}
 function mdColRed(red){return MD_CANAL_COL[mdCanalTipo(red)]||'#B9B3A6'}
 function renderPautaTab(){
   var box=$('#pauta-box'); if(!box)return;
   if(ROL!=='pauta'){box.innerHTML=''; return}
   var n=MD_PT_N, C=mdPautaCohortes(n), cel=C.celdas, nom=function(ym){return mdMesNom(ym)};
   var rango=n===1?mesLabel(C.mesAct):(nom(C.meses[0])+' a '+mesLabel(C.mesAct));
+  var sinHist=!!C.primerMes&&C.meses[0]<C.primerMes, mesesV=C.meses.filter(function(ym){return !C.primerMes||ym>=C.primerMes});
+  if(sinHist)rango=mesesV.length>1?nom(mesesV[0])+' a '+mesLabel(C.mesAct):mesLabel(C.mesAct);
   var chips='<div class="md-pt-sel">'+[[1,'Último mes'],[3,'Últimos 3 meses'],[6,'Últimos 6 meses']].map(function(x){
     return '<button type="button" class="'+(x[0]===n?'on':'')+'" onclick="MD_PT_N='+x[0]+';renderPautaTab()">'+x[1]+'</button>'}).join('')+
-    '<button type="button" class="md-pt-csv" onclick="mdPautaCsv()">⬇ Descargar para Excel</button></div>';
+    '<button type="button" class="md-pt-csv" onclick="mdPautaCsv()">⬇ Descargar para Excel</button></div>'+
+    (sinHist?'<p class="mini md-pt-nota">El panel tiene datos desde '+esc(mesLabel(C.primerMes))+': antes no hay nada cargado, por eso el rango llega solo hasta ahí.</p>':'');
   var todas=Object.keys(cel).map(function(k){return cel[k]});
-  var mejor=todas.filter(function(c){return c.n>=2&&c.red!=='Sin dato'}).sort(function(a,b){return b.tot-a.tot})[0];
+  var mejor=todas.filter(function(c){return c.n>=2&&mdPautable(c.red)}).sort(function(a,b){return b.tot-a.tot})[0];
   var rec=mejor?(function(){var desp=mejor.tot-mejor.m[0], pc=mejor.tot>0?Math.round(desp/mejor.tot*100):0, md=mdMediana(mejor.dias);
       return '<div class="md-pa-rec"><small>LA PAUTA QUE MÁS RINDIÓ · '+esc(rango.toUpperCase())+'</small><h3>'+esc(mejor.red)+' de '+esc(nom(mejor.ym))+': '+mejor.n+' nuevos que ya dejaron '+bs(Math.round(mejor.tot))+'</h3><ul>'+
         (pc>0?'<li>El '+pc+'% llegó después del primer mes, cuando volvieron.</li>':'<li>Todo lo dejaron el mes que llegaron.</li>')+
-        (md!==null?'<li>Los que se hicieron un tratamiento tardaron '+md+' día'+(md===1?'':'s')+' desde la primera visita (mediana).</li>':'')+
+        (md!==null?(md===0?'<li>Los que se hicieron un tratamiento se lo hicieron el mismo día de la primera visita (mediana).</li>':'<li>Los que se hicieron un tratamiento tardaron '+mdDiasTxt(md)+' desde la primera visita (mediana).</li>'):'')+
         '<li>'+mejor.vol+' de '+mejor.n+' volvieron.</li></ul></div>'})()
-    :'<div class="md-pa-rec"><small>TODAVÍA POCOS DATOS</small><h3>Hacen falta 2 o más pacientes nuevos por red y mes</h3><ul><li>Cargá «¿Por dónde nos encontró?» en cada atención.</li></ul></div>';
+    :'<div class="md-pa-rec"><small>TODAVÍA POCOS DATOS</small><h3>Hacen falta 2 o más pacientes nuevos por red de pauta y mes</h3><ul><li>Cargá «¿Por dónde nos encontró?» en cada atención.</li></ul></div>';
   var maxT=Math.max.apply(null,todas.map(function(c){return c.tot}).concat([1]));
   var filas='';
-  C.meses.slice().reverse().forEach(function(ym){
+  mesesV.slice().reverse().forEach(function(ym){
     var cs=todas.filter(function(c){return c.ym===ym}).sort(function(a,b){return b.tot-a.tot});
     filas+='<tr class="md-pt-mes"><td colspan="9">LLEGARON EN '+esc(mesLabel(ym).toUpperCase())+(cs.length?'':' · nadie todavía')+'</td></tr>';
     cs.forEach(function(c){
       var fut=function(j){return mdYm(ym,j)>C.mesAct}, md=mdMediana(c.dias), w=function(v){return (v/maxT*100).toFixed(1)+'%'};
-      filas+='<tr><td><span class="md-pt-red"><i style="background:'+mdColRed(c.red)+'"></i>'+esc(c.red)+'</span></td><td>'+c.n+'</td>'+
+      var ab=function(fl){return ' onclick="event.stopPropagation();mdPautaQuienes(\''+ym+'\',\''+jss(c.red)+'\',\''+fl+'\')"'};
+      filas+='<tr class="md-pt-clic" title="Tocá para ver quiénes son"'+ab('')+'><td><span class="md-pt-red"><i style="background:'+mdColRed(c.red)+'"></i>'+esc(c.red)+'</span></td><td><u>'+c.n+'</u></td>'+
         [0,1,2].map(function(j){return '<td class="md-pt-m'+j+'">'+(fut(j)?'—':esc(bs(Math.round(c.m[j]))))+'</td>'}).join('')+
-        '<td class="md-pt-tot">'+esc(bs(Math.round(c.tot)))+'</td><td>'+c.vol+' de '+c.n+'</td><td>'+c.trat+' de '+c.n+(md!==null?'<small>en '+md+' días</small>':'')+'</td>'+
+        '<td class="md-pt-tot">'+esc(bs(Math.round(c.tot)))+'</td><td'+(c.vol?ab('vol'):'')+'>'+(c.vol?'<u>'+c.vol+' de '+c.n+'</u>':c.vol+' de '+c.n)+'</td><td'+(c.trat?ab('trat'):'')+'>'+(c.trat?'<u>'+c.trat+' de '+c.n+'</u>':c.trat+' de '+c.n)+(md!==null?'<small>'+esc(md===0?'el mismo día':'en '+mdDiasTxt(md))+'</small>':'')+'</td>'+
         '<td><div class="md-pt-bar"><i style="width:'+w(c.m[0])+';background:#2E7D5B"></i><i style="width:'+w(c.m[1])+';background:#2F6FA8"></i><i style="width:'+w(c.m[2])+';background:#7F5DB8"></i></div></td></tr>'})});
   var tabla='<div class="md-pa-mx"><table class="md-pt-t"><tr><th>Red por la que llegó</th><th>Nuevos</th><th>Su 1er mes</th><th>2º mes</th><th>3er mes</th><th>Total</th><th>Volvieron</th><th>Hicieron tratamiento</th><th></th></tr>'+filas+'</table></div>'+
-    '<div class="md-pa-ley"><span><i style="background:#2E7D5B"></i>el mes que llegaron</span><span><i style="background:#2F6FA8"></i>el mes siguiente</span><span><i style="background:#7F5DB8"></i>dos meses después</span><span>Total: lo que dejaron desde que llegaron (cobrado más lo adelantado). «Hicieron tratamiento»: algo más que la consulta.</span></div>';
+    '<div class="md-pa-ley"><span><i style="background:#2E7D5B"></i>el mes que llegaron</span><span><i style="background:#2F6FA8"></i>el mes siguiente</span><span><i style="background:#7F5DB8"></i>dos meses después</span><span>Total: lo que dejaron desde que llegaron (cobrado más lo adelantado). «Hicieron tratamiento»: algo más que la consulta. Solo cuenta a los que llegaron como paciente nuevo. Tocá una fila para ver quiénes son.</span></div>';
   var mxA=Math.max.apply(null,C.antiguos.map(function(a){return a.bs}).concat([1])), totA=C.antiguos.reduce(function(a,x){return a+x.bs},0), nA=C.antiguos.reduce(function(a,x){return a+x.n},0);
   var ant='<div class="md-pt-cj"><h4>🔁 Los que volvieron en '+esc(nom(C.mesAct))+': ¿por dónde habían llegado?</h4>'+
-    (C.antiguos.length?C.antiguos.slice(0,8).map(function(a){return '<div class="md-pt-f"><span class="md-pt-red"><i style="background:'+mdColRed(a.red)+'"></i>'+esc(a.red)+' · '+esc(nom(a.ym))+'</span><div class="md-pt-bar"><i style="width:'+(a.bs/mxA*100).toFixed(0)+'%;background:'+mdColRed(a.red)+'"></i></div><b>'+esc(bs(Math.round(a.bs)))+'</b></div>'}).join('')+
+    (C.antiguos.length?C.antiguos.slice(0,8).map(function(a){return '<div class="md-pt-f md-pt-clic" title="Tocá para ver quiénes son" onclick="mdPautaQuienes(\'ant\',\''+jss(a.red)+'\',\''+a.ym+'\')"><span class="md-pt-red"><i style="background:'+mdColRed(a.red)+'"></i>'+esc(a.red==='Ya era paciente'?'Ya eran pacientes antes del panel':a.red+' · '+nom(a.ym))+' <u>('+a.n+')</u></span><div class="md-pt-bar"><i style="width:'+(a.bs/mxA*100).toFixed(0)+'%;background:'+mdColRed(a.red)+'"></i></div><b>'+esc(bs(Math.round(a.bs)))+'</b></div>'}).join('')+
       '<p class="mini">'+nA+' pacientes que ya habían venido volvieron y dejaron '+esc(bs(Math.round(totA)))+'.</p>':'<p class="mini">Nadie volvió todavía este mes.</p>')+'</div>';
   var porRed={}; todas.forEach(function(c){(porRed[c.red]=porRed[c.red]||[]).push.apply(porRed[c.red],c.dias)});
   var reds=Object.keys(porRed).filter(function(r){return porRed[r].length}).map(function(r){return {r:r,d:mdMediana(porRed[r]),n:porRed[r].length}}).sort(function(a,b){return a.d-b.d});
   var mxD=Math.max.apply(null,reds.map(function(x){return x.d}).concat([1]));
-  var tarda='<div class="md-pt-cj"><h4>⏱ Cuánto tardan en hacerse el tratamiento</h4>'+(reds.length?reds.map(function(x){return '<div class="md-pt-f"><span class="md-pt-red"><i style="background:'+mdColRed(x.r)+'"></i>'+esc(x.r)+'</span><div class="md-pt-bar"><i style="width:'+Math.max(4,x.d/mxD*100).toFixed(0)+'%;background:'+mdColRed(x.r)+'"></i></div><b>'+x.d+' días</b></div>'}).join('')+
+  var tarda='<div class="md-pt-cj"><h4>⏱ Cuánto tardan en hacerse el tratamiento</h4>'+(reds.length?reds.map(function(x){return '<div class="md-pt-f"><span class="md-pt-red"><i style="background:'+mdColRed(x.r)+'"></i>'+esc(x.r)+'</span><div class="md-pt-bar"><i style="width:'+Math.max(4,x.d/mxD*100).toFixed(0)+'%;background:'+mdColRed(x.r)+'"></i></div><b>'+esc(mdDiasTxt(x.d))+'</b></div>'}).join('')+
     '<p class="mini">Desde la primera visita hasta el primer tratamiento (mediana de los que ya se lo hicieron).</p>':'<p class="mini">Todavía nadie se hizo un tratamiento después de la consulta.</p>')+'</div>';
   /* los que más dejan en el rango, con la red y el mes por los que llegaron */
   var desde=C.meses[0]+'-01', fact={};
@@ -15091,7 +15130,7 @@ function renderPautaTab(){
     fact[P.k]={P:P,tot:tot,vis:vs.length,srv:pr?mdLindo(mdSrvBase(pr.nom)):''}});
   var top=Object.keys(fact).map(function(k){return fact[k]}).sort(function(a,b){return b.tot-a.tot}).slice(0,15);
   var ini=function(t){return String(t||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0)}).join('').toUpperCase()};
-  var chip=function(x){return '<span class="md-pt-ch" style="--c:'+mdColRed(x.P.red)+'">'+esc(x.P.red)+(x.P.red!=='Sin dato'?' · '+esc(nom(x.P.ym)):'')+'</span>'+(x.srv?'<span class="md-pt-ch gris">'+esc(x.srv)+'</span>':'')};
+  var chip=function(x){return '<span class="md-pt-ch" style="--c:'+mdColRed(x.P.red)+'">'+esc(x.P.red)+(x.P.red!=='Sin dato'&&!x.P.pre?' · '+esc(nom(x.P.ym)):'')+'</span>'+(x.srv?'<span class="md-pt-ch gris">'+esc(x.srv)+'</span>':'')};
   var wa=function(x){return x.P.cel?'<a class="md-pt-wa" target="_blank" rel="noopener" href="'+waLink(x.P.cel,'Hola '+String(x.P.nombre).split(' ')[0]+'! 👋')+'">WhatsApp</a>':''};
   var pod=top.length>=3?'<div class="md-pt-pod">'+[1,0,2].map(function(i){var x=top[i];
       return '<div class="md-pt-pd'+(i===0?' o1':'')+'"><span class="md-pt-med m'+i+'">'+(i+1)+'</span><span class="md-fc-av">'+esc(ini(x.P.nombre))+'</span><b>'+esc(x.P.nombre)+'</b><div class="md-pt-v">'+esc(bs(Math.round(x.tot)))+'</div><small>'+x.vis+' visita'+(x.vis===1?'':'s')+' · '+esc(bs(Math.round(x.tot/x.vis)))+' por visita</small><div class="md-pt-chs">'+chip(x)+'</div></div>'}).join('')+'</div>':'';
@@ -15125,7 +15164,7 @@ function mdPautaCsv(){
   Object.keys(C.celdas).map(function(k){return C.celdas[k]}).sort(function(a,b){return a.ym.localeCompare(b.ym)||b.tot-a.tot}).forEach(function(c){
     L.push([mesLabel(c.ym),c.red,c.n,Math.round(c.m[0]),mdYm(c.ym,1)>C.mesAct?'':Math.round(c.m[1]),mdYm(c.ym,2)>C.mesAct?'':Math.round(c.m[2]),Math.round(c.tot),c.vol,c.trat,mdMediana(c.dias)])});
   L.push([]); L.push(['Paciente','Llegó en','Red','Visitas','Total que dejó (cobrado)']);
-  C.lista.filter(function(P){return C.meses.indexOf(P.ym)>=0}).forEach(function(P){
+  C.lista.filter(function(P){return !P.pre&&C.meses.indexOf(P.ym)>=0}).forEach(function(P){
     L.push([P.nombre,mesLabel(P.ym),P.red,P.ats.length,Math.round(Object.keys(P.cob).filter(function(ym){return ym>=P.ym}).reduce(function(a,ym){return a+P.cob[ym]},0))])});
   var csv='﻿'+L.map(function(r){return r.map(q).join(';')}).join('\n');
   var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
@@ -15160,6 +15199,8 @@ function mdSrvBase(nom){return String(nom||'').split(' · ')[0].split('(')[0].re
 function mdSrvClave(nom){var t=asisSinTildes(mdSrvBase(nom)).replace(/[^a-z0-9ñ ]/g,' ').trim().split(/\s+/); return t[0]||'otro'}
 function mdEsConsulta(nom){return /consulta|valoraci|control|diagnost/.test(asisSinTildes(nom))}
 function mdLindo(t){t=String(t||''); return t===t.toUpperCase()&&t.length>3?t.charAt(0)+t.slice(1).toLowerCase():t}
+/* las redes en las que se puede poner plata (referidos, antiguos o el local no) */
+function mdPautable(red){return ['fb','ig','tt','go'].indexOf(mdCanalTipo(red||''))>=0}
 function mdPautaDatos(filas,origen){
   var rows=filas||periodoRows(), nuevos=nuevosDelPeriodo(rows), porPac={};
   rows.forEach(function(r){var k=keyPac(r.paciente); if(!k||!nuevos[k]||r.estado!=='Atendido')return; (porPac[k]=porPac[k]||[]).push(r)});
@@ -15187,23 +15228,27 @@ function mdPauta(){
   var box=$('#md-pauta');
   if(!esAdmin()){if(box)box.remove(); return}
   if(!box){box=document.createElement('div'); box.id='md-pauta'; box.className='card md-pauta'; meta.parentNode.insertBefore(box,meta.nextSibling)}
-  var D=MD_PAUTA=mdPautaDatos(), cel=D.cel, nom=function(s){return D.nomSrv[s]||s};
+  /* «Paciente antiguo» no es una red: un nuevo cargado así queda como «Sin dato» */
+  var D=MD_PAUTA=mdPautaDatos(null,true), cel=D.cel, nom=function(s){return D.nomSrv[s]||s};
   var mesAct=$('#p-rango').value==='mes'&&$('#p-mes').value===hoyISO().slice(0,7);
   var periodo=$('#p-rango').value==='mes'?mesLabel($('#p-mes').value):($('#p-rango').value==='anio'?'el año '+$('#p-anio').value:'todo el tiempo');
   if(!D.pacs.length){box.innerHTML='<h2>📣 Pauta por servicio</h2><p class="hint">Todavía no hay pacientes nuevos atendidos en '+esc(periodo)+'. Cuando haya, acá vas a ver qué servicio trae cada red.</p>'; return}
-  /* la recomendación: la casilla con al menos 2 pacientes que más dejó */
+  /* la recomendación: la casilla con al menos 2 pacientes que más dejó, solo en redes que se pueden pautar */
   var lista=Object.keys(cel).map(function(k){return cel[k]}).filter(function(c){return c.canal!=='Sin dato'&&c.srv!=='sin servicio'});
-  var mejor=lista.filter(function(c){return c.n>=2}).sort(function(a,b){return b.bs-a.bs||b.n-a.n})[0];
+  var porBs=function(a,b){return b.bs-a.bs||b.n-a.n};
+  var mejor=lista.filter(function(c){return c.n>=2&&mdPautable(c.canal)}).sort(porBs)[0];
+  var gratis=lista.filter(function(c){return c.n>=2&&!mdPautable(c.canal)&&/referid/i.test(c.canal)}).sort(porBs)[0];
   var rec;
   if(mejor){
-    var otros=lista.filter(function(c){return c.srv===mejor.srv&&c.canal!==mejor.canal}).sort(function(a,b){return b.n-a.n})[0];
+    var otros=lista.filter(function(c){return c.srv===mejor.srv&&c.canal!==mejor.canal&&mdPautable(c.canal)}).sort(function(a,b){return b.n-a.n})[0];
     rec='<div class="md-pa-rec"><small>'+(mesAct?'ESTA SEMANA CONVIENE':'EN '+esc(periodo.toUpperCase())+' RINDIÓ MÁS')+'</small>'+
       '<h3>'+(mesAct?'Pautar ':'')+esc(nom(mejor.srv))+' en '+esc(mejor.canal)+'</h3><ul>'+
-      '<li>Trajo '+mejor.n+' pacientes nuevos'+(otros?' ('+esc(otros.canal)+', '+otros.n+')':'')+' en '+esc(periodo)+'.</li>'+
+      '<li>'+esc(mejor.canal)+' trajo '+mejor.n+' pacientes nuevos de '+esc(nom(mejor.srv))+' en '+esc(periodo)+(otros?' ('+esc(otros.canal)+' trajo '+otros.n+')':'')+'.</li>'+
       '<li>Dejaron '+bs(mejor.bs)+' en total: '+bs(Math.round(mejor.bs/mejor.n))+' por paciente.</li>'+
-      (mejor.vuelven?'<li>'+mejor.vuelven+' de los '+mejor.n+' ya volvieron.</li>':'')+'</ul>'+
+      (mejor.vuelven?'<li>'+mejor.vuelven+' de los '+mejor.n+' ya volvieron.</li>':'')+
+      (gratis&&gratis.bs>mejor.bs?'<li>Los referidos de '+esc(nom(gratis.srv))+' dejaron más ('+bs(gratis.bs)+'), pero eso no se pauta: conviene pedirle a cada paciente contento que traiga a alguien.</li>':'')+'</ul>'+
       '<button type="button" class="btn sm" onclick="mdPautaVer(\''+jss(mejor.srv)+'\',\''+jss(mejor.canal)+'\')">Ver '+(mejor.n===1?'el paciente':'los '+mejor.n+' pacientes')+'</button></div>'}
-  else rec='<div class="md-pa-rec"><small>TODAVÍA POCOS DATOS</small><h3>Hacen falta más pacientes nuevos para recomendar</h3><ul><li>Hay '+D.pacs.length+' nuevo'+(D.pacs.length===1?'':'s')+' en '+esc(periodo)+'. Con 2 o más por servicio y red aparece la recomendación.</li></ul></div>';
+  else rec='<div class="md-pa-rec"><small>TODAVÍA POCOS DATOS</small><h3>Hacen falta más pacientes nuevos de la pauta para recomendar</h3><ul><li>Hay '+D.pacs.length+' nuevo'+(D.pacs.length===1?'':'s')+' en '+esc(periodo)+'. Con 2 o más por servicio en Facebook, Instagram, TikTok o Google aparece la recomendación.</li></ul></div>';
   /* la tabla */
   var max=0; lista.concat(Object.keys(cel).map(function(k){return cel[k]})).forEach(function(c){max=Math.max(max,c.bs)});
   var mejorFila={}; D.srvs.forEach(function(s){var m=null; D.canales.forEach(function(c){var x=cel[s+'|'+c]; if(x&&(!m||x.bs>m.bs))m=x}); if(m)mejorFila[s]=m.canal});
@@ -15215,7 +15260,7 @@ function mdPauta(){
       return '<td><button type="button" class="md-pa-c '+h+(mejorFila[s]===c&&D.canales.length>1?' top':'')+'" onclick="mdPautaVer(\''+jss(s)+'\',\''+jss(c)+'\')" title="Ver los pacientes"><b>'+x.n+'</b><span>'+esc(bs(Math.round(x.bs)))+'</span></button></td>'}).join('')+'</tr>'}).join('');
   /* conclusiones */
   var tips=[];
-  D.canales.filter(function(c){return c!=='Sin dato'}).slice(0,2).forEach(function(c){
+  D.canales.filter(mdPautable).slice(0,2).forEach(function(c){
     var cs=lista.filter(function(x){return x.canal===c}).sort(function(a,b){return b.n-a.n||b.bs-a.bs}), t=cs[0]; if(!t)return;
     var tot=cs.reduce(function(a,x){return a+x.bs},0), n=cs.reduce(function(a,x){return a+x.n},0);
     tips.push('<div class="md-pa-tip"><b>'+esc(c)+' trae '+esc(nom(t.srv).toLowerCase())+'</b>'+t.n+' de sus '+n+' pacientes nuevos vinieron por eso. Dejan '+bs(Math.round(tot/(n||1)))+' en promedio.</div>')});
@@ -15292,6 +15337,8 @@ function mdPautaVer(srv,canal){
      x:'Al abrir una atención o cita, arriba dice qué pasó (atendida, no vino, canceló) y abajo su recorrido: cuándo agendó, si se movió, cómo pagó. Si no vino, ya tenés el WhatsApp armado y el botón «Reagendar».'},
     {id:'md-fotos', f:'2026-10-22', t:'Fotos del antes y del después',
      x:'En la ficha de cada paciente hay una sección «📸 Fotos»: sacá la foto del antes el primer día y la del después al terminar, y quedan juntas para comparar con una barra. Se guardan en el Google Drive de la clínica. Desde la foto la podés mandar al paciente o marcar si autorizó usarla en publicidad.', ayuda:/foto del antes/},
+    {id:'md-fotos-mandar', f:'2026-10-23', t:'Mandar el antes y después al paciente',
+     x:'Debajo de la comparación de 📸 Fotos está «📤 Mandar el antes y después»: arma una sola imagen con las dos fotos, la fecha de cada una, el tratamiento y el nombre de la clínica. En el celular o el iPad se abre para mandarla por WhatsApp; en la compu se descarga y se abre el chat del paciente para adjuntarla.', ayuda:/foto del antes/},
     {id:'md-pauta', f:'2026-10-22', t:'Dónde conviene poner la pauta',
      x:'En 📊 Panel, arriba, «Pauta por servicio»: qué servicio trae cada red y cuánto dejaron esos pacientes, con una recomendación para la semana. Tocá una casilla para ver los pacientes.', si:function(){return esAdmin()}},
     {id:'md-calpar', f:'2026-10-21', t:'El calendario sin citas encimadas',
@@ -15329,8 +15376,8 @@ function mdPautaVer(srv,canal){
      p:['En ＋ Nueva atención, arriba: «▶ ¿Primera vez? Mirá cómo se carga».','En la ventana de 🦷 Planes de cada paciente: el video del paquete, el de marcar sus sesiones y el del tratamiento por etapas.','En mis respuestas de cómo cargar una atención, un paquete o un plan: «▶ Ver el video».','Cada video dura un minuto y se puede pausar.']},
     {q:'El plan dice que falta una sesión que ya se hizo, ¿cómo lo arreglo?', k:'sesion ya se hizo no quedo marcada plan paquete dice primera sesion falta marcar visita suelta arreglar vincular', v:'pacientes', f:'#pc-q',
      p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Si la visita se guardó con el plan elegido, en el plan sale «⚠ visitas cargadas con este plan»: tocá «✓ Marcar sus sesiones».','Si se cargó como visita suelta, tocá «🔗 Ya se hizo en una visita» y elegí la visita de ese día.','Si el plan es de una sola etapa pero se hizo en varias citas, tocá «🧩 Se hizo en varias visitas» y marcá cada visita.','No cambia lo cobrado ni la caja: lo pagado por adelantado queda usado en esa sesión.']},
-    {q:'¿Cómo saco la foto del antes y del después?', k:'foto fotos antes despues camara galeria comparar blanqueamiento sonrisa resultado publicidad', v:'pacientes', f:'#pc-q',
-     p:['Abrí la ficha del paciente (lupa o 👥 Pacientes) y bajá hasta «📸 Fotos».','Tocá «📷 Sacar foto» (en el celular o el iPad abre la cámara) o «⬆ Subir de la galería».','Elegí si es Antes, Durante o Después y el tratamiento (el mismo en el antes y en el después), y tocá «Guardar foto».','Con un antes y un después del mismo tratamiento aparece la comparación: deslizá la barra. Tocá una foto para mandarla, descargarla o marcar si autorizó usarla en publicidad.']},
+    {q:'¿Cómo saco la foto del antes y del después?', k:'foto fotos antes despues camara galeria comparar blanqueamiento sonrisa resultado publicidad mandar enviar whatsapp cliente', v:'pacientes', f:'#pc-q',
+     p:['Abrí la ficha del paciente (lupa o 👥 Pacientes) y bajá hasta «📸 Fotos».','Tocá «📷 Sacar foto» (en el celular o el iPad abre la cámara) o «⬆ Subir de la galería».','Elegí si es Antes, Durante o Después y el tratamiento (el mismo en el antes y en el después), y tocá «Guardar foto».','Con un antes y un después del mismo tratamiento aparece la comparación: deslizá la barra. Para mandarle el resultado al paciente, tocá «📤 Mandar el antes y después»: va en una sola imagen con las dos fotos y el nombre de la clínica.','Tocá una foto para mandarla sola, descargarla o marcar si autorizó usarla en publicidad.']},
     {q:'¿Cómo atiendo rápido a mi próximo paciente?', k:'proximo paciente atender rapido todo cargado repetir ultima vez sesion paquete mi dia', v:'midia', f:'#md-prox',
      p:['Entrá a 🏠 Mi día: arriba está tu próximo paciente con sus alergias y lo que le toca.','Tocá «▶ Atender: todo ya cargado»: se abre la atención con el paciente, la cita y la sesión de su plan.','Para un control, «↻ Repetir lo de la última vez» copia los servicios de la visita anterior.','Revisá y tocá «Guardar atención».']},
     {q:'¿En qué red conviene poner la pauta?', k:'pauta publicidad facebook instagram tiktok red servicio conviene invertir anuncios', v:'panel', f:'#md-pauta', solo:'adm',

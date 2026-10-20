@@ -29,7 +29,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   /* la dueña carga tres meses: Facebook de agosto y septiembre que vuelven, Instagram de octubre, y uno de antes */
   const D = await abrir('pa-duena-1');
   await D.evaluate(() => {
-    let i = 0; const at = (pac, fecha, canal, srv, tot) => { const r = normalize({ id: uid(), fecha, hora: '10:00', paciente: pac, profesional: 'Dra. Mirna', estado: 'Atendido', tipo: 'Nuevo', canal, origen: 'Espontánea', celular: '7004' + (i++),
+    let i = 0; const at = (pac, fecha, canal, srv, tot, tipo) => { const r = normalize({ id: uid(), fecha, hora: '10:00', paciente: pac, profesional: 'Dra. Mirna', estado: 'Atendido', tipo: tipo || 'Nuevo', canal, origen: 'Espontánea', celular: '7004' + (i++),
       servicios: srv, total: tot, acuenta: tot, saldo: 0, metodo: 'QR', pagos: tot ? [{ metodo: 'QR', monto: tot }] : [], ts: new Date().toISOString() }); DATA.push(r); queue('save', r, null); };
     const C = n => CFG.canales.find(c => new RegExp(n, 'i').test(c)) || n;
     const cons = [{ nom: 'Consulta / Valoración', cant: 1, precio: 150 }], blq = [{ nom: 'Blanqueamiento dental · 3 sesiones', cant: 1, precio: 700 }], lim = [{ nom: 'Limpieza dental', cant: 1, precio: 150 }];
@@ -39,9 +39,18 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
     at('Fb Ago Uno', '2026-08-10', C('face'), cons, 150); at('Fb Ago Uno', '2026-09-01', C('antig'), lim, 150); at('Fb Ago Uno', '2026-10-15', C('antig'), lim, 150);
     at('Ig Oct Uno', '2026-10-03', C('insta'), blq, 700); at('Ig Oct Dos', '2026-10-09', C('insta'), cons, 150);
     at('Viejo Antes', '2026-05-02', C('antig'), lim, 150); at('Viejo Antes', '2026-10-11', C('antig'), lim, 150);
+    /* octubre: dos referidos que dejan mucho y dos de Facebook (los referidos no se pautan) */
+    const consR = [{ nom: 'Consulta / Valoración', cant: 1, precio: 1500 }];
+    at('Ref Oct Uno', '2026-10-04', C('referid'), consR, 1500); at('Ref Oct Dos', '2026-10-06', C('referid'), consR, 1500);
+    at('Fb Oct Uno', '2026-10-05', C('face'), cons, 150); at('Fb Oct Dos', '2026-10-07', C('face'), cons, 150);
+    /* ya era paciente antes del panel: su primera visita cargada no es «Nuevo» */
+    at('Ya Era Antes', '2026-09-15', C('antig'), lim, 150, 'Recurrente'); at('Ya Era Antes', '2026-10-12', C('antig'), lim, 150, 'Recurrente');
     saveLocal(); return flushQueue(); });
   await D.waitForTimeout(1500);
   OK('la dueña no ve la pestaña Pauta', !(await D.locator('#nav-pauta').isVisible()));
+  await D.evaluate(() => show('panel')); await D.waitForTimeout(800);
+  const rp = await D.locator('#md-pauta .md-pa-rec').innerText();
+  OK('el Panel recomienda pautar en una red de pauta, no en Referido', /Pautar Consulta \/ Valoración en Facebook/i.test(rp) && /referidos .*no se pauta/i.test(rp), rp.slice(0, 200));
   await D.evaluate(() => show('pauta')); await D.waitForTimeout(300);
   OK('y si la pide, va a Mi día', await D.evaluate(() => $('#v-midia').classList.contains('on') && !$('#v-pauta').classList.contains('on')));
   await D.context().close();
@@ -55,7 +64,22 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('reporte: llegaron en septiembre por Facebook, 3 nuevos', /LLEGARON EN SEPTIEMBRE/.test(txt) && await P.evaluate(() => { const c = mdPautaCohortes(3).celdas['2026-09|' + (CFG.canales.find(c => /face/i.test(c)) || 'Facebook')]; return c && c.n === 3 && c.m[0] === 450 && c.m[1] === 1400 && c.tot === 1850 && c.vol === 2; }));
   OK('la pauta que más rindió: Facebook de septiembre', /Facebook de septiembre: 3 nuevos que ya dejaron Bs 1[.,]?850/.test(txt), txt.slice(0, 300));
   OK('los que volvieron en octubre, por dónde habían llegado', /volvieron en octubre/.test(txt) && /Facebook · septiembre/.test(txt) && /Facebook · agosto/.test(txt) && /Sin dato · mayo/.test(txt));
-  OK('cuánto tardan en hacerse el tratamiento', /Cuánto tardan/.test(txt));
+  OK('cuánto tardan en hacerse el tratamiento', /Cuánto tardan/.test(txt) && /el mismo día/.test(txt));
+  OK('el que ya era paciente no cuenta como nuevo de la pauta', await P.evaluate(() => { const C = mdPautaCohortes(3); return !Object.keys(C.celdas).some(k => C.celdas[k].pacs.some(p => p.nombre === 'Ya Era Antes')) && !C.celdas['2026-09|Sin dato']; }));
+  OK('pero aparece entre los que volvieron, como paciente de antes', /Ya eran pacientes antes del panel/.test(txt));
+  await P.locator('#pauta-box tr.md-pt-clic[onclick*="2026-09"]', { hasText: 'Facebook' }).locator('td').first().click(); await P.waitForTimeout(300);
+  let m = await P.locator('#modal').innerText();
+  OK('tocar la fila muestra quiénes son', /llegaron en septiembre/.test(m) && /Fb Sep Uno/.test(m) && /Fb Sep Dos/.test(m) && /Fb Sep Tres/.test(m), m.slice(0, 120));
+  await P.evaluate(() => closeModal());
+  await P.locator('#pauta-box tr.md-pt-clic[onclick*="2026-09"]', { hasText: 'Facebook' }).locator('td', { hasText: '2 de 3' }).click(); await P.waitForTimeout(300);
+  m = await P.locator('#modal').innerText();
+  OK('tocar «2 de 3 volvieron» muestra solo los que volvieron', /los que volvieron/.test(m) && /Fb Sep Uno/.test(m) && /Fb Sep Dos/.test(m) && !/Fb Sep Tres/.test(m), m.slice(0, 160));
+  await P.evaluate(() => closeModal());
+  await P.locator('#pauta-box .md-pt-f.md-pt-clic', { hasText: 'Ya eran pacientes' }).click(); await P.waitForTimeout(300);
+  m = await P.locator('#modal').innerText();
+  OK('y los que volvieron este mes también se pueden ver', /Ya Era Antes/.test(m));
+  await P.evaluate(() => closeModal());
+  OK('si el rango pasa de lo cargado, avisa desde cuándo hay datos', await P.evaluate(() => { MD_PT_N = 12; renderPautaTab(); const t = $('#pauta-box').innerText; MD_PT_N = 3; renderPautaTab(); return /datos desde mayo/i.test(t) && !/LLEGARON EN ABRIL/.test(t); }));
   OK('los que más dejan con podio y red de llegada', await P.locator('#pauta-box .md-pt-pod .md-pt-pd').count() === 3 && /Los que más dejan/.test(txt));
   OK('y la tabla por servicio', await P.locator('#md-pauta-tab .md-pa-c').count() > 0);
   await P.locator('.md-pt-sel button', { hasText: 'Últimos 6 meses' }).click(); await P.waitForTimeout(300);
