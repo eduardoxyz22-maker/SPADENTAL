@@ -8985,19 +8985,21 @@ function pagoAlPlan(nombre,planId,n){
    Formulario corto: paciente, plan, etapa y precio ya vienen cargados.
    Si hay una cita agendada para ese día, se usa esa (no se duplica). */
 var AT_PLAN=null;
-var AT_PLAN_OTRA=false, AT_PLAN_FRESCO=false;
+var AT_PLAN_OTRA=false, AT_PLAN_N=0;
 function atencionDePlan(nombre,planId,n){
   if(bloqueaAjeno(nombre))return;
   var p=planesDe(nombre).filter(function(x){return x.id===planId})[0]; if(!p)return;
   if(!planVisible(p)){noEsTuya();return}
   var s=(p.sesiones||[]).filter(function(x){return x.n===n})[0]; if(!s)return;
   if(s.hecha){toast('Esa etapa ya está hecha'+(s.fecha?' (visita del '+fmtF(s.fecha)+')':''),1);verPlan(nombre,planId);return}
-  /* otra pantalla pudo marcarla hace un rato: antes de abrir se trae lo último de la hoja */
-  if(CONNECTED&&!AT_PLAN_FRESCO&&!refrescando){
-    AT_PLAN_FRESCO=true; toast('Un momento, reviso la hoja…');
-    refrescarSiCorresponde(true).then(function(){atencionDePlan(nombre,planId,n)},function(){atencionDePlan(nombre,planId,n)}).then(function(){AT_PLAN_FRESCO=false},function(){AT_PLAN_FRESCO=false});
-    return}
-  AT_PLAN_FRESCO=false;
+  /* otra pantalla pudo marcarla hace un rato: se abre igual, pero por detrás se
+     trae lo último de la hoja y, si ya estaba hecha, se cierra y avisa */
+  if(CONNECTED&&!refrescando&&ultimoPull>0&&Date.now()-ultimoPull>5000){
+    var yo=++AT_PLAN_N;
+    refrescarSiCorresponde(true).then(function(){
+      if(AT_PLAN_N!==yo||!AT_PLAN||AT_PLAN.planId!==planId||AT_PLAN.n!==n||AT_PLAN.guardando)return;
+      var p2=planesDe(nombre).filter(function(x){return x.id===planId})[0], s2=p2&&(p2.sesiones||[]).filter(function(x){return x.n===n})[0];
+      if(s2&&s2.hecha){AT_PLAN=null; toast('Esa etapa ya está hecha'+(s2.fecha?' (visita del '+fmtF(s2.fecha)+')':'')+': la marcó otra pantalla hace un rato',1); verPlan(nombre,planId)}}).catch(function(){})}
   /* hay una atención de este paciente a medio cargar: casi siempre la sesión es
      esa misma visita (si no, quedaban dos atenciones del mismo día) */
   if(!EDIT_ID&&!AT_PLAN_OTRA&&desdeLaAtencion(nombre)&&formEnUso()&&$('#f-plan').value!==planId){
@@ -9744,12 +9746,11 @@ function sesionPaqueteForm(){
   var nombre=$('#f-paciente').value.trim();
   if(!nombre){toast('Primero escribí el nombre del paciente',1);return}
   if(bloqueaAjeno(nombre))return;
-  /* otra pantalla pudo marcar una sesión hace un rato: se trae lo último de la hoja antes de decir cuál toca */
-  if(CONNECTED&&!SPF_FRESCO&&!refrescando&&planesActivos(nombre).length){
-    SPF_FRESCO=true; toast('Un momento, reviso la hoja…');
-    refrescarSiCorresponde(true).then(function(){sesionPaqueteForm()},function(){sesionPaqueteForm()}).then(function(){SPF_FRESCO=false},function(){SPF_FRESCO=false});
-    return}
-  SPF_FRESCO=false;
+  /* otra pantalla pudo marcar una sesión hace un rato: se muestra ya, y por
+     detrás se trae lo último de la hoja; si cambió algo, se vuelve a pintar */
+  if(CONNECTED&&!SPF_FRESCO&&!refrescando&&ultimoPull>0&&Date.now()-ultimoPull>5000&&planesActivos(nombre).length){
+    SPF_FRESCO=true;
+    refrescarSiCorresponde(true).then(function(){SPF_FRESCO=false; if($('#spf-h3')&&keyPac($('#f-paciente').value)===keyPac(nombre))sesionPaqueteForm()},function(){SPF_FRESCO=false})}
   var nj=jss(nombre), ps=planesActivos(nombre), sel=$('#f-plan').value;
   var lista=ps.map(function(p){var s=sesionQueToca(p,EDIT_ID), a=avancePlan(p);
     var fav=s&&num(s.precio)>0&&!s.aparte?Math.min(num(s.precio),Math.max(0,creditoPara(nombre,p.id))):0;
@@ -9761,7 +9762,7 @@ function sesionPaqueteForm(){
       '<div class="row-btn" style="margin-top:8px">'+
         (s&&sel!==p.id?'<button class="btn sm" onclick="closeModal();elegirPlanEnForm(\''+p.id+'\')">✓ Hoy es esta sesión</button>':'')+
         '<button class="btn sec sm" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Ver el plan</button></div></div>'}).join('');
-  openModal('<h3>📦 Sesión de un paquete o plan</h3><p class="mini">'+esc(nombre)+'</p>'+
+  openModal('<h3 id="spf-h3">📦 Sesión de un paquete o plan</h3><p class="mini">'+esc(nombre)+'</p>'+
     (ps.length?'<label style="display:block;margin-top:10px">Ya tiene</label>'+lista:'<div class="empty" style="margin-top:10px">No tiene ningún paquete ni plan en curso.</div>')+
     (sel?'<div class="row-btn" style="margin-top:8px"><button class="btn sec sm" onclick="closeModal();elegirPlanEnForm(\'\')">Esta visita NO es una sesión (quitar)</button></div>':'')+
     (EDIT_ID?'':(function(){var pq=paquetesTipo(); if(!pq.length)return ''; return '<label style="display:block;margin-top:14px">Venderle un paquete nuevo hoy</label><div class="row-btn" style="margin-top:4px">'+

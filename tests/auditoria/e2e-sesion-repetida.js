@@ -53,7 +53,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('A marcó la sesión 2 (visita de hace 14 días)', JSON.stringify((await plan(A)).ses.map(x => x[1])) === '[true,true,false,false]' && (await plan(A)).cola === 0, await plan(A));
   OK('B todavía no se enteró (pantalla sin refrescar)', JSON.stringify((await plan(B)).ses.map(x => x[1])) === '[true,false,false,false]');
   /* B intenta marcar la sesión 2 otra vez: antes de abrir se trae lo último y la rechaza */
-  await B.evaluate((n) => { const p = planesDe(n)[0]; atencionDePlan(n, p.id, 2); }, PAC); await B.waitForTimeout(2500);
+  await B.evaluate((n) => { ultimoPull = Date.now() - 10000; const p = planesDe(n)[0]; atencionDePlan(n, p.id, 2); }, PAC); await B.waitForTimeout(2500);
   const tB = await B.evaluate(() => TOASTS.slice(-3));
   OK('B: «Esa etapa ya está hecha (visita del …)» y no abre la ventana', tB.some(t => /ya está hecha \(visita del/.test(t)) && await B.locator('#ap-ok').count() === 0, tB);
   OK('B ya ve la sesión 2 hecha', JSON.stringify((await plan(B)).ses.map(x => x[1])) === '[true,true,false,false]');
@@ -61,7 +61,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   /* el botón de Servicios también se actualiza antes de decir qué sesión toca */
   await B.click('nav button[data-v="atencion"]'); await B.evaluate(() => clearForm());
   await B.fill('#f-prof', 'Dra. Mirna'); await B.fill('#f-paciente', PAC); await B.dispatchEvent('#f-paciente', 'change'); await B.waitForTimeout(500);
-  await B.click('#btn-paq-srv'); await B.waitForTimeout(2500);
+  await B.evaluate(() => { ultimoPull = Date.now() - 10000; }); await B.click('#btn-paq-srv'); await B.waitForTimeout(2500);
   OK('B: «📦 Sesión de un paquete o plan» dice que hoy sería la sesión 3', /Hoy sería: HAIR LOSS CONTROL · sesión 3/.test(await B.locator('#modal').innerText()), (await B.locator('#modal').innerText()).slice(0, 200));
   await B.evaluate(() => closeModal());
   /* y si igual llega una sesión repetida (pantalla vieja, sin conexión en ese momento), el servidor la rechaza */
