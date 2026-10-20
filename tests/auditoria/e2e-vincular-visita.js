@@ -43,7 +43,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
       at(-5, [{ nom: 'Blanqueamiento dental · 1 sesión', det: '2da sesion', cant: 1, precio: 0 }], 0, [], conPlan ? pl.id : '');
       at(-4, [{ nom: 'Consulta / Valoración', det: 'BLANQUEAMIENTO SESION 3/3', cant: 1, precio: 0 }], 0, [], conPlan ? pl.id : '');
     };
-    caso('Paciente Vincular A', true); caso('Paciente Vincular B', false); caso('Paciente Vincular C', false);
+    caso('Paciente Vincular A', true); caso('Paciente Vincular B', false); caso('Paciente Vincular C', false); caso('Paciente Vincular D', true);
     saveLocal(); return flushQueue();
   });
   await D.waitForTimeout(1500); await D.context().close();
@@ -91,10 +91,31 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('C la caja no cambió', e1.caja === e0.caja && e1.cola === 0, [e0.caja, e1.caja]);
   await P.evaluate(() => closeModal());
 
-  /* otro equipo ve lo mismo (quedó en la hoja) */
+  /* D, el caso real: pagó 850 (150 consulta + 700 del blanqueamiento) y los 700 quedaron anotados dos veces.
+     La dueña borra el «Pago al plan» repetido y vincula la visita del primer día a la etapa. */
   const D2 = await abrir('vv-duena-1');
-  const otra = await D2.evaluate(() => ['Paciente Vincular A', 'Paciente Vincular B', 'Paciente Vincular C'].map(n => { const p = planesDe(n)[0]; return [avancePlan(p).hechas, p.estado, creditoLibre(n)]; }));
-  OK('en la hoja (otro equipo) se ve igual', JSON.stringify(otra) === JSON.stringify([[1, 'terminado', 0], [1, 'terminado', 0], [1, 'terminado', 700]]), otra);
+  const est2 = (pac) => D2.evaluate((n) => { const p = planesDe(n)[0];
+    return { h: avancePlan(p).hechas, est: p.estado, pagado: cobradoPlan(p), falta: saldoPlan(p), queda: cuentasPlan(p).queda, favor: creditoLibre(n),
+      caja: DATA.filter(r => r.paciente === n).reduce((a, r) => a + num(r.acuenta) - usoSaldoDe(r), 0), cola: pend().length }; }, pac);
+  const d0 = await est2('Paciente Vincular D');
+  OK('D antes: la caja suma 1550 (700 dos veces)', d0.caja === 1550, d0);
+  await D2.evaluate((n) => verPaciente(n), 'Paciente Vincular D'); await D2.waitForTimeout(500);
+  await D2.locator('#modal button', { hasText: /Borrar/ }).first().click(); await D2.waitForTimeout(1500);
+  const d1 = await est2('Paciente Vincular D');
+  OK('D sin el pago repetido: caja 850', d1.caja === 850 && d1.cola === 0, d1);
+  await D2.evaluate((n) => verPaciente(n), 'Paciente Vincular D'); await D2.waitForTimeout(500);
+  await D2.locator('#modal button', { hasText: /Ya se hizo en una visita/ }).first().click(); await D2.waitForTimeout(400);
+  const primera = await D2.locator('#modal').innerText();
+  OK('D la lista arranca por la visita del primer día (850)', /850/.test(primera.split('Es esta')[0]), primera.slice(0, 300));
+  await D2.locator('#modal button', { hasText: /^Es esta$/ }).first().click(); await D2.waitForTimeout(1500);
+  const d2 = await est2('Paciente Vincular D');
+  OK('D 1/1 terminado, pagado 700 dentro de la atención, sin saldo a favor', d2.h === 1 && d2.est === 'terminado' && d2.pagado === 700 && d2.falta === 0 && d2.queda === 0 && d2.favor === 0, d2);
+  OK('D la caja sigue en 850', d2.caja === 850 && d2.cola === 0, d2);
+  await D2.context().close();
+  /* otro equipo ve lo mismo (quedó en la hoja) */
+  const D3 = await abrir('vv-duena-1');
+  const otra = await D3.evaluate(() => ['Paciente Vincular A', 'Paciente Vincular B', 'Paciente Vincular C', 'Paciente Vincular D'].map(n => { const p = planesDe(n)[0]; return [avancePlan(p).hechas, p.estado, creditoLibre(n), cobradoPlan(p)]; }));
+  OK('en la hoja (otro equipo) se ve igual', JSON.stringify(otra) === JSON.stringify([[1, 'terminado', 0, 700], [1, 'terminado', 0, 700], [1, 'terminado', 700, 1400], [1, 'terminado', 0, 700]]), otra);
   OK('sin errores de página ni red real', !errs.length && !red.length, errs.concat(red).slice(0, 3));
   await b.close();
   console.log(fallas ? 'FALLAS: ' + fallas : 'TODO OK');
