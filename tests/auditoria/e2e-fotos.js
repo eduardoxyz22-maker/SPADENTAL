@@ -75,6 +75,21 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   await P.locator('#modal button', { hasText: /^Borrar$/ }).click(); await P.waitForTimeout(1500);
   const arch = server.drive.archivos[Object.keys(server.drive.archivos).find(k => server.ctx.getSheetFotos()._rows.slice(1).some(r => r[0] === idA && r[6] === k))];
   OK('borrada: a la papelera de Drive y marcada en la hoja', !!filas(server)[1][11] && arch && arch.trashed === true && await P.locator('#md-fotos .md-foto-th').count() === 1);
+  /* un «antes» con otro tratamiento escrito: igual se arma la comparación */
+  await P.evaluate(() => verPaciente('Foto Prueba')); await P.waitForTimeout(800);
+  await subir(P, 'Foto Prueba', '#d9c27a'); await P.waitForTimeout(1500);
+  await P.evaluate(() => { setRadio('fttipo', 'antes'); $('#ft-trat').value = 'Rinomodelación'; $('#ft-fecha').value = addDias(hoyISO(), -5); });
+  await P.click('#ft-ok'); await P.waitForTimeout(2000);
+  OK('con tratamientos distintos igual compara el antes y el después', await P.locator('#md-cmp img').count() === 2);
+  /* cambiar el tipo desde la foto y comparar a mano */
+  const ids = await P.evaluate(() => (MD_FOTOS[keyPac('Foto Prueba')] || []).map(f => f.id));
+  await P.evaluate((id) => mdFotoTipo('Foto Prueba', id, 'durante'), ids[0]); await P.waitForTimeout(1200);
+  OK('cambiar el tipo lo guarda en la hoja', filas(server).some(r => String(r[0]) === ids[0] && r[3] === 'durante'));
+  await P.evaluate(([a, b]) => mdFotoPar('Foto Prueba', a, b), ids); await P.waitForTimeout(1200);
+  OK('«Comparar con otra» arma la comparación elegida', await P.locator('#md-cmp img').count() === 2);
+  await P.evaluate((id) => mdFotoAbrir('Foto Prueba', id), ids[0]); await P.waitForTimeout(800);
+  await P.fill('#fv-trat', 'Rinomodelación con ácido'); await P.locator('#modal .md-foto-trat button').click(); await P.waitForTimeout(1200);
+  OK('corregir el tratamiento desde la foto lo guarda en la hoja', filas(server).some(r => String(r[0]) === ids[0] && r[4] === 'Rinomodelación con ácido') && /Rinomodelación con ácido/.test(await P.locator('#modal .mini').first().innerText()));
   /* permisos: la doctora no ve las fotos de pacientes de otra doctora */
   if (SPA) {
     const otra = await P.evaluate(() => api('fotos', null, undefined, undefined, { consulta: { paciente: 'Otra Doctora' } }));
