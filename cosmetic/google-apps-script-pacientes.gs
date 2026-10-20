@@ -619,16 +619,33 @@ function doSave(r, base, ses) {
         var previa = registroDeFila(sh.getRange(ya, 1, 1, COLS.length).getValues()[0]);
         var junta = fusionRegistro(null, separada, previa, []);
         junta.id = separada.id; junta.nroDia = previa.nroDia;
+        /* el reintento tampoco puede volver a gastar saldo a favor que ya no está */
+        var favJ = favorDeSrv(junta), favPv = favorDeSrv(previa), ajusteJ = 0;
+        if (favJ > favPv + 0.009) {
+          var faltaJ = fR((favJ - favPv) - Math.max(0, creditoPacienteSrv(fClavePac(junta.paciente), junta.planId)));
+          if (faltaJ > 0.009) { ajusteJ = fR(Math.min(faltaJ, favJ - favPv)); junta = recortarFavor(junta, ajusteJ); }
+        }
         sh.getRange(ya, 1, 1, COLS.length).setValues([filaDeRegistro(junta)]);
-        return { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(junta)), conflictos: ['profesional'] };
+        var outJ = { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(junta)), conflictos: ['profesional'] };
+        if (ajusteJ) outJ.ajusteFavor = ajusteJ;
+        return outJ;
       }
       separada.citaDe = r.id;
       separada.obs = String(separada.obs || '') + (separada.obs ? '\n' : '') +
         '⚠ Separada: la misma cita la atendió también ' + actual.profesional + '. Revisar.';
       separada.nroDia = Math.max(cuantas, maxNro) + 1;
       delete separada.correccionesCobro;
+      /* la visita separada también usa saldo a favor: se controla igual que
+         cualquier otra (la de la primera doctora ya está guardada y contada) */
+      var ajusteSep = 0, favSep = favorDeSrv(separada);
+      if (favSep > 0.009) {
+        var faltaSep = fR(favSep - Math.max(0, creditoPacienteSrv(fClavePac(separada.paciente), separada.planId)));
+        if (faltaSep > 0.009) { ajusteSep = fR(Math.min(faltaSep, favSep)); separada = recortarFavor(separada, ajusteSep); }
+      }
       sh.appendRow(filaDeRegistro(separada));
-      return { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(separada)), conflictos: ['profesional'] };
+      var outSep = { ok: true, registro: actual, separada: registroDeFila(filaDeRegistro(separada)), conflictos: ['profesional'] };
+      if (ajusteSep) outSep.ajusteFavor = ajusteSep;
+      return outSep;
     }
     r = fusionRegistro(b0, r, actual, conf);
   }
@@ -648,7 +665,7 @@ function doSave(r, base, ses) {
   if (r.estado !== 'Anticipo') {
     var favN = favorDeSrv(r), favP = previa0 ? favorDeSrv(previa0) : 0;
     if (favN > favP + 0.009) {
-      var falta = fR((favN - favP) - Math.max(0, creditoPacienteSrv(fClavePac(r.paciente))));
+      var falta = fR((favN - favP) - Math.max(0, creditoPacienteSrv(fClavePac(r.paciente), r.planId)));
       if (falta > 0.009) { ajusteFavor = fR(Math.min(falta, favN - favP)); r = recortarFavor(r, ajusteFavor); }
     }
   }
@@ -761,7 +778,7 @@ function doDelete(r, base, ses) {
       if (ses && ses.rol === 'doctora' && actual.estado !== 'Anticipo' && efectivoCobrado(actual) > 0.009)
         return { ok: false, error: 'sin_permiso', registro: actual };
       /* un anticipo (o pago a un plan) que ya se usó como saldo a favor no se borra: el saldo quedaría negativo */
-      if (actual.estado === 'Anticipo' && creditoPacienteSrv(fClavePac(actual.paciente)) - (Number(actual.acuenta) || 0) < -0.009)
+      if (actual.estado === 'Anticipo' && creditoPacienteSrv(fClavePac(actual.paciente), actual.planId) - (Number(actual.acuenta) || 0) < -0.009)
         return { ok: false, error: 'anticipo_usado', registro: actual };
       if (base) {
         if (fCambioParaBorrar(base, actual)) return { ok: false, error: 'cambio', registro: actual };
@@ -1177,7 +1194,7 @@ var ANTICIPO_DOCTORAS = false;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-24-sesion';
+var VERSION_SCRIPT = '2026-10-25-credito';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
@@ -1369,18 +1386,39 @@ function efectivoCobrado(r) {
 }
 /* Lo que le queda a favor a un paciente en total: lo que dejó (anticipos y
    pagos a planes) menos lo que usó con «Saldo a favor». */
-function creditoPacienteSrv(clave) {
-  var sh = getSheet(), n = sh.getLastRow(), t = 0;
-  if (n < 2 || !clave) return 0;
+/* El saldo a favor por bolsillos, como en el panel (creditosEn): lo pagado a
+   un plan es de ese plan y lo general es para cualquier atención. Una atención
+   de un plan puede usar lo de su plan más lo general; una suelta, solo lo
+   general. Lo de un plan que ya no está, y lo que pasa de su presupuesto,
+   queda libre. Así dos pantallas desactualizadas no gastan dos veces el mismo
+   adelanto ni el de otro plan. */
+function creditosSrv(clave) {
+  var sh = getSheet(), n = sh.getLastRow(), gen = 0, plan = {}, uso = {}, cobAt = {}, p;
+  if (n < 2 || !clave) return { general: 0, planes: {} };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0] || fClavePac(filas[i][6]) !== clave) continue;
     var r = registroDeFila(filas[i]);
-    if (r.estado === 'Anticipo') { t += Number(r.acuenta) || 0; continue; }
-    var ps = r.pagos || [];
-    for (var j = 0; j < ps.length; j++) if (ps[j] && ps[j].metodo === 'Saldo a favor') t -= Number(ps[j].monto) || 0;
+    if (r.estado === 'Anticipo') {
+      if (r.planId) plan[r.planId] = fR((plan[r.planId] || 0) + fNum(r.acuenta)); else gen = fR(gen + fNum(r.acuenta));
+      continue;
+    }
+    if (r.planId) cobAt[r.planId] = fR((cobAt[r.planId] || 0) + fNum(r.acuenta));
+    var f = favorDeSrv(r); if (!f) continue;
+    if (r.planId) uso[r.planId] = fR((uso[r.planId] || 0) + f); else gen = fR(gen - f);
   }
-  return Math.round(t * 100) / 100;
+  for (p in uso) { var q = fR((plan[p] || 0) - uso[p]); if (q < 0) { gen = fR(gen + q); q = 0; } plan[p] = q; }
+  var guardados = planesGuardados(clave), porId = {};
+  for (var k = 0; k < guardados.length; k++) if (guardados[k] && guardados[k].id) porId[guardados[k].id] = guardados[k];
+  for (p in plan) {
+    var pl = porId[p], libre = !pl ? plan[p] : Math.max(0, Math.min(plan[p], fR((plan[p] + (cobAt[p] || 0)) - fNum(pl.total))));
+    if (libre > 0.009) { plan[p] = fR(plan[p] - libre); gen = fR(gen + libre); }
+  }
+  return { general: fR(gen), planes: plan };
+}
+function creditoPacienteSrv(clave, planId) {
+  var c = creditosSrv(clave);
+  return fR(c.general + (planId ? (c.planes[planId] || 0) : 0));
 }
 function cobroBaja(prev, nuevo) {
   if ((Number(nuevo.acuenta) || 0) < (Number(prev.acuenta) || 0) - 0.009) return true;

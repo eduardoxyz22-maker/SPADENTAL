@@ -5222,7 +5222,7 @@ function guardarAtencion(){
     'Atención guardada ✅'+(alPlanF.length?' · '+bs(sumaPagos(alPlanF))+' quedaron como pago del plan':'')+(CONNECTED?' · subiendo a la nube (mirá el aviso de arriba)':''));
   if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
     :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
-  showWhatsappModal(rec,cita,favorUsado);
+  showWhatsappModal(rec,cita,favorUsado,sumaPagos(alPlanF));
   try{asisAlGuardar(rec)}catch(e){}
   try{paqueteDespuesDeGuardar(rec)}catch(e){}}
 
@@ -8584,16 +8584,26 @@ function nuevaParaPaciente(nombre){
   $('#f-nac').value=pacDe(nombre).nac||'';
   setRadio('tipo',rs?'Recurrente':'Nuevo'); refrescarFichaForm(''); show('atencion'); refreshNro()}
 
-function showWhatsappModal(r,cita,fav){
-  fav=num(fav); var quedaFav=fav>0?creditoLibre(r.paciente):0;
+function showWhatsappModal(r,cita,fav,alPlan){
+  fav=num(fav); alPlan=num(alPlan);
+  /* lo libre y lo reservado al plan son cosas distintas: no se mezclan en el mensaje */
+  var cr=creditosEn(DATA,r.paciente), quedaFav=num(cr.general), reservado=r.planId?num(cr.planes[r.planId]||0):0;
   var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Gracias por su visita a *'+clinica()+'*.\n\n';
   t+='📅 '+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+'\n';
   if((r.servicios||[]).length)t+='🦷 '+srvText(r)+'\n';
-  if(num(r.total)>0){t+='💵 Total: '+bs(r.total)+'\n';
-    if(num(r.acuenta)-fav>0.009)t+='✅ A cuenta: '+bs(num(r.acuenta)-fav)+'\n';
-    if(fav>0)t+='💜 Descontado de su saldo a favor: '+bs(fav)+'\n';
+  if(num(r.total)>0){
+    var cash=Math.round((num(r.acuenta)-fav)*100)/100;
+    if(alPlan>0.009){
+      /* el día de la venta del paquete: lo recibido entero, y cómo se repartió */
+      t+='💵 Recibido hoy: *'+bs(cash+alPlan)+'*\n';
+      t+='   · '+bs(cash)+' por lo de hoy ('+srvText(r)+' · total '+bs(r.total)+')\n';
+      t+='   · 💜 '+bs(alPlan)+' adelantados para sus próximas sesiones\n'}
+    else{t+='💵 Total: '+bs(r.total)+'\n';
+      if(cash>0.009)t+='✅ A cuenta: '+bs(cash)+'\n'}
+    if(fav>0)t+='💜 Descontado de su adelanto: '+bs(fav)+'\n';
     if(num(r.saldo)>0)t+='⏳ Saldo: '+bs(r.saldo)+'\n';
-    if(fav>0)t+='💜 Le queda a favor: '+bs(Math.max(0,quedaFav))+'\n'}
+    if(reservado>0.009)t+='💜 Reservado para su plan: '+bs(reservado)+'\n';
+    if((fav>0||alPlan>0)&&quedaFav>0.009)t+='💜 Saldo a favor libre: '+bs(quedaFav)+'\n'}
   if(r.prox)t+='\n📌 Próxima cita: *'+fmtF(r.prox)+'*'+(r.proxHora?' a las '+r.proxHora:'')+(r.proxMotivo?' ('+r.proxMotivo+')':'')+'\n';
   var aviso=cita?'<p class="mini" style="margin-top:6px">📅 Se agendó sola la cita del <b>'+fmtF(cita.fecha)+'</b>. Cuando llegue el día, marcá en <b>Recordatorios</b> si vino o no.</p>':'';
   t+='\nCualquier consulta estamos a la orden 🦷';
@@ -8604,8 +8614,8 @@ function showWhatsappModal(r,cita,fav){
     (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,t)+'">Abrir WhatsApp</a>':'')+
     '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
     '<button class="btn sec" onclick="closeModal()">Listo</button></div>'+
-    (fav>0?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Se descontaron '+bs(fav)+' del saldo a favor</div>'+
-      '<div class="meta">Le quedan '+bs(Math.max(0,quedaFav))+' a favor · '+
+    (fav>0?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Se descontaron '+bs(fav)+' de su adelanto</div>'+
+      '<div class="meta">'+(reservado>0.009?'Le quedan '+bs(reservado)+' reservados para su plan':'No le queda adelanto del plan')+(quedaFav>0.009?' y '+bs(quedaFav)+' libres':'')+' · '+
       (num(r.saldo)>0?'todavía debe <b>'+bs(r.saldo)+'</b>':'la atención quedó pagada')+'.</div></div></div>':'')+
     (function(){var cr=!fav&&esAtencion(r)&&num(r.saldo)>0?creditoPara(r.paciente,r.planId):0;
       return cr>0.009?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Tiene '+bs(cr)+' de saldo a favor</div>'+
@@ -9828,7 +9838,7 @@ function vpCambio(tocoPaga){
   if(tocoPaga)VP.paga=pg.value===''?null:num(pg.value);
   if(VP.paga===null)pg.value=vpTot()||'';
   var tot=vpTot(), cons=vpCons(), chips=[['Todo · '+bs(tot),tot]];
-  if(cons>0){chips.push(['Solo la consulta · '+bs(cons),cons]); chips.push(['Solo el paquete · '+bs(VP.tot),VP.tot])}
+  if(cons>0)chips.push(['Solo la consulta · '+bs(cons),cons]);
   chips.push(['Nada por ahora',0]);
   var paga=VP.paga===null?tot:num(VP.paga);
   $('#vp-chips').innerHTML=chips.map(function(x){return '<button type="button" class="btn sm '+(Math.abs(x[1]-paga)<0.009?'':'sec')+'" onclick="vpPaga('+x[1]+')">'+x[0]+'</button>'}).join('');
@@ -9863,17 +9873,15 @@ function vpOk(){
 function elegirPlanEnForm(id){
   var s=$('#f-plan'); if(!s)return;
   var nombre=$('#f-paciente').value.trim(), prev=planesDe(nombre).filter(function(x){return x.id===s.value})[0];
+  /* al cambiar de plan (o quitarlo), la línea que había entrado sola por el anterior se va; lo cargado a mano se queda */
+  if(prev&&prev.id!==id){readSrv(); var antes0=SRV.length; SRV=SRV.filter(function(x){return x.det!==prev.nombre});
+    if(SRV.length!==antes0){if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv(); recalcSaldo()}}
   if(id&&![].some.call(s.options,function(o){return o.value===id}))renderPlanSel(id);
   s.value=id||''; s.dispatchEvent(new Event('change',{bubbles:true}));
   if(id){var p=planesDe(nombre).filter(function(x){return x.id===id})[0], ses=p?sesionQueToca(p,EDIT_ID):null;
     toast(ses?'Listo: hoy es «'+(ses.desc||('sesión '+ses.n))+'» de '+p.nombre+'. Revisá y guardá ✅':'Plan elegido');
     var w=$('#wrap-plan'); if(w&&w.scrollIntoView)w.scrollIntoView({behavior:'smooth',block:'center'})}
-  else{
-    /* al quitar el plan, la línea de la sesión que había entrado sola también se va */
-    readSrv(); var antes=SRV.length;
-    if(prev)SRV=SRV.filter(function(x){return x.det!==prev.nombre});
-    if(SRV.length!==antes){if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv(); recalcSaldo()}
-    toast('Esta visita queda como visita suelta')}}
+  else toast('Esta visita queda como visita suelta')}
 function alElegirPlan(){
   planHint();
   var id=$('#f-plan').value; if(!id)return;
