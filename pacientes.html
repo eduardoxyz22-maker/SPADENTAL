@@ -1596,6 +1596,118 @@ input[type=date],input[type=month],input[type=time],input[type=datetime-local]{m
 @media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .md-spark-l{animation:none;stroke-dashoffset:0}body:not(.md-anim-siempre) .kpi.md-rk .md-rk-i,body:not(.md-anim-siempre) .md-pre-entra,body:not(.md-anim-siempre) .md-cb-lista{animation:none}}
 /* el emoji del principio de la forma de pago no es una tarjeta más */
 .seg.md-tiles span.md-emo{display:none!important}
+/* ============ RONDA 5 · Ajustes, Agenda, ventanas, buscador, Caja, resumen ============ */
+.md-oculto{display:none!important}
+/* 1 · Ajustes: menú a la izquierda y una sección por vez (en la compu) */
+@media(min-width:1000px){
+  #v-config.md-aj-modo .md-aj-lay{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start}
+  #v-config.md-aj-modo .md-aj-izq{position:sticky;top:calc(var(--md-hd,70px) + 12px)}
+  #v-config.md-aj-modo .md-aj-indice{display:flex;flex-direction:column;gap:8px;margin:0}
+  #v-config.md-aj-modo .md-aj-tile{cursor:pointer;padding:12px 14px;transition:box-shadow .2s,transform .15s}
+  #v-config.md-aj-modo .md-aj-tile:hover{transform:translateX(2px)}
+  #v-config.md-aj-modo .md-aj-tile.on{box-shadow:0 0 0 2px var(--lime-dk);background:var(--lime-sf)}
+  #v-config.md-aj-modo .md-aj-tile:not(.on) .md-aj-it{display:none}
+  #v-config.md-aj-modo .md-aj-grupo:not(.on){display:none!important}
+  .md-anim #v-config.md-aj-modo .md-aj-grupo.on{animation:mdDesdeDer .3s cubic-bezier(.2,.8,.2,1)}}
+.md-pre-bar{margin:4px 0 10px}
+.md-pre-top{display:flex;gap:10px;flex-wrap:wrap}
+.md-pre-top input{flex:1 1 260px;height:46px;border:2px solid var(--lime-bd);font-size:15px;padding-left:40px;
+  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23727865' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") no-repeat 13px 50%/17px}
+.md-pre-cats{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.md-pre-cats button{height:34px;border-radius:999px;border:1px solid var(--line);background:#fff;font:inherit;font-size:13px;font-weight:700;padding:0 12px;cursor:pointer;color:var(--ink)}
+.md-pre-cats button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.md-pre-cats em{font-style:normal;opacity:.7;font-size:11.5px;margin-left:3px}
+.md-pre-nuevo{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding:12px;border:1px dashed var(--lime-bd);border-radius:14px;background:var(--lime-sf)}
+.md-pre-nuevo select,.md-pre-nuevo input{flex:1 1 150px;width:auto}
+.md-pre-nuevo[hidden]{display:none}
+#c-precios mark{background:#F7E9A8;color:inherit;border-radius:3px;padding:0 1px}
+#c-precios td{position:relative}
+.md-pre-ok{position:absolute;right:-6px;top:50%;transform:translate(100%,-50%);font-size:11.5px;font-weight:800;color:#1F5E43;background:#DDF3E7;border-radius:999px;padding:3px 8px;white-space:nowrap;animation:mdTilde .3s ease both}
+/* 2 · Agenda */
+.md-mas{position:relative;display:inline-block}
+.md-mas>summary{list-style:none;cursor:pointer}.md-mas>summary::-webkit-details-marker{display:none}
+.md-mas[open]>summary{box-shadow:0 0 0 2px var(--ink)}
+.md-mas-m{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:200px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 22px 44px -18px rgba(0,0,0,.35);padding:6px;display:flex;flex-direction:column;gap:2px}
+.md-anim .md-mas[open] .md-mas-m{animation:mdCbAbre .16s ease-out}
+.md-mas-m .btn{justify-content:flex-start;border:0!important;background:transparent!important;box-shadow:none!important;width:100%}
+.md-mas-m .btn:hover{background:var(--paper)!important}
+.md-qfig{position:relative;padding-left:76px;min-height:64px}
+.md-qanillo{position:absolute;left:0;top:0;width:64px;height:64px}
+.md-anim .md-qanillo circle+circle{animation:mdQan 1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mdQan{from{stroke-dasharray:0 151}}
+#q-resumen-dia .fig.chico .n{font-weight:900}
+#md-ag-arriba{margin-left:auto}
+.md-ag-lugar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.md-ag-lugar .hint{margin:4px 0 0}
+.md-agendar{position:fixed;inset:0;z-index:57;pointer-events:none}
+.md-ag-velo{position:absolute;inset:0;background:rgba(20,22,16,.32);opacity:0;transition:opacity .25s}
+.md-ag-panel{position:absolute;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--paper);box-shadow:-24px 0 48px -24px rgba(0,0,0,.4);transform:translateX(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);overflow:auto;padding:14px}
+.md-agendar.on{pointer-events:auto}.md-agendar.on .md-ag-velo{opacity:1}.md-agendar.on .md-ag-panel{transform:none}
+.md-ag-x{position:sticky;top:0;float:right;z-index:2;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px;cursor:pointer;color:var(--gray)}
+.md-ag-cuerpo>.card{margin:0;box-shadow:none}
+.md-ag-cuerpo .grid{grid-template-columns:1fr 1fr!important}
+body.md-ag-on{overflow:hidden}
+.md-horas{margin:10px 0 4px}
+.md-horas-k{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--gray);text-transform:uppercase;margin-bottom:6px}
+.md-horas-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.md-horas-g button{height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink)}
+.md-horas-g button:hover{background:var(--lime-sf)}
+.md-horas-g button.oc{background:repeating-linear-gradient(45deg,#F1F2EC 0 5px,#FAFBF6 5px 10px);color:#6E7363;text-decoration:line-through}
+.md-horas-g button.paso{opacity:.55}
+.md-horas-g button.on{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+@media(max-width:760px){.md-ag-panel{width:100vw}.md-ag-cuerpo .grid{grid-template-columns:1fr!important}}
+/* 3 · ventanas */
+.modal-pie.md-oculto{display:none!important}
+.md-recibo{position:relative;background:var(--paper);border-radius:16px;padding:46px 16px 14px;margin:12px 0}
+.md-recibo::before,.md-recibo::after{content:'';position:absolute;left:0;right:0;height:9px;background:radial-gradient(circle at 6px -1px,#fff 6px,transparent 7px) 0 0/12px 9px repeat-x}
+.md-recibo::before{top:0}.md-recibo::after{bottom:0;transform:rotate(180deg)}
+.md-recibo h4{margin-top:4px!important}
+.md-recibo .mrow{border-bottom:1px dashed #DCDFD2}
+.md-sello{position:absolute;right:14px;top:12px;transform:rotate(-6deg);border:3px solid #2E7D5B;color:#2E7D5B;border-radius:10px;padding:3px 10px;font-weight:900;font-size:14px;letter-spacing:.1em}
+.md-sello.debe{border-color:#B4552F;color:#B4552F}
+.md-anim .md-sello{animation:mdSello .5s cubic-bezier(.2,.9,.3,1.4) both .15s}
+@keyframes mdSello{from{opacity:0;transform:rotate(-6deg) scale(1.8)}to{opacity:1;transform:rotate(-6deg) scale(1)}}
+.md-acc-recibo .btn.danger{margin-left:auto}
+.md-cp-grande{font-size:28px!important;font-weight:900;height:62px;letter-spacing:-.02em}
+#cp-seg.md-tiles{margin-top:6px}
+/* 4 · buscador */
+#bsq-res .rem{display:grid!important;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px}
+#bsq-res .rem>div:not(.acts){min-width:0}
+.md-bq-av{width:42px;height:42px;font-size:15px;flex:0 0 42px}
+#bsq-res .who mark{background:#F7E9A8;color:inherit;border-radius:3px;padding:0 1px}
+.md-bq-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.md-bq-chips span{font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--paper);color:var(--gray)}
+.md-bq-chips .mal{background:#FBE6DE;color:#8C3B1C}.md-bq-chips .info{background:#E2EEFA;color:#2F5F8A}.md-bq-chips .lila{background:#EDE7F7;color:#5B3F8C}
+#bsq-res .acts{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end;align-items:center}
+#bsq-res .acts .btn{white-space:nowrap}
+@media(max-width:640px){#bsq-res .rem{grid-template-columns:42px minmax(0,1fr)}#bsq-res .acts{grid-column:1/-1;flex-wrap:wrap}}
+#modal:has(#bsq-res){max-width:760px;width:100%}
+.md-bq-wa{background:#DDF3E7!important;color:#1F5E43!important;border-color:#BFE0CD!important}
+#bsq{height:52px;font-size:17px;border:2px solid var(--lime-bd)}
+/* 5 · Caja */
+#cj-kpis .kpi.md-cjk{border-top:4px solid var(--ic,var(--line))}
+.md-arq{margin:4px 0 14px}
+.md-arq-f{display:grid;grid-template-columns:52px minmax(0,1fr) 90px;gap:10px;align-items:center;font-size:13px;margin:6px 0}
+.md-arq-f span{font-weight:700}.md-arq-f b{text-align:right;font-variant-numeric:tabular-nums}
+.md-arq-b{display:flex;height:16px;border-radius:6px;overflow:hidden;background:#F1F2EC}
+.md-arq-b i{display:block;height:100%}.md-arq-b i.e,.md-arq-l i.e{background:#C27A0E}.md-arq-b i.o,.md-arq-l i.o{background:#2F6FA8}
+.md-anim .md-arq-b i{animation:mdCpCrece .9s cubic-bezier(.2,.8,.2,1) both;transform-origin:left}
+.md-arq-l{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--gray);margin-top:8px}
+.md-arq-l i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}.md-arq-n{margin-left:auto}
+.md-liq-n{display:flex;align-items:center;gap:10px}.md-liq-n .md-av{width:34px;height:34px;font-size:12px;flex:0 0 34px}
+.md-liq-b{width:160px;max-width:100%;height:8px;border-radius:5px;background:#ECEEE6;overflow:hidden;margin-top:4px}
+.md-liq-b i{display:block;height:100%;background:var(--lime-dk);border-radius:5px}
+/* 6 · WhatsApp como va a llegar */
+.md-wa-fuente{display:none!important}
+.md-wa-chat{border-radius:16px;overflow:hidden;border:1px solid var(--line);margin:10px 0}
+.md-wa-h{background:#075E54;color:#fff;display:flex;align-items:center;gap:10px;padding:9px 12px}
+.md-wa-h i{font-style:normal;width:32px;height:32px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center}
+.md-wa-h b{display:block;font-size:14px}.md-wa-h small{display:block;font-size:11.5px;opacity:.85}
+.md-wa-c{background:#EFE7DD;padding:14px;max-height:340px;overflow:auto}
+.md-wa-bur{max-width:92%;margin-left:auto;background:#DCF8C6;border-radius:12px 12px 4px 12px;padding:10px 12px;font-size:14px;line-height:1.5;color:#1F2A1F;box-shadow:0 1px 1px rgba(0,0,0,.12);word-wrap:break-word}
+.md-wa-bur small{display:block;text-align:right;font-size:11px;color:#4A5A4A;margin-top:4px}
+.md-anim .md-wa-bur{animation:mdPreEntra .5s cubic-bezier(.2,.9,.3,1.2) both}
+@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .md-sello,body:not(.md-anim-siempre) .md-arq-b i,body:not(.md-anim-siempre) .md-wa-bur,body:not(.md-anim-siempre) .md-qanillo circle{animation:none}}
 /* ===== MODERNO FIN ===== */
 </style>
 </head>
@@ -13959,6 +14071,256 @@ function mdReenganchar(){
     mdQ(document,'input,select,textarea,button').forEach(function(el){
       ['onchange','oninput','onclick'].forEach(function(p){if(el[p]===f)el[p]=function(){return window[n].apply(this,arguments)}})})})}
 
+/* =====================================================================
+   RONDA 5: Ajustes, Agenda, ventanas, buscador, Caja y resumen
+   ===================================================================== */
+/* ---------- 1 · Ajustes: una sección por vez (en la compu) y precios con buscador ---------- */
+function mdAjGrupos(){return mdQ(document,'#v-config .md-aj-grupo')}
+function mdAjVisible(g){return g&&g.style.display!=='none'&&mdQ(g,'.card').some(function(c){return getComputedStyle(c).display!=='none'})}
+function mdAjGrupo(id){
+  var v=$('#v-config'); if(!v||!$('#md-aj-lay'))return;
+  var gs=mdAjGrupos(), g=gs.filter(function(x){return x.id===id})[0];
+  if(!mdAjVisible(g))g=gs.filter(function(x){return x.id==='md-aj-trat'&&mdAjVisible(x)})[0]||gs.filter(mdAjVisible)[0];
+  if(!g)return;
+  gs.forEach(function(x){x.classList.toggle('on',x===g)});
+  mdQ(document,'#md-aj-indice .md-aj-tile').forEach(function(t){t.classList.toggle('on',t.getAttribute('data-g')===g.id)});
+  mdPref('AJ',g.id)}
+function mdAjDe(el){var g=el&&el.closest&&el.closest('.md-aj-grupo'); if(g&&!g.classList.contains('on'))mdAjGrupo(g.id)}
+function mdAjLayout(){
+  var v=$('#v-config'), idx=$('#md-aj-indice'); if(!v||!idx||$('#md-aj-lay'))return;
+  var lay=document.createElement('div'); lay.id='md-aj-lay'; lay.className='md-aj-lay';
+  var izq=document.createElement('div'); izq.className='md-aj-izq'; var der=document.createElement('div'); der.className='md-aj-der';
+  v.insertBefore(lay,idx); lay.appendChild(izq); lay.appendChild(der); izq.appendChild(idx);
+  var gs=mdQ(v,'.md-aj-grupo'); gs.forEach(function(g){der.appendChild(g)});
+  mdQ(idx,'.md-aj-tile').forEach(function(t,i){if(gs[i])t.setAttribute('data-g',gs[i].id)});
+  idx.addEventListener('click',function(e){var t=e.target.closest('.md-aj-tile'); if(t)mdAjGrupo(t.getAttribute('data-g'))},true);
+  v.classList.add('md-aj-modo');
+  mdAjGrupo(mdPref('AJ')||'md-aj-trat')}
+/* la lista de precios: buscador, categorías y guardado solo */
+var MD_PRE_CAT='', MD_PRE_T=0;
+function mdPrecios(){
+  var tb=$('#c-precios'); if(!tb)return;
+  var card=tb.closest('.card'), tabla=tb.closest('.tw')||tb.closest('table');
+  var bar=$('#md-pre-bar');
+  if(!bar&&tabla){
+    bar=document.createElement('div'); bar.id='md-pre-bar'; bar.className='md-pre-bar';
+    bar.innerHTML='<div class="md-pre-top"><input id="md-pre-q" placeholder="Buscar un servicio (escribí unas letras)" autocomplete="off">'+
+      '<button type="button" class="btn dark sm" id="md-pre-add">＋ Agregar servicio</button></div><div class="md-pre-cats" id="md-pre-cats"></div>'+
+      '<div class="md-pre-nuevo" id="md-pre-nuevo" hidden><select id="md-pn-cat"></select><input id="md-pn-nom" placeholder="Nombre del servicio"><input id="md-pn-pre" inputmode="decimal" placeholder="Precio Bs">'+
+      '<button type="button" class="btn sm" id="md-pn-ok">Agregar</button><button type="button" class="btn sec sm" id="md-pn-no">Cancelar</button></div>';
+    tabla.parentNode.insertBefore(bar,tabla);
+    $('#md-pre-q').addEventListener('input',mdPreciosFiltro);
+    $('#md-pre-cats').addEventListener('click',function(e){var b=e.target.closest('button'); if(!b)return; MD_PRE_CAT=b.getAttribute('data-c'); mdPreciosFiltro()});
+    $('#md-pre-add').onclick=function(){var n=$('#md-pre-nuevo'); n.hidden=!n.hidden; if(!n.hidden)$('#md-pn-nom').focus()};
+    $('#md-pn-no').onclick=function(){$('#md-pre-nuevo').hidden=true};
+    $('#md-pn-ok').onclick=function(){
+      var cat=$('#md-pn-cat').value, nom=$('#md-pn-nom').value.trim(), pr=$('#md-pn-pre').value;
+      if(!nom){toast('Escribí el nombre del servicio',1); return}
+      if(montoRaro(pr)||num(pr)<0){toast('El precio tiene letras o es negativo',1); return}
+      if(CFG.precios.some(function(p){return keyPac(p.nom)===keyPac(nom)})){toast('Ese servicio ya está en la lista',1); return}
+      /* va al final de su categoría, antes de «Otro» */
+      var at=-1; CFG.precios.forEach(function(p,i){if(p.cat===cat)at=i});
+      var nuevo={cat:cat,nom:nom,precio:num(pr),lab:0};
+      if(at<0)CFG.precios.push(nuevo); else CFG.precios.splice(at+1,0,nuevo);
+      saveCfg(); renderConfig(); try{renderSrv(); renderQSrv()}catch(x){}
+      toast('Servicio agregado: '+nom); $('#md-pre-q').value=nom; mdPreciosFiltro()};
+    /* el precio se guarda solo, un momento después de cambiarlo */
+    tb.addEventListener('change',function(e){
+      if(!e.target.classList.contains('cp')&&!e.target.classList.contains('cl'))return;
+      var fila=e.target.closest('tr'); clearTimeout(MD_PRE_T);
+      MD_PRE_T=setTimeout(function(){
+        var malos=mdQ(tb,'.cp, .cl').filter(function(i){return montoRaro(i.value)||num(i.value)<0});
+        if(malos.length)return;
+        var b=$('#btn-save-precios'); if(b)b.click();
+        if(fila&&fila.isConnected){var ok=document.createElement('span'); ok.className='md-pre-ok'; ok.textContent='✓ guardado'; var td=fila.lastElementChild; td.appendChild(ok); setTimeout(function(){if(ok.parentNode)ok.parentNode.removeChild(ok)},2400)}},900)})}
+  var cats={}; (CFG.precios||[]).forEach(function(p){cats[p.cat]=(cats[p.cat]||0)+1});
+  var cc=$('#md-pre-cats'); if(cc)cc.innerHTML='<button type="button" data-c="" class="'+(MD_PRE_CAT?'':'on')+'">Todas <em>'+(CFG.precios||[]).length+'</em></button>'+
+    Object.keys(cats).map(function(c){return '<button type="button" data-c="'+esc(c)+'" class="'+(MD_PRE_CAT===c?'on':'')+'">'+esc(c)+' <em>'+cats[c]+'</em></button>'}).join('');
+  var sc=$('#md-pn-cat'); if(sc)sc.innerHTML=Object.keys(cats).map(function(c){return '<option>'+esc(c)+'</option>'}).join('');
+  mdPreciosFiltro()}
+function mdPreciosFiltro(){
+  var tb=$('#c-precios'); if(!tb)return;
+  var q=mdPlegar(($('#md-pre-q')||{}).value||'').trim(), n=0;
+  mdQ(document,'#md-pre-cats button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-c')===MD_PRE_CAT)});
+  Array.prototype.forEach.call(tb.rows,function(tr){
+    var cat=(tr.cells[0]||{}).textContent||'', nc=tr.cells[1]; if(!nc)return;
+    if(!nc.getAttribute('data-md-n'))nc.setAttribute('data-md-n',nc.textContent);
+    var nom=nc.getAttribute('data-md-n'), ok=(!MD_PRE_CAT||cat===MD_PRE_CAT)&&(!q||mdPlegar(nom).indexOf(q)>=0||mdPlegar(cat).indexOf(q)>=0);
+    tr.style.display=ok?'':'none'; if(ok)n++;
+    nc.innerHTML=mdMarcaQ(nom,q)});
+  var vac=$('#md-pre-vacio');
+  if(!n&&!vac){tb.insertAdjacentHTML('afterend','<tbody id="md-pre-vacio"><tr><td colspan="4" class="empty">Ningún servicio con «'+esc(($('#md-pre-q')||{}).value||'')+'». Podés agregarlo con «＋ Agregar servicio».</td></tr></tbody>')}
+  else if(n&&vac)vac.parentNode.removeChild(vac)}
+
+/* ---------- 2 · Agenda: menos botones, el día con su anillo, agendar al costado ---------- */
+function mdAccionesCita(raiz){
+  mdQ(raiz||document,'.rem .acts').forEach(function(a){
+    if(a.querySelector('.md-mas')||!a.querySelector('.marcar'))return;
+    var mover=Array.prototype.filter.call(a.querySelectorAll('button,a.btn'),function(b){
+      return /Canceló|Reprogramar|Ficha|Nota/.test(b.textContent)&&!b.classList.contains('marcar')});
+    if(!mover.length)return;
+    var d=document.createElement('details'); d.className='md-mas';
+    d.innerHTML='<summary class="btn sec sm">⋯ Más</summary><div class="md-mas-m"></div>';
+    var m=d.querySelector('.md-mas-m'); mover.forEach(function(b){m.appendChild(b)});
+    a.appendChild(d);
+    var rot=a.querySelector('.rot-marcar'); if(rot)rot.classList.add('md-oculto')})}
+document.addEventListener('click',function(e){
+  mdQ(document,'details.md-mas[open]').forEach(function(d){if(!d.contains(e.target))d.removeAttribute('open')})});
+function mdResumenAgenda(){
+  var r=$('#q-resumen-dia'); if(!r||r.querySelector('.md-qanillo'))return;
+  var fig=r.querySelector('.fig'), n=fig?num((fig.querySelector('.n')||{}).firstChild?fig.querySelector('.n').firstChild.textContent:0):0;
+  var chicos=mdQ(r,'.fig.chico'), vino=0, falt=0;
+  chicos.forEach(function(f){var l=(f.querySelector('.l')||{}).textContent||'', v=num((f.querySelector('.n')||{}).textContent);
+    if(/Vinieron/.test(l))vino=v; else if(/Faltaron/.test(l))falt=v});
+  if(!fig||!(n>0))return;
+  var C=150.8, hv=Math.min(1,vino/n), hf=Math.min(1-hv,falt/n);
+  fig.insertAdjacentHTML('afterbegin','<svg class="md-qanillo" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="24" fill="none" stroke="#ECEEE6" stroke-width="8"/>'+
+    (hv>0?'<circle cx="30" cy="30" r="24" fill="none" stroke="#2E7D5B" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+(C*hv).toFixed(1)+' '+C+'" transform="rotate(-90 30 30)"/>':'')+
+    (hf>0?'<circle cx="30" cy="30" r="24" fill="none" stroke="#C2512F" stroke-width="8" stroke-dasharray="'+(C*hf).toFixed(1)+' '+C+'" transform="rotate('+(-90+hv*360).toFixed(1)+' 30 30)"/>':'')+'</svg>');
+  fig.classList.add('md-qfig')}
+/* agendar: el formulario se abre al costado */
+function mdAgendarCard(){var f=$('#q-fecha'); return f?f.closest('.card'):null}
+function mdAgendarAbrir(){
+  var c=mdAgendarCard(), d=$('#md-agendar'); if(!c||!d)return;
+  if(c.parentNode!==d.querySelector('.md-ag-cuerpo'))d.querySelector('.md-ag-cuerpo').appendChild(c);
+  document.body.classList.add('md-ag-on'); d.classList.add('on');
+  if(!$('#q-fecha').value)$('#q-fecha').value=hoyISO();
+  mdHorasLibres(); mdBotonAgendar();
+  setTimeout(function(){try{$('#q-paciente').focus({preventScroll:true})}catch(e){}},260)}
+function mdAgendarCerrar(){var d=$('#md-agendar'); if(d)d.classList.remove('on'); document.body.classList.remove('md-ag-on')}
+function mdAgendarMontar(){
+  var c=mdAgendarCard(); if(!c||$('#md-agendar'))return;
+  var d=document.createElement('div'); d.id='md-agendar'; d.className='md-agendar'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Agendar una cita');
+  d.innerHTML='<div class="md-ag-velo"></div><div class="md-ag-panel"><button type="button" class="md-ag-x" aria-label="Cerrar">✕</button><div class="md-ag-cuerpo"></div></div>';
+  document.body.appendChild(d);
+  /* en la pantalla queda un botón grande donde estaba el formulario */
+  var ph=document.createElement('div'); ph.className='card md-ag-lugar'; ph.id='md-ag-lugar';
+  ph.innerHTML='<div><h2>Agendar una cita nueva</h2><p class="hint">Para cuando piden hora por WhatsApp, por teléfono o en el mostrador. Se abre al costado, sin perder lo que estás mirando.</p></div>'+
+    '<button type="button" class="btn" onclick="mdAgendarAbrir()">＋ Agendar una cita</button>';
+  c.parentNode.insertBefore(ph,c);
+  d.querySelector('.md-ag-cuerpo').appendChild(c);
+  d.querySelector('.md-ag-x').onclick=mdAgendarCerrar; d.querySelector('.md-ag-velo').onclick=mdAgendarCerrar;
+  var h=$('#v-cita .card h2'); if(h&&!$('#md-ag-arriba'))h.insertAdjacentHTML('afterend','<button type="button" class="btn sm" id="md-ag-arriba" onclick="mdAgendarAbrir()">＋ Agendar cita</button>');
+  ['#q-fecha','#q-prof','#q-hora'].forEach(function(s){var el=$(s); if(el){el.addEventListener('change',function(){mdHorasLibres(); mdBotonAgendar()}); el.addEventListener('input',mdBotonAgendar)}})}
+function mdHorasLibres(){
+  var f=$('#q-fecha'), h=$('#q-hora'); if(!f||!h)return;
+  var box=$('#md-horas'); if(!box){box=document.createElement('div'); box.id='md-horas'; box.className='md-horas'; var w=h.closest('div'); (w.closest('.grid')||w).insertAdjacentElement('afterend',box)}
+  var dia=f.value, prof=($('#q-prof')||{}).value||''; if(!dia){box.innerHTML=''; return}
+  var dur=num(CFG.minCita)||30, ocup=[];
+  DATA.forEach(function(r){if(r.fecha!==dia||!r.hora||esAnticipo(r))return; if(r.estado==='Canceló'||r.estado==='Reprogramó'||r.estado==='Cancelada'||r.estado==='Reprogramada')return;
+    if(prof&&r.profesional&&r.profesional!==prof)return; var m=mdHoraMin(r.hora); if(m!==null)ocup.push(m)});
+  var hs='', d=new Date(), ahora=dia===hoyISO()?d.getHours()*60+d.getMinutes():-1;
+  for(var m=8*60; m<19*60; m+=dur){
+    var tomado=ocup.some(function(o){return o<m+dur&&o+dur>m}), paso=m<ahora, hh=mdHHMM(m);
+    hs+='<button type="button" class="'+(tomado?'oc':'')+(paso?' paso':'')+(h.value===hh?' on':'')+'" data-h="'+hh+'"'+(tomado?' title="Ya hay una cita a esa hora"':'')+'>'+hh+'</button>'}
+  box.innerHTML='<div class="md-horas-k">Horarios libres'+(prof?' de '+esc(prof.replace(/^Dra\.?\s*/i,'')):'')+' · los tachados ya están tomados</div><div class="md-horas-g">'+hs+'</div>';
+  box.onclick=function(e){var b=e.target.closest('button[data-h]'); if(!b)return; h.value=b.getAttribute('data-h'); h.dispatchEvent(new Event('input',{bubbles:true})); h.dispatchEvent(new Event('change',{bubbles:true}))}}
+function mdBotonAgendar(){
+  var c=mdAgendarCard(); if(!c)return;
+  var b=Array.prototype.filter.call(c.querySelectorAll('.btn'),function(x){return /Agendar/.test(x.textContent)&&!/Limpiar/.test(x.textContent)})[0]; if(!b)return;
+  var f=$('#q-fecha').value, h=$('#q-hora').value, t='Agendar'+(f?' '+(f===hoyISO()?'hoy':DOW[parseISO(f).getDay()].toLowerCase()+' '+fmtF(f).slice(0,5)):'')+(h?' a las '+h:'');
+  var sp=b.querySelector('.md-bt'); if(sp)sp.textContent=t; else b.textContent=t;
+  b.setAttribute('data-md-b',b.textContent)}
+
+/* ---------- 3 · ventanas: un solo «Cerrar», la atención como recibo y el pago en un toque ---------- */
+function mdUnSoloCerrar(){
+  var m=$('#modal'); if(!m)return; var pie=m.querySelector('.modal-pie'); if(!pie)return;
+  var otro=Array.prototype.some.call(m.querySelectorAll('button'),function(b){return !pie.contains(b)&&!b.classList.contains('modal-x')&&/^\s*(Cerrar|Cancelar)\s*$/.test(b.textContent.replace(/[✕✖]/g,''))});
+  pie.classList.toggle('md-oculto',otro)}
+function mdRecibo(id){
+  var r=DATA.filter(function(x){return x.id===id})[0], m=$('#modal'); if(!r||!m||m.querySelector('.md-recibo'))return;
+  var hs=mdQ(m,'h4'), hS=hs.filter(function(h){return /^Servicios$/i.test(h.textContent.trim())})[0], hC=hs.filter(function(h){return /^Cobro$/i.test(h.textContent.trim())})[0];
+  if(!hS||!hC)return;
+  var rec=document.createElement('div'); rec.className='md-recibo';
+  var sal=num(r.saldo), tot=num(r.total);
+  rec.innerHTML=tot>0?'<span class="md-sello'+(sal>0.009?' debe':'')+'">'+(sal>0.009?'DEBE '+esc(bs(sal)):'PAGADO')+'</span>':'';
+  hS.parentNode.insertBefore(rec,hS);
+  var n=hS; while(n&&n!==hC){var sig=n.nextSibling; rec.appendChild(n); n=sig}
+  n=hC; while(n&&!(n.classList&&(n.classList.contains('row-btn')||(n.tagName==='H4'&&n!==hC)))){var s2=n.nextSibling; rec.appendChild(n); n=s2}
+  var acc=m.querySelector('.row-btn'); if(acc){acc.classList.add('md-acc-recibo');
+    Array.prototype.forEach.call(acc.querySelectorAll('.btn'),function(b){if(/Registrar pago/.test(b.textContent))b.classList.remove('sec')})}}
+function mdPagoRapido(id){
+  var r=DATA.filter(function(x){return x.id===id})[0], inp=$('#cp-m'); if(!r||!inp||$('#md-cp-rap'))return;
+  var sal=num(r.saldo); inp.classList.add('md-cp-grande');
+  var seg=$('#cp-seg'); if(seg){seg.classList.add('md-tiles','md-tiles-pago'); mdQ(seg,'label').forEach(function(l){
+    var sp=l.querySelector('span'), v=(l.querySelector('input')||{}).value; if(!sp||sp.querySelector('.md-ti'))return;
+    l.classList.add('md-k-'+(MD_MET_K[v]||'mix')); sp.insertAdjacentHTML('afterbegin','<i class="md-ti" aria-hidden="true">'+mdIco(MD_MET_ICO[v]||'M4 6h16M4 12h16M4 18h16',2.2)+'</i>')})}
+  var rap=document.createElement('div'); rap.id='md-cp-rap'; rap.className='md-rap';
+  rap.innerHTML='<button type="button" data-v="'+sal+'">Todo · '+esc(bs(sal))+'</button><button type="button" data-v="'+Math.round(sal/2)+'">Mitad · '+esc(bs(Math.round(sal/2)))+'</button><button type="button" data-v="">Otro monto</button>';
+  inp.insertAdjacentElement('afterend',rap);
+  var est=document.createElement('div'); est.id='md-cp-est'; est.className='md-cobro'; rap.insertAdjacentElement('afterend',est);
+  var pintar=function(){
+    var v=num(inp.value), q=Math.max(0,sal-v), pc=sal>0?Math.min(100,v/sal*100):0;
+    mdQ(rap,'button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-v')!==''&&num(b.getAttribute('data-v'))===v)});
+    est.innerHTML='<div class="md-cobro-b"><i style="width:'+pc.toFixed(1)+'%"></i></div>'+
+      (v>sal+0.009?'<div class="md-cobro-est nada">Es más de lo que debe ('+esc(bs(sal))+')</div>':
+      (q>0.009?'<div class="md-cobro-est debe">Después de este pago queda debiendo <b>'+esc(bs(q))+'</b></div>':'<div class="md-cobro-est ok">✓ Con esto queda pagado completo</div>'))};
+  rap.onclick=function(e){var b=e.target.closest('button'); if(!b)return; var v=b.getAttribute('data-v'); if(v===''){inp.focus(); inp.select&&inp.select(); return} inp.value=v; pintar()};
+  inp.addEventListener('input',pintar); pintar()}
+
+/* ---------- 4 · el buscador: lo importante a la vista y botones directos ---------- */
+function mdBuscador(){
+  var res=$('#bsq-res'); if(!res)return;
+  var q=mdPlegar(($('#bsq')||{}).value||'').trim(), hoy=hoyISO(), verPlata=esAdmin()||esDoctora();
+  mdQ(res,'.rem').forEach(function(card){
+    if(card.querySelector('.md-bq-av'))return;
+    var who=card.querySelector('.who'); if(!who)return;
+    var nombre=who.textContent, chips=[];
+    try{var deb=verPlata?deudaDe(nombre):0; if(deb>0.009)chips.push(['Debe '+bs(deb),'mal'])}catch(e){}
+    try{var f=pacDe(nombre); if(f&&f.med&&f.med.alergias)chips.push(['⚠ Alergia: '+f.med.alergias,'mal'])}catch(e){}
+    try{var c=citaFuturaDe(nombre); if(c)chips.push(['📅 Cita '+fmtF(c.fecha).slice(0,5)+(c.hora?' '+c.hora:''),'info'])}catch(e){}
+    try{var pl=(planesDe(nombre)||[]).filter(function(p){return p.estado!=='terminado'&&p.estado!=='cancelado'})[0];
+      if(pl){var a=avancePlan(pl); chips.push(['🦷 '+pl.nombre+' '+a.hechas+'/'+a.total,'lila'])}}catch(e){}
+    who.innerHTML=mdMarcaQ(nombre,q);
+    card.insertAdjacentHTML('afterbegin','<span class="md-av md-bq-av md-av'+mdHash(nombre)%6+'" aria-hidden="true">'+esc(mdIniciales(nombre))+'</span>');
+    if(chips.length)(card.querySelector('.meta')||who).insertAdjacentHTML('afterend','<div class="md-bq-chips">'+chips.map(function(c){return '<span class="'+c[1]+'">'+esc(c[0])+'</span>'}).join('')+'</div>');
+    var acts=card.querySelector('.acts');
+    if(acts){var cel=(/📱\s*([^·]+)/.exec((card.querySelector('.meta')||{}).textContent||'')||[])[1];
+      acts.insertAdjacentHTML('beforeend','<button type="button" class="btn sm dark md-bq-at" onclick="nuevaParaPaciente(\''+jss(nombre)+'\');show(\'atencion\')">Nueva atención</button>'+
+        (cel&&!mdCelMalo(cel)?'<a class="btn sm md-bq-wa" target="_blank" rel="noopener" href="'+waLink(cel.trim(),'')+'">WhatsApp</a>':''))}})}
+
+/* ---------- 5 · Caja: cuadros con color, barras por día y por doctora ---------- */
+var MD_CJ_COL=[[/Cobrado|Caja neta/i,'verde'],[/Facturado/i,'azul'],[/Por cobrar/i,'coral'],[/Efectivo/i,'ambar'],[/QR|Transf/i,'azul'],[/Egresos/i,'gris'],[/Sin identificar/i,'gris']];
+function mdCaja5(){
+  mdQ(document,'#cj-kpis .kpi').forEach(function(k){
+    var t=(k.querySelector('.k')||{}).textContent||''; for(var i=0;i<MD_CJ_COL.length;i++)if(MD_CJ_COL[i][0].test(t)){k.classList.add('md-cjk','md-c-'+MD_CJ_COL[i][1]); break}});
+  /* el arqueo como barras: efectivo y lo demás */
+  var dias=$('#cj-dias'), tabla=dias&&dias.querySelector('table');
+  if(tabla&&!dias.querySelector('.md-arq')){
+    var hs=Array.prototype.map.call(tabla.querySelectorAll('thead th'),function(th){return th.textContent});
+    var iF=0, iE=hs.findIndex(function(h){return /EFECTIVO/i.test(h)}), iO=[]; hs.forEach(function(h,i){if(/QR|TARJETA|TRANSF/i.test(h))iO.push(i)});
+    var filas=Array.prototype.slice.call(tabla.querySelectorAll('tbody tr')).filter(function(tr){return tr.cells.length===hs.length&&!/TOTAL/i.test(tr.cells[0].textContent)}).slice(0,14);
+    var datos=filas.map(function(tr){var e=num(String((tr.cells[iE]||{}).textContent||'0').replace(/\./g,'')), o=iO.reduce(function(a,i){return a+num(String(tr.cells[i].textContent).replace(/\./g,''))},0); return {f:tr.cells[iF].textContent.slice(0,5),e:e,o:o}});
+    var mx=Math.max.apply(null,datos.map(function(d){return d.e+d.o}).concat([1]));
+    if(iE>=0&&datos.length)tabla.closest('.tw')?tabla.closest('.tw').insertAdjacentHTML('beforebegin',mdArqueoHtml(datos,mx)):dias.insertAdjacentHTML('afterbegin',mdArqueoHtml(datos,mx))}
+  /* la liquidación: cada doctora con su barra de lo facturado */
+  var liq=$('#cj-liq'), tl=liq&&liq.querySelector('table');
+  if(tl&&!tl.querySelector('.md-liq-b')){
+    var h2=Array.prototype.map.call(tl.querySelectorAll('thead th'),function(th){return th.textContent}), iFa=h2.findIndex(function(h){return /FACTURADO/i.test(h)});
+    var rs=Array.prototype.slice.call(tl.querySelectorAll('tbody tr')).filter(function(tr){return iFa>=0&&tr.cells[iFa]&&!/TOTAL/i.test(tr.cells[0].textContent)});
+    var vs=rs.map(function(tr){return num(String(tr.cells[iFa].textContent).replace(/\./g,''))}), m2=Math.max.apply(null,vs.concat([1]));
+    rs.forEach(function(tr,i){var c=tr.cells[0], n=c.textContent.trim();
+      c.innerHTML='<div class="md-liq-n"><span class="md-av md-av'+mdHash(n)%6+'">'+esc(mdIniciales(n.replace(/^Dra?\.?\s*/i,'')))+'</span><div><b>'+esc(n)+'</b><div class="md-liq-b"><i style="width:'+(vs[i]/m2*100).toFixed(1)+'%"></i></div></div></div>'})}
+  /* las tablas largas, de a 50 */
+  try{mdPorPartes($('#cj-body'),50)}catch(e){}
+  try{var tbd=tabla&&tabla.tBodies[0]; if(tbd){if(!tbd.id)tbd.id='md-cj-dias-b'; mdPorPartes(tbd,31)}}catch(e){}}
+function mdArqueoHtml(d,mx){
+  return '<div class="md-arq">'+d.map(function(x,i){
+    return '<div class="md-arq-f"><span>'+esc(x.f)+'</span><div class="md-arq-b"><i class="e" style="width:'+(x.e/mx*100).toFixed(1)+'%;animation-delay:'+(i*40)+'ms"></i><i class="o" style="width:'+(x.o/mx*100).toFixed(1)+'%;animation-delay:'+(i*40)+'ms"></i></div><b>'+esc(bs(x.e+x.o))+'</b></div>'}).join('')+
+    '<div class="md-arq-l"><span><i class="e"></i>Efectivo</span><span><i class="o"></i>QR, tarjeta y transferencia</span><span class="md-arq-n">Los últimos '+d.length+' días con movimiento</span></div></div>'}
+
+/* ---------- 6 · el mensaje de WhatsApp se ve como va a llegar ---------- */
+function mdWaFormato(t){
+  return esc(t).replace(/\*([^*\n]+)\*/g,'<b>$1</b>').replace(/(^|\s)_([^_\n]+)_(?=\s|$)/g,'$1<i>$2</i>').replace(/~([^~\n]+)~/g,'<s>$1</s>').replace(/\n/g,'<br>')}
+function mdWaBurbuja(){
+  var w=$('#wa-txt'); if(!w||w.getAttribute('data-md-wa'))return;
+  w.setAttribute('data-md-wa','1');
+  var d=new Date(), hora=mdHHMM(d.getHours()*60+d.getMinutes());
+  var c=document.createElement('div'); c.className='md-wa-chat';
+  c.innerHTML='<div class="md-wa-h"><i>💬</i><div><b>Vista previa</b><small>Así va a llegar por WhatsApp</small></div></div>'+
+    '<div class="md-wa-c"><div class="md-wa-bur">'+mdWaFormato(w.textContent)+'<small>'+hora+' ✓✓</small></div></div>';
+  w.parentNode.insertBefore(c,w); w.classList.add('md-wa-fuente')}
+
 /* ---------- Sonri enseña lo nuevo ---------- */
 (function(){
   if(typeof ASIS_NOVEDADES==='undefined'||typeof ASIS_AYUDA==='undefined')return;
@@ -13998,7 +14360,13 @@ function mdReenganchar(){
     {id:'md-rem2', f:'2026-10-21', t:'Recordatorios con color',
      x:'En 🔔 Recordatorios tocá un cuadro (Saldos, Controles…) para ver solo eso. En Controles podés marcar «✓ Ya lo contacté» y ver cuántos te faltan.', ayuda:/controles atrasados/},
     {id:'md-lfil', f:'2026-10-21', t:'Atenciones: filtros en una barra',
-     x:'En 📋 Atenciones el mes se cambia con ◀ ▶ y las doctoras son botones. Cada cuadro muestra un mini gráfico del mes y cómo va contra el mes pasado.'});
+     x:'En 📋 Atenciones el mes se cambia con ◀ ▶ y las doctoras son botones. Cada cuadro muestra un mini gráfico del mes y cómo va contra el mes pasado.'},
+    {id:'md-aj5', f:'2026-10-21', t:'Ajustes por secciones',
+     x:'En ⚙️ Ajustes (en la compu) elegí una sección a la izquierda y se ve solo esa. La lista de precios tiene buscador, filtro por categoría, se guarda sola al cambiar un precio y tiene «＋ Agregar servicio».', si:function(){return esAdmin()}},
+    {id:'md-agendar5', f:'2026-10-21', t:'Agendar al costado',
+     x:'En 📅 Agenda tocá «＋ Agendar cita»: el formulario se abre al costado y muestra los horarios libres de la doctora (los tachados ya están tomados). En cada cita, Canceló, Reprogramar, Ficha y Nota están en «⋯ Más».', ayuda:/horarios libres/},
+    {id:'md-ventanas5', f:'2026-10-21', t:'Ventanas más claras',
+     x:'La atención se ve como un recibo con un sello de lo que debe; al registrar un pago tenés Todo y Mitad, y el mensaje de WhatsApp se ve como va a llegar. La lupa de arriba muestra si el paciente debe o tiene alergias.'});
   ASIS_AYUDA.push(
     {q:'¿Cómo veo el día de cada doctora?', k:'dia vistazo doctoras carril linea tiempo ahora horario quien atiende', v:'midia', f:['#md-carriles','#m-lista'],
      p:['Entrá a 🏠 Mi día.','Arriba, en «El día de un vistazo», cada doctora tiene su fila con sus pacientes en la hora.','Verde: ya atendido. Lima: le toca ahora. Celeste: por venir.','Tocá un paciente para ir a su tarjeta y atenderlo.']},
@@ -14025,7 +14393,9 @@ function mdReenganchar(){
     {q:'¿Cómo busco un servicio escribiendo?', k:'buscar servicio escribir letras lista precio elegir tratamiento rapido', v:'atencion', f:'#srv-list',
      p:['En Nueva atención, tocá el campo «Servicio».','Escribí unas letras (por ejemplo «blan» o «limp»): la lista se achica y lo que coincide se marca en amarillo.','Elegí con un toque, o con las flechas y Enter. El precio se pone solo y lo podés cambiar.','Sin escribir nada, se ve la lista completa por categoría.']},
     {q:'¿Cómo me pongo al día con los controles atrasados?', k:'controles atrasados vencidos ponerse al dia contacte limpieza 6 meses', v:'agenda', f:'#rem-list',
-     p:['Entrá a 🔔 Recordatorios y tocá el cuadro «Controles que tocan».','Arriba ves cuántos contactaste y los botones por tipo de control.','Escribile por WhatsApp y tocá «✓ Ya lo contacté»: sale de la lista y la barra avanza.','Lo contactado se anota en esta compu; «Ver los contactados» los muestra y «Deshacer» lo vuelve atrás.']});
+     p:['Entrá a 🔔 Recordatorios y tocá el cuadro «Controles que tocan».','Arriba ves cuántos contactaste y los botones por tipo de control.','Escribile por WhatsApp y tocá «✓ Ya lo contacté»: sale de la lista y la barra avanza.','Lo contactado se anota en esta compu; «Ver los contactados» los muestra y «Deshacer» lo vuelve atrás.']},
+    {q:'¿Cómo agendo viendo los horarios libres?', k:'agendar cita horario libre hora ocupada tachado costado doctora turno', v:'cita', f:'#md-ag-arriba',
+     p:['Entrá a 📅 Agenda y tocá «＋ Agendar cita»: se abre al costado.','Elegí el día y la doctora: abajo aparecen los horarios; los tachados ya están tomados.','Tocá un horario libre y completá paciente, celular y por dónde agendó.','El botón dice el día y la hora: tocalo y listo.']});
 })();
 
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
@@ -14037,7 +14407,7 @@ function mdRefrescar(){
   try{mdCaraBase()}catch(e){}}
 (function(){
   /* los originales, para cambiar después los avisos que apuntaban a ellos (ver mdReenganchar) */
-  ['renderMiDia','renderRem','renderLista','renderCaja','renderPanel','renderPacientes','renderSemana'].forEach(function(n){MD_ORIG[n]=window[n]});
+  ['renderMiDia','renderRem','renderLista','renderCaja','renderPanel','renderPacientes','renderSemana','renderCitasProximas','renderConfig'].forEach(function(n){MD_ORIG[n]=window[n]});
   var _show=show;
   show=function(v){
     var de=MD_VISTA, y=window.pageYOffset||0;
@@ -14152,6 +14522,27 @@ function mdRefrescar(){
     window[n]=function(){var r=f.apply(this,arguments); try{mdCobroVivo()}catch(e){} return r}});
   var _rem=renderRem; renderRem=function(){var r=_rem.apply(this,arguments); try{mdRecordatoriosColor(); mdControles()}catch(e){} return r};
   var _rl=renderLista; renderLista=function(){var r=_rl.apply(this,arguments); try{mdFiltrosLista(); mdCuadrosLista()}catch(e){} return r}})();
+/* los enganches de la ronda 5 */
+(function(){
+  var _show=show;
+  show=function(v){var r=_show.apply(this,arguments); try{if(v==='config'){mdAjLayout(); mdAjGrupo(mdPref('AJ')||'md-aj-trat'); mdPrecios()}}catch(e){} try{if(v!=='cita')mdAgendarCerrar()}catch(e){} return r};
+  if(typeof renderConfig==='function'){var _rc=renderConfig; renderConfig=function(){var r=_rc.apply(this,arguments); try{mdPrecios()}catch(e){} return r}}
+  if(typeof asisFoco==='function'){var _af=asisFoco; asisFoco=function(sel){
+    try{var el=(sel&&sel.nodeType===1)?sel:null; if(!el)[].concat(sel||[]).some(function(x){el=document.querySelector(x); return !!el});
+      if(el){mdAjDe(el); if(el.closest&&el.closest('#md-agendar'))mdAgendarAbrir()}}catch(e){}
+    return _af.apply(this,arguments)}}
+  if(typeof agendarEse==='function'){var _ae=agendarEse; agendarEse=function(){var r=_ae.apply(this,arguments); try{mdAgendarAbrir()}catch(e){} return r}}
+  if(typeof mdAgendarHora==='function'){var _mah=mdAgendarHora; mdAgendarHora=function(){var r=_mah.apply(this,arguments); try{mdAgendarAbrir()}catch(e){} return r}}
+  if(typeof renderCitasProximas==='function'){var _rcp=renderCitasProximas; renderCitasProximas=function(){var r=_rcp.apply(this,arguments); try{mdAccionesCita($('#v-cita')); mdResumenAgenda(); mdHorasLibres()}catch(e){} return r}}
+  var _rem=renderRem; renderRem=function(){var r=_rem.apply(this,arguments); try{mdAccionesCita($('#rem-list'))}catch(e){} return r};
+  var _om=openModal; openModal=function(){var r=_om.apply(this,arguments);
+    try{mdUnSoloCerrar(); mdWaBurbuja()}catch(e){}
+    try{var h=$('#modal h3'); if(h&&/^Cita agendada/.test(h.textContent))mdAgendarCerrar()}catch(e){}
+    return r};
+  if(typeof verFicha==='function'){var _vf=verFicha; verFicha=function(id){var r=_vf.apply(this,arguments); try{mdRecibo(id); mdUnSoloCerrar()}catch(e){} return r}}
+  if(typeof cobrarSaldo==='function'){var _cs=cobrarSaldo; cobrarSaldo=function(id){var r=_cs.apply(this,arguments); try{mdPagoRapido(id)}catch(e){} return r}}
+  if(typeof pintarBusqueda==='function'){var _pb=pintarBusqueda; pintarBusqueda=function(){var r=_pb.apply(this,arguments); try{mdBuscador()}catch(e){} return r}}
+  var _cj=renderCaja; renderCaja=function(){var r=_cj.apply(this,arguments); try{mdCaja5()}catch(e){} return r}})();
 (function mdInit(){
   try{
     mdAplicarAnim(); mdAplicarNoche(); document.body.classList.toggle('md-fondo',mdPref('FONDO')!==0);
@@ -14189,6 +14580,9 @@ function mdRefrescar(){
     mdSinTrabar($('#l-q'),'renderLista'); mdSinTrabar($('#pc-q'),'renderPacientes');
     /* ronda 4 */
     mdReenganchar(); mdCombos(); mdRecomendaciones(); mdCobroVivo();
+    /* ronda 5 */
+    try{mdAgendarMontar()}catch(e){}
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('md-ag-on'))mdAgendarCerrar()});
     if(window.MutationObserver)['#srv-list','#pre-list'].forEach(function(id){var el=$(id); if(el)new MutationObserver(function(){try{mdCombos(el)}catch(e){}}).observe(el,{childList:true})});
     var pl=$('#pre-list'); if(pl)pl.addEventListener('change',function(){try{mdRecomendaciones()}catch(e){}});
     ['#f-total','#f-saldo'].forEach(function(id){var el=$(id); if(el)el.addEventListener('input',function(){try{mdCobroVivo()}catch(e){}})});
