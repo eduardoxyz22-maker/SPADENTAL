@@ -243,6 +243,21 @@ function planesGuardados(clave) {
   }
   return out;
 }
+/* La etapa que manda esta atención ya está hecha en OTRA visita que sigue
+   guardada: es la misma sesión marcada dos veces (típico de dos pantallas). */
+function sesionRepetidaSrv(r, sh) {
+  var planes = planesGuardados(fClavePac(r.paciente)), n = Number(r.planEtapa) || 0;
+  for (var i = 0; i < planes.length; i++) {
+    var p = planes[i]; if (!p || p.id !== r.planId) continue;
+    var ses = (p.sesiones || []).filter(function (x) { return x && Number(x.n) === n; })[0];
+    if (!ses || !ses.hecha || !ses.atencionId || ses.atencionId === r.id) return null;
+    var tot = sh.getLastRow(); if (tot < 2) return null;
+    var ids = sh.getRange(2, 1, tot - 1, 1).getValues();
+    for (var j = 0; j < ids.length; j++) if (String(ids[j][0]) === String(ses.atencionId)) return ses;
+    return null;
+  }
+  return null;
+}
 function paqueteClinicaActivo(clave) {
   return planesGuardados(clave).some(function (p) { return p && p.deClinica && p.estado !== 'cancelado' && p.estado !== 'terminado'; });
 }
@@ -620,6 +635,12 @@ function doSave(r, base, ses) {
   /* Lo cobrado no se baja ni se borra con un guardado: para eso está
      «Corregir cobro», que deja la historia en _Correcciones. */
   if (previa0 && cobroBaja(previa0, r)) return { ok: false, error: 'cobro_baja', registro: previa0 };
+  /* Una sesión del paquete se marca una sola vez: si una pantalla sin refrescar
+     manda la misma etapa que ya tiene otra visita guardada, se rechaza. */
+  if (r.estado === 'Atendido' && r.planId && r.planEtapa) {
+    var rep = sesionRepetidaSrv(r, sh);
+    if (rep) return { ok: false, error: 'sesion_repetida', etapa: Number(r.planEtapa), fecha: rep.fecha || '', atencionId: rep.atencionId || '' };
+  }
   /* El saldo a favor se usa una sola vez. Con el candado puesto se mira cuánto
      le queda al paciente: si otro equipo ya lo usó, lo que esta atención paga
      con saldo a favor se recorta a lo que queda y la diferencia queda debiendo. */
@@ -1156,7 +1177,7 @@ var ANTICIPO_DOCTORAS = true;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-23-pauta';
+var VERSION_SCRIPT = '2026-10-24-sesion';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con

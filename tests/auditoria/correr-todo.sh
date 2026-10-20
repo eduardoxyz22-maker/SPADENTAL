@@ -31,6 +31,8 @@ if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
     case "$r" in "TODO OK"*) echo "OK     e2e-sesion-visible ($p)";; *) echo "FALLA  e2e-sesion-visible ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-sonri-oye.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-sonri-oye ($p)";; *) echo "FALLA  e2e-sonri-oye ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-sesion-repetida.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-sesion-repetida ($p)";; *) echo "FALLA  e2e-sesion-repetida ($p): $r"; fallas=$((fallas+1));; esac
   done
 else echo "(sin Chromium: se saltea e2e-circuito)"; fi
 echo; [ $fallas -eq 0 ] && echo "TODO OK" || echo "FALLAS: $fallas"
