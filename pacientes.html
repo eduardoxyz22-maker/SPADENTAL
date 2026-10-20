@@ -8579,10 +8579,12 @@ function showWhatsappModal(r,cita,fav,alPlan){
       t+='   · 💜 '+bs(alPlan)+' adelantados para sus próximas sesiones\n'}
     else{t+='💵 Total: '+bs(r.total)+'\n';
       if(cash>0.009)t+='✅ A cuenta: '+bs(cash)+'\n'}
-    if(fav>0)t+='💜 Descontado de su adelanto: '+bs(fav)+'\n';
+    /* con plan, lo descontado sale del adelanto del plan; sin plan, del saldo a favor de siempre */
+    if(fav>0)t+=(r.planId?'💜 Descontado de su adelanto: ':'💜 Descontado de su saldo a favor: ')+bs(fav)+'\n';
     if(num(r.saldo)>0)t+='⏳ Saldo: '+bs(r.saldo)+'\n';
     if(reservado>0.009)t+='💜 Reservado para su plan: '+bs(reservado)+'\n';
-    if((fav>0||alPlan>0)&&quedaFav>0.009)t+='💜 Saldo a favor libre: '+bs(quedaFav)+'\n'}
+    if(fav>0&&!r.planId)t+='💜 Le queda a favor: '+bs(Math.max(0,quedaFav))+'\n';
+    else if((fav>0||alPlan>0)&&quedaFav>0.009)t+='💜 Saldo a favor libre: '+bs(quedaFav)+'\n'}
   if(r.prox)t+='\n📌 Próxima cita: *'+fmtF(r.prox)+'*'+(r.proxHora?' a las '+r.proxHora:'')+(r.proxMotivo?' ('+r.proxMotivo+')':'')+'\n';
   var aviso=cita?'<p class="mini" style="margin-top:6px">📅 Se agendó sola la cita del <b>'+fmtF(cita.fecha)+'</b>. Cuando llegue el día, marcá en <b>Recordatorios</b> si vino o no.</p>':'';
   t+='\nCualquier consulta estamos a la orden 🦷';
@@ -8593,8 +8595,8 @@ function showWhatsappModal(r,cita,fav,alPlan){
     (r.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(r.celular,t)+'">Abrir WhatsApp</a>':'')+
     '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
     '<button class="btn sec" onclick="closeModal()">Listo</button></div>'+
-    (fav>0?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Se descontaron '+bs(fav)+' de su adelanto</div>'+
-      '<div class="meta">'+(reservado>0.009?'Le quedan '+bs(reservado)+' reservados para su plan':'No le queda adelanto del plan')+(quedaFav>0.009?' y '+bs(quedaFav)+' libres':'')+' · '+
+    (fav>0?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Se descontaron '+bs(fav)+(r.planId?' de su adelanto':' del saldo a favor')+'</div>'+
+      '<div class="meta">'+(r.planId?(reservado>0.009?'Le quedan '+bs(reservado)+' reservados para su plan':'No le queda adelanto del plan')+(quedaFav>0.009?' y '+bs(quedaFav)+' libres':''):'Le quedan '+bs(Math.max(0,quedaFav))+' a favor')+' · '+
       (num(r.saldo)>0?'todavía debe <b>'+bs(r.saldo)+'</b>':'la atención quedó pagada')+'.</div></div></div>':'')+
     (function(){var cr=!fav&&esAtencion(r)&&num(r.saldo)>0?creditoPara(r.paciente,r.planId):0;
       return cr>0.009?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Tiene '+bs(cr)+' de saldo a favor</div>'+
@@ -13030,9 +13032,9 @@ function asisTourOfrecer(){
    pestaña), desbloquear() corre antes de que este bloque termine de
    cargarse: Sonri arranca recién cuando todo está listo. */
 setTimeout(function(){try{if(document.body&&!document.body.classList.contains('locked'))asisMontar()}catch(e){}},0);
-/* Cada 10 minutos, si se juntaron más de 10 avisos y nadie los mira: golpea la
+/* Cada 5 minutos, si se juntaron más de 10 avisos y nadie los mira: golpea la
    pantalla, dice «¡Oye, leeme!» y hace toc-toc. Se calma al abrirla. */
-var ASIS_OYE_MS=600000, ASIS_OYE_MIN=10, ASIS_OYE_T=Date.now();
+var ASIS_OYE_MS=300000, ASIS_OYE_MIN=10, ASIS_OYE_T=Date.now();
 function asisOyeToca(n){
   if(ASIS.abierto||ASIS_TOUR||asisModalAbierto()||document.body.classList.contains('locked'))return false;
   if(!(n>ASIS_OYE_MIN)||Date.now()-ASIS_OYE_T<ASIS_OYE_MS)return false;

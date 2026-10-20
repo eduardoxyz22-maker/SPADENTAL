@@ -1,4 +1,4 @@
-/* Sonri: cuando se juntan más de 10 avisos sin mirar, cada 10 minutos golpea la
+/* Sonri: cuando se juntan más de 10 avisos sin mirar, cada 5 minutos golpea la
    pantalla y dice «¡Oye, leeme!». Al abrirla se calma. Chromium real, .gs real en memoria. */
 const { chromium } = require('playwright-core');
 const { gsServer } = require('./gsserver.js');
@@ -35,24 +35,24 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('hay más de 10 avisos juntos', n > 10, n);
   OK('recién abierto el panel, todavía no golpea', await P.evaluate(() => !$('#asis-globo').classList.contains('asis-oye')));
   const pasar = async (min) => { t += min * 60000; await P.clock.setSystemTime(new Date(t)); await P.evaluate(() => asisRefrescar()); await P.waitForTimeout(400); };
-  await pasar(5);
-  OK('a los 5 minutos, nada todavía', await P.evaluate(() => !$('#asis-globo').classList.contains('asis-oye')));
-  await pasar(6);
+  await pasar(3);
+  OK('a los 3 minutos, nada todavía', await P.evaluate(() => !$('#asis-globo').classList.contains('asis-oye')));
+  await pasar(3);
   const g = await P.evaluate(() => ({ oye: $('#asis-globo').classList.contains('asis-oye'), vis: !$('#asis-globo').hidden, txt: $('#asis-globo').innerText, golpea: $('#asis-yo').classList.contains('asis-golpea') || document.body.classList.contains('asis-tiembla') }));
   if (process.env.SHOT) await P.screenshot({ path: process.env.SHOT, clip: { x: 866, y: 600, width: 500, height: 300 } });
-  OK('a los 10 minutos golpea la pantalla y dice «¡Oye, leeme!» con la cantidad', g.oye && g.vis && /¡Oye, leeme!/.test(g.txt) && new RegExp('Tenés ' + n + ' avisos').test(g.txt) && g.golpea, g);
+  OK('a los 6 minutos golpea la pantalla y dice «¡Oye, leeme!» con la cantidad', g.oye && g.vis && /¡Oye, leeme!/.test(g.txt) && new RegExp('Tenés ' + n + ' avisos').test(g.txt) && g.golpea, g);
   const t1 = await P.evaluate(() => ASIS_OYE_T);
-  await pasar(3);
-  OK('no repite antes de otros 10 minutos', await P.evaluate(() => ASIS_OYE_T) === t1);
+  await pasar(2);
+  OK('no repite antes de otros 5 minutos', await P.evaluate(() => ASIS_OYE_T) === t1);
   await P.locator('#asis-globo button', { hasText: /Ver los avisos/ }).click(); await P.waitForTimeout(400);
   OK('«Ver los avisos» abre a Sonri en sus avisos y el globo se va', await P.evaluate(() => ASIS.abierto && ASIS.tab === 'avisos' && $('#asis-globo').hidden));
   await P.evaluate(() => asisCerrar());
-  await pasar(8);
-  OK('después de mirarla, cuenta los 10 minutos de nuevo', await P.evaluate(() => !$('#asis-globo').classList.contains('asis-oye')));
   await pasar(3);
-  OK('y a los 10 minutos vuelve a golpear', await P.evaluate(() => $('#asis-globo').classList.contains('asis-oye') && !$('#asis-globo').hidden));
+  OK('después de mirarla, cuenta los 5 minutos de nuevo', await P.evaluate(() => !$('#asis-globo').classList.contains('asis-oye')));
+  await pasar(3);
+  OK('y a los 5 minutos vuelve a golpear', await P.evaluate(() => $('#asis-globo').classList.contains('asis-oye') && !$('#asis-globo').hidden));
   /* si abre Sonri, no golpea mientras está abierta */
-  await P.evaluate(() => asisAbrir('avisos')); await pasar(11);
+  await P.evaluate(() => asisAbrir('avisos')); await pasar(6);
   OK('con Sonri abierta no golpea', await P.evaluate(() => $('#asis-globo').hidden));
   await P.evaluate(() => asisCerrar());
   OK('sin errores de página ni red real', !errs.length && !red.length, errs.concat(red).slice(0, 3));
