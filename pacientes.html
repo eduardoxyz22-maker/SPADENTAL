@@ -661,6 +661,14 @@ body.locked #asis{display:none}
   .asis-globo{right:56px;bottom:50px;width:min(280px,calc(100vw - 80px))}
 }
 @media print{#asis{display:none}}
+/* «¡Oye, leeme!»: golpea la pantalla cuando se juntan avisos sin mirar */
+.asis-golpea svg{animation:asisGolpea 1.1s cubic-bezier(.3,.1,.3,1)}
+@keyframes asisGolpea{0%,100%{transform:none}12%{transform:translate(-18px,-6px) rotate(-14deg)}22%{transform:translate(2px,0) rotate(4deg) scale(1.06,.94)}36%{transform:translate(-18px,-6px) rotate(-14deg)}46%{transform:translate(2px,0) rotate(4deg) scale(1.06,.94)}60%{transform:translate(-18px,-6px) rotate(-14deg)}70%{transform:translate(2px,0) rotate(4deg) scale(1.06,.94)}}
+body.asis-tiembla{animation:asisTiembla .5s}
+@keyframes asisTiembla{0%,100%{transform:none}15%{transform:translate(-5px,2px)}30%{transform:translate(5px,-2px)}45%{transform:translate(-4px,1px)}60%{transform:translate(4px,-1px)}75%{transform:translate(-2px,0)}}
+.asis-globo.asis-oye{border-top-color:var(--clay);font-size:15px}
+.asis-globo.asis-oye b{font-size:17px}
+@media (prefers-reduced-motion:reduce){.asis-golpea svg,body.asis-tiembla{animation:none}}
 /* ===== fin de Sonri ===== */
 /* ===== MODERNO INI · la cara nueva del panel (va igual en los dos paneles; los colores salen de --lime) ===== */
 /* A · encabezado oscuro con el diente que flota y los anillos del día */
@@ -12839,6 +12847,7 @@ function asisRefrescar(nuevoYa){
   if(!ASIS.montado||document.body.classList.contains('locked'))return;
   var A=asisAvisos(), n=A.length, firma=A.map(function(a){return a.k}).join('#');
   var nb=$('#asis-n'); if(nb){nb.hidden=!n; nb.textContent=String(n)}
+  if(asisOyeToca(n))return;
   /* con una ventana del panel abierta el globito quedaría tapado: espero a que se cierre */
   if(asisModalAbierto()&&!ASIS.abierto){
     if(!ASIS.espera)ASIS.espera=setInterval(function(){if(!asisModalAbierto()){clearInterval(ASIS.espera); ASIS.espera=null; asisRefrescar(true)}},700);
@@ -12861,7 +12870,7 @@ function asisGlobo(a,calladito,solo,html){
   if(!html)ASIS_GLOBO_T=setTimeout(function(){gl.hidden=true},a.ms||8000)}
 function asisModalAbierto(){var o=$('#ov'); return !!o&&o.classList.contains('on')}
 function asisToggle(){if(ASIS_TOUR){asisTourFin(); return} if(ASIS.abierto)asisCerrar(); else asisAbrir(ASIS.firma?'avisos':'ayuda')}
-function asisAbrir(tab){ASIS.abierto=true; ASIS.tab=tab||ASIS.tab; var gl=$('#asis-globo'); if(gl)gl.hidden=true; asisPanelPintar()}
+function asisAbrir(tab){ASIS.abierto=true; ASIS.tab=tab||ASIS.tab; ASIS_OYE_T=Date.now(); var gl=$('#asis-globo'); if(gl){gl.hidden=true; gl.classList.remove('asis-oye')} asisPanelPintar()}
 function asisCerrar(){ASIS.abierto=false; var p=$('#asis-panel'); if(p)p.hidden=true}
 function asisTab(t){ASIS.tab=t; asisPanelPintar(); if(t==='ayuda'){var q=$('#asis-q'); if(q)try{q.focus()}catch(e){}}}
 function asisPosponer(k,ms){
@@ -12969,6 +12978,35 @@ function asisTourOfrecer(){
    pestaña), desbloquear() corre antes de que este bloque termine de
    cargarse: Sonri arranca recién cuando todo está listo. */
 setTimeout(function(){try{if(document.body&&!document.body.classList.contains('locked'))asisMontar()}catch(e){}},0);
+/* Cada 10 minutos, si se juntaron más de 10 avisos y nadie los mira: golpea la
+   pantalla, dice «¡Oye, leeme!» y hace toc-toc. Se calma al abrirla. */
+var ASIS_OYE_MS=600000, ASIS_OYE_MIN=10, ASIS_OYE_T=Date.now();
+function asisOyeToca(n){
+  if(ASIS.abierto||ASIS_TOUR||asisModalAbierto()||document.body.classList.contains('locked'))return false;
+  if(!(n>ASIS_OYE_MIN)||Date.now()-ASIS_OYE_T<ASIS_OYE_MS)return false;
+  ASIS_OYE_T=Date.now(); asisOye(n); return true}
+function asisOye(n){
+  var gl=$('#asis-globo'), yo=$('#asis-yo'); if(!gl||!yo)return;
+  asisGlobo(null,true,false,'<b>👋 ¡Oye, leeme!</b><span>Tenés '+asisPl(n,'aviso','avisos')+' sin mirar. Tocame y los vemos juntos.</span>'+
+    '<div class="asis-acc"><button type="button" class="asis-b" onclick="asisAbrir(\'avisos\')">Ver los avisos</button></div>');
+  gl.classList.add('asis-oye'); gl.onclick=function(e){if(!(e&&e.target&&e.target.tagName==='BUTTON'))asisAbrir('avisos')};
+  yo.classList.remove('asis-salta','asis-golpea'); void yo.offsetWidth; yo.classList.add('asis-golpea');
+  document.body.classList.remove('asis-tiembla'); void document.body.offsetWidth; document.body.classList.add('asis-tiembla');
+  setTimeout(function(){yo.classList.remove('asis-golpea'); document.body.classList.remove('asis-tiembla')},1300);
+  asisToc();
+  clearTimeout(ASIS_GLOBO_T); ASIS_GLOBO_T=setTimeout(function(){gl.hidden=true; gl.classList.remove('asis-oye')},15000)}
+/* toc, toc, toc: tres golpes secos */
+function asisToc(){
+  if(asisMudo()||!asisActivo())return;
+  var C=asisAudio(); if(!C)return;
+  try{
+    if(C.state==='suspended')C.resume();
+    var t0=C.currentTime+0.01;
+    [0,0.16,0.32].forEach(function(d){
+      var t=t0+d, o=C.createOscillator(), g=C.createGain();
+      o.type='triangle'; o.frequency.setValueAtTime(190,t); o.frequency.exponentialRampToValueAtTime(90,t+0.09);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.35,t+0.006); g.gain.exponentialRampToValueAtTime(0.0001,t+0.12);
+      o.connect(g); g.connect(C.destination); o.start(t); o.stop(t+0.14)})}catch(e){}}
 /* ===== fin de Sonri ===== */
 /* ===== MODERNO INI =====================================================
    LA CARA NUEVA DEL PANEL
