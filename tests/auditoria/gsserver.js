@@ -30,6 +30,16 @@ function gsServer(file) {
   }
   const ss = { getSheetByName: n => hojas[n] || null, insertSheet: n => (hojas[n] = hoja(n)), getName: () => 'Simulada', getUrl: () => 'about:blank', getId: () => 'x' };
   const props = {}; 
+  /* Google Drive simulado: carpetas y archivos en memoria (st.drive) */
+  const archivos = {}, carpetas = {};
+  let nArch = 0;
+  const archivo = (id) => { const a = archivos[id]; if (!a) throw new Error('No se encontró el archivo'); return {
+    getId: () => id, getName: () => a.name, getBlob: () => ({ getBytes: () => a.bytes.slice(), getContentType: () => a.mime }), setTrashed: (t) => { a.trashed = !!t; }, getUrl: () => 'drive://' + id }; };
+  const carpeta = (id) => ({ getId: () => id, getName: () => carpetas[id].name, getUrl: () => 'drive://' + id,
+    createFile: (blob) => { const fid = 'f' + (++nArch); archivos[fid] = { name: blob.getName(), mime: blob.getContentType(), bytes: blob.getBytes(), carpeta: id, trashed: false }; return archivo(fid); } });
+  const drive = { createFolder: (name) => { const id = 'c' + (Object.keys(carpetas).length + 1); carpetas[id] = { name }; return carpeta(id); },
+    getFolderById: (id) => { if (!carpetas[id]) throw new Error('No se encontró la carpeta'); return carpeta(id); },
+    getFileById: archivo };
   const cacheMem = {}, ahora = () => (st && st.reloj ? st.reloj() : Date.now());
   const cacheObj = { get: k => { const e = cacheMem[k]; if (!e || e.exp < ahora()) return null; return e.v; },
     put: (k, v, ttl) => { cacheMem[k] = { v: String(v), exp: ahora() + (ttl || 600) * 1000 }; }, remove: k => { delete cacheMem[k]; } };
@@ -38,7 +48,11 @@ function gsServer(file) {
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = String(v); } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     ContentService: { createTextOutput: t => ({ t, setMimeType() { return this; } }), MimeType: { JSON: 'json' } },
+    DriveApp: drive,
     Utilities: { formatDate: (d) => d.toISOString().slice(0, 10),
+      base64Decode: (b) => Array.from(Buffer.from(String(b), 'base64')).map(x => x > 127 ? x - 256 : x),
+      base64Encode: (by) => Buffer.from(by.map(x => x < 0 ? x + 256 : x)).toString('base64'),
+      newBlob: (by, mime, name) => ({ getBytes: () => by.slice(), getContentType: () => mime, getName: () => name }),
       DigestAlgorithm: { SHA_256: 'sha256' }, Charset: { UTF_8: 'utf8' },
       computeDigest: (alg, s) => Array.from(require('crypto').createHash('sha256').update(String(s), 'utf8').digest()).map(x => x > 127 ? x - 256 : x),
       getUuid: () => require('crypto').randomUUID() },
@@ -106,7 +120,7 @@ function gsServer(file) {
     ctx.guardarVerif(v);
   }
   Object.defineProperty(st, 'cfg', { get: () => lista().cfg, set: c => { shim(c); ctx.doGuardarCfg(c); } });
-  st.ctx = ctx; st.props = props; st.cacheMem = cacheMem;
+  st.ctx = ctx; st.props = props; st.cacheMem = cacheMem; st.drive = { archivos, carpetas };
   return st;
 }
 module.exports = { gsServer };

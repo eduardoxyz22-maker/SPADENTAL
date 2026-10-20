@@ -1779,6 +1779,28 @@ body.md-ag-on{overflow:hidden}
 .md-px-sig{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
 .md-px-sig div{font-size:13px}.md-px-sig small{display:block;color:var(--gray);font-size:11.5px}
 .md-px-sig div{border:1px solid var(--line);border-radius:12px;padding:6px 10px;background:var(--paper,#FAFBF6)}
+.md-fotos{margin:14px 0 6px}
+.md-fotos-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.md-fotos-h h4{margin:0;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px}
+.md-fotos-h h4 em{font-style:normal;font-size:11px;background:var(--lime-sf,#F4F7E4);color:var(--ink);border-radius:999px;padding:1px 7px;margin-left:4px}
+.md-fotos-acc{display:flex;gap:6px;flex-wrap:wrap}.md-foto-bt{cursor:pointer}
+.md-cmp{position:relative;border-radius:14px;overflow:hidden;background:#111;aspect-ratio:4/3;user-select:none}
+.md-cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.md-cmp .md-cmp-des{position:absolute;inset:0}
+.md-cmp-l{position:absolute;top:0;bottom:0;width:3px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px #0003;pointer-events:none}
+.md-cmp-l::after{content:'⇆';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;color:#222;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:0 4px 10px #0004}
+.md-cmp-et{position:absolute;top:10px;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:#000a;color:#fff;pointer-events:none}
+.md-cmp-et.izq{left:10px}.md-cmp-et.der{right:10px}
+.md-cmp input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.md-fotos-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.md-foto-th{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;padding:0;background:#fff;cursor:pointer;aspect-ratio:4/3}
+.md-foto-th img{width:100%;height:100%;object-fit:cover;display:block}
+.md-foto-th span{position:absolute;left:4px;bottom:4px;font-size:10.5px;font-weight:800;background:#000a;color:#fff;border-radius:6px;padding:1px 6px}
+.md-foto-th b{position:absolute;right:4px;top:4px;font-size:12px}
+.md-foto-gr{border-radius:14px;overflow:hidden;background:#111;margin:10px 0}
+.md-foto-gr img{display:block;width:100%;max-height:62vh;object-fit:contain}
+.md-foto-aut{display:flex;gap:8px;align-items:center;margin:10px 0 4px;font-size:13.5px;cursor:pointer}
+.md-foto-aut input{width:18px;height:18px}
 /* ===== MODERNO FIN ===== */
 </style>
 </head>
@@ -3260,7 +3282,7 @@ function abrirSesion(clave){
   return fetchApi({action:'login',clave:clave}).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
     if(r&&r.ok&&r.token){
-      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes};
+      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes,fotos:!!r.fotos};
       CLAVE_MEM=clave; guardarSesion(); return r}
     if(r&&r.error==='accion_desconocida')SRV_AUTH=false;
     if(r&&r.error==='clave_incorrecta'&&CLAVE_MEM===clave)CLAVE_MEM='';
@@ -14736,6 +14758,131 @@ function mdAtenderListo(id,repetir){
         if(SRV.length){renderSrv(); recalcTotal()}}
       toast(D.ses?'Listo: «'+(D.ses.desc||'la sesión')+'» ya está elegida. Revisá y tocá Guardar':repetir?'Listo: copié lo de la última vez. Revisá precios y tocá Guardar':'Listo: revisá y tocá Guardar')}catch(e){}},250)}
 
+/* ---------- fotos del antes y del después (en la ficha) ----------
+   Se sacan con la cámara o se suben de la galería; el panel las achica antes
+   de mandarlas (1600 px) y arma una miniatura para la lista. Se guardan en
+   la carpeta de Google Drive de la clínica; la grande se pide al abrirla. */
+var MD_FOTOS={}, MD_FOTO_GRANDE={}, MD_FOTO_PEND=null;
+var MD_FOTO_TIPO={antes:'Antes',durante:'Durante',despues:'Después',otra:'Otra'};
+function mdFotosSrv(){return !!(SESION&&SESION.fotos)}
+function mdFotoErr(e){return e==='accion_desconocida'?'Falta pegar el Apps Script nuevo para guardar fotos':e==='sin_permiso'?'Esa foto no te corresponde 🔐':e==='foto_grande'?'La foto es demasiado grande':'No se pudo ('+(e||'sin respuesta')+')'}
+function mdFotosFicha(nombre){
+  var m=$('#modal'); if(!m||m.querySelector('#md-fotos'))return;
+  var hOdo=mdQ(m,'h4').filter(function(h){return /^odontograma$/i.test(h.textContent.trim())})[0]; if(!hOdo)return;
+  var box=document.createElement('div'); box.id='md-fotos'; box.className='md-fotos'; box.setAttribute('data-pac',nombre);
+  hOdo.parentNode.insertBefore(box,hOdo); mdFotosPintar(nombre);
+  if(!CONNECTED)return;
+  api('fotos',null,undefined,undefined,{consulta:{paciente:nombre}}).then(function(r){
+    if(r&&r.ok){MD_FOTOS[keyPac(nombre)]=r.fotos||[]; if(SESION)SESION.fotos=true}
+    else MD_FOTOS[keyPac(nombre)]={error:(r&&r.error)||'sin respuesta'};
+    mdFotosPintar(nombre)},function(){MD_FOTOS[keyPac(nombre)]={error:'sin conexión'}; mdFotosPintar(nombre)})}
+function mdFotosPintar(nombre){
+  var box=$('#md-fotos'); if(!box||box.getAttribute('data-pac')!==nombre)return;
+  var L=MD_FOTOS[keyPac(nombre)], nj=jss(nombre);
+  var subir='<label class="btn sm md-foto-bt">📷 Sacar foto<input type="file" accept="image/*" capture="environment" hidden onchange="mdFotoElegida(\''+nj+'\',this)"></label>'+
+    '<label class="btn sec sm md-foto-bt">⬆ Subir de la galería<input type="file" accept="image/*" hidden onchange="mdFotoElegida(\''+nj+'\',this)"></label>';
+  var h='<div class="md-fotos-h"><h4>📸 Fotos'+(L&&L.length?' <em>'+L.length+'</em>':'')+'</h4><div class="md-fotos-acc">'+(CONNECTED&&!(L&&L.error)?subir:'')+'</div></div>';
+  if(!CONNECTED){box.innerHTML=h+'<p class="mini">Para ver y guardar fotos hace falta internet.</p>'; return}
+  if(!L){box.innerHTML=h+'<p class="mini">Cargando fotos…</p>'; return}
+  if(L.error){box.innerHTML=h+'<p class="mini">'+esc(mdFotoErr(L.error))+'</p>'; return}
+  if(!L.length){box.innerHTML=h+'<p class="mini">Todavía no hay fotos. Sacá la del <b>antes</b> el primer día y la del <b>después</b> al terminar: quedan juntas para comparar.</p>'; return}
+  var ord=L.slice().sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.cargada||'').localeCompare(b.cargada||'')});
+  /* el antes y el después del mismo tratamiento, los más nuevos */
+  var des=ord.filter(function(f){return f.tipo==='despues'}).pop(), ant=null;
+  if(des)ant=ord.filter(function(f){return f.tipo==='antes'&&(!des.tratamiento||!f.tratamiento||sinTildes(f.tratamiento)===sinTildes(des.tratamiento))}).pop()||null;
+  var cmp=ant&&des?'<div class="md-cmp" id="md-cmp"><img class="a" data-id="'+esc(ant.id)+'" src="'+(MD_FOTO_GRANDE[ant.id]||ant.mini)+'" alt="Antes">'+
+      '<div class="md-cmp-des" style="clip-path:inset(0 0 0 50%)"><img data-id="'+esc(des.id)+'" src="'+(MD_FOTO_GRANDE[des.id]||des.mini)+'" alt="Después"></div><i class="md-cmp-l" style="left:50%"></i>'+
+      '<span class="md-cmp-et izq">ANTES · '+fmtFcorta(ant.fecha)+'</span><span class="md-cmp-et der">DESPUÉS · '+fmtFcorta(des.fecha)+'</span>'+
+      '<input type="range" min="0" max="100" value="50" aria-label="Comparar antes y después" oninput="mdCmp(this.value)"></div>'+
+      '<p class="mini" style="margin:4px 0 8px">'+esc(des.tratamiento||ant.tratamiento||'')+' · deslizá para comparar</p>':'';
+  box.innerHTML=h+cmp+'<div class="md-fotos-g">'+ord.slice().reverse().map(function(f){
+    return '<button type="button" class="md-foto-th" onclick="mdFotoAbrir(\''+nj+'\',\''+esc(f.id)+'\')"><img src="'+f.mini+'" alt="">'+
+      '<span>'+fmtFcorta(f.fecha)+' · '+esc(MD_FOTO_TIPO[f.tipo]||f.tipo)+'</span>'+(f.autoriza?'<b title="Autorizó usarla en publicidad">📣</b>':'')+'</button>'}).join('')+'</div>';
+  if(ant&&des){[ant,des].forEach(function(f){if(!MD_FOTO_GRANDE[f.id])mdFotoGrande(f.id).then(function(){mdCmpRefrescar()},function(){})})}}
+function mdCmp(v){var c=$('#md-cmp'); if(!c)return; c.querySelector('.md-cmp-des').style.clipPath='inset(0 0 0 '+v+'%)'; c.querySelector('.md-cmp-l').style.left=v+'%'}
+function mdCmpRefrescar(){mdQ(document,'#md-cmp img').forEach(function(i){var g=MD_FOTO_GRANDE[i.getAttribute('data-id')]; if(g&&i.src!==g)i.src=g})}
+function mdFotoGrande(id){
+  if(MD_FOTO_GRANDE[id])return Promise.resolve(MD_FOTO_GRANDE[id]);
+  return api('fotoVer',null,undefined,undefined,{consulta:{id:id}}).then(function(r){
+    if(r&&r.ok&&r.datos){MD_FOTO_GRANDE[id]=r.datos; return r.datos} throw new Error((r&&r.error)||'sin respuesta')})}
+function mdFotoDe(nombre,id){return (MD_FOTOS[keyPac(nombre)]||[]).filter?(MD_FOTOS[keyPac(nombre)]||[]).filter(function(f){return f.id===id})[0]:null}
+function mdFotoAbrir(nombre,id){
+  var f=mdFotoDe(nombre,id); if(!f)return;
+  var nj=jss(nombre), puedeBorrar=!esDoctora()||f.cargo===PROF_ACTUAL;
+  openModal('<h3>📸 '+esc(MD_FOTO_TIPO[f.tipo]||'Foto')+' · '+fmtF(f.fecha)+'</h3><p class="mini">'+esc(nombre)+(f.tratamiento?' · '+esc(f.tratamiento):'')+' · la cargó '+esc(f.cargo||'—')+'</p>'+
+    '<div class="md-foto-gr"><img id="md-foto-img" src="'+(MD_FOTO_GRANDE[id]||f.mini)+'" alt=""></div>'+
+    '<label class="md-foto-aut"><input type="checkbox" '+(f.autoriza?'checked':'')+' onchange="mdFotoAutoriza(\''+nj+'\',\''+esc(id)+'\',this.checked)"> <span>Autorizó usarla en publicidad (sin mostrar la cara)</span></label>'+
+    '<div class="row-btn"><button class="btn" onclick="mdFotoCompartir(\''+nj+'\',\''+esc(id)+'\')">📤 Compartir o mandar</button>'+
+      '<button class="btn sec" onclick="mdFotoBajar(\''+nj+'\',\''+esc(id)+'\')">⬇ Descargar</button>'+
+      '<button class="btn sec" onclick="verPaciente(\''+nj+'\')">Volver a la ficha</button>'+
+      (puedeBorrar?'<button class="btn danger sm" style="margin-left:auto" onclick="mdFotoBorrar(\''+nj+'\',\''+esc(id)+'\')">Borrar</button>':'')+'</div>');
+  if(!MD_FOTO_GRANDE[id])mdFotoGrande(id).then(function(d){var i=$('#md-foto-img'); if(i)i.src=d},function(e){toast('No se pudo abrir la foto grande: '+mdFotoErr(e.message),1)})}
+function mdFotoAutoriza(nombre,id,v){
+  api('fotoCambiar',null,undefined,undefined,{consulta:{id:id,autoriza:!!v}}).then(function(r){
+    if(r&&r.ok){var f=mdFotoDe(nombre,id); if(f)f.autoriza=!!v; toast(v?'Anotado: autorizó usarla en publicidad ✅':'Anotado: no se usa en publicidad')}
+    else toast(mdFotoErr(r&&r.error),1)},function(){toast('Sin conexión: no se guardó',1)})}
+function mdFotoNombre(nombre,f){return (f.fecha+' '+nombre+' '+(MD_FOTO_TIPO[f.tipo]||'foto')).replace(/[\\\/:*?"<>|]/g,'')+'.jpg'}
+function mdFotoBajar(nombre,id){
+  var f=mdFotoDe(nombre,id); if(!f)return;
+  mdFotoGrande(id).then(function(d){var a=document.createElement('a'); a.href=d; a.download=mdFotoNombre(nombre,f); document.body.appendChild(a); a.click(); a.remove()},function(){toast('No se pudo bajar la foto',1)})}
+function mdFotoCompartir(nombre,id){
+  var f=mdFotoDe(nombre,id); if(!f)return;
+  mdFotoGrande(id).then(function(d){return fetch(d).then(function(r){return r.blob()})}).then(function(b){
+    var file=new File([b],mdFotoNombre(nombre,f),{type:'image/jpeg'});
+    if(navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Su '+(f.tipo==='despues'?'resultado':'foto')+' en '+clinica()+' 🦷'}).catch(function(){});
+    /* en la compu: se baja la foto y se abre su WhatsApp para adjuntarla */
+    mdFotoBajar(nombre,id);
+    var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
+    if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su foto de '+clinica()+' 🦷'),'_blank','noopener');
+    toast('La foto se descargó: adjuntala en el chat de WhatsApp')},function(){toast('No se pudo preparar la foto',1)})}
+function mdFotoBorrar(nombre,id){
+  if(!confirm('¿Borrar esta foto? Va a la papelera de Google Drive de la clínica.'))return;
+  api('fotoBorrar',null,undefined,undefined,{consulta:{id:id}}).then(function(r){
+    if(r&&r.ok){var k=keyPac(nombre); if(MD_FOTOS[k]&&MD_FOTOS[k].filter)MD_FOTOS[k]=MD_FOTOS[k].filter(function(f){return f.id!==id}); toast('Foto borrada'); verPaciente(nombre)}
+    else toast(mdFotoErr(r&&r.error),1)},function(){toast('Sin conexión: no se borró',1)})}
+function mdAchicar(file,max,q){return new Promise(function(ok,mal){
+  var url=URL.createObjectURL(file), img=new Image();
+  img.onload=function(){var w=img.naturalWidth,h=img.naturalHeight,f=Math.min(1,max/Math.max(w,h)), c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(w*f)); c.height=Math.max(1,Math.round(h*f)); c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url); ok(c.toDataURL('image/jpeg',q))};
+  img.onerror=function(){URL.revokeObjectURL(url); mal(new Error('No se pudo leer la imagen'))};
+  img.src=url})}
+function mdFotoElegida(nombre,inp){
+  var file=inp.files&&inp.files[0]; inp.value=''; if(!file)return;
+  if(!CONNECTED){toast('Para guardar fotos hace falta internet',1);return}
+  toast('Preparando la foto…');
+  Promise.all([mdAchicar(file,1600,.82),mdAchicar(file,320,.6)]).then(function(x){
+    var mini=x[1]; if(mini.length>44000)return mdAchicar(file,220,.5).then(function(m2){return [x[0],m2]}); return x}).then(function(x){
+    MD_FOTO_PEND={nombre:nombre,datos:x[0],mini:x[1]}; mdFotoForm(nombre)},function(e){toast(e.message||'No se pudo leer la foto',1)})}
+function mdFotoForm(nombre){
+  var P=MD_FOTO_PEND; if(!P)return;
+  var k=keyPac(nombre), hoy=hoyISO(), nj=jss(nombre), L=MD_FOTOS[k]&&MD_FOTOS[k].filter?MD_FOTOS[k]:[];
+  var trats=[]; planesDe(nombre).forEach(function(p){if(p.estado!=='cancelado')trats.push(p.nombre)});
+  DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)}).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})
+    .forEach(function(r){(r.servicios||[]).forEach(function(x){var b=mdSrvBase(x.nom); if(b&&!mdEsConsulta(b))trats.push(b)})});
+  trats=trats.filter(function(t,i){return t&&trats.map(sinTildes).indexOf(sinTildes(t))===i}).slice(0,8);
+  var tipoSug=L.some(function(f){return f.tipo==='antes'})?'despues':'antes';
+  openModal('<h3>📸 Guardar foto</h3><p class="mini">'+esc(nombre)+'</p>'+
+    '<div class="md-foto-gr"><img src="'+P.datos+'" alt=""></div>'+
+    '<label>¿Qué foto es?</label><div class="seg lime md-tiles" id="ft-tipo">'+['antes','durante','despues','otra'].map(function(t){
+      return '<label><input type="radio" name="fttipo" value="'+t+'"'+(t===tipoSug?' checked':'')+'><span>'+MD_FOTO_TIPO[t]+'</span></label>'}).join('')+'</div>'+
+    '<div class="grid g2" style="margin-top:10px"><div><label>Tratamiento</label><input id="ft-trat" list="ft-trats" value="'+esc(trats[0]||'')+'" placeholder="Ej. Blanqueamiento">'+
+      '<datalist id="ft-trats">'+trats.map(function(t){return '<option value="'+esc(t)+'">'}).join('')+'</datalist></div>'+
+      '<div><label>Fecha</label><input type="date" id="ft-fecha" value="'+hoy+'"></div></div>'+
+    '<label class="md-foto-aut"><input type="checkbox" id="ft-aut"> <span>Autorizó usarla en publicidad (sin mostrar la cara)</span></label>'+
+    '<div class="row-btn"><button class="btn" id="ft-ok" onclick="mdFotoGuardar(\''+nj+'\')">Guardar foto</button><button class="btn sec" onclick="MD_FOTO_PEND=null;verPaciente(\''+nj+'\')">Cancelar</button></div>')}
+function mdFotoGuardar(nombre){
+  var P=MD_FOTO_PEND; if(!P)return;
+  var b=$('#ft-ok'); if(b){if(b.disabled)return; b.disabled=true; b.textContent='Subiendo…'}
+  var fecha=$('#ft-fecha').value||hoyISO(), k=keyPac(nombre);
+  var at=DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)&&r.fecha===fecha&&r.estado==='Atendido'})[0];
+  var foto={id:P.id||(P.id=uid()),paciente:nombre,datos:P.datos,mini:P.mini,tipo:getRadio('fttipo')||'otra',tratamiento:$('#ft-trat').value.trim(),fecha:fecha,atencionId:at?at.id:'',autoriza:!!$('#ft-aut').checked};
+  api('foto',null,undefined,undefined,{foto:foto}).then(function(r){
+    if(r&&r.ok&&r.foto){MD_FOTO_PEND=null; MD_FOTO_GRANDE[r.foto.id]=foto.datos; var L=MD_FOTOS[k]&&MD_FOTOS[k].filter?MD_FOTOS[k]:[]; L=L.filter(function(f){return f.id!==r.foto.id}); L.push(r.foto); MD_FOTOS[k]=L;
+      toast('Foto guardada ✅'); verPaciente(nombre)}
+    else{if(b){b.disabled=false; b.textContent='Guardar foto'} toast(mdFotoErr(r&&r.error),1)}},
+    function(){if(b){b.disabled=false; b.textContent='Reintentar'} toast('No se pudo subir: revisá la conexión y tocá de nuevo',1)})}
+
 /* ---------- videos de ayuda: cómo se carga una atención, un paquete y un tratamiento ---------- */
 var MD_VIDEOS=[
   {n:1, t:'Cómo cargar una atención', d:'1 min · paciente, canal, servicio, cobro y guardar'},
@@ -14895,6 +15042,8 @@ function mdPautaVer(srv,canal){
      x:'En 🏠 Mi día, arriba, está tu próximo paciente: alergias, qué sesión le toca, qué ya pagó y qué se hizo la última vez. «▶ Atender» abre la atención con todo cargado (también la sesión del paquete): revisás y tocás Guardar.', ayuda:/próximo paciente/},
     {id:'md-ventana6', f:'2026-10-22', t:'La ventana de cada cita, más clara',
      x:'Al abrir una atención o cita, arriba dice qué pasó (atendida, no vino, canceló) y abajo su recorrido: cuándo agendó, si se movió, cómo pagó. Si no vino, ya tenés el WhatsApp armado y el botón «Reagendar».'},
+    {id:'md-fotos', f:'2026-10-22', t:'Fotos del antes y del después',
+     x:'En la ficha de cada paciente hay una sección «📸 Fotos»: sacá la foto del antes el primer día y la del después al terminar, y quedan juntas para comparar con una barra. Se guardan en el Google Drive de la clínica. Desde la foto la podés mandar al paciente o marcar si autorizó usarla en publicidad.', ayuda:/foto del antes/},
     {id:'md-pauta', f:'2026-10-22', t:'Dónde conviene poner la pauta',
      x:'En 📊 Panel, arriba, «Pauta por servicio»: qué servicio trae cada red y cuánto dejaron esos pacientes, con una recomendación para la semana. Tocá una casilla para ver los pacientes.', si:function(){return esAdmin()}},
     {id:'md-calpar', f:'2026-10-21', t:'El calendario sin citas encimadas',
@@ -14932,6 +15081,8 @@ function mdPautaVer(srv,canal){
      p:['En ＋ Nueva atención, arriba: «▶ ¿Primera vez? Mirá cómo se carga».','En la ventana de 🦷 Planes de cada paciente: el video del paquete, el de marcar sus sesiones y el del tratamiento por etapas.','En mis respuestas de cómo cargar una atención, un paquete o un plan: «▶ Ver el video».','Cada video dura un minuto y se puede pausar.']},
     {q:'El plan dice que falta una sesión que ya se hizo, ¿cómo lo arreglo?', k:'sesion ya se hizo no quedo marcada plan paquete dice primera sesion falta marcar visita suelta arreglar vincular', v:'pacientes', f:'#pc-q',
      p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Si la visita se guardó con el plan elegido, en el plan sale «⚠ visitas cargadas con este plan»: tocá «✓ Marcar sus sesiones».','Si se cargó como visita suelta, tocá «🔗 Ya se hizo en una visita» y elegí la visita de ese día.','Si el plan es de una sola etapa pero se hizo en varias citas, tocá «🧩 Se hizo en varias visitas» y marcá cada visita.','No cambia lo cobrado ni la caja: lo pagado por adelantado queda usado en esa sesión.']},
+    {q:'¿Cómo saco la foto del antes y del después?', k:'foto fotos antes despues camara galeria comparar blanqueamiento sonrisa resultado publicidad', v:'pacientes', f:'#pc-q',
+     p:['Abrí la ficha del paciente (lupa o 👥 Pacientes) y bajá hasta «📸 Fotos».','Tocá «📷 Sacar foto» (en el celular o el iPad abre la cámara) o «⬆ Subir de la galería».','Elegí si es Antes, Durante o Después y el tratamiento, y tocá «Guardar foto».','Con un antes y un después del mismo tratamiento aparece la comparación: deslizá la barra. Tocá una foto para mandarla, descargarla o marcar si autorizó usarla en publicidad.']},
     {q:'¿Cómo atiendo rápido a mi próximo paciente?', k:'proximo paciente atender rapido todo cargado repetir ultima vez sesion paquete mi dia', v:'midia', f:'#md-prox',
      p:['Entrá a 🏠 Mi día: arriba está tu próximo paciente con sus alergias y lo que le toca.','Tocá «▶ Atender: todo ya cargado»: se abre la atención con el paciente, la cita y la sesión de su plan.','Para un control, «↻ Repetir lo de la última vez» copia los servicios de la visita anterior.','Revisá y tocá «Guardar atención».']},
     {q:'¿En qué red conviene poner la pauta?', k:'pauta publicidad facebook instagram tiktok red servicio conviene invertir anuncios', v:'panel', f:'#md-pauta', solo:'adm',
@@ -14972,7 +15123,7 @@ function mdRefrescar(){
   var _om=openModal;
   openModal=function(){var m=$('#modal'); if(m)m.classList.remove('md-ficha'); return _om.apply(this,arguments)};
   var _vp=verPaciente;
-  verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdFicha(nombre)}catch(e){} return r};
+  verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdFicha(nombre)}catch(e){} try{mdFotosFicha(nombre)}catch(e){} return r};
   if(typeof cuentasPlanHtml==='function')cuentasPlanHtml=function(plan){return mdCuentasPlanHtml(plan)};
   var _vpl=verPlan;
   verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPlanEnModal(nombre,id)}catch(e){} return r};

@@ -1156,7 +1156,7 @@ var ANTICIPO_DOCTORAS = true;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-19-b';
+var VERSION_SCRIPT = '2026-10-22-fotos';
 var CLINICA_ID = 'spadental';
 function deOtraClinica(r) { return !!(r && r.clinicaId && r.clinicaId !== CLINICA_ID); }
 /* =====================================================================
@@ -1277,7 +1277,7 @@ function doLogin(body) {
   s.h = h; s.fabrica = esDeFabrica(h);
   var tok = nuevaSesion(s);
   /* pagoPlan: este script acepta los pagos de plan que carga la doctora */
-  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true };
+  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true, fotos: true };
 }
 
 /* Cambiar una clave: la dueña cambia cualquiera; recepción, la suya
@@ -1610,12 +1610,120 @@ function doPost(e) {
     if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg, base));
+    if (body.action === 'foto') return json(doFotoGuardar(body.foto, ses));
+    if (body.action === 'fotos') return json(doFotos(body.consulta, ses));
+    if (body.action === 'fotoVer') return json(doFotoVer(body.consulta, ses));
+    if (body.action === 'fotoCambiar') return json(doFotoCambiar(body.consulta, ses));
+    if (body.action === 'fotoBorrar') return json(doFotoBorrar(body.consulta, ses));
     return json({ ok: false, error: 'accion_desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });
   } finally {
     lock.releaseLock();
   }
+}
+
+/* =====================================================================
+   FOTOS DEL ANTES Y DEL DESPUÉS
+   Las fotos van a una carpeta de Google Drive de la clínica (la de la
+   cuenta que publicó este script; no se comparte con nadie). En la hoja
+   «Fotos» queda el registro, con una miniatura chica para la lista: la foto
+   grande se pide recién cuando se abre. Una foto borrada va a la papelera
+   de Drive (se puede recuperar 30 días) y su fila queda marcada.
+   ===================================================================== */
+var HOJA_FOTOS = 'Fotos';
+var COLS_FOTOS = ['ID', 'Paciente', 'Fecha', 'Tipo', 'Tratamiento', 'Atención', 'Archivo Drive',
+  'Miniatura', 'Autoriza publicidad', 'Cargó', 'Cargada', 'Borrada'];
+var FOTO_TIPOS = ['antes', 'durante', 'despues', 'otra'];
+var FOTO_MAX_B64 = 4500000;   // unos 3,3 MB de foto
+var FOTO_MINI_MAX = 45000;    // la miniatura entra en una celda
+function getSheetFotos() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(HOJA_FOTOS);
+  if (!sh) sh = ss.insertSheet(HOJA_FOTOS);
+  var cab = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0];
+  if (cab.length < COLS_FOTOS.length || String(cab[0]).trim() !== COLS_FOTOS[0]) {
+    sh.getRange(1, 1, 1, COLS_FOTOS.length).setValues([COLS_FOTOS]);
+    sh.getRange(1, 1, 1, COLS_FOTOS.length).setFontWeight('bold').setBackground('#A8C21E').setFontColor('#262625');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+function carpetaFotos() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('FOTOS_CARPETA');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { } }
+  var f = DriveApp.createFolder('Fotos de pacientes · ' + getSpreadsheet().getName());
+  props.setProperty('FOTOS_CARPETA', f.getId());
+  return f;
+}
+function fotoDeFila(f) {
+  return { id: String(f[0] || ''), paciente: String(f[1] || ''), fecha: formatoFecha(f[2]), tipo: String(f[3] || ''),
+    tratamiento: String(f[4] || ''), atencionId: String(f[5] || ''), mini: String(f[7] || ''),
+    autoriza: String(f[8] || '') === 'SÍ', cargo: String(f[9] || ''), cargada: String(f[10] || '') };
+}
+function filasFotos() {
+  var sh = getSheetFotos(), n = sh.getLastRow(), out = [];
+  if (n < 2) return out;
+  var vs = sh.getRange(2, 1, n - 1, COLS_FOTOS.length).getValues();
+  for (var i = 0; i < vs.length; i++) if (vs[i][0] && !vs[i][11]) out.push({ fila: i + 2, v: vs[i] });
+  return out;
+}
+function quienFoto(ses) { return ses.rol === 'doctora' ? ses.prof : (ses.rol === 'admin' ? 'Dueña' : 'Recepción'); }
+/* la doctora ve y carga fotos solo de sus pacientes (como la ficha) */
+function fotoPermitida(ses, nombre) { return !(ses && ses.rol === 'doctora' && pacienteDeOtra(fClavePac(nombre), ses.prof)); }
+function doFotoGuardar(f, ses) {
+  if (!f || !f.paciente || !f.datos) return { ok: false, error: 'faltan_datos' };
+  if (!fotoPermitida(ses, f.paciente)) return { ok: false, error: 'sin_permiso' };
+  var datos = String(f.datos).replace(/^data:image\/\w+;base64,/, ''), mini = String(f.mini || '');
+  if (datos.length > FOTO_MAX_B64) return { ok: false, error: 'foto_grande' };
+  if (mini.length > FOTO_MINI_MAX || (mini && !/^data:image\/jpeg;base64,/.test(mini))) mini = '';
+  var tipo = FOTO_TIPOS.indexOf(f.tipo) >= 0 ? f.tipo : 'otra';
+  var id = String(f.id || Utilities.getUuid()).slice(0, 60);
+  var ya = filasFotos().filter(function (x) { return String(x.v[0]) === id; })[0];
+  if (ya) return { ok: true, foto: fotoDeFila(ya.v) };          // reintento: ya estaba guardada
+  var fecha = /^\d{4}-\d{2}-\d{2}$/.test(f.fecha || '') ? f.fecha : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var nombre = (fecha + ' ' + f.paciente + ' ' + tipo + ' ' + id.slice(0, 6)).replace(/[\\\/:*?"<>|]/g, '') + '.jpg';
+  var archivo = carpetaFotos().createFile(Utilities.newBlob(Utilities.base64Decode(datos), 'image/jpeg', nombre));
+  var fila = [id, String(f.paciente), fecha, tipo, String(f.tratamiento || '').slice(0, 120), String(f.atencionId || ''),
+    archivo.getId(), mini, f.autoriza ? 'SÍ' : 'NO', quienFoto(ses), new Date().toISOString(), ''];
+  getSheetFotos().appendRow(fila);
+  return { ok: true, foto: fotoDeFila(fila) };
+}
+function doFotos(c, ses) {
+  var clave = c && c.paciente ? fClavePac(c.paciente) : '';
+  var out = filasFotos().map(function (x) { return fotoDeFila(x.v); }).filter(function (f) {
+    return (!clave || fClavePac(f.paciente) === clave) && fotoPermitida(ses, f.paciente);
+  });
+  return { ok: true, fotos: out };
+}
+function fotoDe(id, ses) {
+  var x = filasFotos().filter(function (y) { return String(y.v[0]) === String(id || ''); })[0];
+  if (!x) return { error: 'no_existe' };
+  if (!fotoPermitida(ses, x.v[1])) return { error: 'sin_permiso' };
+  return { x: x };
+}
+function doFotoVer(c, ses) {
+  var r = fotoDe(c && c.id, ses); if (r.error) return { ok: false, error: r.error };
+  var b = DriveApp.getFileById(r.x.v[6]).getBlob();
+  return { ok: true, id: String(r.x.v[0]), datos: 'data:image/jpeg;base64,' + Utilities.base64Encode(b.getBytes()) };
+}
+function doFotoCambiar(c, ses) {
+  var r = fotoDe(c && c.id, ses); if (r.error) return { ok: false, error: r.error };
+  var v = r.x.v.slice();
+  if (typeof c.autoriza === 'boolean') v[8] = c.autoriza ? 'SÍ' : 'NO';
+  if (c.tipo && FOTO_TIPOS.indexOf(c.tipo) >= 0) v[3] = c.tipo;
+  if (typeof c.tratamiento === 'string') v[4] = c.tratamiento.slice(0, 120);
+  getSheetFotos().getRange(r.x.fila, 1, 1, COLS_FOTOS.length).setValues([v]);
+  return { ok: true, foto: fotoDeFila(v) };
+}
+function doFotoBorrar(c, ses) {
+  var r = fotoDe(c && c.id, ses); if (r.error) return { ok: false, error: r.error };
+  /* la doctora borra solo las que cargó ella; recepción y la dueña, cualquiera */
+  if (ses.rol === 'doctora' && String(r.x.v[9]) !== ses.prof) return { ok: false, error: 'sin_permiso' };
+  try { DriveApp.getFileById(r.x.v[6]).setTrashed(true); } catch (e) { }
+  var v = r.x.v.slice(); v[11] = new Date().toISOString() + ' · ' + quienFoto(ses);
+  getSheetFotos().getRange(r.x.fila, 1, 1, COLS_FOTOS.length).setValues([v]);
+  return { ok: true };
 }
 
 function doGet(e) {
@@ -1637,5 +1745,7 @@ function probar() {
   Logger.log('Planilla: ' + info.planilla);
   Logger.log('Abrila acá: ' + getSpreadsheet().getUrl());
   Logger.log('Atenciones guardadas: ' + info.filas);
+  /* también pide el permiso de Google Drive para guardar las fotos */
+  Logger.log('Carpeta de fotos: ' + carpetaFotos().getUrl());
   return info;
 }
