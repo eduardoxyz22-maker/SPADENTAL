@@ -2464,6 +2464,9 @@ body.rol-pauta header nav button:not(#nav-pauta):not(#nav-duena),body.rol-pauta 
     <div id="cj-nocuadra"></div></div>
 
   <div class="card"><h2>Movimientos del periodo</h2>
+    <div class="row" style="margin:4px 0 10px;gap:10px;align-items:center;flex-wrap:wrap">
+      <input id="cj-q" placeholder="🔎 Buscar paciente o doctora: solo sus pagos del periodo" style="max-width:420px" oninput="cajaTablaPintar()" autocomplete="off">
+      <span class="mini" id="cj-q-res"></span></div>
     <div class="tw"><table><thead><tr><th>Fecha</th><th>Paciente</th><th>Profesional</th>
       <th class="num">Total</th><th class="num">Cobrado</th><th class="num">Saldo</th><th>Forma de pago</th></tr></thead>
       <tbody id="cj-body"></tbody></table></div>
@@ -7770,6 +7773,22 @@ function renderCaja(){
         'arranca con lo que se carga desde el panel.</p>'
       : '');
 
+  cajaTablaPintar(rows)}
+/* la tabla de movimientos, con el buscador por paciente: escribí unas letras y
+   quedan solo sus pagos del periodo elegido (día, quincena, mes o año) */
+function cajaTablaPintar(rows){
+  rows=rows||cajaRows();
+  var qEl=$('#cj-q'), q=sinTildes(qEl?qEl.value:''), res=$('#cj-q-res');
+  if(q){
+    /* por paciente o por doctora: «mirna» deja todo lo que cobró la Dra. Mirna en el periodo */
+    rows=rows.filter(function(r){return sinTildes(r.paciente).indexOf(q)>=0||sinTildes(r.profesional).indexOf(q)>=0});
+    var tot=0, cob=0, sal=0, fav=0; rows.forEach(function(r){tot+=num(r.total); cob+=num(r.acuenta); sal+=num(r.saldo); fav+=num(r._favor)});
+    var pacs={}, docs={}; rows.forEach(function(r){pacs[keyPac(r.paciente)]=1; if(r.profesional)docs[r.profesional]=1});
+    var quien=Object.keys(pacs).length===1?' de <b>'+esc(rows[0].paciente)+'</b>':(Object.keys(docs).length===1&&rows.every(function(r){return sinTildes(r.profesional).indexOf(q)>=0})?' de <b>'+esc(Object.keys(docs)[0])+'</b> · '+Object.keys(pacs).length+' paciente'+(Object.keys(pacs).length===1?'':'s'):' de '+Object.keys(pacs).length+' pacientes');
+    if(res)res.innerHTML=rows.length?'<b>'+rows.length+'</b> movimiento'+(rows.length===1?'':'s')+quien+
+      ' · total '+bs(tot)+' · <b>cobrado '+bs(cob)+'</b>'+(sal>0.009?' · debe '+bs(sal):'')+(fav>0.009?' · 💜 '+bs(fav)+' con saldo a favor':'')+' <button type="button" class="btn sec sm" onclick="$(\'#cj-q\').value=\'\';cajaTablaPintar()">✕ Ver todos</button>'
+      :'Nadie con «'+esc(qEl.value)+'» en este periodo'}
+  else if(res)res.textContent='';
   $('#cj-body').innerHTML=rows.length?rows.slice().reverse().map(function(r){
     var m=metodoText(r);
     return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
@@ -7780,7 +7799,8 @@ function renderCaja(){
       '<td class="num"'+(num(r.saldo)>0?' style="color:var(--clay);font-weight:700"':'')+'>'+n0(r.saldo)+'</td>'+
       '<td>'+(m?esc(m):(num(r.acuenta)>0?'<span class="pill bad">sin anotar</span>':(r._favor>0?'':'—')))+
         (r._favor>0?' <span class="pill lime">💜 '+n0(r._favor)+' saldo a favor</span>':'')+'</td></tr>'
-  }).join(''):'<tr><td colspan="7" class="empty">No hay movimientos en este periodo.</td></tr>'}
+  }).join(''):'<tr><td colspan="7" class="empty">'+(q?'Sin movimientos de ese paciente en este periodo.':'No hay movimientos en este periodo.')+'</td></tr>';
+  try{if(window.mdPorPartes)mdPorPartes($('#cj-body'),50)}catch(e){}}
 
 /* ============================ PACIENTES ============================ */
 function agrupaPacientes(filas){
@@ -15540,6 +15560,8 @@ function mdPautaVer(srv,canal){
      x:'Al abrir una atención o cita, arriba dice qué pasó (atendida, no vino, canceló) y abajo su recorrido: cuándo agendó, si se movió, cómo pagó. Si no vino, ya tenés el WhatsApp armado y el botón «Reagendar».'},
     {id:'md-fotos', f:'2026-10-22', t:'Fotos del antes y del después',
      x:'En la ficha de cada paciente hay una sección «📸 Fotos»: sacá la foto del antes el primer día y la del después al terminar, y quedan juntas para comparar con una barra. Se guardan en el Google Drive de la clínica. Desde la foto la podés mandar al paciente o marcar si autorizó usarla en publicidad.', ayuda:/foto del antes/},
+    {id:'md-caja-busca', f:'2026-10-24', t:'Buscar un paciente en Caja',
+     x:'En 💳 Caja › Movimientos del periodo hay un buscador: escribí unas letras del nombre de un paciente o de una doctora y quedan solo sus pagos del periodo elegido (día, quincena, mes o año), con el total cobrado y lo que debe.', ayuda:/pagos de un paciente/, si:function(){return !esDoctora()}},
     {id:'md-paq-boton', f:'2026-10-23', t:'La sesión del paquete, desde Servicios',
      x:'En Nueva atención, en «Servicios realizados», hay un botón «📦 Sesión de un paquete o plan». Muestra los paquetes que ya tiene el paciente, qué sesión le toca hoy y si ya está pagada: tocá «✓ Hoy es esta sesión» y entra como línea de la atención. Desde ahí también se le vende un paquete nuevo. En la ficha, cada visita dice qué sesión fue.', ayuda:/sesión de un paquete/},
     {id:'md-fotos-mandar', f:'2026-10-23', t:'Mandar el antes y después al paciente',
@@ -15581,6 +15603,8 @@ function mdPautaVer(srv,canal){
      p:['En ＋ Nueva atención, arriba: «▶ ¿Primera vez? Mirá cómo se carga».','En la ventana de 🦷 Planes de cada paciente: el video del paquete, el de marcar sus sesiones y el del tratamiento por etapas.','En mis respuestas de cómo cargar una atención, un paquete o un plan: «▶ Ver el video».','Cada video dura un minuto y se puede pausar.']},
     {q:'El plan dice que falta una sesión que ya se hizo, ¿cómo lo arreglo?', k:'sesion ya se hizo no quedo marcada plan paquete dice primera sesion falta marcar visita suelta arreglar vincular', v:'pacientes', f:'#pc-q',
      p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Si la visita se guardó con el plan elegido, en el plan sale «⚠ visitas cargadas con este plan»: tocá «✓ Marcar sus sesiones».','Si se cargó como visita suelta, tocá «🔗 Ya se hizo en una visita» y elegí la visita de ese día.','Si el plan es de una sola etapa pero se hizo en varias citas, tocá «🧩 Se hizo en varias visitas» y marcá cada visita.','No cambia lo cobrado ni la caja: lo pagado por adelantado queda usado en esa sesión.']},
+    {q:'¿Cómo veo los pagos de un paciente o de una doctora en Caja?', k:'caja pagos de un paciente doctora buscar movimientos cobrado mes año cuanto pago cobro', v:'caja', f:'#cj-q',
+     p:['Entrá a 💳 Caja y elegí el periodo arriba (día, quincena, mes o año).','En «Movimientos del periodo» escribí unas letras del nombre del paciente o de la doctora en el buscador.','Quedan solo esos pagos del periodo, con el total cobrado y lo que debe.','Tocá «✕ Ver todos» para volver a la lista completa.']},
     {q:'¿Cómo saco la foto del antes y del después?', k:'foto fotos antes despues camara galeria comparar blanqueamiento sonrisa resultado publicidad mandar enviar whatsapp cliente', v:'pacientes', f:'#pc-q',
      p:['Abrí la ficha del paciente (lupa o 👥 Pacientes) y bajá hasta «📸 Fotos».','Tocá «📷 Sacar foto» (en el celular o el iPad abre la cámara) o «⬆ Subir de la galería».','Elegí si es Antes, Durante o Después y el tratamiento (el mismo en el antes y en el después), y tocá «Guardar foto».','Con un antes y un después del mismo tratamiento aparece la comparación: deslizá la barra. Para mandarle el resultado al paciente, tocá «📤 Mandar el antes y después»: va en una sola imagen con las dos fotos y el nombre de la clínica.','Tocá una foto para mandarla sola, descargarla o marcar si autorizó usarla en publicidad.']},
     {q:'¿Cómo atiendo rápido a mi próximo paciente?', k:'proximo paciente atender rapido todo cargado repetir ultima vez sesion paquete mi dia', v:'midia', f:'#md-prox',

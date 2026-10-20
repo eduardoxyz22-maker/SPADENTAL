@@ -47,6 +47,27 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
     at('Ya Era Antes', '2026-09-15', C('antig'), lim, 150, 'Recurrente'); at('Ya Era Antes', '2026-10-12', C('antig'), lim, 150, 'Recurrente');
     saveLocal(); return flushQueue(); });
   await D.waitForTimeout(1500);
+  /* Caja › Movimientos: el buscador por paciente deja solo sus pagos del periodo */
+  await D.evaluate(() => show('caja')); await D.waitForTimeout(600);
+  await D.evaluate(() => { $('#c-rango').value = 'mes'; $('#c-rango').dispatchEvent(new Event('change', { bubbles: true })); $('#c-mes').value = '2026-10'; $('#c-mes').dispatchEvent(new Event('change', { bubbles: true })); renderCaja(); });
+  await D.waitForTimeout(300);
+  const antes = await D.evaluate(() => document.querySelectorAll('#cj-body tr').length);
+  await D.fill('#cj-q', 'fb sep uno'); await D.dispatchEvent('#cj-q', 'input'); await D.waitForTimeout(300);
+  const cj = await D.evaluate(() => ({ n: document.querySelectorAll('#cj-body tr').length, pacs: [...document.querySelectorAll('#cj-body tr td:nth-child(2)')].map(t => t.innerText.trim()), res: $('#cj-q-res').innerText }));
+  OK('Caja: buscar «fb sep uno» deja solo sus pagos de octubre, con el resumen', antes > 1 && cj.n === 1 && cj.pacs.every(p => /Fb Sep Uno/.test(p)) && /1 movimiento de Fb Sep Uno · total Bs 700 · cobrado Bs 700/.test(cj.res), cj);
+  await D.evaluate(() => { $('#c-rango').value = 'anio'; $('#c-rango').dispatchEvent(new Event('change', { bubbles: true })); $('#c-anio').value = '2026'; $('#c-anio').dispatchEvent(new Event('change', { bubbles: true })); renderCaja(); }); await D.waitForTimeout(300);
+  const cj2 = await D.evaluate(() => ({ n: document.querySelectorAll('#cj-body tr').length, res: $('#cj-q-res').innerText }));
+  OK('Caja: en el año son sus 2 visitas (850)', cj2.n === 2 && /2 movimientos de Fb Sep Uno · total Bs 850 · cobrado Bs 850/.test(cj2.res), cj2);
+  if (process.env.SHOT_CAJA) { await D.evaluate(() => { const c = [...document.querySelectorAll('#v-caja .card')].filter(x => /Movimientos del periodo/.test(x.textContent))[0]; c.scrollIntoView(); }); await D.waitForTimeout(300); await D.locator('#v-caja .card', { hasText: 'Movimientos del periodo' }).first().screenshot({ path: process.env.SHOT_CAJA }); }
+  await D.fill('#cj-q', 'mirna'); await D.dispatchEvent('#cj-q', 'input'); await D.waitForTimeout(300);
+  const cj3 = await D.evaluate(() => ({ n: document.querySelectorAll('#cj-body tr').length, docs: [...new Set([...document.querySelectorAll('#cj-body tr td:nth-child(3)')].map(t => t.innerText.trim()))], res: $('#cj-q-res').innerText }));
+  OK('Caja: buscar «mirna» deja todo lo que cobró la Dra. Mirna en el año', cj3.n > 2 && cj3.docs.length === 1 && /Dra\. Mirna/.test(cj3.docs[0]) && /movimientos de Dra\. Mirna · \d+ pacientes/.test(cj3.res), cj3);
+  await D.locator('#cj-q-res button', { hasText: /Ver todos/ }).click(); await D.waitForTimeout(300);
+  OK('«✕ Ver todos» vuelve a la lista completa', await D.evaluate(() => $('#cj-q').value === '' && document.querySelectorAll('#cj-body tr').length > 2));
+  await D.fill('#cj-q', 'zzzz'); await D.dispatchEvent('#cj-q', 'input'); await D.waitForTimeout(200);
+  OK('si no hay nadie, lo dice', /Nadie con «zzzz»/.test(await D.evaluate(() => $('#cj-q-res').innerText)));
+  await D.fill('#cj-q', ''); await D.dispatchEvent('#cj-q', 'input');
+  await D.evaluate(() => show('midia')); await D.waitForTimeout(300);
   OK('la dueña no ve la pestaña Pauta', !(await D.locator('#nav-pauta').isVisible()));
   await D.evaluate(() => show('panel')); await D.waitForTimeout(800);
   const rp = await D.locator('#md-pauta .md-pa-rec').innerText();
