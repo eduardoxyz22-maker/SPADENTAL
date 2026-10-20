@@ -1053,31 +1053,74 @@ body.md-tema-primavera .md-ropa.primavera{display:inline}
   body.md-en-atencion .wrap{padding-bottom:190px}
   body.md-en-atencion #asis{bottom:150px}}
 
-/* pestañas: íconos de línea y la activa como píldora */
+/* pestañas con vida: cada una con su color, la abierta con una píldora que se desliza */
 .md-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-header nav{gap:4px;padding-top:7px;padding-bottom:7px;align-items:center}
-header nav button{display:inline-flex;align-items:center;gap:7px;border-bottom:0;border-radius:999px;padding:9px 14px;min-height:42px;
-  font-weight:650;transition:background .2s,color .2s}
-header nav button .md-nav-i svg{width:17px;height:17px;display:block}
-header nav button:not(.on):hover{background:var(--lime-sf);color:var(--ink)}
-header nav button.on{background:var(--ink);color:#fff;border-bottom-color:transparent}
-header nav button.on .pill{background:rgba(255,255,255,.16);border-color:transparent;color:#fff}
+header nav{position:relative;gap:4px;padding-top:9px;padding-bottom:9px;align-items:center;background:#fff;
+  box-shadow:0 8px 22px -14px rgba(0,0,0,.25)}
+header nav button{position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;border-bottom:0;border-radius:16px;
+  padding:6px 14px 6px 6px;min-height:48px;font-weight:700;font-size:14px;color:#3d4136;transition:color .2s,background .2s}
+header nav button .md-nav-i{width:36px;height:36px;flex:0 0 36px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:var(--cs,#EEF0E8);color:var(--c,var(--ink));transition:transform .25s cubic-bezier(.2,.9,.3,1.4),background .25s,color .25s,box-shadow .25s}
+header nav button .md-nav-i svg{width:19px;height:19px;display:block}
+header nav button:not(.on):hover{background:transparent;color:var(--ink)}
+header nav button:hover .md-nav-i{transform:translateY(-2px) rotate(-6deg)}
+header nav button.on{background:transparent;color:var(--ink);font-weight:800}
+header nav button.on .md-nav-i{background:var(--c,var(--ink));color:#fff;box-shadow:0 6px 14px -4px var(--c,rgba(0,0,0,.3))}
 body.octubre header nav button.on{border-bottom-color:transparent}
-#nav-buscar,#nav-duena{padding:9px 11px}
-@media(max-width:1280px){header nav{gap:1px}header nav button{padding:8px 10px;font-size:13px;gap:6px}header nav button .md-nav-i svg{width:16px;height:16px}
-  header nav .pill{padding:2px 6px;font-size:10.5px}#nav-buscar,#nav-duena{padding:8px 9px}}
+#md-nav-ind{position:absolute;left:0;top:9px;height:48px;border-radius:16px;background:var(--lime-sf);border:1.5px solid var(--lime-bd);
+  z-index:0;pointer-events:none;transition:transform .45s cubic-bezier(.2,.9,.25,1.15),width .45s cubic-bezier(.2,.9,.25,1.15),opacity .2s;opacity:0}
+header nav .pill.bad,header nav button.on .pill.bad{background:#E0533A;border-color:#E0533A;color:#fff;font-weight:800;box-shadow:0 0 0 2px #fff}
+header nav .nav-cnt,header nav button.on .nav-cnt{background:var(--cs,#EEF0E8);border-color:transparent;color:var(--c,var(--gray))}
+.md-anim header nav .pill.bad{animation:mdLatido 2.4s ease-in-out infinite}
+@keyframes mdLatido{0%,100%{transform:scale(1)}12%{transform:scale(1.18)}24%{transform:scale(1)}}
+#nav-buscar,#nav-duena{padding:6px}
+.md-t-midia{--c:#C27A0E;--cs:#FFF1D6}
+.md-t-atencion{--c:var(--lime-dk);--cs:var(--lime-sf)}
+.md-t-cita{--c:#2F6FA8;--cs:#E2EEFA}
+.md-t-agenda{--c:#C2512F;--cs:#FDE8E0}
+.md-t-lista{--c:#6B4FA0;--cs:#EFE8F8}
+.md-t-panel{--c:#16807A;--cs:#DDF3F1}
+.md-t-caja{--c:#2E7D5B;--cs:#E0F2E9}
+.md-t-pacientes{--c:#B83E73;--cs:#FBE4EE}
+.md-t-config{--c:#4F5666;--cs:#ECEEF2}
+.md-t-buscar{--c:#20241C;--cs:#ECEEE6}
+.md-t-duena{--c:#A27A0B;--cs:#FBF0D2}.md-t-doctora{--c:#2F6FA8;--cs:#E2EEFA}.md-t-equipo{--c:#4F5666;--cs:#ECEEF2}
+@media(max-width:1280px){header nav{gap:2px}header nav button{padding:5px 10px 5px 5px;font-size:13px;gap:7px}
+  header nav button .md-nav-i{width:32px;height:32px;flex-basis:32px;border-radius:11px}header nav button .md-nav-i svg{width:17px;height:17px}
+  #md-nav-ind{height:42px;top:12px}header nav button{min-height:42px}
+  header nav .pill{padding:1px 6px;font-size:10.5px}#nav-buscar,#nav-duena{padding:5px}}
+/* el encabezado con un brillo del color de la clínica */
+header .hd::before{content:'';position:absolute;left:-60px;top:-80px;width:340px;height:220px;border-radius:50%;
+  background:radial-gradient(closest-side,var(--lime),transparent);opacity:.22;pointer-events:none;z-index:0}
+header .hd::after{content:'';position:absolute;right:12%;top:-60px;width:300px;height:200px;border-radius:50%;
+  background:radial-gradient(closest-side,#7FB8E6,transparent);opacity:.16;pointer-events:none;z-index:0}
+.md-markw{z-index:1}
+/* la barra de abajo del celular, también con color */
+@media(max-width:760px){
+  #md-barra button[data-md] svg{width:20px;height:20px}
+  #md-barra button[data-md]:not(.md-mas-grande)::before{content:'';position:absolute;top:2px;width:44px;height:30px;border-radius:12px;
+    background:transparent;transition:background .25s;z-index:-1}
+  #md-barra button{z-index:0}
+  #md-barra button.on:not(.md-mas-grande)::before{background:var(--lime-sf)}
+  #md-barra button.on{color:var(--lime-dk)}}
 /* el aviso de conexión, chiquito cuando todo anda */
 #conn-banner .banner.conn{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 12px;font-size:12px;margin-top:12px}
 
 /* listas de Pacientes y Atenciones */
 .md-pnom{display:flex;align-items:center;gap:11px;min-width:0}
 .md-pnom-t{min-width:0}
-.md-av{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:var(--lime-sf);border:1px solid var(--lime-bd);color:var(--lime-dk);
+.md-av{width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:var(--lime-sf);border:0;color:var(--lime-dk);
   display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:-.02em}
 #pc-body tr,#l-body tr{transition:background .15s}
 #pc-body tr:hover,#l-body tr:hover{background:var(--lime-sf)}
 #pc-body td,#l-body td{padding-top:11px;padding-bottom:11px}
 .md-chip.gris{background:var(--paper);color:var(--gray);border:1px solid var(--line);font-weight:600}
+.md-av0{background:#FFF1D6!important;color:#8A5A06!important}.md-av1{background:#E2EEFA!important;color:#22507C!important}
+.md-av2{background:#FBE4EE!important;color:#8E2C58!important}.md-av3{background:#E0F2E9!important;color:#1F5E43!important}
+.md-av4{background:#EFE8F8!important;color:#5A3F8A!important}.md-av5{background:#DDF3F1!important;color:#12605B!important}
+.md-chip.c-fb{background:#E3ECFB;color:#1E4E9C}.md-chip.c-ig{background:#FBE4EE;color:#9C2E62}.md-chip.c-wa{background:#DFF4E6;color:#1C6B3A}
+.md-chip.c-tt{background:#ECEEE6;color:#20241C}.md-chip.c-ref{background:#EFE8F8;color:#5A3F8A}.md-chip.c-ant{background:#FFF1D6;color:#7A5206}
+.md-chip.c-go{background:#E2EEFA;color:#22507C}
 .md-anim .md-fila{animation:mdEntra .45s cubic-bezier(.2,.7,.2,1) both}
 
 /* movimiento: entrada de las pantallas, tarjetas que se levantan, ventanas que aparecen */
@@ -1096,7 +1139,7 @@ body.octubre header nav button.on{border-bottom-color:transparent}
 
 /* las animaciones nuevas viven bajo body.md-anim: se apagan en Ajustes › Apariencia,
    y el aparato que pide quietud no las ve */
-@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .mark,body:not(.md-anim-siempre) .md-chispa,body:not(.md-anim-siempre) .md-arco,body:not(.md-anim-siempre) .md-cepillo,body:not(.md-anim-siempre) .md-moneda,body:not(.md-anim-siempre) .md-hoja-cal,body:not(.md-anim-siempre) .md-late,body:not(.md-anim-siempre) .md-prog i,body:not(.md-anim-siempre) .md-ba i,body:not(.md-anim-siempre) .md-tl-fila.ya .md-tl-punto,body:not(.md-anim-siempre) .md-check *,body:not(.md-anim-siempre) .md-conf,body:not(.md-anim-siempre) .md-copo,body:not(.md-anim-siempre) .md-tallo,body:not(.md-anim-siempre) .md-entra,body:not(.md-anim-siempre) .md-fila,body:not(.md-anim-siempre) .ov.on,body:not(.md-anim-siempre) .ov.on .modal{animation:none!important}
+@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .mark,body:not(.md-anim-siempre) .md-chispa,body:not(.md-anim-siempre) .md-arco,body:not(.md-anim-siempre) .md-cepillo,body:not(.md-anim-siempre) .md-moneda,body:not(.md-anim-siempre) .md-hoja-cal,body:not(.md-anim-siempre) .md-late,body:not(.md-anim-siempre) .md-prog i,body:not(.md-anim-siempre) .md-ba i,body:not(.md-anim-siempre) .md-tl-fila.ya .md-tl-punto,body:not(.md-anim-siempre) .md-check *,body:not(.md-anim-siempre) .md-conf,body:not(.md-anim-siempre) .md-copo,body:not(.md-anim-siempre) .md-tallo,body:not(.md-anim-siempre) .md-entra,body:not(.md-anim-siempre) .md-fila,body:not(.md-anim-siempre) header nav .pill.bad,body:not(.md-anim-siempre) .ov.on,body:not(.md-anim-siempre) .ov.on .modal{animation:none!important}
   body:not(.md-anim-siempre) .kpi:hover,body:not(.md-anim-siempre) .md-aj-tile:hover{transform:none}
   /* con «siempre», también se mueve lo que ya traía el panel */
   body.md-anim-siempre .murci{animation:vuela 10s ease-in-out infinite}body.md-anim-siempre .arana{animation:cuelga 6s ease-in-out infinite}
@@ -12342,7 +12385,7 @@ function mdFicha(nombre){
   var cel=''; datosVisibles().filter(function(r){return keyPac(r.paciente)===keyPac(nom)}).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})
     .forEach(function(r){if(!cel&&r.celular)cel=r.celular});
   var cab=document.createElement('div'); cab.className='md-ficha-cab';
-  cab.innerHTML='<div class="md-avatar" aria-hidden="true">'+esc(mdIniciales(nom))+'</div><div class="md-ficha-txt"></div>'+
+  cab.innerHTML='<div class="md-avatar md-av'+mdHash(nom)%6+'" aria-hidden="true">'+esc(mdIniciales(nom))+'</div><div class="md-ficha-txt"></div>'+
     (cel?'<a class="btn sm md-wa" target="_blank" rel="noopener" href="'+waLink(cel,'Hola '+nom.split(' ')[0]+'! ')+'">WhatsApp</a>':'');
   var txt=cab.querySelector('.md-ficha-txt'), sub=h.nextElementSibling;
   h.parentNode.insertBefore(cab,h); txt.appendChild(h);
@@ -12609,13 +12652,26 @@ function mdIconosNav(){
     for(var i=0;i<b.childNodes.length;i++){var n=b.childNodes[i];
       if(n.nodeType===3&&n.textContent.trim()){n.textContent=n.textContent.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ¿]+/,''); break}}
     if(k==='buscar'){b.innerHTML='<span class="md-sr">Buscar</span>'; b.setAttribute('aria-label','Buscar paciente')}
-    b.insertAdjacentHTML('afterbegin','<span class="md-nav-i">'+mdIco(MD_NAV_I[k])+'</span>');
+    b.insertAdjacentHTML('afterbegin','<span class="md-nav-i">'+mdIco(MD_NAV_I[k],2.2)+'</span>');
+    b.classList.add('md-t-'+k);
     b.setAttribute('data-md-ico','1')});
-  mdIconoDuena()}
+  var nav=$('header nav');
+  if(nav&&!$('#md-nav-ind')){var ind=document.createElement('span'); ind.id='md-nav-ind'; ind.setAttribute('aria-hidden','true'); nav.insertBefore(ind,nav.firstChild)}
+  mdIconoDuena(); mdIndicador(true)}
+/* la píldora de la pestaña abierta se desliza hasta la nueva */
+function mdIndicador(sinAnim){
+  var ind=$('#md-nav-ind'), b=$('header nav button.on'); if(!ind)return;
+  if(!b||!b.offsetWidth){ind.style.opacity='0'; return}
+  if(sinAnim)ind.style.transition='none';
+  ind.style.opacity='1'; ind.style.width=b.offsetWidth+'px'; ind.style.transform='translateX('+b.offsetLeft+'px)';
+  if(sinAnim){void ind.offsetWidth; ind.style.transition=''}
+  var nav=b.parentNode; if(nav&&nav.scrollWidth>nav.clientWidth){
+    var x=b.offsetLeft-(nav.clientWidth-b.offsetWidth)/2; try{nav.scrollTo({left:x,behavior:'smooth'})}catch(e){nav.scrollLeft=x}}}
 function mdIconoDuena(){
   var b=$('#nav-duena'); if(!b)return;
   var k=ROL==='admin'?'duena':(esDoctora()?'doctora':'equipo');
-  b.innerHTML='<span class="md-nav-i">'+mdIco(MD_NAV_I[k])+'</span><span class="md-sr">'+(k==='duena'?'Dueña':(k==='doctora'?'Doctora':'Recepción'))+'</span>';
+  b.className=b.className.replace(/\bmd-t-\w+/g,'')+' md-t-'+k;
+  b.innerHTML='<span class="md-nav-i">'+mdIco(MD_NAV_I[k],2.2)+'</span><span class="md-sr">'+(k==='duena'?'Dueña':(k==='doctora'?'Doctora':'Recepción'))+'</span>';
   b.setAttribute('aria-label',b.title||'Sesión')}
 
 /* ---------- nombres prolijos en pantalla (la hoja no se toca) ---------- */
@@ -12635,10 +12691,13 @@ function mdFilaPac(td){
   var b=td.querySelector('b'); if(!b||td.querySelector('.md-pnom'))return;
   mdLindoEn(b);
   var w=document.createElement('div'); w.className='md-pnom';
-  w.innerHTML='<span class="md-av" aria-hidden="true">'+esc(mdIniciales(b.title||b.textContent))+'</span>';
+  w.innerHTML='<span class="md-av md-av'+mdHash(b.title||b.textContent)%6+'" aria-hidden="true">'+esc(mdIniciales(b.title||b.textContent))+'</span>';
   var tx=document.createElement('div'); tx.className='md-pnom-t';
   while(td.firstChild)tx.appendChild(td.firstChild);
   w.appendChild(tx); td.appendChild(w)}
+function mdHash(s){var h=0; s=String(s||''); for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0; return h}
+function mdCanalCls(t){t=asisSinTildes(t);
+  return /facebook/.test(t)?'c-fb':/instagram/.test(t)?'c-ig':/whats/.test(t)?'c-wa':/tiktok/.test(t)?'c-tt':/referid/.test(t)?'c-ref':/antiguo|recurrent/.test(t)?'c-ant':/google|maps/.test(t)?'c-go':'gris'}
 function mdChipCelda(td,cls){
   if(!td||td.querySelector('.md-chip')||td.textContent.trim()==='—'||!td.textContent.trim())return;
   td.innerHTML='<span class="md-chip '+cls+'">'+esc(td.textContent.trim())+'</span>'}
@@ -12648,7 +12707,7 @@ function mdDecorarPacientes(){
     var td=tr.children; if(td.length<5)return;
     mdFilaPac(td[0]);
     if(mdCelMalo(td[1].textContent))td[1].innerHTML='<span class="md-chip rojo" title="'+esc(td[1].textContent)+'">Revisar celular</span>';
-    mdChipCelda(td[2],'gris');
+    mdChipCelda(td[2],mdCanalCls(td[2].textContent));
     var iSal=adm?5:4, iProx=adm?7:6;
     if(td[iSal]&&num(td[iSal].textContent.replace(/\./g,''))>0)mdChipCelda(td[iSal],'rojo');
     if(td[iProx])mdChipCelda(td[iProx],'lima');
@@ -12660,7 +12719,7 @@ function mdDecorarAtenciones(){
     mdQ(td[2],'.mini').forEach(function(m){
       var t=m.firstChild&&m.firstChild.nodeType===3?m.firstChild.textContent:'';
       if(mdCelMalo(t.replace(/·\s*$/,'')))m.firstChild.textContent='revisar celular · '});
-    mdChipCelda(td[4],'gris');
+    mdChipCelda(td[4],mdCanalCls(td[4].textContent));
     if(i<24)tr.style.animationDelay=(i*18)+'ms', tr.classList.add('md-fila')})}
 
 /* ---------- movimiento: las vistas entran, los números cuentan ---------- */
@@ -12740,7 +12799,7 @@ function mdRefrescar(){
   show=function(v){
     var r=_show.apply(this,arguments);
     if(v==='midia')MD_ANILLOS_FIRMA='';
-    try{mdRefrescar()}catch(e){}
+    try{mdRefrescar(); mdIndicador()}catch(e){}
     try{mdEntrada(v); mdContar($('#v-'+v))}catch(e){}
     try{if(v==='config'){mdSincAjustes(); mdPintarInstalar()}}catch(e){}
     try{document.body.classList.toggle('md-en-atencion',v==='atencion'); if(v==='atencion')mdResumen()}catch(e){}
@@ -12788,7 +12847,8 @@ function mdRefrescar(){
   try{
     mdAplicarAnim(); mdIconosNav(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
     document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
-    window.addEventListener('resize',function(){try{mdAltoHeader()}catch(e){}});
+    window.addEventListener('resize',function(){try{mdAltoHeader(); mdIndicador(true)}catch(e){}});
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){try{mdIndicador(true)}catch(e){}});
     setInterval(function(){try{mdEncabezado(); mdCaraBase()}catch(e){}},60000);
     /* si el panel abrió ya con sesión, lo que está a la vista se repinta con la cara nueva */
     if(!document.body.classList.contains('locked')){
