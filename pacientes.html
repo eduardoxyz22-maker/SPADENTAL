@@ -2020,7 +2020,8 @@ body.rol-pauta header nav button:not(#nav-pauta):not(#nav-duena),body.rol-pauta 
     <h2><span class="n">4</span>Servicios realizados</h2>
     <p class="hint">El precio sale de la lista pero <b>lo podés cambiar</b>: manda siempre lo que anotan ustedes.</p>
     <div id="srv-list"></div>
-    <button type="button" class="btn sec sm" id="btn-add-srv">＋ Agregar servicio</button>
+    <div class="row-btn"><button type="button" class="btn sec sm" id="btn-add-srv">＋ Agregar servicio</button>
+      <button type="button" class="btn sm" id="btn-paq-srv" title="La visita de hoy es una sesión de un paquete o plan que ya tiene, o le vendés un paquete nuevo">📦 Sesión de un paquete o plan</button></div>
     <div id="wrap-plan" style="display:none;margin-top:14px">
       <label>¿Esta visita es una sesión de un plan?</label>
       <select id="f-plan"></select>
@@ -6440,6 +6441,14 @@ function guardarReagenda(id){
 </script>
 <script>
 /* ============================ LISTA DE ATENCIONES ============================ */
+/* la sesión del plan que lleva una visita, dicha en la ficha: si no, una
+   consulta guardada con el plan elegido cuenta como sesión y nadie lo ve */
+function sesionPillDe(r){
+  if(!r||!r.planId||!esAtencion(r))return '';
+  var p=planesDe(r.paciente).filter(function(x){return x.id===r.planId})[0]; if(!p)return '';
+  var s=sesionDeAtencion(p,r); if(!s)return '';
+  var N=(p.sesiones||[]).filter(function(x){return !x.aparte}).length;
+  return '<span class="pill info" title="Esta visita cuenta como esta sesión del plan">📦 '+esc(s.aparte?(s.desc||('etapa '+s.n)):('sesión '+s.n+(N>1?' de '+N:'')))+' · '+esc(p.nombre)+'</span>'}
 function srvText(r){
   return (r.servicios||[]).map(function(s){
     var pz=(s.piezas&&s.piezas.length)?(' · '+piezasTexto(s)):'';
@@ -8490,7 +8499,7 @@ function verPaciente(nombre){
       '<th class="num">Total</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody>'+
       rs.map(function(r){return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
         '<td>'+(r.profesional?esc(r.profesional.replace(/^Dra\.?\s*/i,'')):'—')+'</td>'+
-        '<td style="max-width:190px">'+esc(srvText(r)||'—')+'</td><td class="num">'+n0(r.total)+'</td>'+
+        '<td style="max-width:190px">'+esc(srvText(r)||'—')+(sesionPillDe(r)?'<div style="margin-top:3px">'+sesionPillDe(r)+'</div>':'')+'</td><td class="num">'+n0(r.total)+'</td>'+
         '<td class="num">'+n0(r.saldo)+'</td><td>'+estadoPill(r.estado)+'</td></tr>'}).join('')+
       '</tbody></table></div>':'<div class="empty">Todavía no tiene visitas cargadas.</div>')+
     '<div class="row-btn">'+
@@ -8938,12 +8947,23 @@ function pagoAlPlan(nombre,planId,n){
    Formulario corto: paciente, plan, etapa y precio ya vienen cargados.
    Si hay una cita agendada para ese día, se usa esa (no se duplica). */
 var AT_PLAN=null;
+var AT_PLAN_OTRA=false;
 function atencionDePlan(nombre,planId,n){
   if(bloqueaAjeno(nombre))return;
   var p=planesDe(nombre).filter(function(x){return x.id===planId})[0]; if(!p)return;
   if(!planVisible(p)){noEsTuya();return}
   var s=(p.sesiones||[]).filter(function(x){return x.n===n})[0]; if(!s)return;
   if(s.hecha){toast('Esa etapa ya está hecha',1);verPlan(nombre,planId);return}
+  /* hay una atención de este paciente a medio cargar: casi siempre la sesión es
+     esa misma visita (si no, quedaban dos atenciones del mismo día) */
+  if(!EDIT_ID&&!AT_PLAN_OTRA&&desdeLaAtencion(nombre)&&formEnUso()&&$('#f-plan').value!==planId){
+    openModal('<h3>✓ '+esc(s.desc||('Etapa '+s.n))+'</h3><p class="mini">'+esc(nombre)+' · '+esc(p.nombre)+'</p>'+
+      '<p style="margin:14px 0 4px;font-size:17px"><b>Estás cargando una atención de '+esc(nombre.split(' ')[0])+'. ¿La sesión es esa misma visita?</b></p>'+
+      '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="closeModal();elegirPlanEnForm(\''+planId+'\')">Sí, es esta atención</button>'+
+      '<button class="btn sec" onclick="AT_PLAN_OTRA=true;try{atencionDePlan(\''+jss(nombre)+'\',\''+planId+'\','+n+')}finally{AT_PLAN_OTRA=false}">No, es otra visita</button>'+
+      '<button class="btn ghost" onclick="closeModal()">Cancelar</button></div>'+
+      '<p class="mini" style="margin-top:10px">«Sí»: la sesión entra en la atención que estás cargando y se guarda con ella. «No»: se registra como otra visita aparte.</p>');
+    return}
   AT_PLAN={id:uid(), nombre:nombre, planId:planId, n:n, guardando:false};
   var precio=num(s.precio), profDef=esDoctora()?PROF_ACTUAL:(p.prof||duenaPlanDeducida(p,nombre)||'');
   var profs=(CFG.prof||[]).filter(function(x){return x&&x!=='Por definir'});
@@ -9496,7 +9516,7 @@ function crearPaquete(nombre,i,silencioso){
   if(ya){
     var tomo0=tomarPlanEnForm(nombre,ya.id);
     if(!silencioso){
-      if(!tomo0&&desdeLaAtencion(nombre)){preguntaSesionHoy(nombre,ya);return ya}
+      if(desdeLaAtencion(nombre)&&!EDIT_ID){preguntaSesionHoy(nombre,ya);return ya}
       toast('Ya tiene el paquete «'+ya.nombre+'» sin empezar: es ese (no se crea otro igual)'); verPlan(nombre,ya.id)}
     return ya}
   var cli=!!t.deClinica&&hayPaquetesSrv(), etapas=[];
@@ -9512,7 +9532,7 @@ function crearPaquete(nombre,i,silencioso){
   f.planes.push(plan); savePac(f);
   var tomo=tomarPlanEnForm(nombre,plan.id);
   if(!silencioso){
-    if(!tomo&&desdeLaAtencion(nombre)){preguntaSesionHoy(nombre,plan);return plan}
+    if(desdeLaAtencion(nombre)&&!EDIT_ID){preguntaSesionHoy(nombre,plan);return plan}
     toast('📦 Paquete creado'+(tomo?' · quedó elegido en la atención que estás cargando: al guardarla cuenta como la sesión 1':': registrá el pago y después cada sesión'));
     verPlan(nombre,plan.id)}
   return plan}
@@ -9553,21 +9573,25 @@ function preguntaSesionHoy(nombre,plan){
 function sesionHoySi(nombre,id){
   closeModal();
   var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
-  renderPlanSel(id); $('#f-plan').value=id;
-  readSrv(); var s=proxSesion(p);
-  if(s&&!SRV.some(function(x){return x.nom})){SRV=[{nom:s.desc||p.nombre,det:p.nombre,cant:1,precio:num(s.precio)}]; renderSrv()}
-  planHint(); recalcSaldo();
+  elegirPlanEnForm(id);
+  var s=proxSesion(p);
   try{$('#srv-list').scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
-  toast('Abajo quedó la sesión 1'+(s?' ('+bs(s.precio)+')':'')+'. Poné lo que pagó y guardá la atención')}
-function sesionHoyNo(nombre,id){PAGO_SOLO_PAQ=keyPac(nombre); closeModal(); pagoAlPlan(nombre,id)}
+  toast('Abajo quedó la sesión 1'+(s?' ('+bs(s.precio)+')':'')+(SRV.filter(function(x){return x.nom}).length>1?' junto con lo demás':'')+'. Poné TODO lo que pagó hoy (consulta + paquete) y guardá la atención: se reparte solo')}
+/* «No»: el paquete NO queda elegido en la atención que se está cargando (si no,
+   la consulta de hoy contaba como sesión 1 sin que nadie lo viera) */
+function sesionHoyNo(nombre,id){
+  PAGO_SOLO_PAQ=keyPac(nombre); closeModal();
+  if($('#f-plan')&&$('#f-plan').value===id){renderPlanSel(''); $('#f-plan').value=''; try{planHint()}catch(e){}}
+  pagoAlPlan(nombre,id)}
 /* Pagó el paquete y hoy no se atendió: la atención que estaba a medio cargar
    no hace falta (sus datos de contacto ya quedaron en el pago). */
 function despuesDePagoSolo(pac){
   if(!PAGO_SOLO_PAQ||PAGO_SOLO_PAQ!==keyPac(pac))return;
   PAGO_SOLO_PAQ='';
   try{readSrv()}catch(e){}
-  if(!EDIT_ID&&keyPac($('#f-paciente').value)===keyPac(pac)&&!SRV.some(function(x){return x.nom})&&!num($('#f-acuenta').value))clearForm();
-  toast('Pago registrado ✅ No hace falta guardar una atención: cuando venga, «✓ Marcar realizada» en el paquete')}
+  if(!EDIT_ID&&keyPac($('#f-paciente').value)===keyPac(pac)&&!SRV.some(function(x){return x.nom})&&!num($('#f-acuenta').value)){clearForm();
+    toast('Pago del paquete registrado ✅ No hace falta guardar una atención: cuando venga, «✓ Marcar realizada» en el paquete'); return}
+  toast('Pago del paquete registrado ✅ En esta atención poné SOLO lo de hoy (ej. la consulta) y lo que cobraste por eso: el paquete ya está pagado aparte')}
 /* Lo que pasa del total de la sesión, en una atención nueva de un plan, es
    pago al plan (ej. paga el paquete entero el día de la sesión 1). */
 function excesoAlPlanOk(){
@@ -9668,13 +9692,126 @@ function paquetesDeFilas(){
 
 /* Al elegir un plan en la atención, si todavía no hay nada cargado, viene la
    sesión que toca con su precio. */
+/* Desde Servicios, en un solo lugar: la visita de hoy es una sesión de un
+   paquete o plan que ya tiene (queda elegido y la sesión entra como línea),
+   o se le vende un paquete nuevo de la clínica. */
+function sesionPaqueteForm(){
+  var nombre=$('#f-paciente').value.trim();
+  if(!nombre){toast('Primero escribí el nombre del paciente',1);return}
+  if(bloqueaAjeno(nombre))return;
+  var nj=jss(nombre), ps=planesActivos(nombre), sel=$('#f-plan').value;
+  var lista=ps.map(function(p){var s=sesionQueToca(p,EDIT_ID), a=avancePlan(p);
+    var fav=s&&num(s.precio)>0&&!s.aparte?Math.min(num(s.precio),Math.max(0,creditoPara(nombre,p.id))):0;
+    return '<div class="pl-fila" style="border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:8px'+(sel===p.id?';background:rgba(120,160,90,.08)':'')+'">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b>'+esc(p.nombre)+'</b>'+(sel===p.id?'<span class="pill lime">elegido para hoy</span>':planPill(p.estado))+'</div>'+
+      '<div class="mini">'+a.hechas+'/'+a.total+' sesiones hechas · pagado '+bs(cobradoPlan(p))+' · pendiente '+bs(saldoPlan(p))+'</div>'+
+      (s?'<div class="mini" style="margin-top:4px">Hoy sería: <b>'+esc(s.desc||('sesión '+s.n))+'</b>'+(num(s.precio)>0?' · '+bs(s.precio):'')+(fav>0.009?' · 💜 ya tiene '+bs(fav)+' pagados':num(s.precio)>0?' · se cobra hoy o queda debiendo':'')+'</div>'
+         :'<div class="mini" style="margin-top:4px">Todas sus sesiones ya están marcadas.</div>')+
+      '<div class="row-btn" style="margin-top:8px">'+
+        (s&&sel!==p.id?'<button class="btn sm" onclick="closeModal();elegirPlanEnForm(\''+p.id+'\')">✓ Hoy es esta sesión</button>':'')+
+        '<button class="btn sec sm" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Ver el plan</button></div></div>'}).join('');
+  openModal('<h3>📦 Sesión de un paquete o plan</h3><p class="mini">'+esc(nombre)+'</p>'+
+    (ps.length?'<label style="display:block;margin-top:10px">Ya tiene</label>'+lista:'<div class="empty" style="margin-top:10px">No tiene ningún paquete ni plan en curso.</div>')+
+    (sel?'<div class="row-btn" style="margin-top:8px"><button class="btn sec sm" onclick="closeModal();elegirPlanEnForm(\'\')">Esta visita NO es una sesión (quitar)</button></div>':'')+
+    (EDIT_ID?'':(function(){var pq=paquetesTipo(); if(!pq.length)return ''; return '<label style="display:block;margin-top:14px">Venderle un paquete nuevo hoy</label><div class="row-btn" style="margin-top:4px">'+
+      pq.map(function(x){return '<button class="btn sec sm" onclick="venderPaqueteForm('+x.i+')">📦 '+esc(x.t.nombre)+' · '+nSesionesTipo(x.t)+' sesiones · '+bs(x.t.total)+'</button>'}).join('')+'</div>'})())+
+    '<div class="row-btn" style="margin-top:10px"><button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
+/* ---------- vender un paquete, en una sola pantalla ----------
+   Qué se hizo hoy (la sesión 1, la consulta), cuánto paga y las cuentas
+   claras. Deja todo cargado en la atención; falta solo Guardar. El guardado
+   es el de siempre (paquetesDeFilas): el paquete se crea al guardar. */
+var VP=null;
+function venderPaqueteForm(i){
+  var nombre=$('#f-paciente').value.trim(); if(!nombre){toast('Primero escribí el nombre del paciente',1);return}
+  if(bloqueaAjeno(nombre))return;
+  var t=(CFG.planesTipo||[])[+i]; if(!t||!t.paquete)return;
+  var ya=paqueteSinEmpezar(nombre,t.nombre);
+  if(ya){closeModal(); elegirPlanEnForm(ya.id); return}
+  try{readSrv()}catch(e){}
+  var cons=(CFG.precios||[]).filter(function(x){return x&&x.nom&&mdEsConsulta(x.nom)})[0];
+  var yaCons=SRV.some(function(x){return x.nom&&mdEsConsulta(x.nom)});
+  VP={nombre:nombre,t:t,N:nSesionesTipo(t),tot:num(t.total),consNom:cons?cons.nom:'Consulta / Valoración',consPrecio:cons?num(cons.precio):0,
+      yaCons:yaCons,otrasTot:Math.round(totalSrv()*100)/100,hoy:true,conCons:!yaCons&&!esPacienteConocido(nombre),paga:null,metodo:''};
+  var rep=repartirPrecio(VP.tot,VP.N);
+  openModal('<h3>📦 '+esc(t.nombre)+'</h3><p class="mini">'+esc(nombre)+' · '+VP.N+' sesiones · '+bs(VP.tot)+'</p>'+
+    '<label style="display:block;margin-top:12px">¿Qué se hizo hoy?</label>'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-top:8px"><input type="checkbox" id="vp-hoy" checked onchange="vpCambio()" style="width:20px;height:20px;margin:0;flex:0 0 auto"><label for="vp-hoy" style="display:inline;margin:0;font-weight:400;text-transform:none;letter-spacing:0;font-size:15px"><b>Sesión 1 del paquete</b> <span class="mini">· '+bs(rep[0])+' de los '+bs(VP.tot)+'</span></label></div>'+
+    (yaCons?'<p class="mini" style="margin-top:6px">La consulta ya está cargada en la atención.</p>'
+      :'<div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap"><input type="checkbox" id="vp-cons"'+(VP.conCons?' checked':'')+' onchange="vpCambio()" style="width:20px;height:20px;margin:0;flex:0 0 auto"><label for="vp-cons" style="display:inline;margin:0;font-weight:400;text-transform:none;letter-spacing:0;font-size:15px"><b>'+esc(VP.consNom)+'</b></label>'+
+        '<span class="mini">Bs</span><input type="number" id="vp-cons-p" value="'+(VP.consPrecio||'')+'" placeholder="150" style="width:90px" oninput="vpCambio()"></div>')+
+    '<label style="display:block;margin-top:14px">¿Cuánto paga hoy?</label>'+
+    '<div class="row-btn" id="vp-chips" style="margin-top:4px"></div>'+
+    '<div style="margin-top:6px;display:flex;align-items:center;gap:8px"><span class="mini">Bs</span><input type="number" id="vp-paga" style="width:130px" oninput="vpCambio(1)"></div>'+
+    '<div class="seg lime" style="margin-top:8px">'+METODOS.map(function(k){return '<label><input type="radio" name="vp-met" value="'+k+'" onchange="vpCambio()"><span>'+k+'</span></label>'}).join('')+'</div>'+
+    '<div class="avisomed nota" id="vp-cuentas" style="margin-top:12px"></div>'+
+    '<div class="row-btn" style="margin-top:12px"><button class="btn" onclick="vpOk()">Cargar en la atención</button><button class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  vpCambio()}
+function vpCons(){return VP.conCons&&!VP.yaCons?VP.consPrecio:0}
+function vpTot(){return Math.round((VP.otrasTot+vpCons()+VP.tot)*100)/100}
+function vpCambio(tocoPaga){
+  var h=$('#vp-hoy'), c=$('#vp-cons'), cp=$('#vp-cons-p'), pg=$('#vp-paga'); if(!h||!pg)return;
+  VP.hoy=h.checked; if(c)VP.conCons=c.checked; if(cp)VP.consPrecio=num(cp.value);
+  VP.metodo=getRadio('vp-met');
+  if(tocoPaga)VP.paga=pg.value===''?null:num(pg.value);
+  if(VP.paga===null)pg.value=vpTot()||'';
+  var tot=vpTot(), cons=vpCons(), chips=[['Todo · '+bs(tot),tot]];
+  if(cons>0){chips.push(['Solo la consulta · '+bs(cons),cons]); chips.push(['Solo el paquete · '+bs(VP.tot),VP.tot])}
+  chips.push(['Nada por ahora',0]);
+  var paga=VP.paga===null?tot:num(VP.paga);
+  $('#vp-chips').innerHTML=chips.map(function(x){return '<button type="button" class="btn sm '+(Math.abs(x[1]-paga)<0.009?'':'sec')+'" onclick="vpPaga('+x[1]+')">'+x[0]+'</button>'}).join('');
+  $('#vp-cuentas').innerHTML=vpCuentas(paga)}
+function vpPaga(v){VP.paga=v; $('#vp-paga').value=v||''; vpCambio()}
+function vpCuentas(paga){
+  var cons=vpCons(), otras=VP.otrasTot, tot=vpTot(), rep=repartirPrecio(VP.tot,VP.N), s1=rep[0], L=[];
+  if(otras>0)L.push('Lo que ya estaba cargado: '+bs(otras));
+  if(cons>0)L.push(esc(VP.consNom)+': '+bs(cons));
+  L.push('Paquete '+esc(VP.t.nombre)+': '+bs(VP.tot)+' · '+VP.N+' sesiones ('+rep.map(function(x){return bs(x)}).join(' + ')+')'+(VP.hoy?' · hoy se hace la sesión 1':' · hoy no se hace ninguna sesión'));
+  var noPaq=Math.round((otras+cons)*100)/100, aNoPaq=Math.min(paga,noPaq), aPaq=Math.min(VP.tot,Math.max(0,Math.round((paga-aNoPaq)*100)/100)), sobra=Math.max(0,Math.round((paga-tot)*100)/100), r=[];
+  if(noPaq>0)r.push(aNoPaq>=noPaq-0.009?'✅ '+(cons>0?'La consulta':'Lo cargado')+(cons>0&&otras>0?' y lo demás':'')+' queda pagad'+(cons>0?'a':'o')+'.':'⚠️ '+(cons>0?'De la consulta':'De lo cargado')+' quedan '+bs(noPaq-aNoPaq)+' debiendo.');
+  if(aPaq>=VP.tot-0.009)r.push('✅ El paquete queda pagado entero: '+(VP.hoy?'las sesiones 2 a '+VP.N:'las '+VP.N+' sesiones')+' ya están pagadas. Cuando venga, solo se marcan.');
+  else if(aPaq>0.009)r.push('💜 Del paquete paga '+bs(aPaq)+(VP.hoy?' (la sesión 1 de hoy '+(aPaq>=s1-0.009?'queda pagada':'queda debiendo '+bs(s1-aPaq))+')':'')+'. Faltan '+bs(VP.tot-aPaq)+': se cobran en las próximas visitas.');
+  else r.push('Del paquete no paga nada hoy: los '+bs(VP.tot)+' se cobran en las próximas visitas.');
+  if(sobra>0.009)r.push('⚠️ Paga '+bs(sobra)+' más que el total de hoy: queda como saldo a favor.');
+  return '<div>'+L.join('<br>')+'</div><div style="margin-top:6px"><b>Total de hoy: '+bs(tot)+'</b> · paga <b>'+bs(paga)+'</b></div>'+
+    '<ul style="margin:6px 0 0 18px">'+r.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+(paga>0&&!VP.metodo?'<div style="margin-top:6px;color:#a33">Elegí cómo pagó.</div>':'')}
+function vpOk(){
+  vpCambio(); var paga=VP.paga===null?vpTot():num(VP.paga);
+  if(paga>0&&!VP.metodo){toast('Elegí cómo pagó',1);return}
+  if(VP.conCons&&!VP.yaCons&&!(VP.consPrecio>0)){toast('Poné el precio de la consulta (o destildala)',1);return}
+  readSrv(); SRV=SRV.filter(function(x){return x.nom});
+  if(VP.conCons&&!VP.yaCons)SRV.push({nom:VP.consNom,det:'',cant:1,precio:VP.consPrecio,lab:'',piezas:[]});
+  SRV.push({nom:VP.t.nombre,det:'',cant:1,precio:VP.tot,lab:'',piezas:[],ses:VP.N,solo:!VP.hoy,noPaq:false});
+  renderSrv(); recalcTotal();
+  var a=$('#f-acuenta'); a.value=paga>0?paga:''; a.dispatchEvent(new Event('input',{bubbles:true}));
+  if(paga>0)setRadio('metodo',VP.metodo); else $$('input[name="metodo"]').forEach(function(x){x.checked=false});
+  recalcSaldo(); closeModal();
+  var b=$('#btn-save'); try{b.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}
+  toast('Listo: '+(VP.conCons&&!VP.yaCons?'consulta + ':'')+'paquete cargados'+(paga>0?' y el pago de '+bs(paga):'')+'. Revisá y tocá «Guardar atención»')}
+function elegirPlanEnForm(id){
+  var s=$('#f-plan'); if(!s)return;
+  var nombre=$('#f-paciente').value.trim(), prev=planesDe(nombre).filter(function(x){return x.id===s.value})[0];
+  if(id&&![].some.call(s.options,function(o){return o.value===id}))renderPlanSel(id);
+  s.value=id||''; s.dispatchEvent(new Event('change',{bubbles:true}));
+  if(id){var p=planesDe(nombre).filter(function(x){return x.id===id})[0], ses=p?sesionQueToca(p,EDIT_ID):null;
+    toast(ses?'Listo: hoy es «'+(ses.desc||('sesión '+ses.n))+'» de '+p.nombre+'. Revisá y guardá ✅':'Plan elegido');
+    var w=$('#wrap-plan'); if(w&&w.scrollIntoView)w.scrollIntoView({behavior:'smooth',block:'center'})}
+  else{
+    /* al quitar el plan, la línea de la sesión que había entrado sola también se va */
+    readSrv(); var antes=SRV.length;
+    if(prev)SRV=SRV.filter(function(x){return x.det!==prev.nombre});
+    if(SRV.length!==antes){if(!SRV.length)SRV=[{nom:'',det:'',cant:1,precio:''}]; renderSrv(); recalcSaldo()}
+    toast('Esta visita queda como visita suelta')}}
 function alElegirPlan(){
   planHint();
   var id=$('#f-plan').value; if(!id)return;
   var p=planesVisiblesDe($('#f-paciente').value.trim()).filter(function(x){return x.id===id})[0]; if(!p)return;
-  readSrv(); if(SRV.some(function(s){return s.nom}))return;
-  var s=proxSesion(p); if(!s)return;
-  SRV=[{nom:s.desc||p.nombre,det:p.nombre,cant:1,precio:num(s.precio)}]; renderSrv(); planHint(); recalcSaldo()}
+  readSrv();
+  var s=sesionQueToca(p,EDIT_ID); if(!s||(s.hecha&&s.atencionId!==EDIT_ID))return;
+  /* la sesión va como línea de la atención aunque ya haya otras cosas (la
+     consulta): si no, la visita queda contada como sesión sin que se vea */
+  var clave=sinTildes(p.nombre).split(' ')[0], nom=s.desc||p.nombre;
+  if(SRV.some(function(x){return x.nom&&(x.nom===nom||x.det===p.nombre||(clave&&sinTildes(x.nom).indexOf(clave)>=0))}))return;
+  SRV=SRV.filter(function(x){return x.nom}).concat([{nom:nom,det:p.nombre,cant:1,precio:num(s.precio)}]); renderSrv(); planHint(); recalcSaldo()}
 
 /* ---------- (C) el paquete entero cobrado como una sola atención ---------- */
 var PAQ_OK=null, PAQ_PASE=null, PAQ_Q=null;
@@ -11931,6 +12068,7 @@ function bind(){
   $('#btn-ficha-med').onclick=function(){abrirFichaMed($('#f-paciente').value.trim())};
   $('#btn-planes').onclick=function(){abrirPlanes($('#f-paciente').value.trim())};
   $('#btn-add-srv').onclick=function(){readSrv();SRV.push({nom:'',det:'',cant:1,precio:''});renderSrv()};
+  $('#btn-paq-srv').onclick=function(){sesionPaqueteForm()};
   $('#btn-add-pre').onclick=function(){readPre();PRE.push(preBlanco());renderPre()};
   $('#pre-list').addEventListener('click',function(e){
     if(!e.target.classList.contains('p-del'))return;
@@ -14839,7 +14977,7 @@ function mdAtenderListo(id,repetir){
 var MD_FOTOS={}, MD_FOTO_GRANDE={}, MD_FOTO_PEND=null, MD_CMP_PAR={};
 var MD_FOTO_TIPO={antes:'Antes',durante:'Durante',despues:'Después',otra:'Otra'};
 function mdFotosSrv(){return !!(SESION&&SESION.fotos)}
-function mdFotoErr(e){return e==='accion_desconocida'?'Falta pegar el Apps Script nuevo para guardar fotos':e==='sin_permiso'?'Esa foto no te corresponde 🔐':e==='foto_grande'?'La foto es demasiado grande':'No se pudo ('+(e||'sin respuesta')+')'}
+function mdFotoErr(e){return e==='accion_desconocida'?'Falta pegar el Apps Script nuevo para guardar fotos':e==='sin_permiso'?'Esa foto no te corresponde 🔐':e==='foto_grande'?'La foto es demasiado grande':e==='sin_sesion'?'Escribí tu clave arriba y volvé a abrir la ficha para ver las fotos':'No se pudo ('+(e||'sin respuesta')+')'}
 function mdFotosFicha(nombre){
   var m=$('#modal'); if(!m||m.querySelector('#md-fotos'))return;
   var hOdo=mdQ(m,'h4').filter(function(h){return /^odontograma$/i.test(h.textContent.trim())})[0]; if(!hOdo)return;
@@ -15332,7 +15470,7 @@ function mdPautaVer(srv,canal){
     {id:'md-videos', f:'2026-10-21', t:'Videos de un minuto',
      x:'Hay cinco videos cortos: cómo cargar una atención, un paquete, un tratamiento por etapas, cómo marcar las sesiones de un paquete cuando el paciente vuelve y cómo corregir un plan que no quedó marcado. Están en Nueva atención («▶ ¿Primera vez?»), en la ventana de Planes y en mis respuestas («▶ Ver el video»).', ayuda:/videos de ayuda/},
     {id:'md-sesionpaq', f:'2026-10-21', t:'Marcar la sesión de un paquete',
-     x:'Cuando vuelve un paciente con paquete: en Nueva atención escribí su nombre y en «¿Esta visita es una sesión de un plan?» elegí el paquete. Se marca la sesión que sigue y se usa lo que ya pagó. También se puede desde su ficha con «Marcar realizada». Hay un video de 1 minuto.', ayuda:/sesión de un paquete/},
+     x:'Cuando vuelve un paciente con paquete: en Nueva atención escribí su nombre y en Servicios tocá «📦 Sesión de un paquete o plan» (o elegí el paquete en «¿Esta visita es una sesión de un plan?»). Se marca la sesión que sigue y se usa lo que ya pagó. También se puede desde su ficha con «Marcar realizada». Hay un video de 1 minuto.', ayuda:/sesión de un paquete/},
     {id:'md-vincular', f:'2026-10-21', t:'Sesiones que no quedaron marcadas',
      x:'Si un plan dice que falta una sesión que ya se hizo: abrí la ficha del paciente. Si la visita se guardó con el plan elegido, aparece «✓ Marcar sus sesiones». Si se cargó como visita suelta, tocá «🔗 Ya se hizo en una visita». Si el plan quedó de una sola etapa pero se hizo en varias citas (ej. un blanqueamiento en 3), tocá «🧩 Se hizo en varias visitas» y marcá las visitas. Lo pagado se reparte entre las sesiones y la caja no cambia. Hay un video de 1 minuto.', ayuda:/ya se hizo/},
     {id:'md-proximo', f:'2026-10-22', t:'Tu próximo paciente, listo para atender',
@@ -15341,6 +15479,8 @@ function mdPautaVer(srv,canal){
      x:'Al abrir una atención o cita, arriba dice qué pasó (atendida, no vino, canceló) y abajo su recorrido: cuándo agendó, si se movió, cómo pagó. Si no vino, ya tenés el WhatsApp armado y el botón «Reagendar».'},
     {id:'md-fotos', f:'2026-10-22', t:'Fotos del antes y del después',
      x:'En la ficha de cada paciente hay una sección «📸 Fotos»: sacá la foto del antes el primer día y la del después al terminar, y quedan juntas para comparar con una barra. Se guardan en el Google Drive de la clínica. Desde la foto la podés mandar al paciente o marcar si autorizó usarla en publicidad.', ayuda:/foto del antes/},
+    {id:'md-paq-boton', f:'2026-10-23', t:'La sesión del paquete, desde Servicios',
+     x:'En Nueva atención, en «Servicios realizados», hay un botón «📦 Sesión de un paquete o plan». Muestra los paquetes que ya tiene el paciente, qué sesión le toca hoy y si ya está pagada: tocá «✓ Hoy es esta sesión» y entra como línea de la atención. Desde ahí también se le vende un paquete nuevo. En la ficha, cada visita dice qué sesión fue.', ayuda:/sesión de un paquete/},
     {id:'md-fotos-mandar', f:'2026-10-23', t:'Mandar el antes y después al paciente',
      x:'Debajo de la comparación de 📸 Fotos está «📤 Mandar el antes y después»: arma una sola imagen con las dos fotos, la fecha de cada una, el tratamiento y el nombre de la clínica. En el celular o el iPad se abre para mandarla por WhatsApp; en la compu se descarga y se abre el chat del paciente para adjuntarla.', ayuda:/foto del antes/},
     {id:'md-pauta', f:'2026-10-22', t:'Dónde conviene poner la pauta',
@@ -15387,7 +15527,7 @@ function mdPautaVer(srv,canal){
     {q:'¿En qué red conviene poner la pauta?', k:'pauta publicidad facebook instagram tiktok red servicio conviene invertir anuncios', v:'panel', f:'#md-pauta', solo:'adm',
      p:['Entrá a 📊 Panel: arriba está «Pauta por servicio».','La recomendación de la semana dice qué servicio pautar y en qué red.','La tabla cruza cada servicio con la red: cuántos pacientes nuevos y cuánto dejaron. La casilla marcada es la mejor de cada servicio.','Tocá una casilla para ver esos pacientes. Para que sea exacto, cargá «¿Por dónde nos encontró?» en cada atención.']},
     {q:'¿Cómo marco la sesión de un paquete cuando el paciente vuelve?', k:'marcar sesion paquete vuelve segunda tercera realizada blanqueamiento plan adelanto pagado', v:'atencion', f:'#wrap-plan',
-     p:['Entrá a ＋ Nueva atención y escribí el nombre del paciente.','Aparece «¿Esta visita es una sesión de un plan?»: elegí el paquete.','Abajo dice qué sesión se marca y si ya está pagada (se usa lo que dejó adelantado).','Tocá «Guardar atención». Otra forma: lupa → su ficha → «Marcar realizada».']});
+     p:['Entrá a ＋ Nueva atención y escribí el nombre del paciente.','En «Servicios realizados» tocá «📦 Sesión de un paquete o plan»: muestra sus paquetes, qué sesión le toca hoy y si ya está pagada.','Tocá «✓ Hoy es esta sesión»: la sesión entra como línea de la atención (podés sumar la consulta u otra cosa).','Tocá «Guardar atención». Otra forma: lupa → su ficha → «Marcar realizada».']});
 })();
 
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
