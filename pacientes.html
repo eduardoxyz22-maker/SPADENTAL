@@ -1051,10 +1051,56 @@ body.md-tema-primavera .md-ropa.primavera{display:inline}
   body.md-en-atencion .wrap{padding-bottom:190px}
   body.md-en-atencion #asis{bottom:150px}}
 
+/* pestañas: íconos de línea y la activa como píldora */
+.md-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+header nav{gap:4px;padding-top:7px;padding-bottom:7px;align-items:center}
+header nav button{display:inline-flex;align-items:center;gap:7px;border-bottom:0;border-radius:999px;padding:9px 14px;min-height:42px;
+  font-weight:650;transition:background .2s,color .2s}
+header nav button .md-nav-i svg{width:17px;height:17px;display:block}
+header nav button:not(.on):hover{background:var(--lime-sf);color:var(--ink)}
+header nav button.on{background:var(--ink);color:#fff;border-bottom-color:transparent}
+header nav button.on .pill{background:rgba(255,255,255,.16);border-color:transparent;color:#fff}
+body.octubre header nav button.on{border-bottom-color:transparent}
+#nav-buscar,#nav-duena{padding:9px 11px}
+@media(max-width:1280px){header nav{gap:1px}header nav button{padding:8px 10px;font-size:13px;gap:6px}header nav button .md-nav-i svg{width:16px;height:16px}
+  header nav .pill{padding:2px 6px;font-size:10.5px}#nav-buscar,#nav-duena{padding:8px 9px}}
+/* el aviso de conexión, chiquito cuando todo anda */
+#conn-banner .banner.conn{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 12px;font-size:12px;margin-top:12px}
+
+/* listas de Pacientes y Atenciones */
+.md-pnom{display:flex;align-items:center;gap:11px;min-width:0}
+.md-pnom-t{min-width:0}
+.md-av{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:var(--lime-sf);border:1px solid var(--lime-bd);color:var(--lime-dk);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:-.02em}
+#pc-body tr,#l-body tr{transition:background .15s}
+#pc-body tr:hover,#l-body tr:hover{background:var(--lime-sf)}
+#pc-body td,#l-body td{padding-top:11px;padding-bottom:11px}
+.md-chip.gris{background:var(--paper);color:var(--gray);border:1px solid var(--line);font-weight:600}
+.md-anim .md-fila{animation:mdEntra .45s cubic-bezier(.2,.7,.2,1) both}
+
+/* movimiento: entrada de las pantallas, tarjetas que se levantan, ventanas que aparecen */
+@keyframes mdEntra{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.md-anim .md-entra{animation:mdEntra .5s cubic-bezier(.2,.7,.2,1) both}
+.md-anim .kpi,.md-anim .md-aj-tile,.md-anim .md-met-t,.md-anim .md-pv-t{transition:transform .2s,box-shadow .2s}
+.md-anim .kpi:hover,.md-anim .md-aj-tile:hover,.md-anim .md-met-t:hover,.md-anim .md-pv-t:hover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,.05),0 10px 24px rgba(0,0,0,.08)}
+.md-anim .btn{transition:transform .12s,background .2s}
+.md-anim .btn:active{transform:scale(.96)}
+.md-anim .ov.on{animation:mdFundido .2s ease-out}
+.md-anim .ov.on .modal{animation:mdModal .32s cubic-bezier(.2,.9,.3,1.12)}
+@keyframes mdFundido{from{opacity:0}}
+@keyframes mdModal{from{opacity:0;transform:translateY(22px) scale(.97)}}
+.md-anim #md-barra button{transition:color .2s,transform .15s}
+.md-anim #md-barra button:active{transform:scale(.92)}
+
 /* las animaciones nuevas viven bajo body.md-anim: se apagan en Ajustes › Apariencia,
    y el aparato que pide quietud no las ve */
-@media(prefers-reduced-motion:reduce){.md-anim .mark,.md-anim .md-chispa,.md-anim .md-arco,.md-anim .md-cepillo,.md-anim .md-moneda,
-  .md-anim .md-hoja-cal,.md-anim .md-late,.md-anim .md-prog i,.md-anim .md-ba i,.md-anim .md-tl-fila.ya .md-tl-punto,.md-anim .md-check *,.md-anim .md-conf,.md-anim .md-copo,.md-anim .md-tallo{animation:none!important}}
+@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .mark,body:not(.md-anim-siempre) .md-chispa,body:not(.md-anim-siempre) .md-arco,body:not(.md-anim-siempre) .md-cepillo,body:not(.md-anim-siempre) .md-moneda,body:not(.md-anim-siempre) .md-hoja-cal,body:not(.md-anim-siempre) .md-late,body:not(.md-anim-siempre) .md-prog i,body:not(.md-anim-siempre) .md-ba i,body:not(.md-anim-siempre) .md-tl-fila.ya .md-tl-punto,body:not(.md-anim-siempre) .md-check *,body:not(.md-anim-siempre) .md-conf,body:not(.md-anim-siempre) .md-copo,body:not(.md-anim-siempre) .md-tallo,body:not(.md-anim-siempre) .md-entra,body:not(.md-anim-siempre) .md-fila,body:not(.md-anim-siempre) .ov.on,body:not(.md-anim-siempre) .ov.on .modal{animation:none!important}
+  body:not(.md-anim-siempre) .kpi:hover,body:not(.md-anim-siempre) .md-aj-tile:hover{transform:none}
+  /* con «siempre», también se mueve lo que ya traía el panel */
+  body.md-anim-siempre .murci{animation:vuela 10s ease-in-out infinite}body.md-anim-siempre .arana{animation:cuelga 6s ease-in-out infinite}
+  body.md-anim-siempre .boo{animation:flota 3.2s ease-in-out infinite}
+  body.md-anim-siempre .asis-brazo{animation:asisSaluda 3.2s ease-in-out infinite}body.md-anim-siempre .asis-chispa{animation:asisBrilla 2.8s ease-in-out infinite}
+  body.md-anim-siempre .asis-salta svg{animation:asisSalta .65s}}
 /* ===== MODERNO FIN ===== */
 </style>
 </head>
@@ -11838,9 +11884,10 @@ function mdPref(k,v){
     if(v===undefined){var s=localStorage.getItem(MD_PFX+k); return s==null?null:JSON.parse(s)}
     localStorage.setItem(MD_PFX+k,JSON.stringify(v))}catch(e){return null}}
 function mdAnimar(){return mdPref('ANIM')!==0}
+function mdAnimSiempre(){var v=mdPref('ANIM'); return v===null||v===1||v==='siempre'}
 function mdTemporadaSi(){return mdPref('TEMP')!==0}
 function mdQ(raiz,sel){return raiz?Array.prototype.slice.call(raiz.querySelectorAll(sel)):[]}
-function mdAplicarAnim(){document.body.classList.toggle('md-anim',mdAnimar())}
+function mdAplicarAnim(){document.body.classList.toggle('md-anim',mdAnimar()); document.body.classList.toggle('md-anim-siempre',mdAnimar()&&mdAnimSiempre())}
 function mdIco(d,w){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>'}
 var MD_I={
   dia:'M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z',
@@ -11895,11 +11942,12 @@ function mdEncabezado(){
   var box=$('#md-anillos'); if(!box)return;
   var meta=mdMetaDia(), html=mdAnillo(d.total?d.hechas.length/d.total:0,'var(--lime)',d.hechas.length+'/'+d.total,'Atendidos');
   if(d.verPlata){
-    var base=meta>0?meta:Math.max(d.facturado,d.cobrado);
-    html+=mdAnillo(base>0?d.cobrado/base:0,'#FFFFFF',bs(d.cobrado),meta>0?'de '+bs(meta)+' de meta':(d.facturado>0?'de '+bs(d.facturado)+' facturado':'cobrado hoy'))}
+    var base=meta>0?meta:Math.max(d.facturado,d.cobrado), deAntes=d.cobrado>d.facturado+0.009;
+    html+=mdAnillo(base>0?d.cobrado/base:0,'#FFFFFF',bs(d.cobrado),meta>0?'de '+bs(meta)+' de meta':
+      (deAntes?(d.facturado>0?'cobrado hoy · incluye pagos de antes':'cobrado hoy (pagos de antes)'):(d.facturado>0?'de '+bs(d.facturado)+' facturado':'cobrado hoy')))}
   html+=mdAnillo(d.total?d.pend.length/d.total:0,'#7FB8E6',String(d.pend.length),d.pend.length===1?'Por atender':'Por atender');
   /* no se repinta si no cambió nada: el arco no vuelve a llenarse a cada rato */
-  if(html!==MD_ANILLOS_FIRMA){box.innerHTML=html; MD_ANILLOS_FIRMA=html}}
+  if(html!==MD_ANILLOS_FIRMA){box.innerHTML=html; MD_ANILLOS_FIRMA=html; try{mdContar(box)}catch(e){}}}
 function mdMontarEncabezado(){
   var hd=$('.hd'); if(!hd||$('#md-anillos'))return;
   var mk=$('.hd .mark');
@@ -11966,7 +12014,11 @@ function mdMontarAjustes(){
   /* la tarjeta nueva: lo que cambia cómo se ve el panel en ESTE aparato */
   v.insertAdjacentHTML('beforeend','<div class="card" id="md-apariencia"><h2>Apariencia</h2>'+
     '<p class="hint">Cómo se ve el panel en este aparato. No cambia nada para los demás.</p>'+
-    '<div class="seg lime" style="margin-top:6px"><label><input type="checkbox" id="md-op-anim"><span>Animaciones y dibujitos que se mueven</span></label></div>'+
+    '<label style="margin-top:6px">Animaciones y dibujitos que se mueven</label>'+
+    '<div class="seg lime" id="md-op-anim"><label><input type="radio" name="md-anim" value="siempre"><span>Siempre</span></label>'+
+    '<label><input type="radio" name="md-anim" value="aparato"><span>Según el aparato</span></label>'+
+    '<label><input type="radio" name="md-anim" value="no"><span>Apagadas</span></label></div>'+
+    '<p class="hint" style="margin:6px 0 0">«Según el aparato» las apaga si la compu o el celular tiene activado «reducir movimiento».</p>'+
     '<div class="seg lime" style="margin-top:10px"><label><input type="checkbox" id="md-op-temp"><span>Decoración de temporada (Navidad, Carnaval, primavera, Halloween)</span></label></div>'+
     '<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">App en el celular</h3><div id="md-instalar"></div></div>');
   var cards=$$('#v-config > .card'), usados=[];
@@ -11990,12 +12042,16 @@ function mdMontarAjustes(){
     var c=grupos[+b.getAttribute('data-g')].lista[+b.getAttribute('data-c')]; if(!c)return;
     c.scrollIntoView({behavior:'smooth',block:'start'});
     c.classList.remove('md-flash'); void c.offsetWidth; c.classList.add('md-flash')}});
-  var oa=$('#md-op-anim'), ot=$('#md-op-temp');
-  if(oa)oa.onchange=function(){mdPref('ANIM',oa.checked?1:0); mdAplicarAnim(); toast(oa.checked?'Animaciones prendidas':'Animaciones apagadas en este aparato')};
+  var ot=$('#md-op-temp');
+  mdQ(document,'input[name="md-anim"]').forEach(function(r){r.onchange=function(){
+    mdPref('ANIM',r.value==='no'?0:r.value); mdAplicarAnim();
+    toast(r.value==='no'?'Animaciones apagadas en este aparato':(r.value==='siempre'?'Animaciones siempre prendidas en este aparato':'Animaciones según el aparato'));
+    if(r.value!=='no')mdEntrada('config')}});
   if(ot)ot.onchange=function(){mdPref('TEMP',ot.checked?1:0); mdAplicarTema(); mdEncabezado(); toast(ot.checked?'Decoración de temporada prendida':'Decoración de temporada apagada')}}
 function mdSincAjustes(){
-  var oa=$('#md-op-anim'), ot=$('#md-op-temp');
-  if(oa)oa.checked=mdAnimar(); if(ot)ot.checked=mdTemporadaSi();
+  var ot=$('#md-op-temp'), pa=mdPrefAnim();
+  mdQ(document,'input[name="md-anim"]').forEach(function(r){r.checked=r.value===pa});
+  if(ot)ot.checked=mdTemporadaSi();
   /* en el índice se esconde lo que la tarjeta no muestra */
   $$('#md-aj-indice .md-aj-tile').forEach(function(t){
     var vis=mdQ(t,'.md-aj-it').filter(function(b){return getComputedStyle(b).display!=='none'}).length;
@@ -12028,6 +12084,7 @@ function mdDibujo(tipo){
   return ''}
 function mdTarjetasVivas(){
   var box=$('#m-kpis'); if(!box)return;
+  mdQ($('#m-lista'),'.who').forEach(mdLindoEn);
   var d=mdDelDia($('#m-dia').value||hoyISO(),$('#m-prof').value);
   mdQ(box,'.kpi').forEach(function(k){
     if(k.querySelector('.md-ilu'))return;
@@ -12251,6 +12308,7 @@ function mdIniciales(n){var p=String(n||'').trim().split(/\s+/); return ((p[0]||
 function mdFicha(nombre){
   var modal=$('#modal'), h=$('#modal h3'); if(!modal||!h||h.closest('.md-ficha-cab'))return;
   var f=pacDe(nombre), nom=h.textContent;
+  mdLindoEn(h);
   var planes=planesVisibles(f.planes).slice().sort(function(a,b){return (a.estado==='activo'?0:1)-(b.estado==='activo'?0:1)});
   /* el recorrido de cada plan, en el mismo orden en que la ficha los pinta */
   var barras=mdQ(modal,'.barra');
@@ -12514,6 +12572,109 @@ function mdPintarInstalar(){
   var b=$('#md-btn-instalar');
   if(b)b.onclick=function(){var e=MD_INSTALAR; if(!e)return; e.prompt(); if(e.userChoice)e.userChoice.then(function(){MD_INSTALAR=null; mdPintarInstalar()})}}
 
+/* ---------- pestañas con íconos de línea en vez de emojis ---------- */
+var MD_NAV_I={
+  midia:'M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10',
+  atencion:MD_I.mas, cita:MD_I.agenda,
+  agenda:'M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4',
+  lista:MD_I.lista, panel:'M4 20V10M10 20V4M16 20v-7M22 20H2', caja:MD_I.caja, pacientes:MD_I.equipo,
+  config:'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
+  buscar:'M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-5-5',
+  duena:'M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z', doctora:'M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1', equipo:'M7 11V7a5 5 0 0110 0v4M5 11h14v10H5z'};
+function mdIconosNav(){
+  $$('header nav button').forEach(function(b){
+    var k=b.dataset.v||(b.id==='nav-buscar'?'buscar':'');
+    if(!k||b.getAttribute('data-md-ico'))return;
+    for(var i=0;i<b.childNodes.length;i++){var n=b.childNodes[i];
+      if(n.nodeType===3&&n.textContent.trim()){n.textContent=n.textContent.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ¿]+/,''); break}}
+    if(k==='buscar'){b.innerHTML='<span class="md-sr">Buscar</span>'; b.setAttribute('aria-label','Buscar paciente')}
+    b.insertAdjacentHTML('afterbegin','<span class="md-nav-i">'+mdIco(MD_NAV_I[k])+'</span>');
+    b.setAttribute('data-md-ico','1')});
+  mdIconoDuena()}
+function mdIconoDuena(){
+  var b=$('#nav-duena'); if(!b)return;
+  var k=ROL==='admin'?'duena':(esDoctora()?'doctora':'equipo');
+  b.innerHTML='<span class="md-nav-i">'+mdIco(MD_NAV_I[k])+'</span><span class="md-sr">'+(k==='duena'?'Dueña':(k==='doctora'?'Doctora':'Recepción'))+'</span>';
+  b.setAttribute('aria-label',b.title||'Sesión')}
+
+/* ---------- nombres prolijos en pantalla (la hoja no se toca) ---------- */
+function mdLindo(s){
+  s=String(s||'');
+  if(s!==s.toUpperCase()||!/[A-ZÁÉÍÓÚÑ]{3}/.test(s))return s;
+  return s.toLowerCase().replace(/(^|[\s\-'])([a-záéíóúñü])/g,function(m,a,c){return a+c.toUpperCase()})
+    .replace(/\s(De|Del|La|Las|Los|Y)(?=\s)/g,function(m,w){return ' '+w.toLowerCase()})}
+function mdLindoEn(el){
+  if(!el||el.getAttribute('data-md-lindo'))return;
+  if(el.childNodes.length===1&&el.firstChild.nodeType===3){var t=el.textContent, l=mdLindo(t); if(l!==t){el.textContent=l; el.title=t}}
+  el.setAttribute('data-md-lindo','1')}
+function mdCelMalo(t){t=String(t||'').trim(); return !!t&&t!=='—'&&/[#A-Za-z!]/.test(t)}
+
+/* ---------- las listas de Pacientes y Atenciones ---------- */
+function mdFilaPac(td){
+  var b=td.querySelector('b'); if(!b||td.querySelector('.md-pnom'))return;
+  mdLindoEn(b);
+  var w=document.createElement('div'); w.className='md-pnom';
+  w.innerHTML='<span class="md-av" aria-hidden="true">'+esc(mdIniciales(b.title||b.textContent))+'</span>';
+  var tx=document.createElement('div'); tx.className='md-pnom-t';
+  while(td.firstChild)tx.appendChild(td.firstChild);
+  w.appendChild(tx); td.appendChild(w)}
+function mdChipCelda(td,cls){
+  if(!td||td.querySelector('.md-chip')||td.textContent.trim()==='—'||!td.textContent.trim())return;
+  td.innerHTML='<span class="md-chip '+cls+'">'+esc(td.textContent.trim())+'</span>'}
+function mdDecorarPacientes(){
+  var filas=mdQ($('#pc-body'),'tr'), adm=esAdmin();
+  filas.forEach(function(tr,i){
+    var td=tr.children; if(td.length<5)return;
+    mdFilaPac(td[0]);
+    if(mdCelMalo(td[1].textContent))td[1].innerHTML='<span class="md-chip rojo" title="'+esc(td[1].textContent)+'">Revisar celular</span>';
+    mdChipCelda(td[2],'gris');
+    var iSal=adm?5:4, iProx=adm?7:6;
+    if(td[iSal]&&num(td[iSal].textContent.replace(/\./g,''))>0)mdChipCelda(td[iSal],'rojo');
+    if(td[iProx])mdChipCelda(td[iProx],'lima');
+    if(i<24)tr.style.animationDelay=(i*18)+'ms', tr.classList.add('md-fila')})}
+function mdDecorarAtenciones(){
+  mdQ($('#l-body'),'tr').forEach(function(tr,i){
+    var td=tr.children; if(td.length<10)return;
+    mdFilaPac(td[2]);
+    mdQ(td[2],'.mini').forEach(function(m){
+      var t=m.firstChild&&m.firstChild.nodeType===3?m.firstChild.textContent:'';
+      if(mdCelMalo(t.replace(/·\s*$/,'')))m.firstChild.textContent='revisar celular · '});
+    mdChipCelda(td[4],'gris');
+    if(i<24)tr.style.animationDelay=(i*18)+'ms', tr.classList.add('md-fila')})}
+
+/* ---------- movimiento: las vistas entran, los números cuentan ---------- */
+function mdPrefAnim(){var v=mdPref('ANIM'); return v===0?'no':(v==='aparato'?'aparato':'siempre')}
+function mdMueve(){
+  if(!document.body.classList.contains('md-anim'))return false;
+  if(document.body.classList.contains('md-anim-siempre'))return true;
+  return !(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)}
+function mdEntrada(v){
+  if(!mdMueve())return;
+  var vista=$('#v-'+v); if(!vista)return;
+  var els=[], k=0;
+  Array.prototype.slice.call(vista.children).forEach(function(c){
+    if(c.classList.contains('kpis'))Array.prototype.slice.call(c.children).forEach(function(x){els.push(x)});
+    else if(c.offsetParent!==null||c.getClientRects().length)els.push(c)});
+  els.slice(0,14).forEach(function(e){
+    e.classList.remove('md-entra'); void e.offsetWidth;
+    e.style.animationDelay=(k++*55)+'ms'; e.classList.add('md-entra')});
+  setTimeout(function(){els.forEach(function(e){e.classList.remove('md-entra'); e.style.animationDelay=''})},1500)}
+function mdContar(raiz){
+  if(!mdMueve()||!raiz)return;
+  mdQ(raiz,'.kpi .v, .md-anillo b, .md-met-t b').forEach(function(el){
+    if(el.getAttribute('data-md-contado')===el.textContent)return;
+    var fin=el.textContent, m=/^(Bs\s)?(\d{1,3}(?:\.\d{3})*|\d+)$/.exec(fin.trim()); if(!m)return;
+    var n=+m[2].replace(/\./g,''); if(!(n>0))return;
+    var pre=m[1]||'', t0=null, dur=Math.min(1100,450+String(n).length*90);
+    el.setAttribute('data-md-contado',fin);
+    var paso=function(ts){
+      if(!el.isConnected)return;
+      if(t0===null)t0=ts;
+      var p=Math.min(1,(ts-t0)/dur), e=1-Math.pow(1-p,3);
+      el.textContent=p<1?pre+Math.round(n*e).toLocaleString('es-BO'):fin;
+      if(p<1)requestAnimationFrame(paso)};
+    requestAnimationFrame(paso)})}
+
 /* ---------- Sonri enseña lo nuevo ---------- */
 (function(){
   if(typeof ASIS_NOVEDADES==='undefined'||typeof ASIS_AYUDA==='undefined')return;
@@ -12557,7 +12718,9 @@ function mdRefrescar(){
   var _show=show;
   show=function(v){
     var r=_show.apply(this,arguments);
+    if(v==='midia')MD_ANILLOS_FIRMA='';
     try{mdRefrescar()}catch(e){}
+    try{mdEntrada(v); mdContar($('#v-'+v))}catch(e){}
     try{if(v==='config'){mdSincAjustes(); mdPintarInstalar()}}catch(e){}
     try{document.body.classList.toggle('md-en-atencion',v==='atencion'); if(v==='atencion')mdResumen()}catch(e){}
     return r};
@@ -12581,6 +12744,9 @@ function mdRefrescar(){
   var _wa=showWhatsappModal;
   showWhatsappModal=function(r){var x=_wa.apply(this,arguments); try{mdFestejo(r)}catch(e){} try{mdEncabezado()}catch(e){} return x};
   /* solo las listas de personas y movimientos: los resúmenes de muchas columnas siguen como tabla que se desliza */
+  var _rl=renderLista; renderLista=function(){var r=_rl.apply(this,arguments); try{mdDecorarAtenciones()}catch(e){} return r};
+  var _rpa=renderPacientes; renderPacientes=function(){var r=_rpa.apply(this,arguments); try{mdDecorarPacientes()}catch(e){} return r};
+  var _ar=aplicarRol; aplicarRol=function(){var r=_ar.apply(this,arguments); try{mdIconoDuena(); mdPintarBarra()}catch(e){} return r};
   [['renderLista','#v-lista'],['renderCaja','#cj-body'],['renderPacientes','#v-pacientes']].forEach(function(p){
     var f=window[p[0]]; if(typeof f!=='function')return;
     window[p[0]]=function(){var r=f.apply(this,arguments); try{var el=$(p[1]); mdEtiquetarTablas(el&&el.tagName==='TBODY'?el.closest('table').parentNode:el)}catch(e){} return r}});
@@ -12599,7 +12765,7 @@ function mdRefrescar(){
   refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar()}catch(e){} return r}})();
 (function mdInit(){
   try{
-    mdAplicarAnim(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
+    mdAplicarAnim(); mdIconosNav(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
     document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
     window.addEventListener('resize',function(){try{mdAltoHeader()}catch(e){}});
     setInterval(function(){try{mdEncabezado(); mdCaraBase()}catch(e){}},60000);
