@@ -987,6 +987,7 @@ body.md-tema-primavera .md-ropa.primavera{display:inline}
 .md-hueco:focus-visible{outline:2px solid var(--lime-dk);outline-offset:-2px}
 .md-sem-b{position:absolute;left:3px;right:3px;z-index:1;border-radius:9px;padding:4px 6px;line-height:1.25;justify-content:center;text-align:left;overflow:hidden;display:flex;flex-direction:column;
   font:inherit;cursor:pointer;background:#E4EEF8;border:1px solid #9CBCDD;color:#163B5E;min-width:0}
+.md-sem-b.md-sem-par{padding:4px 5px}
 .md-sem-b b{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .md-sem-b small{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
 .md-sem-b.okk{background:#E3F1EA;border-color:#9FCDB5;color:#1F5E43}
@@ -5021,9 +5022,6 @@ function guardarAtencion(){
   /* la fecha de nacimiento es del paciente, no de la visita: va a su ficha */
   var nac=$('#f-nac').value;
   if(nac){var fi=pacDe(rec.paciente); if(fi.nac!==nac){fi.nac=nac; savePac(fi)}}
-  if(prev&&(prev.planId!==rec.planId||keyPac(prev.paciente)!==keyPac(rec.paciente)||rec.estado!=='Atendido'))liberarSesionPlan(prev);
-  marcarSesionPlan(rec);
-  alPlanF.forEach(function(p){registrarPagoPlan(rec.paciente,rec.planId,p.monto,p.metodo,rec.fecha,'Pagado junto con la atención del '+fmtF(rec.fecha))});
   /* si hoy se hizo algo que estaba recomendado, ese presupuesto se cierra solo */
   var cerrados=autoCerrarPresu(rec);
   if(CONNECTED){
@@ -5039,6 +5037,11 @@ function guardarAtencion(){
         if(v&&v.v&&v.v!=='atencion')show(v.v)}
     }).catch(function(){})
   } else {queue('save',rec,EDIT_ID?(baseForm===undefined?undefined:baseForm):null)}
+  /* la sesión del plan se marca después de mandar la atención: el servidor
+     tiene que ver la atención para aceptar la marca */
+  if(prev&&(prev.planId!==rec.planId||keyPac(prev.paciente)!==keyPac(rec.paciente)||rec.estado!=='Atendido'))liberarSesionPlan(prev);
+  marcarSesionPlan(rec);
+  alPlanF.forEach(function(p){registrarPagoPlan(rec.paciente,rec.planId,p.monto,p.metodo,rec.fecha,'Pagado junto con la atención del '+fmtF(rec.fecha))});
   var cita=crearCitaDesde(rec);
   var era=EDIT_ID; clearForm(true); fillDatalists(); updateNavRem();
   toast(era?(pagoNuevo?'Atención actualizada · pago de '+bs(sumaPagos(pagoNuevo))+' registrado hoy ✅':'Atención actualizada'):
@@ -5651,13 +5654,19 @@ function pacVacia(p){
   return !p.nac && !p.med.alergias && !p.med.medicacion && !p.med.antecedentes.length
       && !p.med.notas && !p.med.consent && !p.planes.length}
 
-function savePac(p){
+/* Con tras (lo que se está subiendo antes), la ficha queda en la cola ya,
+   pero sale recién cuando eso terminó: el servidor solo acepta la marca de
+   una sesión de un paquete de la clínica si ya ve la atención que la hizo. */
+function savePac(p,tras){
   if(identidadAmbigua(p.nombre)){toast(AVISO_IDENTIDAD,1);return}
   var k=keyPac(p.nombre); if(!k)return;
   if(pacVacia(p)&&!PAC[k])return;
   p.ts=new Date().toISOString();
   PAC[k]=p; savePacLocal();
-  enviar('pac',p)}
+  if(!tras){enviar('pac',p);return}
+  queue('pac',p);
+  var kp=claveCola('pac',p), sigue=function(){if(CONNECTED)mandar(kp)};
+  tras.then(sigue,sigue)}
 
 /* Datos de contacto, última visita y próxima cita, sacados de las
    atenciones. Se arma una sola vez por pantalla y no por paciente. */
@@ -5967,7 +5976,7 @@ function marcarSesionPlan(rec){
   if(!s)return;
   s.hecha=true; s.fecha=rec.fecha; s.atencionId=rec.id;
   if(!proxSesion(plan)&&saldoPlan(plan)<=0)plan.estado='terminado';
-  savePac(p)}
+  savePac(p,VUELO[claveCola('save',rec)])}
 
 /* ============================ RECORDATORIOS ============================ */
 /* Citas sin resolver. Una cita deja la lista cuando se marca si vino,
@@ -13130,16 +13139,29 @@ function mdSemanaHoras(){
   var cols=dias.map(function(f){
     var huecos=''; for(var h=ini; h<fin; h+=60)huecos+='<button type="button" class="sem-add md-hueco" style="top:'+((h-ini)/60*H)+'px;height:'+H+'px" '+
       'onclick="mdAgendarHora(\''+f+'\',\''+mdHHMM(h)+'\')" aria-label="'+esc('Agendar el '+fmtF(f)+' a las '+mdHHMM(h))+'"></button>';
-    var bl=por[f].map(function(r){
+    /* dos citas que en el dibujo se tocarían van una al lado de la otra, nunca encimadas */
+    var alto1=Math.max(40,dur/60*H-2), pos=mdCarriles(por[f].map(function(r){return (mdHoraMin(r.hora)-ini)/60*H+1}),alto1);
+    var bl=por[f].map(function(r,j){
       var m=mdHoraMin(r.hora), pend=esCitaPendiente(r), ch=pend?choquesDe(r.fecha,r.hora,r.profesional,r.id):[];
       var cls=pend?(ch.length?' choca':(f<hoy?' vencida':'')):(r.estado==='Atendido'?' okk':' off');
-      return '<button type="button" class="sem-chip md-sem-b'+cls+'" style="top:'+((m-ini)/60*H+1)+'px;height:'+Math.max(40,dur/60*H-2)+'px" '+
+      var pc=pos[j], lado=pc.n>1?'left:calc('+(pc.c*100/pc.n)+'% + 2px);right:auto;width:calc('+(100/pc.n)+'% - 4px);':'';
+      return '<button type="button" class="sem-chip md-sem-b'+cls+(pc.n>1?' md-sem-par':'')+'" style="'+lado+'top:'+((m-ini)/60*H+1)+'px;height:'+alto1+'px" '+
         'onclick="irAlDia(\''+f+'\')" title="'+esc((r.hora||'')+' · '+(r.paciente||'')+' · '+(r.profesional||'')+(ch.length?' · choca con '+(ch[0].paciente||''):''))+'">'+
-        '<b>'+esc(r.hora)+' · '+esc((r.paciente||'').split(' ')[0])+'</b><small>'+esc((r.profesional||'').replace(/^Dra\.?\s*/i,'')+(r.proxMotivo?' · '+r.proxMotivo:''))+'</small></button>'}).join('');
+        (pc.n>1?'<b>'+esc((r.paciente||'').split(' ')[0])+'</b><small>'+esc(r.hora)+' · '+esc((r.profesional||'').replace(/^Dra\.?\s*/i,''))+'</small>'
+          :'<b>'+esc(r.hora)+' · '+esc((r.paciente||'').split(' ')[0])+'</b><small>'+esc((r.profesional||'').replace(/^Dra\.?\s*/i,'')+(r.proxMotivo?' · '+r.proxMotivo:''))+'</small>')+'</button>'}).join('');
     return '<div class="md-sem-col'+(f===hoy?' hoy':'')+'" style="height:'+alto+'px">'+huecos+bl+'</div>'}).join('');
   el.innerHTML='<div class="md-sem-w"><div class="md-sem-in">'+cab+sinH+
     '<div class="md-sem-cuerpo" style="grid-template-columns:52px repeat('+dias.length+',minmax(0,1fr))"><div class="md-sem-horas" style="height:'+alto+'px">'+horas+'</div>'+cols+'</div></div></div>'+
     '<div class="md-car-ley"><span class="prox">Agendada</span><span class="hecha">Atendida</span><span class="choca">Se pisa con otra</span><span class="novino">No vino o se movió</span></div>'}
+/* tops ya ordenados: a cada cita le toca un carril y cuántos carriles tiene su grupo */
+function mdCarriles(tops,alto){
+  var out=[], grupo=[], finG=-1, fines=[];
+  var cerrar=function(){var n=fines.length; grupo.forEach(function(i){out[i].n=n}); grupo=[]; fines=[]};
+  tops.forEach(function(t,i){
+    if(t>=finG)cerrar();
+    var c=0; while(c<fines.length&&fines[c]>t)c++;
+    fines[c]=t+alto; out[i]={c:c,n:1}; grupo.push(i); finG=Math.max(finG,t+alto)});
+  cerrar(); return out}
 function mdAgendarHora(f,h){agendarEse(f); var q=$('#q-hora'); if(q)q.value=h}
 
 /* ---------- I · el odontograma con dientes de verdad ---------- */
@@ -14359,7 +14381,8 @@ function mdWaBurbuja(){
 var MD_VIDEOS=[
   {n:1, t:'Cómo cargar una atención', d:'1 min · paciente, canal, servicio, cobro y guardar'},
   {n:2, t:'Cómo cargar un paquete', d:'1 min · la primera vez y cuando vuelve para la sesión 2'},
-  {n:3, t:'Cómo armar un tratamiento por etapas', d:'1 min · plan de ortodoncia, pago adelantado y marcar etapas'}];
+  {n:3, t:'Cómo armar un tratamiento por etapas', d:'1 min · plan de ortodoncia, pago adelantado y marcar etapas'},
+  {n:4, t:'Cómo marcar las sesiones de un paquete', d:'1 min · cuando vuelve: desde Nueva atención o desde su ficha'}];
 function mdVideo(n){
   var v=MD_VIDEOS.filter(function(x){return x.n===n})[0]||MD_VIDEOS[0];
   openModal('<h3>🎬 '+esc(v.t)+'</h3><p class="mini">'+esc(v.d)+'</p>'+
@@ -14367,7 +14390,7 @@ function mdVideo(n){
     '<div class="md-video-otros">'+MD_VIDEOS.map(function(x){return '<button type="button" class="'+(x.n===v.n?'on':'')+'" onclick="mdVideo('+x.n+')"><b>'+x.n+'</b>'+esc(x.t)+'</button>'}).join('')+'</div>');
   var el=$('#modal video'); if(el)el.onerror=function(){el.insertAdjacentHTML('afterend','<div class="md-cobro-est debe">No se pudo cargar el video. Revisá la conexión e intentá de nuevo.</div>')}}
 function mdPausarVideos(){mdQ(document,'#modal video').forEach(function(v){try{v.pause()}catch(e){}})}
-var MD_VID_AYUDA=[[/^¿Cómo cargo una atención nueva\?/,1],[/^¿Cómo cargo un paquete/,2],[/^¿Cómo armo un plan de tratamiento/,3],[/^¿Cómo registro la atención de una etapa del plan\?/,3]];
+var MD_VID_AYUDA=[[/^¿Cómo cargo una atención nueva\?/,1],[/^¿Cómo cargo un paquete/,2],[/^¿Cómo armo un plan de tratamiento/,3],[/^¿Cómo registro la atención de una etapa del plan\?/,3],[/^¿Cómo marco la sesión de un paquete/,4]];
 function mdVideoDeAyuda(q){for(var i=0;i<MD_VID_AYUDA.length;i++)if(MD_VID_AYUDA[i][0].test(q))return MD_VID_AYUDA[i][1]; return 0}
 function mdLinksVideo(){
   var h=$('#v-atencion .card h2'); if(h&&!$('#md-vid-at'))h.insertAdjacentHTML('afterend','<button type="button" class="md-vid-link" id="md-vid-at" onclick="mdVideo(1)">▶ ¿Primera vez? Mirá cómo se carga (1 min)</button>')}
@@ -14419,7 +14442,11 @@ function mdLinksVideo(){
     {id:'md-ventanas5', f:'2026-10-21', t:'Ventanas más claras',
      x:'La atención se ve como un recibo con un sello de lo que debe; al registrar un pago tenés Todo y Mitad, y el mensaje de WhatsApp se ve como va a llegar. La lupa de arriba muestra si el paciente debe o tiene alergias.'},
     {id:'md-videos', f:'2026-10-21', t:'Videos de un minuto',
-     x:'Hay tres videos cortos: cómo cargar una atención, un paquete y un tratamiento por etapas. Están en Nueva atención («▶ ¿Primera vez?»), en la ventana de Planes y en mis respuestas («▶ Ver el video»).', ayuda:/videos de ayuda/});
+     x:'Hay cuatro videos cortos: cómo cargar una atención, un paquete, un tratamiento por etapas y cómo marcar las sesiones de un paquete cuando el paciente vuelve. Están en Nueva atención («▶ ¿Primera vez?»), en la ventana de Planes y en mis respuestas («▶ Ver el video»).', ayuda:/videos de ayuda/},
+    {id:'md-sesionpaq', f:'2026-10-21', t:'Marcar la sesión de un paquete',
+     x:'Cuando vuelve un paciente con paquete: en Nueva atención escribí su nombre y en «¿Esta visita es una sesión de un plan?» elegí el paquete. Se marca la sesión que sigue y se usa lo que ya pagó. También se puede desde su ficha con «Marcar realizada». Hay un video de 1 minuto.', ayuda:/sesión de un paquete/},
+    {id:'md-calpar', f:'2026-10-21', t:'El calendario sin citas encimadas',
+     x:'En 📅 Agenda › El calendario, dos citas con poca diferencia de hora ahora van una al lado de la otra en vez de taparse. Las rojas siguen siendo las que se pisan con la misma doctora.'});
   ASIS_AYUDA.push(
     {q:'¿Cómo veo el día de cada doctora?', k:'dia vistazo doctoras carril linea tiempo ahora horario quien atiende', v:'midia', f:['#md-carriles','#m-lista'],
      p:['Entrá a 🏠 Mi día.','Arriba, en «El día de un vistazo», cada doctora tiene su fila con sus pacientes en la hora.','Verde: ya atendido. Lima: le toca ahora. Celeste: por venir.','Tocá un paciente para ir a su tarjeta y atenderlo.']},
@@ -14450,7 +14477,9 @@ function mdLinksVideo(){
     {q:'¿Cómo agendo viendo los horarios libres?', k:'agendar cita horario libre hora ocupada tachado costado doctora turno', v:'cita', f:'#md-ag-arriba',
      p:['Entrá a 📅 Agenda y tocá «＋ Agendar cita»: se abre al costado.','Elegí el día y la doctora: abajo aparecen los horarios; los tachados ya están tomados.','Tocá un horario libre y completá paciente, celular y por dónde agendó.','El botón dice el día y la hora: tocalo y listo.']},
     {q:'¿Dónde están los videos de ayuda?', k:'video videos ayuda tutorial aprender como se carga mirar ver', v:'atencion', f:'#md-vid-at',
-     p:['En ＋ Nueva atención, arriba: «▶ ¿Primera vez? Mirá cómo se carga».','En la ventana de 🦷 Planes de cada paciente: el video del paquete y el del tratamiento por etapas.','En mis respuestas de cómo cargar una atención, un paquete o un plan: «▶ Ver el video».','Cada video dura un minuto y se puede pausar.']});
+     p:['En ＋ Nueva atención, arriba: «▶ ¿Primera vez? Mirá cómo se carga».','En la ventana de 🦷 Planes de cada paciente: el video del paquete, el de marcar sus sesiones y el del tratamiento por etapas.','En mis respuestas de cómo cargar una atención, un paquete o un plan: «▶ Ver el video».','Cada video dura un minuto y se puede pausar.']},
+    {q:'¿Cómo marco la sesión de un paquete cuando el paciente vuelve?', k:'marcar sesion paquete vuelve segunda tercera realizada blanqueamiento plan adelanto pagado', v:'atencion', f:'#wrap-plan',
+     p:['Entrá a ＋ Nueva atención y escribí el nombre del paciente.','Aparece «¿Esta visita es una sesión de un plan?»: elegí el paquete.','Abajo dice qué sesión se marca y si ya está pagada (se usa lo que dejó adelantado).','Tocá «Guardar atención». Otra forma: lupa → su ficha → «Marcar realizada».']});
 })();
 
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
@@ -14605,7 +14634,7 @@ function mdRefrescar(){
     if(n&&idx.indexOf(i)>=0)h=h.replace(new RegExp('(<button[^>]*onclick="asisMostrar\\('+i+'\\)"[^>]*>[^<]*</button>)'),'$1<button type="button" class="asis-b md-vid-b" onclick="asisCerrar();mdVideo('+n+')">▶ Ver el video</button>');
     return h}}
   if(typeof abrirPlanes==='function'){var _ap=abrirPlanes; abrirPlanes=function(){var r=_ap.apply(this,arguments);
-    try{var m=$('#modal'); if(m&&!m.querySelector('.md-vid-link'))(m.querySelector('h3')||m).insertAdjacentHTML('afterend','<div class="md-vid-fila"><button type="button" class="md-vid-link" onclick="mdVideo(2)">▶ Video: un paquete</button><button type="button" class="md-vid-link" onclick="mdVideo(3)">▶ Video: un tratamiento por etapas</button></div>')}catch(e){}
+    try{var m=$('#modal'); if(m&&!m.querySelector('.md-vid-link'))(m.querySelector('h3')||m).insertAdjacentHTML('afterend','<div class="md-vid-fila"><button type="button" class="md-vid-link" onclick="mdVideo(2)">▶ Video: un paquete</button><button type="button" class="md-vid-link" onclick="mdVideo(4)">▶ Video: marcar sus sesiones</button><button type="button" class="md-vid-link" onclick="mdVideo(3)">▶ Video: un tratamiento por etapas</button></div>')}catch(e){}
     return r}}
   var _cm=closeModal; closeModal=function(){try{mdPausarVideos()}catch(e){} return _cm.apply(this,arguments)};
   var _om=openModal; openModal=function(){try{mdPausarVideos()}catch(e){} return _om.apply(this,arguments)}})();

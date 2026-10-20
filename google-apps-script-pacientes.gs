@@ -290,6 +290,12 @@ function planesSinTocarAjenos(viejos, nuevos, prof, clave) {
         if (marca || desmarca) { c.hecha = !!ns.hecha; c.fecha = ns.fecha || ''; c.atencionId = ns.atencionId || ''; }
         return c;
       });
+      /* con la última sesión hecha el plan termina; si se desmarca una, vuelve a estar activo */
+      if (q.estado !== 'cancelado') {
+        var todas = q.sesiones.length > 0 && q.sesiones.every(function (s) { return s && s.hecha; });
+        if (todas && p.estado === 'terminado') q.estado = 'terminado';
+        else if (!todas && q.estado === 'terminado') q.estado = 'activo';
+      }
       out.push(q); vistos[p.id] = 1; return;
     }
     if (!v) {
