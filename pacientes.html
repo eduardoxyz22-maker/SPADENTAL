@@ -1135,9 +1135,219 @@ header .hd::after{content:'';position:absolute;right:12%;top:-60px;width:300px;h
 .md-anim #md-barra button{transition:color .2s,transform .15s}
 .md-anim #md-barra button:active{transform:scale(.92)}
 
+/* ============ RONDA 2: más color y más vida ============ */
+/* 1 · botones con ícono y color (el emoji queda en el texto, escondido) */
+.md-emo{display:none}
+.btn .md-bi{width:28px;height:28px;flex:0 0 28px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.4);color:inherit;margin-left:-8px}
+.btn .md-bi svg{width:16px;height:16px}
+.btn.sm .md-bi{width:24px;height:24px;flex-basis:24px;border-radius:8px;margin-left:-5px}
+.btn.sm .md-bi svg{width:14px;height:14px}
+.btn.dark .md-bi{background:rgba(255,255,255,.14);color:var(--lime)}
+.btn.sec .md-bi{background:var(--bs,#EEF0E8);color:var(--bc,var(--ink))}
+.md-b-wa{--bc:#1C6B3A;--bs:#DFF4E6}.md-b-azul{--bc:#2F6FA8;--bs:#E2EEFA}.md-b-rojo{--bc:#B4552F;--bs:#FBE6DE}.md-b-gris{--bc:#4F5666;--bs:#ECEEF2}
+.md-b-lima{--bc:var(--lime-dk);--bs:var(--lime-sf)}.md-b-verde{--bc:#2E7D5B;--bs:#E0F2E9}.md-b-teal{--bc:#16807A;--bs:#DDF3F1}
+.md-b-ambar{--bc:#A86A0A;--bs:#FFF1D6}.md-b-lila{--bc:#6B4FA0;--bs:#EFE8F8}
+.btn.md-b-wa:not(.sec):not(.dark){background:#2E7D5B;color:#fff}
+.btn.md-b-wa:not(.sec):not(.dark):hover{background:#246349}
+.btn.md-b-wa:not(.sec) .md-bi{background:rgba(255,255,255,.18)}
+.btn.sec.md-b-rojo{color:#A3401E;border-color:#EFC3B3}
+a.btn{text-decoration:none}
+/* 2 · campos con ícono y tarjetas de canal y forma de pago */
+.md-in{position:relative;display:block}
+.md-in-i{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;pointer-events:none;background:var(--is,#EEF0E8);color:var(--ic,var(--gray));z-index:1}
+.md-in-i svg{width:16px;height:16px}
+.md-in input{padding-left:46px}
+.md-c-rosa{--ic:#B83E73;--is:#FBE4EE}.md-c-verde{--ic:#2E7D5B;--is:#E0F2E9}.md-c-azul{--ic:#2F6FA8;--is:#E2EEFA}.md-c-ambar{--ic:#A86A0A;--is:#FFF1D6}
+.md-c-teal{--ic:#16807A;--is:#DDF3F1}.md-c-gris{--ic:#4F5666;--is:#ECEEF2}
+.seg.md-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(168px,100%),1fr));gap:8px}
+.seg.md-tiles span{display:flex;align-items:center;gap:10px;border-radius:14px;padding:6px 12px 6px 6px;min-height:50px;font-weight:700;width:100%;box-sizing:border-box}
+.md-ti{width:36px;height:36px;flex:0 0 36px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--ks,#EEF0E8);color:var(--kc,var(--ink));font-style:normal;transition:background .2s,color .2s}
+.md-ti svg{width:18px;height:18px}
+.seg.md-tiles input:checked + span{background:var(--ks,var(--lime-sf));border:2px solid var(--kc,var(--lime-dk));color:var(--ink)}
+.seg.md-tiles input:checked + span .md-ti{background:var(--kc,var(--lime-dk));color:#fff}
+.seg.md-tiles-pago{grid-template-columns:repeat(auto-fill,minmax(min(128px,100%),1fr))}
+.seg.md-tiles-pago span{flex-direction:column;justify-content:center;padding:12px 6px;min-height:92px;text-align:center}
+.seg.md-tiles-pago .md-ti{width:44px;height:44px;flex-basis:44px;border-radius:14px}
+.md-k-fb{--kc:#1E4E9C;--ks:#E3ECFB}.md-k-ig{--kc:#B83E73;--ks:#FBE4EE}.md-k-tt{--kc:#20241C;--ks:#ECEEE6}.md-k-wa{--kc:#1C6B3A;--ks:#DFF4E6}
+.md-k-go{--kc:#2F6FA8;--ks:#E2EEFA}.md-k-ref{--kc:#6B4FA0;--ks:#EFE8F8}.md-k-ant{--kc:#A86A0A;--ks:#FFF1D6}.md-k-loc{--kc:#16807A;--ks:#DDF3F1}
+.md-k-vol{--kc:#4F5666;--ks:#ECEEF2}.md-k-otro{--kc:#4F5666;--ks:#ECEEF2}
+.md-k-efe{--kc:#2E7D5B;--ks:#E0F2E9}.md-k-qr{--kc:var(--lime-dk);--ks:var(--lime-sf)}.md-k-tar{--kc:#2F6FA8;--ks:#E2EEFA}.md-k-tra{--kc:#6B4FA0;--ks:#EFE8F8}.md-k-mix{--kc:#4F5666;--ks:#ECEEF2}
+/* 3 · tarjetas de pacientes en Mi día */
+.rem.md-mi{border-radius:20px;border:1px solid var(--line);border-left:5px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 24px -14px rgba(0,0,0,.18);padding:14px 16px}
+.rem.md-mi[data-md-est="pend"]{border-left-color:var(--lime);background:var(--lime-sf)}
+.rem.md-mi[data-md-est="hecha"]{border-left-color:var(--ok)}
+.rem.md-mi>div:first-child{display:grid;grid-template-columns:52px minmax(0,1fr);column-gap:12px;align-content:start}
+.md-av-mi{grid-row:1/span 6;width:48px;height:48px;font-size:16px;align-self:start}
+.rem.md-mi .who{font-size:17px;font-weight:800}
+.rem.md-mi .mi-avisos{flex-direction:row;flex-wrap:wrap;gap:6px}
+.rem.md-mi .mi-a{border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:700;border:0}
+.rem.md-mi .acts .btn{border-radius:14px;min-height:44px}
+@media(max-width:760px){
+  .rem.md-mi .acts .btn:not(.md-b-lima):not(.md-b-verde) .md-bt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .rem.md-mi .acts .btn:not(.md-b-lima):not(.md-b-verde){width:48px;height:48px;padding:0;justify-content:center;border-radius:16px}
+  .rem.md-mi .acts .btn:not(.md-b-lima):not(.md-b-verde) .md-bi{margin:0;width:32px;height:32px}}
+/* 5 · carga con brillo */
+.md-cargando{display:flex;flex-direction:column;gap:14px;padding:6px 0}
+.md-carga-chip{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px 7px 9px;font-size:13.5px;font-weight:700}
+.md-giro{width:18px;height:18px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--lime);animation:mdGiro 1s linear infinite}
+@keyframes mdGiro{to{transform:rotate(360deg)}}
+.md-sk-fila{display:flex;align-items:center;gap:14px}
+.md-sk-col{flex:1;display:flex;flex-direction:column;gap:8px}
+.md-sk{display:block;height:13px;border-radius:9px;background:linear-gradient(90deg,var(--line) 0,var(--paper) 40%,var(--line) 80%);background-size:900px 100%;animation:mdBrillo 1.4s linear infinite}
+.md-sk-chico{height:10px}.md-sk-av{width:44px;height:44px;border-radius:50%;flex:0 0 44px}.md-sk-btn{width:88px;height:34px;border-radius:12px;flex:0 0 88px}
+@keyframes mdBrillo{from{background-position:-450px 0}to{background-position:450px 0}}
+/* 6 · vacíos con dibujito */
+#m-lista .empty,#pc-body td.empty,#l-body td.empty,#rem-list .empty,#q-lista .empty,#q-lista-dia .empty{padding-top:20px}
+#m-lista .empty::before,#pc-body td.empty::before,#l-body td.empty::before,#rem-list .empty::before,#q-lista .empty::before,#q-lista-dia .empty::before{
+  content:'';display:block;width:130px;height:96px;margin:0 auto 10px;background:no-repeat center/contain;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 110'%3E%3Cellipse cx='75' cy='104' rx='40' ry='5' fill='%23000' opacity='.07'/%3E%3Cpath d='M58 26c-10 0-17 6-17 18 0 8 3 14 5 23 2 10 3 25 9 25 5 0 5-14 9-19 2-3 5-4 11-4s9 1 11 4c4 5 4 19 9 19 6 0 7-15 9-25 2-9 5-15 5-23 0-12-7-18-17-18-8 0-10 4-17 4s-9-4-17-4z' fill='%23fff' stroke='%239AA08E' stroke-width='3'/%3E%3Cpath d='M62 52q3 3 6 0M82 52q3 3 6 0' fill='none' stroke='%2320241C' stroke-width='2.5' stroke-linecap='round'/%3E%3Cpath d='M118 20h9l-9 9h9M130 6h6l-6 6h6' fill='none' stroke='%239AA08E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.md-quisiste{margin-top:12px;font-weight:700}
+/* 7 · títulos con ícono y franja de color */
+.card > h2.md-h{display:flex;align-items:center;gap:12px}
+.card > h2.md-h:first-child{margin:-16px -16px 12px;padding:13px 16px;background:var(--hb);border-bottom:1px solid var(--line);border-radius:var(--r) var(--r) 0 0}
+.md-h-i{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:var(--hc);color:#fff;
+  box-shadow:0 8px 16px -8px var(--hc)}
+.md-h-i svg{width:19px;height:19px}
+.md-h-ambar{--hc:#C27A0E;--hb:#FFF7E6}.md-h-azul{--hc:#2F6FA8;--hb:#EEF5FC}.md-h-coral{--hc:#C2512F;--hb:#FDF0EA}.md-h-lila{--hc:#6B4FA0;--hb:#F5F0FB}
+.md-h-teal{--hc:#16807A;--hb:#EAF7F5}.md-h-verde{--hc:#2E7D5B;--hb:#EBF6F0}.md-h-gris{--hc:#4F5666;--hb:#F3F4F6}.md-h-rosa{--hc:#B83E73;--hb:#FCEEF4}
+.md-h-lima{--hc:var(--lime-dk);--hb:var(--lime-sf)}
+/* 8 · avisos que se deslizan desde arriba */
+#toast{left:auto;right:16px;top:calc(var(--md-hd,96px) + 12px);bottom:auto;transform:translateX(120%);background:var(--panel);color:var(--ink);
+  border:1px solid var(--line);border-radius:16px;box-shadow:0 2px 4px rgba(0,0,0,.05),0 18px 36px -14px rgba(0,0,0,.3);padding:14px 16px 16px 58px;
+  text-align:left;max-width:min(380px,calc(100vw - 32px));min-height:46px;font-weight:700;overflow:hidden;transition:transform .45s cubic-bezier(.2,.9,.3,1.2),opacity .25s}
+#toast.on{transform:none}
+#toast.err{background:var(--panel);color:var(--ink)}
+#toast::before{content:'i';position:absolute;left:14px;top:12px;width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;background:#E2EEFA;color:#2F6FA8}
+#toast[data-tipo="bien"]::before{content:'✓';background:#E0F2E9;color:#2E7D5B}
+#toast[data-tipo="mal"]::before{content:'!';background:#FBE6DE;color:#B4552F}
+#toast::after{content:'';position:absolute;left:0;bottom:0;height:4px;width:0;background:#2F6FA8}
+#toast[data-tipo="bien"]::after{background:#2E7D5B}#toast[data-tipo="mal"]::after{background:#B4552F}
+#toast.on.md-t-on::after{animation:mdTiempo 2.6s linear both}
+@keyframes mdTiempo{from{width:100%}to{width:0}}
+@media(max-width:760px){#toast{right:10px;left:10px;max-width:none;bottom:auto}}
+/* 9 · la pantalla de entrada */
+#gate.md-gate:not(.off){display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);padding:0;align-items:stretch}
+.md-gate-lado{position:relative;overflow:hidden;background:#15170F;color:#fff;padding:56px;display:flex;flex-direction:column;justify-content:center}
+#gate.md-gate>.box{align-self:center;justify-self:center;margin:24px;max-width:400px;padding:34px 30px;border-radius:26px;border:1px solid var(--line);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.35);text-align:left}
+#gate.md-gate>.box .gate-mark{display:none}
+#gate.md-gate>.box .logo{font-size:24px}
+#gate.md-gate input{text-align:left;height:56px;border-radius:16px;border:2px solid var(--lime);background:var(--lime-sf);padding-left:18px}
+#gate.md-gate .btn{height:56px;border-radius:16px;font-size:17px;background:var(--ink);color:#fff}
+.md-blob{position:absolute;border-radius:50%;pointer-events:none}
+.md-blob.b1{left:-140px;top:-120px;width:520px;height:520px;background:radial-gradient(closest-side,var(--lime),transparent);opacity:.32}
+.md-blob.b2{right:-160px;bottom:-160px;width:480px;height:480px;background:radial-gradient(closest-side,#7FB8E6,transparent);opacity:.2}
+.md-anim .md-blob{animation:mdDeriva 9s ease-in-out infinite}.md-anim .md-blob.b2{animation-delay:-4s}
+@keyframes mdDeriva{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-20px)}}
+.md-gate-logo{position:relative;width:130px;height:110px;color:var(--lime)}
+.md-gate-logo>svg:first-child{width:130px;height:100px}
+.md-anim .md-gate-logo>svg:first-child{animation:mdBob 3.6s ease-in-out infinite;transform-origin:50% 85%}
+.md-gate-logo .md-chispa{width:24px;height:24px}
+.md-gate-k{position:relative;margin-top:26px;font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--lime)}
+.md-gate-t{position:relative;margin:10px 0 8px;font-size:clamp(34px,3.6vw,54px);line-height:1.03;font-weight:900;letter-spacing:-.03em}
+.md-gate-s{position:relative;font-size:16px;color:#D7DAD0}
+@media(max-width:860px){#gate.md-gate:not(.off){grid-template-columns:1fr;align-content:start;overflow:auto}
+  .md-gate-lado{padding:28px 24px;min-height:0}.md-gate-logo{width:70px;height:60px}.md-gate-logo>svg:first-child{width:70px;height:56px}
+  .md-gate-t{font-size:30px}#gate.md-gate>.box{margin:-18px 16px 24px;width:auto;max-width:none}}
+/* 10 · gráficos del Panel */
+.md-pv-meses svg{width:100%;height:auto;display:block;font-family:inherit}
+.md-pv-cab{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:baseline}
+.md-pv-ley{display:flex;gap:14px;font-size:13px;font-weight:700}
+.md-pv-ley span{display:flex;align-items:center;gap:6px}.md-pv-ley span::before{content:'';width:18px;height:4px;border-radius:3px}
+.md-pv-ley .c::before{background:var(--lime-dk)}.md-pv-ley .n::before{background:#7FB8E6}
+.md-anim .md-traza{stroke-dasharray:2400;animation:mdTraza3 2s ease-out both}
+@keyframes mdTraza3{from{stroke-dashoffset:2400}to{stroke-dashoffset:0}}
+.md-anim .md-arco2{animation:mdArco2 1.4s cubic-bezier(.2,.7,.2,1) both}
+@keyframes mdArco2{from{stroke-dashoffset:377}}
+.bars .bar-row:nth-child(6n+1) .bar-fill{background:#D9578C}.bars .bar-row:nth-child(6n+2) .bar-fill{background:#7F5DB8}
+.bars .bar-row:nth-child(6n+3) .bar-fill{background:#3B6FC9}.bars .bar-row:nth-child(6n+4) .bar-fill{background:#16807A}
+.bars .bar-row:nth-child(6n+5) .bar-fill{background:#E2A06B}.bars .bar-row:nth-child(6n+6) .bar-fill{background:var(--lime)}
+.bar-fill{border-radius:9px}
+.md-anim .bar-fill{animation:mdCreceX 1s cubic-bezier(.2,.7,.2,1) both;transform-origin:left}
+@keyframes mdCreceX{from{transform:scaleX(0)}}
+/* 11 · recordatorios de color */
+.rem.md-r{position:relative;overflow:hidden;grid-template-columns:auto minmax(0,1fr) auto;border:0;border-radius:20px;background:var(--rs);padding:14px 16px}
+.md-rem-i{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--rc);color:#fff;align-self:start}
+.md-rem-i svg{width:21px;height:21px}
+.rem.md-r .who{font-size:16px}
+.md-rem-h{display:flex;align-items:center;gap:8px}
+.md-rem-h::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--rc)}
+.md-r-cita{--rc:#2F6FA8;--rs:#EEF5FC}.md-r-saldo{--rc:#C2512F;--rs:#FDF0EA}.md-r-dormido{--rc:#4F5666;--rs:#F3F4F6}.md-r-cuota{--rc:#A86A0A;--rs:#FFF6E3}
+.md-r-plan{--rc:#6B4FA0;--rs:#F5F0FB}.md-r-cumple{--rc:#D9578C;--rs:#FCEEF4}.md-r-control{--rc:#16807A;--rs:#EAF7F5}.md-r-presu{--rc:#A86A0A;--rs:#FFF6E3}
+.rem.md-r.due{box-shadow:inset 4px 0 0 var(--clay)}
+.md-conf-r{top:-14px}
+.md-anim .md-conf-r{animation:mdConf 2.8s linear infinite}
+.rem.md-r>*:not(.md-conf){position:relative}
+/* 12 · festejos */
+.md-primer{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#E2EEFA;color:#22507C;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:800}
+.md-primer::before{content:'✦'}
+.md-meta-ov{position:fixed;inset:0;z-index:300;background:rgba(14,15,11,.82);display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden}
+.md-meta-card{position:relative;background:var(--panel);color:var(--ink);border-radius:30px;padding:30px 28px;max-width:440px;width:100%;text-align:center;
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+.md-anim .md-meta-card{animation:mdModal .7s cubic-bezier(.2,.9,.3,1.25) both}
+.md-meta-card h2{margin:6px 0 4px;font-size:36px;font-weight:900;letter-spacing:-.02em}
+.md-meta-card p{margin:0 0 18px;color:var(--gray);font-size:16px}
+.md-meta-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--lime-dk);margin-top:10px}
+.md-copa{width:110px;height:110px;display:block;margin:0 auto}
+.md-anim .md-copa{animation:mdCopa 2.6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes mdCopa{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+.md-fuego{position:absolute;width:170px;height:170px;margin:-85px 0 0 -85px;opacity:0}
+.md-anim .md-fuego{animation:mdEstalla 2.2s ease-out infinite}
+@keyframes mdEstalla{0%{transform:scale(.1);opacity:0}15%{opacity:1}70%{opacity:1}100%{transform:scale(1);opacity:0}}
+/* 13 · números grandes */
+.kpi .v{font-size:clamp(28px,1.9vw + 10px,44px);font-weight:900;letter-spacing:-.045em;font-variant-numeric:tabular-nums;line-height:1.05}
+.kpi .k{letter-spacing:.06em}
+/* 14 · fondo con dientecitos */
+body.md-fondo{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23000' stroke-opacity='.045' stroke-width='1.6'%3E%3Cpath d='M22 14c-4 0-7 3-7 8 0 4 1 7 2 11 1 5 2 12 5 12 2 0 3-7 4-9 1-1 2-2 4-2s3 1 4 2c1 2 2 9 4 9 3 0 4-7 5-12 1-4 2-7 2-11 0-5-3-8-7-8-3 0-5 2-8 2s-5-2-8-2z'/%3E%3Cpath transform='translate(60 60) rotate(18 18 16)' d='M10 2c-4 0-7 3-7 8 0 4 1 7 2 11 1 5 2 12 5 12 2 0 3-7 4-9 1-1 2-2 4-2s3 1 4 2c1 2 2 9 4 9 3 0 4-7 5-12 1-4 2-7 2-11 0-5-3-8-7-8-3 0-5 2-8 2s-5-2-8-2z'/%3E%3C/g%3E%3C/svg%3E");background-size:120px 120px}
+body.md-fondo.md-noche{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23fff' stroke-opacity='.04' stroke-width='1.6'%3E%3Cpath d='M22 14c-4 0-7 3-7 8 0 4 1 7 2 11 1 5 2 12 5 12 2 0 3-7 4-9 1-1 2-2 4-2s3 1 4 2c1 2 2 9 4 9 3 0 4-7 5-12 1-4 2-7 2-11 0-5-3-8-7-8-3 0-5 2-8 2s-5-2-8-2z'/%3E%3Cpath transform='translate(60 60) rotate(18 18 16)' d='M10 2c-4 0-7 3-7 8 0 4 1 7 2 11 1 5 2 12 5 12 2 0 3-7 4-9 1-1 2-2 4-2s3 1 4 2c1 2 2 9 4 9 3 0 4-7 5-12 1-4 2-7 2-11 0-5-3-8-7-8-3 0-5 2-8 2s-5-2-8-2z'/%3E%3C/g%3E%3C/svg%3E")}
+/* 15 · Sonri entra saltando y sus globitos con franja de color */
+.md-anim #asis .asis-yo{animation:mdSonriEntra 1.2s cubic-bezier(.3,.7,.4,1) both}
+@keyframes mdSonriEntra{0%{transform:translateY(160px)}38%{transform:translateY(-34px)}52%{transform:translateY(0) scale(1.08,.9)}62%{transform:translateY(-12px) scale(.97,1.04)}74%,100%{transform:none}}
+.asis-globo{border-radius:18px 18px 6px 18px;border:0;border-top:5px solid var(--lime);box-shadow:0 2px 4px rgba(0,0,0,.05),0 20px 40px -18px rgba(0,0,0,.35)}
+.md-anim .asis-globo{animation:mdGlobo .5s cubic-bezier(.2,.9,.3,1.3) both;transform-origin:100% 100%}
+@keyframes mdGlobo{from{opacity:0;transform:scale(.6) translateY(10px)}}
+
+/* 4 · modo noche */
+body.md-noche{--paper:#11130F;--panel:#1B1E18;--line:#2D3128;--gray:#A6AB9A;--ink:#ECEEE6;
+  --lime-sf:color-mix(in srgb,var(--lime) 14%,#1B1E18);--lime-bd:color-mix(in srgb,var(--lime) 32%,#1B1E18);background-color:#11130F;color:#ECEEE6}
+body.md-noche header .hd{background:#0A0B08;box-shadow:0 0 0 100vmax #0A0B08}
+body.md-noche header nav,body.md-noche #md-barra{background:#151812;box-shadow:none}
+body.md-noche header nav button{color:#D9DCD0}
+body.md-noche header nav button.on{color:#fff}
+body.md-noche #md-nav-ind{background:#22261D;border-color:#33382C}
+body.md-noche input,body.md-noche select,body.md-noche textarea,body.md-noche .btn.sec,body.md-noche .seg span,body.md-noche .srv .del,
+body.md-noche .rem,body.md-noche .di,body.md-noche .modal,body.md-noche .st-fila,body.md-noche .rep-par,body.md-noche .mes-dia,
+body.md-noche .asis-globo,body.md-noche .asis-panel,body.md-noche .asis-b,body.md-noche .asis-q,body.md-noche .asis-pq,body.md-noche .md-hoja,
+body.md-noche .md-hoja-g button,body.md-noche table.md-tc tr,body.md-noche .md-met-t,body.md-noche .md-prom span,body.md-noche .md-pasos-at button,
+body.md-noche #gate .box,body.md-noche .modal-x,body.md-noche .md-bl.novino,body.md-noche .md-nodo{background-color:var(--panel);color:var(--ink)}
+body.md-noche .btn.dark{background:#ECEEE6;color:#11130F}
+body.md-noche .btn.dark .md-bi{background:rgba(0,0,0,.08);color:#11130F}
+body.md-noche .btn.sec .md-bi{background:color-mix(in srgb,var(--bc,#888) 22%,#1B1E18);color:color-mix(in srgb,var(--bc,#ccc) 55%,#fff)}
+body.md-noche label,body.md-noche .pill{color:var(--gray)}
+body.md-noche .rem.due,body.md-noche .rem.today{background:var(--panel)}
+body.md-noche .rem.md-r{background:color-mix(in srgb,var(--rc) 16%,#1B1E18)}
+body.md-noche .card > h2.md-h:first-child{background:color-mix(in srgb,var(--hc) 16%,#1B1E18)}
+body.md-noche .mi-a{background:#22261D;border-color:#33382C;color:#D9DCD0}
+body.md-noche .mi-a.alergia{background:#3A2219;color:#F4C3B0}
+body.md-noche .md-ti,body.md-noche .md-in-i,body.md-noche header nav button .md-nav-i{background:color-mix(in srgb,var(--kc,var(--ic,var(--c,#888))) 22%,#1B1E18);
+  color:color-mix(in srgb,var(--kc,var(--ic,var(--c,#ccc))) 55%,#fff)}
+body.md-noche header nav button.on .md-nav-i{background:var(--c);color:#fff}
+body.md-noche .seg.md-tiles input:checked + span{background:color-mix(in srgb,var(--kc,var(--lime)) 20%,#1B1E18)}
+body.md-noche #modal.md-ficha>.kpis,body.md-noche .md-at-res,body.md-noche body.md-en-atencion .md-at-pie,body.md-noche .md-at-pie{background:#0A0B08}
+body.md-noche .md-sem-cab .sem-cab.hoy b{color:#11130F}
+body.md-noche #pc-body tr:hover,body.md-noche #l-body tr:hover{background:#22261D}
+body.md-noche .md-av{filter:saturate(.9) brightness(.92)}
+body.md-noche .kpi.acc .k,body.md-noche .kpi.acc .d{color:color-mix(in srgb,var(--lime) 60%,#fff)}
+
+body.md-noche #toast{background:#22261D;border-color:#33382C;color:#ECEEE6}
+body.md-noche .md-meta-card{background:#1B1E18}
+
 /* las animaciones nuevas viven bajo body.md-anim: se apagan en Ajustes › Apariencia,
    y el aparato que pide quietud no las ve */
-@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .mark,body:not(.md-anim-siempre) .md-chispa,body:not(.md-anim-siempre) .md-arco,body:not(.md-anim-siempre) .md-cepillo,body:not(.md-anim-siempre) .md-moneda,body:not(.md-anim-siempre) .md-hoja-cal,body:not(.md-anim-siempre) .md-late,body:not(.md-anim-siempre) .md-prog i,body:not(.md-anim-siempre) .md-ba i,body:not(.md-anim-siempre) .md-tl-fila.ya .md-tl-punto,body:not(.md-anim-siempre) .md-check *,body:not(.md-anim-siempre) .md-conf,body:not(.md-anim-siempre) .md-copo,body:not(.md-anim-siempre) .md-tallo,body:not(.md-anim-siempre) .md-entra,body:not(.md-anim-siempre) .md-fila,body:not(.md-anim-siempre) header nav .pill.bad,body:not(.md-anim-siempre) .ov.on,body:not(.md-anim-siempre) .ov.on .modal{animation:none!important}
+@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .mark,body:not(.md-anim-siempre) .md-chispa,body:not(.md-anim-siempre) .md-arco,body:not(.md-anim-siempre) .md-cepillo,body:not(.md-anim-siempre) .md-moneda,body:not(.md-anim-siempre) .md-hoja-cal,body:not(.md-anim-siempre) .md-late,body:not(.md-anim-siempre) .md-prog i,body:not(.md-anim-siempre) .md-ba i,body:not(.md-anim-siempre) .md-tl-fila.ya .md-tl-punto,body:not(.md-anim-siempre) .md-check *,body:not(.md-anim-siempre) .md-conf,body:not(.md-anim-siempre) .md-copo,body:not(.md-anim-siempre) .md-tallo,body:not(.md-anim-siempre) .md-entra,body:not(.md-anim-siempre) .md-fila,body:not(.md-anim-siempre) .md-traza,body:not(.md-anim-siempre) .md-arco2,body:not(.md-anim-siempre) .bar-fill,body:not(.md-anim-siempre) .md-blob,body:not(.md-anim-siempre) .md-fuego,body:not(.md-anim-siempre) .md-copa,body:not(.md-anim-siempre) .md-meta-card,body:not(.md-anim-siempre) #asis .asis-yo,body:not(.md-anim-siempre) .asis-globo,body:not(.md-anim-siempre) .md-conf-r,body:not(.md-anim-siempre) header nav .pill.bad,body:not(.md-anim-siempre) .ov.on,body:not(.md-anim-siempre) .ov.on .modal{animation:none!important}
   body:not(.md-anim-siempre) .kpi:hover,body:not(.md-anim-siempre) .md-aj-tile:hover{transform:none}
   /* con «siempre», también se mueve lo que ya traía el panel */
   body.md-anim-siempre .murci{animation:vuela 10s ease-in-out infinite}body.md-anim-siempre .arana{animation:cuelga 6s ease-in-out infinite}
@@ -1145,6 +1355,50 @@ header .hd::after{content:'';position:absolute;right:12%;top:-60px;width:300px;h
   body.md-anim-siempre .asis-brazo{animation:asisSaluda 3.2s ease-in-out infinite}body.md-anim-siempre .asis-chispa{animation:asisBrilla 2.8s ease-in-out infinite}
   body.md-anim-siempre .asis-salta svg{animation:asisSalta .65s}}
 /* ===== MODERNO FIN ===== */
+
+/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
+@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
+.md-pv{grid-auto-flow:row dense}
+.md-dona li.md-vacio span{white-space:normal}
+/* modo noche: lo que quedaba claro */
+body.md-noche .md-ilu{filter:none;background:color-mix(in srgb,var(--lime) 14%,#1B1E18)}
+body.md-noche .md-ilu.verde{background:#1E3128}body.md-noche .md-ilu.azul{background:#1D2A38}body.md-noche .md-ilu.ambar{background:#372C18}body.md-noche .md-ilu.gris{background:#262922}
+body.md-noche .tot-box{background:#0A0B08;color:#ECEEE6;border:1px solid var(--line)}
+body.md-noche .resp-aviso{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}
+body.md-noche .pill.warn{background:#3A2F14;border-color:#5A4A22;color:#F2C969}
+body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6}body.md-noche .banner{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}body.md-noche .banner.conn{background:#1E3128;color:#9BD8B6}
+body.md-noche #md-barra button{color:#C9CCBF}
+body.md-noche #md-barra button.on{color:var(--lime)}
+body.md-noche #md-barra button.on:not(.md-mas-grande)::before{background:color-mix(in srgb,var(--lime) 20%,#151812)}
+
+/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
+@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
+.md-pv{grid-auto-flow:row dense}
+.md-dona li.md-vacio span{white-space:normal}
+/* modo noche: lo que quedaba claro */
+body.md-noche .md-ilu{filter:none;background:color-mix(in srgb,var(--lime) 14%,#1B1E18)}
+body.md-noche .md-ilu.verde{background:#1E3128}body.md-noche .md-ilu.azul{background:#1D2A38}body.md-noche .md-ilu.ambar{background:#372C18}body.md-noche .md-ilu.gris{background:#262922}
+body.md-noche .tot-box{background:#0A0B08;color:#ECEEE6;border:1px solid var(--line)}
+body.md-noche .resp-aviso{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}
+body.md-noche .pill.warn{background:#3A2F14;border-color:#5A4A22;color:#F2C969}
+body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6}body.md-noche .banner{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}body.md-noche .banner.conn{background:#1E3128;color:#9BD8B6}
+
+/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
+@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
+.md-pv{grid-auto-flow:row dense}
+.md-dona li.md-vacio span{white-space:normal}
+/* modo noche: lo que quedaba claro */
+body.md-noche .md-ilu{filter:none;background:color-mix(in srgb,var(--lime) 14%,#1B1E18)}
+body.md-noche .md-ilu.verde{background:#1E3128}body.md-noche .md-ilu.azul{background:#1D2A38}body.md-noche .md-ilu.ambar{background:#372C18}body.md-noche .md-ilu.gris{background:#262922}
+body.md-noche .tot-box{background:#0A0B08;color:#ECEEE6;border:1px solid var(--line)}
+body.md-noche .resp-aviso{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}
+body.md-noche .pill.warn{background:#3A2F14;border-color:#5A4A22;color:#F2C969}
+body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6}body.md-noche .banner{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}body.md-noche .banner.conn{background:#1E3128;color:#9BD8B6}
+
+/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
+@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
+.md-pv{grid-auto-flow:row dense}
+.md-dona li.md-vacio span{white-space:normal}
 </style>
 </head>
 <body class="locked">
@@ -12063,6 +12317,11 @@ function mdMontarAjustes(){
     '<label><input type="radio" name="md-anim" value="no"><span>Apagadas</span></label></div>'+
     '<p class="hint" style="margin:6px 0 0">«Según el aparato» las apaga si la compu o el celular tiene activado «reducir movimiento».</p>'+
     '<div class="seg lime" style="margin-top:10px"><label><input type="checkbox" id="md-op-temp"><span>Decoración de temporada (Navidad, Carnaval, primavera, Halloween)</span></label></div>'+
+    '<label style="margin-top:16px">Modo noche</label>'+
+    '<div class="seg lime" id="md-op-noche"><label><input type="radio" name="md-noche" value="no"><span>Apagado</span></label>'+
+    '<label><input type="radio" name="md-noche" value="auto"><span>Automático (de 19 a 7)</span></label>'+
+    '<label><input type="radio" name="md-noche" value="si"><span>Siempre</span></label></div>'+
+    '<div class="seg lime" style="margin-top:12px"><label><input type="checkbox" id="md-op-fondo"><span>Fondo con dientecitos</span></label></div>'+
     '<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">App en el celular</h3><div id="md-instalar"></div></div>');
   var cards=$$('#v-config > .card'), usados=[];
   var idx=document.createElement('div'); idx.id='md-aj-indice'; idx.className='md-aj-indice';
@@ -12085,7 +12344,10 @@ function mdMontarAjustes(){
     var c=grupos[+b.getAttribute('data-g')].lista[+b.getAttribute('data-c')]; if(!c)return;
     c.scrollIntoView({behavior:'smooth',block:'start'});
     c.classList.remove('md-flash'); void c.offsetWidth; c.classList.add('md-flash')}});
-  var ot=$('#md-op-temp');
+  var ot=$('#md-op-temp'), of=$('#md-op-fondo');
+  mdQ(document,'input[name="md-noche"]').forEach(function(r){r.onchange=function(){mdPref('NOCHE',r.value); mdAplicarNoche();
+    toast(r.value==='si'?'Modo noche prendido en este aparato':(r.value==='auto'?'Modo noche automático: de 19 a 7':'Modo noche apagado'))}});
+  if(of)of.onchange=function(){mdPref('FONDO',of.checked?1:0); document.body.classList.toggle('md-fondo',of.checked)};
   mdQ(document,'input[name="md-anim"]').forEach(function(r){r.onchange=function(){
     mdPref('ANIM',r.value==='no'?0:r.value); mdAplicarAnim();
     toast(r.value==='no'?'Animaciones apagadas en este aparato':(r.value==='siempre'?'Animaciones siempre prendidas en este aparato':'Animaciones según el aparato'));
@@ -12094,6 +12356,8 @@ function mdMontarAjustes(){
 function mdSincAjustes(){
   var ot=$('#md-op-temp'), pa=mdPrefAnim();
   mdQ(document,'input[name="md-anim"]').forEach(function(r){r.checked=r.value===pa});
+  var pn=mdNochePref(); mdQ(document,'input[name="md-noche"]').forEach(function(r){r.checked=r.value===pn});
+  var of=$('#md-op-fondo'); if(of)of.checked=mdPref('FONDO')!==0;
   if(ot)ot.checked=mdTemporadaSi();
   /* en el índice se esconde lo que la tarjeta no muestra */
   $$('#md-aj-indice .md-aj-tile').forEach(function(t){
@@ -12153,7 +12417,7 @@ function mdFestejo(r){
   div.innerHTML=conf+'<svg class="md-check" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="var(--lime-sf)"/>'+
     '<circle class="md-c1" cx="50" cy="50" r="40" fill="none" stroke="#2E7D5B" stroke-width="6" stroke-linecap="round" transform="rotate(-90 50 50)"/>'+
     '<path class="md-c2" d="M32 51l12 12 24-26" fill="none" stroke="#2E7D5B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
-    '<h3>¡Guardado!</h3><p>'+esc((r&&r.paciente)||'')+plata+'</p>';
+    '<h3>¡Guardado!</h3><p>'+esc((r&&r.paciente)||'')+plata+'</p>'+mdPrimerNuevo(r);
   h.parentNode.replaceChild(div,h);
   mdCara('festeja',5000)}
 
@@ -12734,6 +12998,241 @@ function mdContar(raiz){
       if(p<1)requestAnimationFrame(paso)};
     requestAnimationFrame(paso)})}
 
+/* =====================================================================
+   RONDA 2: más color y más vida
+   ===================================================================== */
+/* ---------- 1 · botones con ícono y color ---------- */
+var MD_BTN=[
+  [/whats|mandar|enviar resumen|confirmar|saludar|recordar|escribirle|invitar|preguntar/i,'M21 12a8 8 0 01-11.8 7L3 21l2-6.2A8 8 0 1121 12z','wa'],
+  [/resumen/i,'M22 2L11 13M22 2l-7 20-4-9-9-4z','azul'],
+  [/borrar|eliminar|quitar/i,'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3','rojo'],
+  [/no vino|cancel/i,'M18 6L6 18M6 6l12 12','gris'],
+  [/atender|marcar realizada|vino\b/i,'M5 12l5 5L20 7','lima'],
+  [/cobrar|pago|saldo a favor|anticipo|adelant|cuota/i,'M3 7h18v10H3zM12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z','verde'],
+  [/ficha m|ficha$|^ficha/i,'M9 3h6v4H9zM6 5h12v16H6zM9 12h6M9 16h4','teal'],
+  [/nota/i,'M12 17v5M5 10l7-7 7 7-3 1-2 4H10l-2-4z','ambar'],
+  [/ver |historial|abrir|detalle/i,'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z','lila'],
+  [/editar|corregir|cambiar/i,'M4 20h4L19 9l-4-4L4 16zM14 6l4 4','ambar'],
+  [/nueva|agregar|crear|registrar/i,MD_I.mas,'lima'],
+  [/agendar|cita/i,MD_I.agenda,'azul'],
+  [/imprimir|historia|receta|informe/i,'M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z','gris'],
+  [/excel|descargar|respaldo|json/i,'M12 3v12M7 10l5 5 5-5M5 21h14','gris'],
+  [/plan|paquete|sesi/i,'M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8','lima'],
+  [/copiar/i,'M8 8h12v12H8zM4 16V4h12','gris'],
+  [/guardar|listo|aceptar|usar/i,'M5 12l5 5L20 7','lima'],
+  [/actualizar|reintentar|subir/i,'M21 12a9 9 0 11-3-6.7M21 4v5h-5','azul']];
+var MD_EMO=/^[\s←-⯿⺀-⿿　-〿️‍＋]*(?:[\uD83C-\uD83E][\uDC00-\uDFFF][️‍]*)*[\s️]*/;
+function mdBoton(b){
+  if(b.getAttribute('data-md-b')===b.textContent)return;
+  if(b.closest('header,#md-barra,#asis,.asis-panel,.md-pasos-at'))return;
+  var txt=b.textContent.replace(/\s+/g,' ').trim(); if(!txt){b.setAttribute('data-md-b',b.textContent); return}
+  if(!b.querySelector('.md-bi')){
+    var m=null; for(var i=0;i<MD_BTN.length;i++)if(MD_BTN[i][0].test(txt)){m=MD_BTN[i]; break}
+    if(/wa\.me|api\.whatsapp/.test(b.getAttribute('href')||''))m=MD_BTN[0];
+    /* el emoji del principio queda en el texto (lo leen las pruebas y los buscadores), pero no se ve */
+    var n=b.firstChild;
+    if(n&&n.nodeType===3){var e=MD_EMO.exec(n.textContent); if(e&&e[0].trim()&&n.textContent.slice(e[0].length).trim()){var s=document.createElement('span'); s.className='md-emo'; s.setAttribute('aria-hidden','true'); s.textContent=e[0]; n.textContent=n.textContent.slice(e[0].length); b.insertBefore(s,n)}}
+    if(m){b.insertAdjacentHTML('afterbegin','<span class="md-bi" aria-hidden="true">'+mdIco(m[1],2.3)+'</span>'); b.classList.add('md-b-'+m[2])}
+    /* el texto en su propio span: en el celular, en las tarjetas, queda solo el ícono */
+    Array.prototype.slice.call(b.childNodes).forEach(function(x){if(x.nodeType===3&&x.textContent.trim()){var t=document.createElement('span'); t.className='md-bt'; t.textContent=x.textContent; b.replaceChild(t,x)}});
+    if(!b.getAttribute('aria-label')&&!b.getAttribute('title'))b.setAttribute('title',txt.replace(MD_EMO,''))}
+  b.setAttribute('data-md-b',b.textContent)}
+function mdBotones(raiz){mdQ(raiz||document,'.btn').forEach(function(b){try{mdBoton(b)}catch(e){}})}
+
+/* ---------- 2 · formularios: campos con ícono, canal y pago en tarjetas ---------- */
+var MD_CAMPO={'f-paciente':['M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1','rosa'],'q-paciente':['M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1','rosa'],
+  'f-cel':['M7 2h10a1 1 0 011 1v18a1 1 0 01-1 1H7a1 1 0 01-1-1V3a1 1 0 011-1zM11 18h2','verde'],'q-cel':['M7 2h10a1 1 0 011 1v18a1 1 0 01-1 1H7a1 1 0 01-1-1V3a1 1 0 011-1zM11 18h2','verde'],
+  'f-fecha':[MD_I.agenda,'azul'],'q-fecha':[MD_I.agenda,'azul'],'f-nac':['M20 12v9H4v-9M2 7h20v5H2zM12 21V7','rosa'],'q-nac':['M20 12v9H4v-9M2 7h20v5H2zM12 21V7','rosa'],
+  'f-hora':['M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z','ambar'],'q-hora':['M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z','ambar'],
+  'f-prof':['M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1','teal'],'q-prof':['M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1','teal'],
+  'pc-q':[MD_NAV_I.buscar,'gris'],'l-q':[MD_NAV_I.buscar,'gris'],'f-ci':['M3 5h18v14H3zM7 9h4M7 13h6M15 9h2','gris']};
+function mdCampos(){
+  Object.keys(MD_CAMPO).forEach(function(id){
+    var i=document.getElementById(id); if(!i||i.parentNode.classList.contains('md-in'))return;
+    var w=document.createElement('span'); w.className='md-in md-c-'+MD_CAMPO[id][1];
+    i.parentNode.insertBefore(w,i); w.appendChild(i);
+    w.insertAdjacentHTML('afterbegin','<span class="md-in-i" aria-hidden="true">'+mdIco(MD_CAMPO[id][0],2.2)+'</span>')})}
+var MD_CANAL_I={fb:'M7 10v4h3v7h4v-7h3l1-4h-4V8a1 1 0 011-1h3V3h-3a5 5 0 00-5 5v2z',ig:'M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4zM12 8a4 4 0 100 8 4 4 0 000-8zM17.5 6.5h.01',
+  tt:'M14 3v11a3.5 3.5 0 11-3-3.5M14 3c.5 3 2.5 5 5 5',wa:'M21 12a8 8 0 01-11.8 7L3 21l2-6.2A8 8 0 1121 12z',go:'M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11zM12 8a2 2 0 100 4 2 2 0 000-4z',
+  ref:MD_I.equipo,ant:'M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z',loc:'M3 21h18M5 21V8l7-5 7 5v13M10 21v-6h4v6',vol:'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5',otro:'M5 12h.01M12 12h.01M19 12h.01'};
+function mdCanalTipo(t){t=asisSinTildes(t);
+  return /facebook/.test(t)?'fb':/instagram/.test(t)?'ig':/tiktok/.test(t)?'tt':/whats/.test(t)?'wa':/google|maps/.test(t)?'go':/referid/.test(t)?'ref':/antiguo|recurrent/.test(t)?'ant':/local|paso/.test(t)?'loc':/volante|flyer/.test(t)?'vol':'otro'}
+var MD_MET_K={Efectivo:'efe',QR:'qr',Tarjeta:'tar',Transferencia:'tra',Mixto:'mix'};
+function mdTarjetasSeg(){
+  [['#seg-canal','canal'],['#seg-q-canal','canal'],['#seg-metodo','pago']].forEach(function(p){
+    var seg=$(p[0]); if(!seg)return;
+    seg.classList.add('md-tiles','md-tiles-'+p[1]);
+    mdQ(seg,'label').forEach(function(l){
+      var sp=l.querySelector('span'); if(!sp||sp.querySelector('.md-ti'))return;
+      var t=sp.textContent, k=p[1]==='canal'?mdCanalTipo(t):(MD_MET_K[(l.querySelector('input')||{}).value]||'mix');
+      var d=p[1]==='canal'?MD_CANAL_I[k]:(MD_MET_ICO[(l.querySelector('input')||{}).value]||'M4 6h16M4 12h16M4 18h16');
+      l.classList.add('md-k-'+k);
+      var n=sp.firstChild;
+      if(n&&n.nodeType===3){var e=MD_EMO.exec(n.textContent); if(e&&e[0].trim()&&n.textContent.slice(e[0].length).trim()){var s=document.createElement('span'); s.className='md-emo'; s.setAttribute('aria-hidden','true'); s.textContent=e[0]; n.textContent=n.textContent.slice(e[0].length); sp.insertBefore(s,n)}}
+      sp.insertAdjacentHTML('afterbegin','<i class="md-ti" aria-hidden="true">'+mdIco(d,2.2)+'</i>')})})}
+
+/* ---------- 3 · las tarjetas de Mi día ---------- */
+function mdTarjetasMiDia(){
+  mdQ($('#m-lista'),'.rem.mi').forEach(function(c){
+    if(c.querySelector('.md-av'))return;
+    var who=c.querySelector('.who'); if(!who)return;
+    var nom=who.title||who.textContent;
+    who.insertAdjacentHTML('beforebegin','<span class="md-av md-av'+mdHash(nom)%6+' md-av-mi" aria-hidden="true">'+esc(mdIniciales(nom))+'</span>');
+    c.classList.add('md-mi');
+    var est=c.querySelector('.meta .pill'); if(est)c.setAttribute('data-md-est',/atendida/.test(est.textContent)?'hecha':(/por atender/.test(est.textContent)?'pend':'otro'))});
+  mdBotones($('#m-lista'))}
+
+/* ---------- 4 · modo noche ---------- */
+function mdNochePref(){var v=mdPref('NOCHE'); return v==='si'||v==='auto'?v:'no'}
+function mdAplicarNoche(){
+  var v=mdNochePref(), h=new Date().getHours();
+  var on=v==='si'||(v==='auto'&&(h>=19||h<7));
+  document.body.classList.toggle('md-noche',on);
+  var tc=document.querySelector('meta[name="theme-color"]'); if(tc)tc.setAttribute('content',on?'#0B0C09':(tc.getAttribute('data-dia')||tc.getAttribute('content')))}
+
+/* ---------- 5 · carga con brillo ---------- */
+var MD_CARGANDO=false;
+function mdEsqueleto(n){
+  var f=''; for(var i=0;i<(n||4);i++)f+='<div class="md-sk-fila"><span class="md-sk md-sk-av"></span><span class="md-sk-col"><span class="md-sk" style="width:'+(30+i*7%25)+'%"></span><span class="md-sk md-sk-chico" style="width:'+(45+i*11%20)+'%"></span></span><span class="md-sk md-sk-btn"></span></div>';
+  return '<div class="md-cargando"><div class="md-carga-chip"><span class="md-giro"></span>Trayendo los datos de la clínica…</div>'+f+'</div>'}
+function mdCargaEnLista(){
+  if(!MD_CARGANDO)return;
+  var l=$('#m-lista'); if(l&&!l.querySelector('.md-tl, .rem'))l.innerHTML=mdEsqueleto(4);
+  var t=$('#pc-body'); if(t&&t.querySelector('td.empty')){var td=t.querySelector('td.empty'); td.classList.remove('empty'); td.innerHTML=mdEsqueleto(5)}
+  var b=$('#l-body'); if(b&&b.querySelector('td.empty')){var tb=b.querySelector('td.empty'); tb.classList.remove('empty'); tb.innerHTML=mdEsqueleto(5)}}
+
+/* ---------- 6 · vacíos con dibujito y «¿quisiste decir…?» ---------- */
+function mdQuisiste(){
+  var q=($('#pc-q')||{}).value; q=String(q||'').trim(); if(!q)return;
+  var vacio=$('#pc-body td.empty'); if(!vacio||vacio.querySelector('.md-quisiste'))return;
+  var mejor=null, dmin=99, a=asisSinTildes(q);
+  var vistos={};
+  datosVisibles().forEach(function(r){var n=r.paciente; if(!n||vistos[keyPac(n)])return; vistos[keyPac(n)]=1;
+    var d=distNombre(a,asisSinTildes(n).slice(0,a.length+2)); if(d<dmin){dmin=d; mejor=n}});
+  if(mejor&&dmin<=Math.max(2,Math.round(a.length/4)))
+    vacio.insertAdjacentHTML('beforeend','<div class="md-quisiste">¿Quisiste decir <button type="button" class="btn sm" onclick="$(\'#pc-q\').value=\''+jss(mejor)+'\';renderPacientes()">'+esc(mdLindo(mejor))+'</button>?</div>')}
+
+/* ---------- 7 · títulos de las tarjetas con ícono de color ---------- */
+var MD_TIT=[
+  [/^Mi día|Los pacientes del día|El día de un vistazo/,'M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10','ambar'],
+  [/Agenda del día|calendario|Lo que viene/,MD_I.agenda,'azul'],[/Agendar/,MD_I.agenda,'azul'],
+  [/Para contactar/,MD_NAV_I.agenda,'coral'],[/Atenciones registradas/,MD_I.lista,'lila'],[/Panel de control/,MD_NAV_I.panel,'teal'],
+  [/Caja y conciliación|Cobrado por forma|Cierre de caja/,MD_I.caja,'verde'],[/Arqueo/,'M4 4h16v16H4zM8 8h8M8 12h3M13 12h3M8 16h3M13 16h3','verde'],
+  [/Egresos/,'M12 5v14M5 12l7 7 7-7','coral'],[/Liquidación/,MD_I.equipo,'lila'],[/Cuentas por cobrar/,'M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z','ambar'],
+  [/Sin forma de pago|no cuadran/,'M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z','coral'],
+  [/Movimientos/,MD_I.lista,'gris'],[/^Pacientes/,MD_I.equipo,'rosa'],[/Profesionales/,MD_I.equipo,'teal'],[/Canales/,'M3 11v2a2 2 0 002 2h2l5 4V5L7 9H5a2 2 0 00-2 2zM16 8a5 5 0 010 8','rosa'],
+  [/precios/,MD_I.precio,'lima'],[/^Recordatorios/,MD_NAV_I.agenda,'coral'],[/Plantillas/,'M8 8h12v12H8zM4 16V4h12','lila'],[/Comisiones/,'M19 5L5 19M7 7h.01M17 17h.01','verde'],
+  [/Indicaciones/,MD_I.mensaje,'azul'],[/Clave/,'M7 11V7a5 5 0 0110 0v4M5 11h14v10H5z','gris'],[/Respaldo|Datos y/,MD_I.datos,'gris'],[/Apariencia/,MD_I.pincel,'rosa']];
+function mdTitulos(){
+  mdQ(document,'.view .card > h2').forEach(function(h){
+    if(h.classList.contains('md-h')||h.querySelector('.n'))return;
+    var t=h.textContent.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ¿]+/,'').trim(), m=null;
+    for(var i=0;i<MD_TIT.length;i++)if(MD_TIT[i][0].test(t)){m=MD_TIT[i]; break}
+    if(!m)return;
+    var n=h.firstChild; if(n&&n.nodeType===3){var e=MD_EMO.exec(n.textContent); if(e&&e[0].trim()&&n.textContent.slice(e[0].length).trim()){var s=document.createElement('span'); s.className='md-emo'; s.textContent=e[0]; n.textContent=n.textContent.slice(e[0].length); h.insertBefore(s,n)}}
+    h.classList.add('md-h','md-h-'+m[2]);
+    h.insertAdjacentHTML('afterbegin','<span class="md-h-i" aria-hidden="true">'+mdIco(m[1],2.2)+'</span>')})}
+
+/* ---------- 8 · los avisos se deslizan desde arriba a la derecha ---------- */
+function mdTipoAviso(m,err){return err?'mal':(/✅|listo|guardad|copiad|descargad|ya está|actualizad|registrad/i.test(m)?'bien':'info')}
+
+/* ---------- 9 · la pantalla de entrada ---------- */
+function mdEntradaPantalla(){
+  var g=$('#gate'); if(!g||$('#md-gate-lado'))return;
+  var h=new Date().getHours(), sal=h<12?'Buen día.':(h<19?'Buenas tardes.':'Buenas noches.');
+  var kick=($('#hd-kicker')||{}).textContent||'';
+  var lado=document.createElement('div'); lado.id='md-gate-lado'; lado.className='md-gate-lado';
+  lado.innerHTML='<span class="md-blob b1"></span><span class="md-blob b2"></span>'+
+    '<div class="md-gate-logo"><svg viewBox="0 0 120 92" aria-hidden="true"><use href="#corona"/></svg>'+
+    '<svg class="md-chispa c1" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0l1.8 6.2L16 8l-6.2 1.8L8 16l-1.8-6.2L0 8l6.2-1.8z" fill="currentColor"/></svg>'+
+    '<svg class="md-chispa c2" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0l1.8 6.2L16 8l-6.2 1.8L8 16l-1.8-6.2L0 8l6.2-1.8z" fill="currentColor"/></svg></div>'+
+    '<div class="md-gate-k">'+esc(kick)+'</div><div class="md-gate-t">'+sal+'<br>Que hoy sean<br>puras sonrisas.</div>'+
+    '<div class="md-gate-s">'+esc(DOW[new Date().getDay()]+' '+fmtF(hoyISO()))+'</div>';
+  g.insertBefore(lado,g.firstChild); g.classList.add('md-gate')}
+
+/* ---------- 10 · gráficos del Panel: dona por canal y mes a mes ---------- */
+var MD_CANAL_COL={fb:'#3B6FC9',ig:'#D9578C',tt:'#20241C',wa:'#2E9C5E',go:'#E2A06B',ref:'#7F5DB8',ant:'#C27A0E',loc:'#16807A',vol:'#8A8F7E',otro:'#B9B3A6'};
+function mdPanelCanalesYMeses(){
+  var box=$('#md-pvis .md-pv'); if(!box||box.querySelector('.md-pv-canal'))return;
+  var rows=periodoRows().filter(function(r){return r.tipo==='Nuevo'}), por={}, tot=0;
+  rows.forEach(function(r){var k=mdCanalTipo(r.canal||'Otro'), n=r.canal||'Otro'; por[n]=por[n]||{n:n,k:k,v:0}; por[n].v++; tot++});
+  var arr=Object.keys(por).map(function(k){return por[k]}).sort(function(a,b){return b.v-a.v}).slice(0,6);
+  var C=376.99, acc=0, arcos='', ley='';
+  arr.forEach(function(s){var f=tot?s.v/tot:0, col=MD_CANAL_COL[s.k]||'#B9B3A6';
+    if(f>0)arcos+='<circle cx="80" cy="80" r="60" fill="none" stroke="'+col+'" stroke-width="22" stroke-dasharray="'+Math.max(0,C*f-1.5).toFixed(1)+' '+C+'" transform="rotate('+(-90+acc*360).toFixed(1)+' 80 80)" class="md-arco2"/>';
+    acc+=f; ley+='<li><i style="background:'+col+'"></i><span>'+esc(s.n)+'</span><b>'+s.v+'</b></li>'});
+  var dona='<div class="md-pv-t md-pv-canal"><h2>De dónde vienen los nuevos</h2><div class="md-dona"><svg viewBox="0 0 160 160" role="img" aria-label="Pacientes nuevos por canal">'+
+    '<circle cx="80" cy="80" r="60" fill="none" stroke="var(--line)" stroke-width="22"/>'+arcos+
+    '<text x="80" y="82" text-anchor="middle" font-size="28" font-weight="900" fill="var(--ink)">'+tot+'</text>'+
+    '<text x="80" y="100" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--gray)">nuevos</text></svg><ul>'+(ley||'<li class="md-vacio"><span>Sin pacientes nuevos en el periodo</span></li>')+'</ul></div></div>';
+  /* mes a mes: los últimos 6 meses de cobros y de nuevos */
+  var hoy=hoyISO(), meses=[], cob={}, nue={};
+  for(var i=5;i>=0;i--){var d=parseISO(hoy.slice(0,7)+'-01'); d.setMonth(d.getMonth()-i); meses.push(iso(d).slice(0,7))}
+  filasCaja(DATA).forEach(function(r){var m=(r.fecha||'').slice(0,7); if(meses.indexOf(m)>=0)cob[m]=(cob[m]||0)+num(r.acuenta)});
+  soloAtenciones(DATA).forEach(function(r){var m=(r.fecha||'').slice(0,7); if(meses.indexOf(m)>=0&&r.tipo==='Nuevo')nue[m]=(nue[m]||0)+1});
+  var maxC=Math.max.apply(null,meses.map(function(m){return cob[m]||0}).concat([1])), maxN=Math.max.apply(null,meses.map(function(m){return nue[m]||0}).concat([1]));
+  var X=function(i){return 40+i*204}, Y=function(v,mx){return 190-v/mx*150};
+  var lc=meses.map(function(m,i){return (i?'L':'M')+X(i)+' '+Y(cob[m]||0,maxC).toFixed(1)}).join(' ');
+  var ln=meses.map(function(m,i){return (i?'L':'M')+X(i)+' '+Y(nue[m]||0,maxN).toFixed(1)}).join(' ');
+  var MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var ult=meses[5];
+  var linea='<div class="md-pv-t md-pv-ancho md-pv-meses"><div class="md-pv-cab"><h2>Mes a mes</h2><div class="md-pv-ley"><span class="c">Cobrado</span><span class="n">Pacientes nuevos</span></div></div>'+
+    '<svg viewBox="0 0 1100 230" role="img" aria-label="Cobrado y pacientes nuevos de los últimos seis meses">'+
+    '<path d="'+lc+' L'+X(5)+' 200 L'+X(0)+' 200 Z" fill="var(--lime)" opacity=".16"/>'+
+    '<path class="md-traza" d="'+lc+'" fill="none" stroke="var(--lime-dk)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<path class="md-traza" d="'+ln+'" fill="none" stroke="#7FB8E6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+
+    meses.map(function(m,i){return '<circle cx="'+X(i)+'" cy="'+Y(cob[m]||0,maxC).toFixed(1)+'" r="'+(i===5?8:5)+'" fill="#fff" stroke="var(--lime-dk)" stroke-width="3"/>'+
+      '<text x="'+X(i)+'" y="224" text-anchor="middle" font-size="14" font-weight="700" fill="var(--gray)">'+MN[+m.slice(5,7)-1]+'</text>'}).join('')+
+    '<text x="'+(X(5)-12)+'" y="'+(Y(cob[ult]||0,maxC)-14).toFixed(1)+'" text-anchor="end" font-size="15" font-weight="900" fill="var(--ink)">'+esc(bs(cob[ult]||0))+'</text></svg></div>';
+  box.insertAdjacentHTML('beforeend',dona+linea)}
+
+/* ---------- 11 · recordatorios de color según el tipo ---------- */
+var MD_REM_T=[[/vencid|hoy|próxim|adelante/i,'cita',MD_I.agenda],[/saldo/i,'saldo','M12 2v20M17 6H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'],
+  [/sin volver/i,'dormido','M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z'],[/cuota/i,'cuota','M3 6h18v12H3zM3 10h18M7 15h3'],
+  [/medio hacer|frenad/i,'plan','M10 9v6M14 9v6M12 3a9 9 0 100 18 9 9 0 000-18z'],[/cumplea/i,'cumple','M20 12v9H4v-9M2 7h20v5H2zM12 21V7M12 7C10 3 7 3 7 5s3 2 5 2c2 0 5 0 5-2s-3-2-5 2z'],
+  [/control/i,'control','M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z'],[/recomend/i,'presu',MD_I.mensaje]];
+function mdRecordatorios(){
+  var l=$('#rem-list'); if(!l)return;
+  var tipo=null;
+  Array.prototype.slice.call(l.children).forEach(function(x){
+    if(x.tagName==='H3'){tipo=null; var t=x.textContent; for(var i=0;i<MD_REM_T.length;i++)if(MD_REM_T[i][0].test(t)){tipo=MD_REM_T[i]; break}
+      if(tipo){x.classList.add('md-rem-h','md-r-'+tipo[1])} return}
+    if(!tipo||!x.classList.contains('rem')||x.querySelector('.md-rem-i'))return;
+    x.classList.add('md-r','md-r-'+tipo[1]);
+    x.insertAdjacentHTML('afterbegin','<span class="md-rem-i" aria-hidden="true">'+mdIco(tipo[2],2.2)+'</span>');
+    if(tipo[1]==='cumple'&&/hoy/i.test(x.textContent)){
+      var cf=''; for(var j=0;j<12;j++)cf+='<span class="md-conf md-conf-r" style="left:'+((j*37+9)%100)+'%;background:'+['#D9578C','var(--lime)','#7FB8E6','#8BCBAA','#F2B33D'][j%5]+';animation-delay:'+((j*.27)%2.4).toFixed(2)+'s"></span>';
+      x.insertAdjacentHTML('afterbegin',cf); x.classList.add('md-r-fiesta')}});
+  mdBotones(l)}
+
+/* ---------- 12 · festejos: la meta del mes y el primer paciente nuevo del día ---------- */
+function mdMetaFestejo(){
+  if(!esAdmin()||ROL!=='admin')return;
+  var meta=num(CFG.metaMes); if(!(meta>0))return;
+  var ym=hoyISO().slice(0,7), cob=0;
+  filasCaja(DATA).forEach(function(r){if((r.fecha||'').slice(0,7)===ym)cob+=num(r.acuenta)});
+  if(cob<meta||mdPref('META_'+ym))return;
+  mdPref('META_'+ym,1);
+  var ov=document.createElement('div'); ov.className='md-meta-ov'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-label','Meta del mes alcanzada');
+  var fu='';
+  [[18,22,'var(--lime)'],[82,18,'#F28DB6'],[26,78,'#7FB8E6'],[78,74,'#F2B33D'],[50,10,'#8BCBAA']].forEach(function(f,i){
+    var r=''; for(var k=0;k<12;k++){var a=k/12*Math.PI*2; r+='<path d="M'+(50+Math.cos(a)*14).toFixed(1)+' '+(50+Math.sin(a)*14).toFixed(1)+'L'+(50+Math.cos(a)*44).toFixed(1)+' '+(50+Math.sin(a)*44).toFixed(1)+'"/>'}
+    fu+='<svg class="md-fuego" style="left:'+f[0]+'%;top:'+f[1]+'%;animation-delay:'+(i*.45)+'s;color:'+f[2]+'" viewBox="0 0 100 100" aria-hidden="true"><g stroke="currentColor" stroke-width="5" stroke-linecap="round">'+r+'</g></svg>'});
+  var MES=MESES[+ym.slice(5,7)-1];
+  ov.innerHTML=fu+'<div class="md-meta-card"><svg class="md-copa" viewBox="0 0 120 120" aria-hidden="true"><path d="M36 18h48v22a24 24 0 01-48 0z" fill="var(--lime)" stroke="var(--lime-dk)" stroke-width="4" stroke-linejoin="round"/>'+
+    '<path d="M36 26H20a14 14 0 0016 18M84 26h16a14 14 0 01-16 18" fill="none" stroke="var(--lime-dk)" stroke-width="4"/><path d="M60 64v18M44 98h32l-4-16H48z" fill="var(--lime)" stroke="var(--lime-dk)" stroke-width="4" stroke-linejoin="round"/>'+
+    '<path d="M60 28l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#fff"/></svg>'+
+    '<div class="md-meta-k">META DE '+esc(MES.toUpperCase())+'</div><h2>¡Lo lograron!</h2><p>Llegaron a <b>'+bs(meta)+'</b>: van '+bs(cob)+' cobrados.</p>'+
+    '<button type="button" class="btn dark" id="md-meta-ok">¡Gracias, equipo!</button></div>';
+  document.body.appendChild(ov);
+  var fin=function(){if(ov.parentNode)ov.parentNode.removeChild(ov)};
+  $('#md-meta-ok').onclick=fin; ov.onclick=function(e){if(e.target===ov)fin()};
+  try{mdCara('festeja',6000)}catch(e){}}
+function mdPrimerNuevo(r){
+  if(!r||r.tipo!=='Nuevo'||r.estado!=='Atendido'||r.fecha!==hoyISO())return '';
+  var nuevos=DATA.filter(function(x){return esAtencion(x)&&x.tipo==='Nuevo'&&x.fecha===r.fecha&&x.estado==='Atendido'});
+  return nuevos.length===1?'<div class="md-primer">Primer paciente nuevo de hoy'+(r.canal?' · llegó por '+esc(r.canal):'')+'</div>':''}
+
 /* ---------- Sonri enseña lo nuevo ---------- */
 (function(){
   if(typeof ASIS_NOVEDADES==='undefined'||typeof ASIS_AYUDA==='undefined')return;
@@ -12750,7 +13249,16 @@ function mdContar(raiz){
      x:'En 💰 Caja contá el efectivo, anotalo y el semáforo te dice si cuadra. Lo contado queda en tu aparato: no cambia ningún cobro.', ayuda:/semáforo/,
      si:function(){return esAdmin()}},
     {id:'md-app', f:'2026-10-20', t:'Instalá el panel como app',
-     x:'En ⚙️ Ajustes › Apariencia está cómo dejarlo en la pantalla de inicio del celular. Se abre aunque la señal esté mala.', ayuda:/como app/});
+     x:'En ⚙️ Ajustes › Apariencia está cómo dejarlo en la pantalla de inicio del celular. Se abre aunque la señal esté mala.', ayuda:/como app/},
+    {id:'md-noche', f:'2026-10-21', t:'Modo noche',
+     x:'Para el turno de la tarde: el panel se pone oscuro y descansa la vista. En ⚙️ Ajustes › Apariencia elegí «Automático (de 19 a 7)» o «Siempre».', ayuda:/modo noche/},
+    {id:'md-color2', f:'2026-10-21', t:'Más color para encontrar todo rápido',
+     x:'Cada botón tiene su ícono y su color (WhatsApp verde, cobrar verde, borrar rojo), los campos tienen dibujito y «¿Por dónde nos encontró?» y la forma de pago son tarjetas grandes para tocar.'},
+    {id:'md-avisos', f:'2026-10-21', t:'Avisos más claros',
+     x:'Los avisos ahora salen arriba a la derecha: verde cuando salió bien, rojo cuando algo falló e i azul cuando es solo información. Se van solos.'},
+    {id:'md-meta', f:'2026-10-21', t:'Festejo de la meta del mes',
+     x:'Si cargaste la meta del mes en ⚙️ Ajustes, el día que se alcanza el panel lo festeja con fuegos artificiales (una sola vez por mes). En 📊 Panel también está «De dónde vienen los nuevos» y «Mes a mes».',
+     si:function(){return esAdmin()}});
   ASIS_AYUDA.push(
     {q:'¿Cómo veo el día de cada doctora?', k:'dia vistazo doctoras carril linea tiempo ahora horario quien atiende', v:'midia', f:['#md-carriles','#m-lista'],
      p:['Entrá a 🏠 Mi día.','Arriba, en «El día de un vistazo», cada doctora tiene su fila con sus pacientes en la hora.','Verde: ya atendido. Lima: le toca ahora. Celeste: por venir.','Tocá un paciente para ir a su tarjeta y atenderlo.']},
@@ -12763,7 +13271,11 @@ function mdContar(raiz){
     {q:'¿Cómo instalo el panel como app?', k:'instalar app celular pantalla inicio icono aplicacion', v:'config', f:'#md-apariencia',
      p:['Abrí el panel en el celular.','En ⚙️ Ajustes › Apariencia tocá «Instalar el panel como app» (o seguí las indicaciones que aparecen ahí).','Queda un ícono en la pantalla de inicio y se abre sin la barra del navegador.']},
     {q:'¿Cómo apago las animaciones o la decoración?', k:'apagar animaciones decoracion temporada navidad halloween carnaval moverse dibujitos', v:'config', f:'#md-apariencia',
-     p:['Entrá a ⚙️ Ajustes › Apariencia.','Destildá «Animaciones» o «Decoración de temporada».','Vale solo para este aparato.']});
+     p:['Entrá a ⚙️ Ajustes › Apariencia.','Destildá «Animaciones» o «Decoración de temporada».','Vale solo para este aparato.']},
+    {q:'¿Cómo pongo el modo noche?', k:'modo noche oscuro negro tarde vista fondo dientecitos claro', v:'config', f:'#md-apariencia',
+     p:['Entrá a ⚙️ Ajustes › Apariencia.','En «Modo noche» elegí «Automático (de 19 a 7)» para que se ponga oscuro solo a la noche, o «Siempre».','Ahí mismo podés prender o apagar el «Fondo con dientecitos».','Vale solo para este aparato: no cambia nada de los datos.']},
+    {q:'¿Qué significan los colores de los avisos?', k:'aviso cartel mensaje verde rojo azul error salio bien toast', v:'midia', f:'#toast',
+     p:['Verde con ✓: lo que hiciste salió bien (por ejemplo, la atención quedó guardada).','Rojo con !: algo no se pudo hacer; leé el aviso, casi siempre dice qué hacer.','Azul con i: es solo información.','La rayita de abajo muestra cuánto falta para que se vaya solo.']});
 })();
 
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
@@ -12779,12 +13291,15 @@ function mdRefrescar(){
     var r=_show.apply(this,arguments);
     if(v==='midia')MD_ANILLOS_FIRMA='';
     try{mdRefrescar(); mdIndicador()}catch(e){}
+    try{mdTitulos(); mdBotones($('#v-'+v))}catch(e){}
     try{mdEntrada(v); mdContar($('#v-'+v))}catch(e){}
     try{if(v==='config'){mdSincAjustes(); mdPintarInstalar()}}catch(e){}
     try{document.body.classList.toggle('md-en-atencion',v==='atencion'); if(v==='atencion')mdResumen()}catch(e){}
     return r};
   var _mi=renderMiDia;
-  renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdTarjetasVivas()}catch(e){} try{mdMiDiaLinea()}catch(e){} return r};
+  renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdTarjetasVivas()}catch(e){} try{mdTarjetasMiDia()}catch(e){} try{mdMiDiaLinea()}catch(e){} try{mdCargaEnLista()}catch(e){} return r};
+  var _rem=renderRem; renderRem=function(){var r=_rem.apply(this,arguments); try{mdRecordatorios()}catch(e){} return r};
+  var _can=renderCanales; renderCanales=function(){var r=_can.apply(this,arguments); try{mdTarjetasSeg()}catch(e){} return r};
   var _om=openModal;
   openModal=function(){var m=$('#modal'); if(m)m.classList.remove('md-ficha'); return _om.apply(this,arguments)};
   var _vp=verPaciente;
@@ -12799,36 +13314,46 @@ function mdRefrescar(){
     var f=window[n]; if(typeof f!=='function')return;
     window[n]=function(){var r=f.apply(this,arguments); try{mdResumenLuego()}catch(e){} return r}});
   var _rp=renderPanel;
-  renderPanel=function(){var r=_rp.apply(this,arguments); try{mdPanelVisual()}catch(e){} return r};
+  renderPanel=function(){var r=_rp.apply(this,arguments); try{mdPanelVisual(); mdPanelCanalesYMeses()}catch(e){} return r};
   var _wa=showWhatsappModal;
   showWhatsappModal=function(r){var x=_wa.apply(this,arguments); try{mdFestejo(r)}catch(e){} try{mdEncabezado()}catch(e){} return x};
   /* solo las listas de personas y movimientos: los resúmenes de muchas columnas siguen como tabla que se desliza */
   var _rl=renderLista; renderLista=function(){var r=_rl.apply(this,arguments); try{mdDecorarAtenciones()}catch(e){} return r};
-  var _rpa=renderPacientes; renderPacientes=function(){var r=_rpa.apply(this,arguments); try{mdDecorarPacientes()}catch(e){} return r};
+  var _rpa=renderPacientes; renderPacientes=function(){var r=_rpa.apply(this,arguments); try{mdDecorarPacientes(); mdQuisiste(); mdCargaEnLista()}catch(e){} return r};
   var _ar=aplicarRol; aplicarRol=function(){var r=_ar.apply(this,arguments); try{mdIconoDuena(); mdPintarBarra()}catch(e){} return r};
   [['renderLista','#v-lista'],['renderCaja','#cj-body'],['renderPacientes','#v-pacientes']].forEach(function(p){
     var f=window[p[0]]; if(typeof f!=='function')return;
     window[p[0]]=function(){var r=f.apply(this,arguments); try{var el=$(p[1]); mdEtiquetarTablas(el&&el.tagName==='TBODY'?el.closest('table').parentNode:el)}catch(e){} return r}});
   var _toast=toast;
-  toast=function(m,err){var r=_toast.apply(this,arguments); if(err)try{mdCara('preocupa',4500)}catch(e){} return r};
+  toast=function(m,err){var r=_toast.apply(this,arguments);
+    try{var t=$('#toast'); t.setAttribute('data-tipo',mdTipoAviso(m,err)); t.classList.remove('md-t-on'); void t.offsetWidth; t.classList.add('md-t-on')}catch(e){}
+    if(err)try{mdCara('preocupa',4500)}catch(e){} return r};
   if(typeof pullServer==='function'){
     var _pull=pullServer;
     pullServer=function(){
       try{mdCara('piensa')}catch(e){}
-      var pr=_pull.apply(this,arguments), fin=function(x){try{if(document.querySelector('#asis.md-c-piensa'))mdCara('')}catch(e){} return x};
+      if(!DATA.length){MD_CARGANDO=true; try{mdCargaEnLista()}catch(e){}}
+      var pr=_pull.apply(this,arguments), fin=function(x){MD_CARGANDO=false; try{if(document.querySelector('#asis.md-c-piensa'))mdCara('')}catch(e){} return x};
       if(pr&&pr.then)pr.then(fin,function(e){fin(); throw e}); else fin();
       return pr}}
   var _upd=updateNavRem;
   updateNavRem=function(){var r=_upd.apply(this,arguments); try{mdPintarBarra()}catch(e){} return r};
   var _ref=refreshAll;
-  refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar()}catch(e){} return r}})();
+  refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar(); mdMetaFestejo()}catch(e){} return r}})();
 (function mdInit(){
   try{
-    mdAplicarAnim(); mdIconosNav(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
+    mdAplicarAnim(); mdAplicarNoche(); document.body.classList.toggle('md-fondo',mdPref('FONDO')!==0);
+    try{var tc=document.querySelector('meta[name="theme-color"]'); if(tc&&!tc.getAttribute('data-dia'))tc.setAttribute('data-dia',tc.getAttribute('content'))}catch(e){}
+    mdEntradaPantalla(); mdCampos(); mdTarjetasSeg(); mdTitulos(); mdBotones(document);
+    if(window.MutationObserver){var mdObsT=0, mdPend=[];
+      new MutationObserver(function(ms){ms.forEach(function(m){Array.prototype.forEach.call(m.addedNodes,function(n){if(n.nodeType===1)mdPend.push(n)})});
+        if(mdObsT)return; mdObsT=(window.requestAnimationFrame||setTimeout)(function(){mdObsT=0; var L=mdPend; mdPend=[];
+          L.forEach(function(n){if(!n.isConnected)return; if(n.classList&&n.classList.contains('btn'))mdBoton(n); else if(n.querySelector&&n.querySelector('.btn'))mdBotones(n)})})}).observe(document.body,{childList:true,subtree:true})}
+    mdIconosNav(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
     document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
     window.addEventListener('resize',function(){try{mdAltoHeader(); mdIndicador(true)}catch(e){}});
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){try{mdIndicador(true)}catch(e){}});
-    setInterval(function(){try{mdEncabezado(); mdCaraBase()}catch(e){}},60000);
+    setInterval(function(){try{mdEncabezado(); mdCaraBase(); mdAplicarNoche()}catch(e){}},60000);
     /* si el panel abrió ya con sesión, lo que está a la vista se repinta con la cara nueva */
     if(!document.body.classList.contains('locked')){
       var v=asisVista(); if(v==='midia')renderMiDia(); else if(v)show(v)}

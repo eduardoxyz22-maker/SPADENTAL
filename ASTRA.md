@@ -128,6 +128,7 @@ Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para segu
 - Preferencias por aparato (`<prefijo>_MD_ANIM`, `_MD_TEMP`, `_MD_CIERRE_<fecha>`). Animaciones solo bajo `body.md-anim`.
 - App instalable: `pacientes.webmanifest`, `sw-pacientes.js` e `iconos/` en la raíz y en `cosmetic/`. El service worker pide siempre a la red primero (cada publicación llega sola) y guarda copia solo de `pacientes.html`, el manifiesto y los íconos; nunca toca los pedidos a Google. No se registra en `file://` (las pruebas no lo ven).
 - Sonri enseña lo nuevo: entradas `md-*` en `ASIS_NOVEDADES` y preguntas nuevas en `ASIS_AYUDA` (se agregan desde el bloque MODERNO).
+- Ronda 2 (más color): botones con ícono y color según el texto (`mdBoton`; el emoji del principio queda en el texto pero oculto en `span.md-emo`, y el texto va en `span.md-bt`); campos con ícono (`span.md-in`); canal y forma de pago como tarjetas; títulos de tarjeta con ícono (`.md-h`); avisos arriba a la derecha con tipo bien/mal/info; pantalla de entrada partida (`#gate.md-gate`, solo cuando no tiene `.off`); esqueleto mientras carga; «¿Quisiste decir…?» en Pacientes; recordatorios de color por tipo; panel con «De dónde vienen los nuevos» y «Mes a mes»; festejo de la meta del mes (solo dueña, una vez por mes, `_MD_META_<aaaa-mm>`); modo noche (`body.md-noche`, `_MD_NOCHE` = no/auto/si, auto de 19 a 7) y fondo con dientecitos (`_MD_FONDO`). Un `MutationObserver` le pone ícono a los botones que se agregan después.
 
 ## 7. Pruebas
 
