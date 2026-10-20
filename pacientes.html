@@ -1847,6 +1847,7 @@ body.md-ag-on{overflow:hidden}
 .md-pt-wa{height:32px;border-radius:10px;background:#DDF3E7;color:#1F5E43;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;text-decoration:none}
 body.rol-pauta #md-barra{display:none!important}
 @media(max-width:700px){.md-pt-r{grid-template-columns:24px 34px minmax(0,1fr) 80px}.md-pt-r .md-pt-bb,.md-pt-r .md-pt-wa{display:none}.md-pt-pod{grid-template-columns:1fr}}
+.md-cmp-acc{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -14858,7 +14859,9 @@ function mdFotosPintar(nombre){
       '<div class="md-cmp-des" style="clip-path:inset(0 0 0 50%)"><img data-id="'+esc(des.id)+'" src="'+(MD_FOTO_GRANDE[des.id]||des.mini)+'" alt="Después"></div><i class="md-cmp-l" style="left:50%"></i>'+
       '<span class="md-cmp-et izq">'+(ant.tipo==='antes'?'ANTES':'')+' · '+fmtFcorta(ant.fecha)+'</span><span class="md-cmp-et der">'+(des.tipo==='despues'?'DESPUÉS':'')+' · '+fmtFcorta(des.fecha)+'</span>'+
       '<input type="range" min="0" max="100" value="50" aria-label="Comparar antes y después" oninput="mdCmp(this.value)"></div>'+
-      '<p class="mini" style="margin:4px 0 8px">'+esc(des.tratamiento||ant.tratamiento||'')+' · deslizá la barra para comparar</p>':
+      '<p class="mini" style="margin:4px 0 6px">'+esc(des.tratamiento||ant.tratamiento||'')+' · deslizá la barra para comparar</p>'+
+      '<div class="md-cmp-acc"><button type="button" class="btn sm" onclick="mdCmpMandar(\''+nj+'\',\''+esc(ant.id)+'\',\''+esc(des.id)+'\',1)">📤 Mandar el antes y después</button>'+
+      '<button type="button" class="btn sec sm" onclick="mdCmpMandar(\''+nj+'\',\''+esc(ant.id)+'\',\''+esc(des.id)+'\',0)">⬇ Descargar</button></div>':
     (ord.length>=2?'<p class="mini" style="margin:0 0 8px">Para comparar, marcá una foto como «Antes» y otra como «Después» con el mismo tratamiento, o abrí una y tocá «⇆ Comparar con otra».</p>':'');
   box.innerHTML=h+cmp+'<div class="md-fotos-g">'+ord.slice().reverse().map(function(f){
     return '<button type="button" class="md-foto-th" onclick="mdFotoAbrir(\''+nj+'\',\''+esc(f.id)+'\')"><img src="'+f.mini+'" alt="">'+
@@ -14913,7 +14916,9 @@ function mdFotoAutoriza(nombre,id,v){
   api('fotoCambiar',null,undefined,undefined,{consulta:{id:id,autoriza:!!v}}).then(function(r){
     if(r&&r.ok){var f=mdFotoDe(nombre,id); if(f)f.autoriza=!!v; toast(v?'Anotado: autorizó usarla en publicidad ✅':'Anotado: no se usa en publicidad')}
     else toast(mdFotoErr(r&&r.error),1)},function(){toast('Sin conexión: no se guardó',1)})}
-function mdFotoNombre(nombre,f){return (f.fecha+' '+nombre+' '+(MD_FOTO_TIPO[f.tipo]||'foto')).replace(/[\\\/:*?"<>|]/g,'')+'.jpg'}
+/* nombre de archivo sin tildes ni signos: con tilde, algunos navegadores lo bajan como «download» */
+function mdNomArch(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim()}
+function mdFotoNombre(nombre,f){return mdNomArch(f.fecha+' '+nombre+' '+(MD_FOTO_TIPO[f.tipo]||'foto'))+'.jpg'}
 function mdFotoBajar(nombre,id){
   var f=mdFotoDe(nombre,id); if(!f)return;
   mdFotoGrande(id).then(function(d){var a=document.createElement('a'); a.href=d; a.download=mdFotoNombre(nombre,f); document.body.appendChild(a); a.click(); a.remove()},function(){toast('No se pudo bajar la foto',1)})}
@@ -14927,6 +14932,35 @@ function mdFotoCompartir(nombre,id){
     var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
     if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su foto de '+clinica()+' 🦷'),'_blank','noopener');
     toast('La foto se descargó: adjuntala en el chat de WhatsApp')},function(){toast('No se pudo preparar la foto',1)})}
+/* El antes y el después en una sola imagen, con el nombre de la clínica:
+   para mandárselo al paciente (o guardarlo para publicidad si lo autorizó). */
+function mdImg(src){return new Promise(function(ok,mal){var i=new Image(); i.onload=function(){ok(i)}; i.onerror=function(){mal(new Error('imagen'))}; i.src=src})}
+function mdCmpArmar(nombre,a,d){
+  return Promise.all([mdFotoGrande(a.id).then(mdImg),mdFotoGrande(d.id).then(mdImg)]).then(function(im){
+    var W=1600, H=1000, pie=120, c=document.createElement('canvas'); c.width=W; c.height=H+pie; var g=c.getContext('2d');
+    var cubrir=function(img,x){var r=Math.max((W/2)/img.naturalWidth,H/img.naturalHeight), w=img.naturalWidth*r, h=img.naturalHeight*r;
+      g.save(); g.beginPath(); g.rect(x,0,W/2,H); g.clip(); g.drawImage(img,x+(W/2-w)/2,(H-h)/2,w,h); g.restore()};
+    g.fillStyle='#111'; g.fillRect(0,0,W,H); cubrir(im[0],0); cubrir(im[1],W/2);
+    g.fillStyle='#fff'; g.fillRect(W/2-2,0,4,H);
+    var acento=getComputedStyle(document.body).getPropertyValue('--lime').trim()||'#B6C932';
+    var etiqueta=function(t,x,der){g.font='800 34px system-ui,Archivo,sans-serif'; var w=g.measureText(t).width+44, px=der?x-w:x;
+      g.fillStyle='rgba(0,0,0,.62)'; g.beginPath(); g.roundRect?g.roundRect(px,28,w,62,31):g.rect(px,28,w,62); g.fill(); g.fillStyle='#fff'; g.fillText(t,px+22,71)};
+    etiqueta('ANTES · '+fmtFcorta(a.fecha),28,false); etiqueta('DESPUÉS · '+fmtFcorta(d.fecha),W-28,true);
+    g.fillStyle='#fff'; g.fillRect(0,H,W,pie); g.fillStyle=acento; g.fillRect(0,H,W,10);
+    g.fillStyle='#20241C'; g.font='900 40px system-ui,Archivo,sans-serif'; g.fillText(clinica(),40,H+78);
+    var tr=d.tratamiento||a.tratamiento||''; if(tr){g.font='700 32px system-ui,Archivo,sans-serif'; g.fillStyle='#5F6553'; var tw=g.measureText(tr).width; g.fillText(tr,W-40-tw,H+76)}
+    return new Promise(function(ok){c.toBlob(function(b){ok(b)},'image/jpeg',.88)})})}
+function mdCmpMandar(nombre,ida,idd,compartir){
+  var a=mdFotoDe(nombre,ida), d=mdFotoDe(nombre,idd); if(!a||!d)return;
+  toast('Armando la imagen…');
+  mdCmpArmar(nombre,a,d).then(function(b){
+    var file=new File([b],mdNomArch('Antes y despues '+nombre+' '+d.fecha)+'.jpg',{type:'image/jpeg'});
+    if(compartir&&navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Su antes y después en '+clinica()+' 🦷✨'}).catch(function(){});
+    var url=URL.createObjectURL(b), x=document.createElement('a'); x.href=url; x.download=file.name; document.body.appendChild(x); x.click(); setTimeout(function(){URL.revokeObjectURL(url); x.remove()},1500);
+    if(compartir){var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
+      if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su antes y después de '+clinica()+' 🦷✨'),'_blank','noopener');
+      toast('La imagen se descargó: adjuntala en el chat de WhatsApp')}
+    else toast('Imagen descargada ✅')},function(){toast('No se pudo armar la imagen: revisá la conexión',1)})}
 function mdFotoBorrar(nombre,id){
   if(!confirm('¿Borrar esta foto? Va a la papelera de Google Drive de la clínica.'))return;
   api('fotoBorrar',null,undefined,undefined,{consulta:{id:id}}).then(function(r){
@@ -15095,7 +15129,7 @@ function mdPautaCsv(){
     L.push([P.nombre,mesLabel(P.ym),P.red,P.ats.length,Math.round(Object.keys(P.cob).filter(function(ym){return ym>=P.ym}).reduce(function(a,ym){return a+P.cob[ym]},0))])});
   var csv='﻿'+L.map(function(r){return r.map(q).join(';')}).join('\n');
   var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download='Pauta '+clinica()+' '+C.meses[0]+' a '+C.mesAct+'.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove()},500)}
+  a.download=mdNomArch('Pauta '+clinica()+' '+C.meses[0]+' a '+C.mesAct)+'.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove()},500)}
 
 /* ---------- videos de ayuda: cómo se carga una atención, un paquete y un tratamiento ---------- */
 var MD_VIDEOS=[

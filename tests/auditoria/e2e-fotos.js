@@ -15,7 +15,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   const preparar = (gs) => { const server = gsServer(gs); server.shimClaves = false; server.sesionDirecta = false;
     const v = server.ctx.leerVerif(); v.admin = server.ctx.shaHex('fo-duena-1'); v.prof['Dra. Shirley'] = server.ctx.shaHex('fo-shirley-1'); v.equipo = server.ctx.shaHex('fo-equipo-1'); server.ctx.guardarVerif(v); return server; };
   const abrir = async (server, clave) => {
-    const page = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+    const page = await (await b.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true })).newPage();
     page.on('pageerror', e => errs.push(e.message)); page.on('dialog', d => d.accept());
     await page.route('**/*', async r => { const u = r.request().url(); if (u.startsWith('file:') || u.startsWith('data:') || u.startsWith('blob:')) return r.continue();
       if (/script\.google(usercontent)?\.com/.test(u)) return r.fulfill({ contentType: 'application/json', body: JSON.stringify(server.handle(JSON.parse(r.request().postData() || '{}'))) });
@@ -64,6 +64,10 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('la segunda sugiere «Después»', await P.evaluate(() => getRadio('fttipo')) === 'despues');
   await P.click('#ft-aut'); await P.click('#ft-ok'); await P.waitForTimeout(2000);
   OK('la ficha muestra el antes y el después para comparar', await P.locator('#md-cmp img').count() === 2 && await P.locator('#md-fotos .md-foto-th').count() === 2);
+  const [dl] = await Promise.all([P.waitForEvent('download'), P.locator('#md-fotos .md-cmp-acc button', { hasText: 'Descargar' }).click()]);
+  const jpg = require('fs').readFileSync(await dl.path());
+  const dims = await P.evaluate((b64) => new Promise(ok => { const i = new Image(); i.onload = () => ok([i.naturalWidth, i.naturalHeight]); i.src = 'data:image/jpeg;base64,' + b64; }), jpg.toString('base64'));
+  OK('arma el antes y después en una sola imagen para mandar', /^Antes y despues Foto Prueba/.test(dl.suggestedFilename()) && dims[0] === 1600 && dims[1] === 1120, [dl.suggestedFilename(), dims]);
   await P.evaluate(() => mdCmp(20)); OK('la barra compara', await P.evaluate(() => $('#md-cmp .md-cmp-des').style.clipPath) === 'inset(0px 0px 0px 20%)' || await P.evaluate(() => $('#md-cmp .md-cmp-des').style.clipPath) === 'inset(0 0 0 20%)');
   F = filas(server); OK('la del después quedó autorizada para publicidad', F[2][3] === 'despues' && F[2][8] === 'SÍ', F[2][8]);
   /* abrir la del antes: se ve grande, se autoriza, se borra */
