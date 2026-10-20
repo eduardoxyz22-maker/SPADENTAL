@@ -533,7 +533,7 @@ function leerCfg() {
 /* ---------------------------------------------------------------- acciones */
 function doList(ses) {
   /* los egresos de la clínica son de la dueña y recepción: a una doctora no se le mandan */
-  var egr = (ses && ses.rol === 'doctora') ? [] : doListEgr();
+  var egr = (ses && (ses.rol === 'doctora' || ses.rol === 'pauta')) ? [] : doListEgr();
   var sh = getSheet();
   var n = sh.getLastRow();
   if (n < 2) return { ok: true, registros: [], cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: egr };
@@ -1156,7 +1156,12 @@ var ANTICIPO_DOCTORAS = true;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-22-fotos';
+var VERSION_SCRIPT = '2026-10-23-pauta';
+/* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
+   persona, la misma en las dos clínicas. Acá está solo su verificador (no la
+   clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
+   esa clave se leen los datos, pero no se puede guardar ni borrar nada. */
+var VERIF_PAUTA = '1c7a40d1300e541b00a9d9c67e1e0600baf4de0a839f6f673babf2a2736f4ce3';
 var CLINICA_ID = 'spadental';
 function deOtraClinica(r) { return !!(r && r.clinicaId && r.clinicaId !== CLINICA_ID); }
 /* =====================================================================
@@ -1256,7 +1261,7 @@ function sesionDe(tok) {
   var t = cache().get('S_' + tok); if (!t) return null;
   var s = null; try { s = JSON.parse(t); } catch (e) { return null; }
   /* la clave pudo cambiar desde que se abrió: la sesión vieja ya no vale */
-  var v = leerVerif(), h = s.rol === 'admin' ? v.admin : (s.rol === 'equipo' ? v.equipo : v.prof[s.prof]);
+  var v = leerVerif(), h = s.rol === 'pauta' ? VERIF_PAUTA : (s.rol === 'admin' ? v.admin : (s.rol === 'equipo' ? v.equipo : v.prof[s.prof]));
   if (!h || h !== s.h) { cache().remove('S_' + tok); return null; }
   cache().put('S_' + tok, t, SESION_SEG);   // se renueva mientras se usa
   return s;
@@ -1268,7 +1273,8 @@ function doLogin(body) {
   var clave = String(body.clave || '');
   if (!clave) return { ok: false, error: 'clave_incorrecta' };
   var h = shaHex(clave), v = leerVerif(), s = null;
-  if (h === v.admin) s = { rol: 'admin', prof: '' };
+  if (hashOk(VERIF_PAUTA) && h === VERIF_PAUTA) s = { rol: 'pauta', prof: '' };
+  else if (h === v.admin) s = { rol: 'admin', prof: '' };
   else {
     for (var p in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, p) && v.prof[p] === h) { s = { rol: 'doctora', prof: p }; break; }
     if (!s && h === v.equipo) s = { rol: 'equipo', prof: '' };
@@ -1293,6 +1299,7 @@ function doCambiarClave(body, ses) {
   var h = shaHex(nueva);
   if (esDeFabrica(h)) return { ok: false, error: 'clave_de_fabrica' };
   var usadas = [];
+  if (hashOk(VERIF_PAUTA)) usadas.push(VERIF_PAUTA);
   if (quien !== 'admin') usadas.push(v.admin);
   if (quien !== 'equipo') usadas.push(v.equipo);
   for (var p in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, p) && !(quien === 'prof' && p === body.prof)) usadas.push(v.prof[p]);
@@ -1590,6 +1597,8 @@ function doPost(e) {
        queda afuera). */
     var ses = sesionDe(body.token);
     if (!ses) return json({ ok: false, error: 'sin_sesion' });
+    /* la clave de «Pauta» solo lee */
+    if (ses.rol === 'pauta' && body.action !== 'list') return json({ ok: false, error: 'sin_permiso' });
     /* los pacientes tampoco se leen sin sesión */
     if (body.action === 'list') return json(doList(ses));
     /* base ausente = panel de una versión anterior: escribe como siempre.
