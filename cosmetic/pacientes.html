@@ -657,6 +657,172 @@ body.locked #asis{display:none}
 }
 @media print{#asis{display:none}}
 /* ===== fin de Sonri ===== */
+/* ===== MODERNO INI · la cara nueva del panel (va igual en los dos paneles; los colores salen de --lime) ===== */
+/* A · encabezado oscuro con el diente que flota y los anillos del día */
+header .hd{background:var(--ink);color:#fff;box-shadow:0 0 0 100vmax var(--ink);clip-path:inset(0 -100vmax);
+  position:relative;padding-top:16px;padding-bottom:16px;flex-wrap:wrap}
+header{border-bottom:1px solid var(--line)}
+.hd .kicker{color:var(--lime)}
+.hd .logo{color:#fff;font-size:clamp(19px,1vw + 12px,27px)}
+.hd .sub{display:none}
+.md-linea{font-size:13px;color:#D7DAD0;margin-top:4px;white-space:normal}
+.md-markw{position:relative;width:44px;height:44px;flex:0 0 44px;display:flex;align-items:center;justify-content:center}
+.hd .md-markw .mark{width:40px;height:40px;flex:0 0 40px;color:var(--lime);transform-origin:50% 85%}
+.md-chispa{position:absolute;width:13px;height:13px;color:var(--lime);opacity:0}
+.md-chispa.c1{top:-3px;right:-5px}
+.md-chispa.c2{bottom:2px;left:-6px;width:9px;height:9px;color:#fff}
+.md-anim .mark{animation:mdBob 3.2s ease-in-out infinite}
+.md-anim .md-chispa{animation:mdBrilla 2.4s ease-in-out infinite}
+.md-anim .md-chispa.c2{animation-delay:.8s}
+@keyframes mdBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-3deg)}}
+@keyframes mdBrilla{0%,100%{opacity:0;transform:scale(.3)}50%{opacity:1;transform:scale(1)}}
+.hd .mast{flex:1 1 300px;position:relative;z-index:1}
+.md-anillos{display:flex;flex-wrap:wrap;gap:20px;margin-left:auto;position:relative;z-index:1}
+.md-anillo{display:flex;align-items:center;gap:9px;color:#fff}
+.md-anillo svg{width:46px;height:46px;flex:0 0 46px}
+.md-anillo b{display:block;font-size:18px;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.md-anillo small{display:block;font-size:11.5px;color:#D7DAD0;margin-top:2px}
+.md-anim .md-arco{animation:mdArco 1.3s cubic-bezier(.2,.7,.2,1) both}
+@keyframes mdArco{from{stroke-dashoffset:113.1}}
+body.octubre .hd .murci,body.octubre .hd .telarana{color:#fff}
+/* con los anillos a la derecha, los murciélagos vuelan en el medio */
+.hd .murci.m1{right:auto;left:44%}.hd .murci.m2{right:auto;left:calc(44% + 58px)}
+.hd .murci.m3{right:auto;left:calc(44% + 120px)}.hd .murci.m4{right:auto;left:calc(44% - 70px)}
+.md-markw .sombrero{left:-4px;top:-15px;width:30px;height:26px;z-index:1}
+.md-markw .sombrero path[fill="#1E1E1E"]{fill:#6B5A8C}
+@media(max-width:900px){.md-anillos{gap:14px}.md-anillo svg{width:38px;height:38px;flex-basis:38px}.md-anillo b{font-size:15px}}
+@media(max-width:760px){
+  header .hd{padding-top:11px;padding-bottom:11px}
+  .md-anillos{display:none}
+  .md-markw{width:34px;height:34px;flex-basis:34px}.hd .md-markw .mark{width:31px;height:31px;flex-basis:31px}
+  .md-linea{font-size:12px;margin-top:2px}}
+
+/* B · en el celular, las pestañas van abajo, al alcance del pulgar */
+#md-barra{display:none}
+.md-hoja-ov{position:fixed;inset:0;background:rgba(20,20,20,.45);z-index:62;display:none;align-items:flex-end}
+.md-hoja-ov.on{display:flex}
+.md-hoja{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:10px 16px 26px;max-height:80vh;overflow:auto}
+.md-hoja .md-tirador{width:40px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 14px}
+.md-hoja h3{margin:0 0 10px;font-size:16px}
+.md-hoja-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.md-hoja-g button{min-height:52px;border:1px solid var(--line);border-radius:14px;background:#fff;font:inherit;font-weight:700;
+  font-size:14px;color:var(--ink);text-align:left;padding:8px 12px;cursor:pointer}
+.md-hoja-g button.on{background:var(--lime-sf);border-color:var(--lime-bd)}
+@media(max-width:760px){
+  header nav{display:none}
+  #md-barra{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;position:fixed;left:0;right:0;bottom:0;
+    z-index:50;background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(10px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 18px rgba(0,0,0,.06)}
+  body.locked #md-barra{display:none}
+  #md-barra button{border:0;background:transparent;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;font:inherit;font-size:11px;font-weight:600;color:var(--gray);cursor:pointer;position:relative;padding:0}
+  #md-barra button.on{color:var(--lime-dk);font-weight:800}
+  #md-barra svg{width:22px;height:22px}
+  #md-barra .md-mas-grande span.md-bola{width:56px;height:56px;margin-top:-28px;border-radius:19px;background:var(--lime);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+  #md-barra .md-mas-grande{color:var(--ink);font-weight:700}
+  #md-barra .md-badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--clay);
+    color:#fff;font-size:10.5px;font-weight:800;line-height:18px;text-align:center;padding:0 5px}
+  .wrap{padding-bottom:120px}
+  #asis{bottom:84px}
+  #toast{bottom:92px}}
+
+/* C · Ajustes agrupados por tema */
+.md-aj-indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:12px;margin-top:14px}
+.md-aj-tile{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--sh)}
+.md-aj-tile h3{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:16px}
+.md-aj-ico{width:38px;height:38px;border-radius:12px;background:var(--lime-sf);color:var(--lime-dk);display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.md-aj-ico svg{width:20px;height:20px}
+.md-aj-it{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;border:0;border-top:1px solid var(--line);background:transparent;
+  font:inherit;font-size:14.5px;font-weight:600;color:var(--ink);text-align:left;padding:8px 2px;cursor:pointer}
+.md-aj-it:hover{color:var(--lime-dk)}
+.md-aj-it span{flex:1}
+.md-aj-it em{font-style:normal;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--lime-sf);color:var(--lime-dk)}
+.md-aj-it::after{content:'›';font-size:20px;color:var(--gray)}
+.md-aj-grupo{margin-top:26px}
+.md-aj-grupo>h2{display:flex;align-items:center;gap:10px;margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--gray)}
+.md-aj-grupo>h2 .md-aj-ico{width:30px;height:30px;flex-basis:30px;border-radius:9px}
+.md-aj-grupo>h2 .md-aj-ico svg{width:16px;height:16px}
+.md-flash{animation:mdFlash 1.6s ease-out}
+@keyframes mdFlash{0%{box-shadow:0 0 0 0 var(--lime)}25%{box-shadow:0 0 0 5px var(--lime)}100%{box-shadow:var(--sh)}}
+
+/* F · tarjetas vivas en Mi día */
+.md-viva{display:flex;flex-direction:column}
+.md-ilu{height:86px;border-radius:13px;margin:-2px -2px 10px;display:flex;align-items:center;justify-content:center;background:var(--lime-sf)}
+.md-ilu svg{height:70px;width:auto;max-width:100%}
+.md-ilu.verde{background:#E3F1EA}.md-ilu.azul{background:#E4EEF8}.md-ilu.ambar{background:#FBEFD9}.md-ilu.gris{background:#F0F0EC}
+.md-prog{height:7px;border-radius:9px;background:var(--line);margin-top:8px;overflow:hidden}
+.md-prog i{display:block;height:100%;border-radius:9px;background:var(--lime)}
+.md-anim .md-cepillo{animation:mdCepillo 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes mdCepillo{0%,100%{transform:translateX(-5px) rotate(-8deg)}50%{transform:translateX(5px) rotate(-8deg)}}
+.md-anim .md-moneda{animation:mdCae 2.4s ease-out infinite}
+.md-anim .md-moneda.m2{animation-delay:.3s}.md-anim .md-moneda.m3{animation-delay:.6s}
+@keyframes mdCae{0%{transform:translateY(-34px);opacity:0}30%{opacity:1}60%,100%{transform:translateY(0);opacity:1}}
+.md-anim .md-hoja-cal{animation:mdHojaCal 3.5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
+@keyframes mdHojaCal{0%,70%,100%{transform:rotateX(0)}80%{transform:rotateX(80deg)}90%{transform:rotateX(0)}}
+.md-anim .md-late{animation:mdLate 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes mdLate{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.md-anim .md-prog i{animation:mdLlena 1.4s cubic-bezier(.2,.7,.2,1) both}
+@keyframes mdLlena{from{width:0}}
+
+/* L · el festejo al guardar */
+.md-fiesta{position:relative;overflow:hidden;text-align:center;margin:-18px -18px 6px;padding:22px 18px 8px;border-radius:18px 18px 0 0}
+.md-fiesta h3{margin:10px 0 2px;font-size:24px}
+.md-fiesta p{margin:0;color:var(--gray);font-size:14px}
+.md-fiesta svg.md-check{width:84px;height:84px;display:block;margin:0 auto}
+.md-check .md-c1{stroke-dasharray:252}
+.md-check .md-c2{stroke-dasharray:60}
+.md-anim .md-check .md-c1{animation:mdTraza 1s ease-out both}
+.md-anim .md-check .md-c2{animation:mdTraza2 1.3s ease-out both}
+@keyframes mdTraza{from{stroke-dashoffset:252}}
+@keyframes mdTraza2{0%,35%{stroke-dashoffset:60}100%{stroke-dashoffset:0}}
+.md-conf{position:absolute;top:-14px;width:8px;height:13px;border-radius:2px;opacity:0;pointer-events:none}
+.md-anim .md-conf{animation:mdConf 2.2s linear 1 both}
+@keyframes mdConf{0%{transform:translateY(-10px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(190px) rotate(540deg);opacity:0}}
+
+/* N · en el celular, las tablas largas se leen como tarjetas */
+@media(max-width:760px){
+  table.md-tc{min-width:0!important;border-collapse:separate}
+  table.md-tc thead{display:none}
+  table.md-tc tr{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:16px;background:#fff;margin:0 0 10px;padding:6px 14px}
+  table.md-tc td,table.md-tc tfoot td{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border:0;padding:6px 0;
+    text-align:right;white-space:normal;max-width:none!important}
+  table.md-tc td::before{content:attr(data-l);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--gray);
+    text-align:left;flex:0 0 auto}
+  table.md-tc td[data-l=""]::before,table.md-tc td.empty::before{content:none}
+  table.md-tc td.empty{justify-content:center}
+  table.md-tc td>*{text-align:right}
+  .tw.md-tw{margin:0;padding:0;overflow:visible}
+  #v-lista table.md-tc td:nth-child(3){order:-1;font-size:16.5px;text-align:left;justify-content:flex-start;border-bottom:1px solid var(--line);padding-bottom:8px}
+  #v-lista table.md-tc td:nth-child(3)::before{content:none}
+  #v-lista table.md-tc td:nth-child(3)>*{text-align:left}}
+
+/* O · las caras de Sonri */
+#asis .md-cara{display:none}
+#asis .md-cara.n,#asis-panel .md-cara.n{display:inline}
+#asis.md-c-festeja .md-cara.n,#asis.md-c-piensa .md-cara.n,#asis.md-c-preocupa .md-cara.n,#asis.md-c-duerme .md-cara.n{display:none}
+#asis.md-c-festeja .md-cara.festeja,#asis.md-c-piensa .md-cara.piensa,#asis.md-c-preocupa .md-cara.preocupa,#asis.md-c-duerme .md-cara.duerme{display:inline}
+.md-ropa{display:none}
+body.md-tema-navidad .md-ropa.navidad,body.md-tema-carnaval .md-ropa.carnaval,body.md-tema-octubre .md-ropa.octubre,
+body.md-tema-primavera .md-ropa.primavera{display:inline}
+
+/* P · temas de temporada (solo decoran el encabezado) */
+.md-decor{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.md-copo{position:absolute;top:-8px;border-radius:50%;background:#fff;opacity:.8}
+.md-anim .md-copo{animation:mdNieve 6s linear infinite}
+@keyframes mdNieve{from{transform:translateY(-10px)}to{transform:translateY(160px)}}
+.md-arbol{position:absolute;bottom:0;width:58px;height:66px}
+.md-flor{position:absolute;bottom:0;width:150px;height:62px}
+.md-anim .md-tallo{animation:mdMece 3s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes mdMece{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.md-papel{position:absolute;width:8px;height:4px;border-radius:2px;opacity:.85}
+.md-antifaz{position:absolute;width:74px;height:46px}
+
+/* las animaciones nuevas viven bajo body.md-anim: se apagan en Ajustes › Apariencia,
+   y el aparato que pide quietud no las ve */
+@media(prefers-reduced-motion:reduce){.md-anim .mark,.md-anim .md-chispa,.md-anim .md-arco,.md-anim .md-cepillo,.md-anim .md-moneda,
+  .md-anim .md-hoja-cal,.md-anim .md-late,.md-anim .md-prog i,.md-anim .md-check *,.md-anim .md-conf,.md-anim .md-copo,.md-anim .md-tallo{animation:none!important}}
+/* ===== MODERNO FIN ===== */
 </style>
 </head>
 <body class="locked">
@@ -11441,6 +11607,394 @@ function asisTourOfrecer(){
    cargarse: Sonri arranca recién cuando todo está listo. */
 setTimeout(function(){try{if(document.body&&!document.body.classList.contains('locked'))asisMontar()}catch(e){}},0);
 /* ===== fin de Sonri ===== */
+/* ===== MODERNO INI =====================================================
+   LA CARA NUEVA DEL PANEL
+   Encabezado oscuro con el diente que flota y tres anillos del día, las
+   pestañas abajo en el celular, Ajustes agrupados por tema, tarjetas con
+   dibujitos en Mi día, el festejo al guardar, las tablas que en el celular
+   se leen como tarjetas, Sonri con caras y los temas de temporada.
+   SOLO PINTA: no guarda nada en la hoja ni cambia una sola cuenta. Lee lo
+   que el panel ya calcula (filasDelDia, filasCajaDia, totalCobros) y respeta
+   lo que cada una puede ver. Las preferencias (animaciones, temporada)
+   quedan en este aparato. Va idéntico en los dos paneles.
+   ===================================================================== */
+var MD_PFX=String(K_DATA).split('_')[0]+'_MD_';
+function mdPref(k,v){
+  try{
+    if(v===undefined){var s=localStorage.getItem(MD_PFX+k); return s==null?null:JSON.parse(s)}
+    localStorage.setItem(MD_PFX+k,JSON.stringify(v))}catch(e){return null}}
+function mdAnimar(){return mdPref('ANIM')!==0}
+function mdTemporadaSi(){return mdPref('TEMP')!==0}
+function mdQ(raiz,sel){return raiz?Array.prototype.slice.call(raiz.querySelectorAll(sel)):[]}
+function mdAplicarAnim(){document.body.classList.toggle('md-anim',mdAnimar())}
+function mdIco(d,w){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>'}
+var MD_I={
+  dia:'M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z',
+  agenda:'M8 3v3M16 3v3M4 8h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',
+  mas:'M12 5v14M5 12h14',
+  caja:'M3 7h18v12H3zM3 11h18M7 15h3',
+  lista:'M9 6h11M9 12h11M9 18h11M5 6h.01M5 12h.01M5 18h.01',
+  puntos:'M5 12h.01M12 12h.01M19 12h.01',
+  equipo:'M16 19v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M9.5 10a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM21 19v-1a4 4 0 00-3-3.9M16 3.1a3.5 3.5 0 010 6.8',
+  precio:'M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L3 13V3h10l7.6 7.6a2 2 0 010 2.8zM7.5 7.5h.01',
+  mensaje:'M21 12a8 8 0 01-11.8 7L3 21l2-6.2A8 8 0 1121 12z',
+  datos:'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6',
+  pincel:'M18 3l3 3-9.5 9.5-3.5.5.5-3.5zM5 21c-1.5 0-2-1-2-2 1 0 2-.5 2.5-1.5S8 16 8.5 17.5 7 21 5 21z'
+};
+
+/* ---------- A · el encabezado ---------- */
+function mdHoraSaludo(){var h=new Date().getHours(); return h<12?'Buen día':(h<19?'Buenas tardes':'Buenas noches')}
+function mdQuienSaludo(){
+  if(esDoctora())return PROF_ACTUAL||'';
+  return ROL==='admin'?'Dra. Mirna':''}
+function mdDelDia(dia,prof){
+  var filas=filasDelDia(dia,prof);
+  var pend=filas.filter(esCitaPendiente), hechas=filas.filter(function(r){return r.estado==='Atendido'});
+  var noVino=filas.filter(function(r){return r.estado==='No asistió'}).length;
+  var verPlata=esAdmin()||(esDoctora()&&(!prof||prof===PROF_ACTUAL));
+  return {filas:filas,pend:pend,hechas:hechas,noVino:noVino,total:pend.length+hechas.length+noVino,verPlata:verPlata,
+    cobrado:verPlata?totalCobros(filasCajaDia(dia,prof)):0,
+    facturado:hechas.reduce(function(a,r){return a+num(r.total)},0)}}
+/* La meta del día: la del mes repartida en los días que se trabaja (lunes a sábado). */
+function mdMetaDia(){
+  var meta=num(CFG.metaMes); if(!(meta>0)||esDoctora())return 0;
+  var h=hoyISO(), y=+h.slice(0,4), m=+h.slice(5,7)-1, d=new Date(y,m,1), n=0;
+  while(d.getMonth()===m){if(d.getDay()!==0)n++; d.setDate(d.getDate()+1)}
+  return n?meta/n:0}
+function mdAnillo(p,color,grande,txt){
+  var C=113.1, f=Math.max(0,Math.min(1,p||0));
+  return '<div class="md-anillo" role="img" aria-label="'+esc(txt+': '+grande)+'"><svg viewBox="0 0 44 44" aria-hidden="true">'+
+    '<circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="5"/>'+
+    (f>0?'<circle class="md-arco" cx="22" cy="22" r="18" fill="none" stroke="'+color+'" stroke-width="5" stroke-linecap="round" '+
+      'stroke-dasharray="'+(C*f).toFixed(1)+' '+C+'" transform="rotate(-90 22 22)"/>':'')+
+    '</svg><div><b>'+esc(grande)+'</b><small>'+esc(txt)+'</small></div></div>'}
+var MD_ANILLOS_FIRMA='';
+function mdEncabezado(){
+  var hd=$('.hd'); if(!hd)return;
+  var logo=$('.hd .logo'), q=mdQuienSaludo();
+  if(logo)logo.textContent=mdHoraSaludo()+(q?', '+q:'');
+  var dia=hoyISO(), d=mdDelDia(dia,esDoctora()?PROF_ACTUAL:'');
+  var lin=$('#md-linea');
+  var tema=mdTema(), extra=tema==='navidad'?' · ¡Felices fiestas!':(tema==='carnaval'?' · ¡Buen Carnaval!':(tema==='primavera'?' · ¡Feliz primavera!':''));
+  if(lin)lin.textContent=($('#hd-hoy')?$('#hd-hoy').textContent:'')+' · '+
+    (d.total?(d.total===1?'1 paciente hoy':d.total+' pacientes hoy')+(d.pend.length?' · '+d.pend.length+' por atender':''):'sin pacientes cargados hoy')+extra;
+  var box=$('#md-anillos'); if(!box)return;
+  var meta=mdMetaDia(), html=mdAnillo(d.total?d.hechas.length/d.total:0,'var(--lime)',d.hechas.length+'/'+d.total,'Atendidos');
+  if(d.verPlata){
+    var base=meta>0?meta:Math.max(d.facturado,d.cobrado);
+    html+=mdAnillo(base>0?d.cobrado/base:0,'#FFFFFF',bs(d.cobrado),meta>0?'de '+bs(meta)+' de meta':(d.facturado>0?'de '+bs(d.facturado)+' facturado':'cobrado hoy'))}
+  html+=mdAnillo(d.total?d.pend.length/d.total:0,'#7FB8E6',String(d.pend.length),d.pend.length===1?'Por atender':'Por atender');
+  /* no se repinta si no cambió nada: el arco no vuelve a llenarse a cada rato */
+  if(html!==MD_ANILLOS_FIRMA){box.innerHTML=html; MD_ANILLOS_FIRMA=html}}
+function mdMontarEncabezado(){
+  var hd=$('.hd'); if(!hd||$('#md-anillos'))return;
+  var mk=$('.hd .mark');
+  if(mk){
+    var w=document.createElement('span'); w.className='md-markw';
+    mk.parentNode.insertBefore(w,mk); w.appendChild(mk);
+    var ch='<path d="M8 0l1.8 6.2L16 8l-6.2 1.8L8 16l-1.8-6.2L0 8l6.2-1.8z" fill="currentColor"/>';
+    w.insertAdjacentHTML('beforeend','<svg class="md-chispa c1" viewBox="0 0 16 16" aria-hidden="true">'+ch+'</svg>'+
+      '<svg class="md-chispa c2" viewBox="0 0 16 16" aria-hidden="true">'+ch+'</svg>');
+    var som=$('.hd .sombrero'); if(som)w.appendChild(som)}
+  var mast=$('.hd .mast');
+  if(mast)mast.insertAdjacentHTML('beforeend','<div class="md-linea" id="md-linea"></div>');
+  var sub=$('.hd .sub');
+  var an=document.createElement('div'); an.id='md-anillos'; an.className='md-anillos';
+  if(sub)hd.insertBefore(an,sub); else hd.appendChild(an)}
+
+/* ---------- B · la barra de abajo en el celular ---------- */
+function mdBotonesBarra(){
+  var cuarta=esAdmin()?['caja','Caja',MD_I.caja]:['lista','Atenciones',MD_I.lista];
+  return [['midia','Mi día',MD_I.dia],['cita','Agenda',MD_I.agenda],['atencion','Atención',MD_I.mas],cuarta,['mas','Más',MD_I.puntos]]}
+function mdPintarBarra(){
+  var b=$('#md-barra'); if(!b)return;
+  var vista=asisVista(), botones=mdBotonesBarra(), principales=botones.slice(0,4).map(function(x){return x[0]});
+  b.innerHTML=botones.map(function(x){
+    var on=x[0]===vista||(x[0]==='mas'&&principales.indexOf(vista)<0);
+    if(x[0]==='atencion')return '<button type="button" class="md-mas-grande'+(vista==='atencion'?' on':'')+'" data-md="atencion">'+
+      '<span class="md-bola">'+mdIco(x[2],2.6)+'</span>'+x[1]+'</button>';
+    var nb=x[0]==='cita'?$('#nav-cita'):null, badge='';
+    if(nb&&nb.style.display!=='none'&&num(nb.textContent)>0)badge='<span class="md-badge">'+esc(nb.textContent)+'</span>';
+    return '<button type="button" data-md="'+x[0]+'"'+(on?' class="on"':'')+' aria-label="'+x[1]+'">'+mdIco(x[2])+x[1]+badge+'</button>'}).join('');
+  $$('#md-barra button').forEach(function(bt){bt.onclick=function(){
+    var v=bt.getAttribute('data-md'); if(v==='mas')mdAbrirHoja(); else show(v)}})}
+function mdAbrirHoja(){
+  var ov=$('#md-hoja-ov'); if(!ov)return;
+  var vista=asisVista();
+  var bs_=$$('header nav button');
+  $('#md-hoja').innerHTML='<div class="md-tirador"></div><h3>Todo el panel</h3><div class="md-hoja-g">'+
+    bs_.map(function(b,i){
+      if(b.style.display==='none')return '';
+      var t=(b.title&&!b.textContent.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ]/g,''))?b.textContent+' '+b.title:b.textContent;
+      return '<button type="button" data-i="'+i+'"'+(b.dataset.v&&b.dataset.v===vista?' class="on"':'')+'>'+esc(t.replace(/\s+/g,' ').trim())+'</button>'}).join('')+'</div>';
+  $$('#md-hoja button[data-i]').forEach(function(x){x.onclick=function(){mdCerrarHoja(); bs_[+x.getAttribute('data-i')].click()}});
+  ov.classList.add('on')}
+function mdCerrarHoja(){var ov=$('#md-hoja-ov'); if(ov)ov.classList.remove('on')}
+function mdMontarBarra(){
+  if($('#md-barra'))return;
+  var d=document.createElement('div'); d.id='md-barra'; d.setAttribute('role','navigation'); d.setAttribute('aria-label','Secciones');
+  document.body.appendChild(d);
+  var ov=document.createElement('div'); ov.id='md-hoja-ov'; ov.className='md-hoja-ov';
+  ov.innerHTML='<div class="md-hoja" id="md-hoja" role="dialog" aria-label="Todo el panel"></div>';
+  ov.onclick=function(e){if(e.target===ov)mdCerrarHoja()};
+  document.body.appendChild(ov)}
+
+/* ---------- C · Ajustes agrupados ---------- */
+var MD_AJ_GRUPOS=[
+  {id:'equipo',t:'Equipo y accesos',ico:MD_I.equipo,cards:['Profesionales','Clave de entrada']},
+  {id:'trat',t:'Tratamientos y precios',ico:MD_I.precio,cards:['Lista de precios','Plantillas de plan','Comisiones']},
+  {id:'msj',t:'Pacientes y mensajes',ico:MD_I.mensaje,cards:['Recordatorios','Indicaciones post-tratamiento','Canales de captación']},
+  {id:'datos',t:'Datos y respaldo',ico:MD_I.datos,cards:['Respaldo de historias clínicas','Datos y respaldo']},
+  {id:'apar',t:'Apariencia',ico:MD_I.pincel,cards:['Apariencia']}];
+function mdTituloCard(c){var h=c.querySelector('h2'); return h?h.textContent.replace(/\s+/g,' ').trim():''}
+function mdMontarAjustes(){
+  var v=$('#v-config'); if(!v||$('#md-aj-indice'))return;
+  /* la tarjeta nueva: lo que cambia cómo se ve el panel en ESTE aparato */
+  v.insertAdjacentHTML('beforeend','<div class="card" id="md-apariencia"><h2>Apariencia</h2>'+
+    '<p class="hint">Cómo se ve el panel en este aparato. No cambia nada para los demás.</p>'+
+    '<div class="seg lime" style="margin-top:6px"><label><input type="checkbox" id="md-op-anim"><span>Animaciones y dibujitos que se mueven</span></label></div>'+
+    '<div class="seg lime" style="margin-top:10px"><label><input type="checkbox" id="md-op-temp"><span>Decoración de temporada (Navidad, Carnaval, primavera, Halloween)</span></label></div></div>');
+  var cards=$$('#v-config > .card'), usados=[];
+  var idx=document.createElement('div'); idx.id='md-aj-indice'; idx.className='md-aj-indice';
+  var grupos=MD_AJ_GRUPOS.map(function(g){
+    var sec=document.createElement('section'); sec.className='md-aj-grupo'; sec.id='md-aj-'+g.id;
+    sec.innerHTML='<h2><span class="md-aj-ico">'+mdIco(g.ico)+'</span>'+esc(g.t)+'</h2>';
+    var lista=[];
+    g.cards.forEach(function(t){cards.forEach(function(c){if(usados.indexOf(c)<0&&mdTituloCard(c)===t){sec.appendChild(c); usados.push(c); lista.push(c)}})});
+    return {g:g,sec:sec,lista:lista}});
+  /* una tarjeta que no esté en la lista no se pierde: va a Datos */
+  cards.forEach(function(c){if(usados.indexOf(c)<0){grupos[3].sec.appendChild(c); grupos[3].lista.push(c)}});
+  grupos.forEach(function(G){v.appendChild(G.sec)});
+  v.insertBefore(idx,v.firstChild);
+  idx.innerHTML=grupos.map(function(G,gi){
+    return '<div class="md-aj-tile"><h3><span class="md-aj-ico">'+mdIco(G.g.ico)+'</span>'+esc(G.g.t)+'</h3>'+
+      G.lista.map(function(c,ci){
+        return '<button type="button" class="md-aj-it'+(c.classList.contains('solo-admin')?' solo-admin':'')+'" data-g="'+gi+'" data-c="'+ci+'"><span>'+esc(mdTituloCard(c))+'</span>'+
+          (c.classList.contains('solo-admin')?'<em>Dueña</em>':'')+'</button>'}).join('')+'</div>'}).join('');
+  $$('#md-aj-indice .md-aj-it').forEach(function(b){b.onclick=function(){
+    var c=grupos[+b.getAttribute('data-g')].lista[+b.getAttribute('data-c')]; if(!c)return;
+    c.scrollIntoView({behavior:'smooth',block:'start'});
+    c.classList.remove('md-flash'); void c.offsetWidth; c.classList.add('md-flash')}});
+  var oa=$('#md-op-anim'), ot=$('#md-op-temp');
+  if(oa)oa.onchange=function(){mdPref('ANIM',oa.checked?1:0); mdAplicarAnim(); toast(oa.checked?'Animaciones prendidas':'Animaciones apagadas en este aparato')};
+  if(ot)ot.onchange=function(){mdPref('TEMP',ot.checked?1:0); mdAplicarTema(); mdEncabezado(); toast(ot.checked?'Decoración de temporada prendida':'Decoración de temporada apagada')}}
+function mdSincAjustes(){
+  var oa=$('#md-op-anim'), ot=$('#md-op-temp');
+  if(oa)oa.checked=mdAnimar(); if(ot)ot.checked=mdTemporadaSi();
+  /* en el índice se esconde lo que la tarjeta no muestra */
+  $$('#md-aj-indice .md-aj-tile').forEach(function(t){
+    var vis=mdQ(t,'.md-aj-it').filter(function(b){return getComputedStyle(b).display!=='none'}).length;
+    t.style.display=vis?'':'none'});
+  $$('.md-aj-grupo').forEach(function(s){
+    var vis=mdQ(s,'.card').filter(function(c){return getComputedStyle(c).display!=='none'}).length;
+    s.style.display=vis?'':'none'})}
+
+/* ---------- F · las tarjetas vivas de Mi día ---------- */
+function mdDibujo(tipo){
+  if(tipo==='pac')return '<svg viewBox="0 0 110 90" aria-hidden="true"><rect x="16" y="12" width="78" height="70" rx="10" fill="#fff" stroke="var(--lime-dk)" stroke-width="3"/>'+
+    '<rect x="16" y="12" width="78" height="18" rx="9" fill="var(--lime)"/><rect x="34" y="5" width="6" height="15" rx="3" fill="var(--lime-dk)"/><rect x="70" y="5" width="6" height="15" rx="3" fill="var(--lime-dk)"/>'+
+    '<g class="md-hoja-cal"><rect x="23" y="35" width="64" height="40" rx="6" fill="#fff"/><circle cx="44" cy="52" r="7" fill="var(--lime-sf)" stroke="var(--lime-dk)" stroke-width="2.5"/>'+
+    '<path d="M33 70c2-7 7-10 11-10s9 3 11 10" fill="none" stroke="var(--lime-dk)" stroke-width="2.5" stroke-linecap="round"/><circle cx="68" cy="54" r="5.5" fill="var(--lime-sf)" stroke="var(--lime-dk)" stroke-width="2.5"/>'+
+    '<path d="M59 70c1.5-5 5-8 9-8s7.5 3 9 8" fill="none" stroke="var(--lime-dk)" stroke-width="2.5" stroke-linecap="round"/></g></svg>';
+  if(tipo==='espera')return '<svg viewBox="0 0 110 90" aria-hidden="true"><circle cx="55" cy="46" r="32" fill="#fff" stroke="#A8730B" stroke-width="3.5"/>'+
+    '<path d="M55 26v20l13 9" fill="none" stroke="#7A5206" stroke-width="4" stroke-linecap="round"/><circle class="md-late" cx="55" cy="46" r="4" fill="#A8730B"/>'+
+    '<path d="M31 14l-9 7M79 14l9 7" stroke="#A8730B" stroke-width="4" stroke-linecap="round"/></svg>';
+  if(tipo==='hechos')return '<svg viewBox="0 0 130 90" aria-hidden="true"><path d="M44 14c-9 0-16 6-16 18 0 9 4 15 6 25 2 11 4 27 10 27 6 0 6-16 10-22 2-3 5-4 11-4s9 1 11 4c4 6 4 22 10 22 6 0 8-16 10-27 2-10 6-16 6-25 0-12-7-18-16-18-8 0-12 4-21 4s-13-4-21-4z" fill="#fff" stroke="#2E7D5B" stroke-width="3" stroke-linejoin="round"/>'+
+    '<g class="md-cepillo"><rect x="72" y="26" width="46" height="8" rx="4" fill="var(--lime)" stroke="var(--lime-dk)" stroke-width="2"/><rect x="64" y="20" width="14" height="10" rx="2" fill="#fff" stroke="var(--lime-dk)" stroke-width="2"/></g>'+
+    '<path d="M22 10l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="var(--lime)"/></svg>';
+  if(tipo==='plata')return '<svg viewBox="0 0 120 90" aria-hidden="true"><ellipse cx="60" cy="84" rx="38" ry="4" fill="rgba(0,0,0,.08)"/>'+
+    '<ellipse cx="60" cy="76" rx="28" ry="7" fill="#2E7D5B"/><rect x="32" y="69" width="56" height="7" fill="#2E7D5B"/><ellipse cx="60" cy="69" rx="28" ry="7" fill="#5FAE89"/>'+
+    '<g class="md-moneda"><rect x="32" y="56" width="56" height="7" fill="#2E7D5B"/><ellipse cx="60" cy="56" rx="28" ry="7" fill="#5FAE89"/></g>'+
+    '<g class="md-moneda m2"><rect x="32" y="43" width="56" height="7" fill="#2E7D5B"/><ellipse cx="60" cy="43" rx="28" ry="7" fill="#5FAE89"/></g>'+
+    '<g class="md-moneda m3"><rect x="32" y="30" width="56" height="7" fill="#2E7D5B"/><ellipse cx="60" cy="30" rx="28" ry="7" fill="#8BCBAA"/>'+
+    '<text x="60" y="34" text-anchor="middle" font-family="Archivo,Arial,sans-serif" font-size="11" font-weight="800" fill="#1F5E43">Bs</text></g></svg>';
+  if(tipo==='candado')return '<svg viewBox="0 0 110 90" aria-hidden="true"><rect x="32" y="38" width="46" height="38" rx="8" fill="#fff" stroke="var(--gray)" stroke-width="3.5"/>'+
+    '<path d="M42 38V28a13 13 0 0126 0v10" fill="none" stroke="var(--gray)" stroke-width="3.5"/><circle cx="55" cy="56" r="5" fill="var(--gray)"/></svg>';
+  return ''}
+function mdTarjetasVivas(){
+  var box=$('#m-kpis'); if(!box)return;
+  var d=mdDelDia($('#m-dia').value||hoyISO(),$('#m-prof').value);
+  mdQ(box,'.kpi').forEach(function(k){
+    if(k.querySelector('.md-ilu'))return;
+    var t=(k.querySelector('.k')||{}).textContent||'', tipo='', fondo='';
+    if(/^Pacientes/i.test(t)){tipo='pac'}
+    else if(/^Por atender/i.test(t)){tipo='espera'; fondo='ambar'}
+    else if(/^Atendidos/i.test(t)){tipo='hechos'; fondo='verde'}
+    else if(/^Cobrado/i.test(t)){tipo='plata'; fondo='verde'}
+    else if(/^Cobros/i.test(t)){tipo='candado'; fondo='gris'}
+    if(!tipo)return;
+    k.classList.add('md-viva');
+    k.insertAdjacentHTML('afterbegin','<div class="md-ilu '+fondo+'">'+mdDibujo(tipo)+'</div>');
+    if(tipo==='hechos'&&d.total)k.insertAdjacentHTML('beforeend','<div class="md-prog" role="img" aria-label="'+d.hechas.length+' de '+d.total+' atendidos"><i style="width:'+
+      Math.round(d.hechas.length/d.total*100)+'%"></i></div>')})}
+
+/* ---------- L · el festejo al guardar ---------- */
+function mdFestejo(r){
+  var h=$('#modal h3'); if(!h||!/^Atenci[oó]n guardada/.test(h.textContent))return;
+  var cols=['var(--lime)','#7FB8E6','#8BCBAA','#F4B8A8','var(--lime-dk)'], conf='';
+  for(var i=0;i<16;i++)conf+='<span class="md-conf" style="left:'+((i*37+7)%100)+'%;background:'+cols[i%cols.length]+';animation-delay:'+((i*.11)%1.2).toFixed(2)+'s"></span>';
+  var plata=(esAdmin()||esDoctora())&&num(r&&r.acuenta)>0.009?' · '+bs(r.acuenta)+' cobrado':'';
+  var div=document.createElement('div'); div.className='md-fiesta';
+  div.innerHTML=conf+'<svg class="md-check" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="var(--lime-sf)"/>'+
+    '<circle class="md-c1" cx="50" cy="50" r="40" fill="none" stroke="#2E7D5B" stroke-width="6" stroke-linecap="round" transform="rotate(-90 50 50)"/>'+
+    '<path class="md-c2" d="M32 51l12 12 24-26" fill="none" stroke="#2E7D5B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+    '<h3>¡Guardado!</h3><p>'+esc((r&&r.paciente)||'')+plata+'</p>';
+  h.parentNode.replaceChild(div,h);
+  mdCara('festeja',5000)}
+
+/* ---------- N · tablas que en el celular son tarjetas ---------- */
+function mdEtiquetarTablas(raiz){
+  mdQ(raiz||document,'table').forEach(function(t){
+    var th=mdQ(t,'thead th'); if(th.length<3)return;
+    var nom=th.map(function(x){return x.textContent.replace(/\s+/g,' ').trim()});
+    mdQ(t,'tbody tr, tfoot tr').forEach(function(tr){
+      var i=0;
+      mdQ(tr,'td').forEach(function(td){
+        if(!td.hasAttribute('data-l'))td.setAttribute('data-l',+td.colSpan>1?'':(nom[i]||''));
+        i+=+td.colSpan||1})});
+    t.classList.add('md-tc');
+    if(t.parentNode&&t.parentNode.classList&&t.parentNode.classList.contains('tw'))t.parentNode.classList.add('md-tw')})}
+
+/* ---------- O · las caras de Sonri ---------- */
+var MD_CARA_T=null, MD_CARA_FIJA='';
+function mdCara(c,ms){
+  var a=$('#asis'); if(!a)return;
+  a.classList.remove('md-c-festeja','md-c-piensa','md-c-preocupa','md-c-duerme');
+  if(MD_CARA_T){clearTimeout(MD_CARA_T); MD_CARA_T=null}
+  var cara=c||MD_CARA_FIJA; if(cara)a.classList.add('md-c-'+cara);
+  if(c&&ms)MD_CARA_T=setTimeout(function(){mdCara('')},ms)}
+function mdCaraBase(){
+  var h=new Date().getHours();
+  MD_CARA_FIJA=(h>=23||h<6)?'duerme':'';
+  if(!MD_CARA_T)mdCara('')}
+function mdSonriSvg(base){
+  /* la muela de siempre; se agregan las caras y la ropa, que se prenden por clase */
+  var s=base.replace(/<ellipse cx="47" cy="55"[\s\S]*?stroke-linejoin="round"\/>/,function(cara){
+    return '<g class="md-cara n">'+cara+'</g>'});
+  var tinta='#2b2f27';
+  var caras=
+    '<g class="md-cara festeja"><path d="M41 57c2-5 9-5 11 0M67 57c2-5 9-5 11 0" fill="none" stroke="'+tinta+'" stroke-width="3" stroke-linecap="round"/>'+
+      '<ellipse cx="38" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/><ellipse cx="82" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/>'+
+      '<path d="M47 65h26c-1 10-7 14-13 14s-12-4-13-14z" fill="#F4A9A0" stroke="'+tinta+'" stroke-width="2.6" stroke-linejoin="round"/></g>'+
+    '<g class="md-cara piensa"><ellipse cx="49" cy="52" rx="4" ry="5.2" fill="'+tinta+'"/><ellipse cx="75" cy="52" rx="4" ry="5.2" fill="'+tinta+'"/>'+
+      '<circle cx="50.4" cy="50" r="1.4" fill="#fff"/><circle cx="76.4" cy="50" r="1.4" fill="#fff"/>'+
+      '<ellipse cx="38" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/><ellipse cx="82" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/>'+
+      '<ellipse cx="60" cy="70" rx="4" ry="5" fill="#fff" stroke="'+tinta+'" stroke-width="2.6"/>'+
+      '<circle cx="20" cy="24" r="4" fill="#9CBCDD"/><circle cx="11" cy="12" r="6" fill="#9CBCDD"/></g>'+
+    '<g class="md-cara preocupa"><ellipse cx="47" cy="56" rx="4.2" ry="5.6" fill="'+tinta+'"/><ellipse cx="73" cy="56" rx="4.2" ry="5.6" fill="'+tinta+'"/>'+
+      '<path d="M40 49l11-4M80 49l-11-4" stroke="'+tinta+'" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<path d="M50 73c6-6 14-6 20 0" fill="none" stroke="'+tinta+'" stroke-width="2.8" stroke-linecap="round"/>'+
+      '<path d="M90 38c3 5 3 8 0 9-3-1-3-4 0-9z" fill="#7FB8E6" stroke="#2F6FA8" stroke-width="1.5"/></g>'+
+    '<g class="md-cara duerme"><path d="M41 56c2 3 9 3 11 0M67 56c2 3 9 3 11 0" fill="none" stroke="'+tinta+'" stroke-width="3" stroke-linecap="round"/>'+
+      '<ellipse cx="38" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/><ellipse cx="82" cy="67" rx="5.5" ry="3.2" fill="#F6B7B0" opacity=".85"/>'+
+      '<path d="M54 71h12" stroke="'+tinta+'" stroke-width="2.8" stroke-linecap="round"/>'+
+      '<path d="M92 14h8l-8 8h8M103 4h5l-5 5h5" fill="none" stroke="var(--gray)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>';
+  var ropa=
+    '<g class="md-ropa navidad"><path d="M24 30c10-20 52-24 70-4l-2 6C74 20 42 20 28 36z" fill="#C2412D" stroke="#8C2A1A" stroke-width="2"/>'+
+      '<path d="M24 32c14-10 54-12 70-4" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><circle cx="98" cy="22" r="6" fill="#fff" stroke="#D9D9D9"/></g>'+
+    '<g class="md-ropa carnaval"><path d="M30 50c18-8 42-8 60 0l-3 11c-10-5-17-5-24 0h-6c-7-5-14-5-24 0z" fill="#7F5DB8" stroke="var(--lime)" stroke-width="2.4" stroke-linejoin="round"/>'+
+      '<ellipse cx="47" cy="55" rx="5" ry="3.6" fill="#2A1F3D"/><ellipse cx="73" cy="55" rx="5" ry="3.6" fill="#2A1F3D"/>'+
+      '<path d="M90 50c6-6 10-14 9-22" fill="none" stroke="#F4B8A8" stroke-width="2.5" stroke-linecap="round"/></g>'+
+    '<g class="md-ropa octubre"><path d="M63 2c5 9 9 19 12 31H45c3-13 9-23 18-31z" fill="#1E1E1E"/><path d="M47 27h27l1.5 5H45.5z" fill="#E8761B"/>'+
+      '<path d="M30 36c10-4 50-4 60 0 1 3-2 5-5 5H35c-3 0-6-2-5-5z" fill="#1E1E1E"/></g>'+
+    '<g class="md-ropa primavera"><circle cx="34" cy="24" r="9" fill="#F4A9A0" stroke="#2b2f27" stroke-width="1.5"/><circle cx="34" cy="24" r="3.5" fill="#FFE38A"/>'+
+      '<circle cx="48" cy="17" r="6.5" fill="var(--lime)" stroke="#2b2f27" stroke-width="1.5"/><circle cx="48" cy="17" r="2.5" fill="#fff"/></g>';
+  return s.replace(/<\/svg>$/,caras+ropa+'</svg>')}
+(function(){
+  var orig=asisSvg;
+  asisSvg=function(){return mdSonriSvg(orig())}})();
+
+/* ---------- P · temas de temporada ---------- */
+function mdPascua(y){
+  var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+      h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+      mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
+  return new Date(y,mes-1,dia)}
+function mdTema(){
+  if(!mdTemporadaSi())return '';
+  var hoy=parseISO(hoyISO()), m=hoy.getMonth(), d=hoy.getDate();
+  if(m===11)return 'navidad';
+  if(m===9)return 'octubre';
+  if(m===8&&d>=21)return 'primavera';
+  /* Carnaval: del jueves de comadres al martes de ch'alla (52 a 47 días antes de Pascua) */
+  var p=mdPascua(hoy.getFullYear()), dif=Math.round((p-hoy)/864e5);
+  if(dif>=47&&dif<=52)return 'carnaval';
+  return ''}
+function mdAplicarTema(){
+  var t=mdTema(), b=document.body;
+  ['navidad','carnaval','primavera','octubre'].forEach(function(x){b.classList.toggle('md-tema-'+x,t===x)});
+  var hd=$('.hd'); if(!hd)return;
+  var dec=$('#md-decor'); if(dec)dec.parentNode.removeChild(dec);
+  /* Halloween ya lo pinta el panel; si la temporada se apaga, se saca también */
+  if(!mdTemporadaSi()){
+    b.classList.remove('octubre');
+    $$('.hd .murci,.hd .telarana,.hd .arana,.hd .sombrero').forEach(function(x){x.parentNode.removeChild(x)})}
+  var html='';
+  if(t==='navidad'){
+    for(var i=0;i<16;i++)html+='<span class="md-copo" style="left:'+((i*41+5)%100)+'%;width:'+(3+i%3*2)+'px;height:'+(3+i%3*2)+'px;animation-delay:-'+((i*.53)%6).toFixed(2)+'s"></span>';
+    html+='<svg class="md-arbol" style="left:min(46%,calc(100% - 300px))" viewBox="0 0 120 130" aria-hidden="true"><path d="M60 8l28 40H72l26 36H76l30 40H14l30-40H22l26-36H32z" fill="#2E7D5B"/>'+
+      '<rect x="52" y="124" width="16" height="6" fill="#7A5A0C"/><circle cx="60" cy="8" r="7" fill="var(--lime)"/><circle cx="48" cy="60" r="4.5" fill="#C2412D"/>'+
+      '<circle cx="74" cy="92" r="4.5" fill="#C2412D"/><circle cx="56" cy="106" r="4.5" fill="var(--lime)"/></svg>'}
+  else if(t==='primavera'){
+    var fc=['#F4B8A8','var(--lime)','#FFFFFF','#F4B8A8','var(--lime)'];
+    html+='<svg class="md-flor" style="left:min(44%,calc(100% - 320px))" viewBox="0 0 220 90" aria-hidden="true">'+[20,60,100,140,180].map(function(x,k){
+      var y=30+(k%2)*18;
+      return '<g class="md-tallo" style="animation-delay:'+(k*.4)+'s"><path d="M'+x+' 90Q'+(x+6)+' '+(y+30)+' '+x+' '+(y+8)+'" stroke="#5FAE89" stroke-width="3" fill="none" stroke-linecap="round"/>'+
+        '<circle cx="'+x+'" cy="'+y+'" r="10" fill="'+fc[k]+'"/><circle cx="'+x+'" cy="'+y+'" r="4" fill="#fff"/></g>'}).join('')+'</svg>'}
+  else if(t==='carnaval'){
+    var cc=['var(--lime)','#7FB8E6','#F4B8A8','#8BCBAA','#FFFFFF'];
+    for(var j=0;j<22;j++)html+='<span class="md-papel" style="left:'+((j*29+11)%100)+'%;top:'+((j*47+9)%100)+'%;transform:rotate('+(j*37%180)+'deg);background:'+cc[j%cc.length]+'"></span>';
+    html+='<svg class="md-antifaz" style="left:min(46%,calc(100% - 300px));top:10px" viewBox="0 0 110 70" aria-hidden="true"><path d="M8 20q47-22 94 0l-6 26q-20-14-41-4-21-10-41 4z" fill="#7F5DB8" stroke="var(--lime)" stroke-width="3" stroke-linejoin="round"/>'+
+      '<ellipse cx="34" cy="28" rx="10" ry="6" fill="var(--ink)"/><ellipse cx="76" cy="28" rx="10" ry="6" fill="var(--ink)"/></svg>'}
+  if(html){var d=document.createElement('div'); d.id='md-decor'; d.className='md-decor'; d.innerHTML=html; hd.insertBefore(d,hd.firstChild)}}
+(function(){
+  /* con la temporada apagada, Halloween tampoco saluda ni se ríe */
+  var s1=saludoTemporada, s2=sonidoTemporada;
+  saludoTemporada=function(){if(mdTemporadaSi())return s1.apply(this,arguments)};
+  sonidoTemporada=function(){if(mdTemporadaSi())return s2.apply(this,arguments)}})();
+
+/* ---------- los enganches: después de lo que el panel ya hace ---------- */
+function mdRefrescar(){
+  try{mdEncabezado()}catch(e){}
+  try{mdPintarBarra()}catch(e){}
+  try{mdCaraBase()}catch(e){}}
+(function(){
+  var _show=show;
+  show=function(v){
+    var r=_show.apply(this,arguments);
+    try{mdRefrescar()}catch(e){}
+    try{if(v==='config')mdSincAjustes()}catch(e){}
+    return r};
+  var _mi=renderMiDia;
+  renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdTarjetasVivas()}catch(e){} return r};
+  var _wa=showWhatsappModal;
+  showWhatsappModal=function(r){var x=_wa.apply(this,arguments); try{mdFestejo(r)}catch(e){} try{mdEncabezado()}catch(e){} return x};
+  [['renderLista','#v-lista'],['renderCaja','#v-caja'],['renderPacientes','#v-pacientes'],['renderPanel','#v-panel']].forEach(function(p){
+    var f=window[p[0]]; if(typeof f!=='function')return;
+    window[p[0]]=function(){var r=f.apply(this,arguments); try{mdEtiquetarTablas($(p[1]))}catch(e){} return r}});
+  var _toast=toast;
+  toast=function(m,err){var r=_toast.apply(this,arguments); if(err)try{mdCara('preocupa',4500)}catch(e){} return r};
+  if(typeof pullServer==='function'){
+    var _pull=pullServer;
+    pullServer=function(){
+      try{mdCara('piensa')}catch(e){}
+      var pr=_pull.apply(this,arguments), fin=function(x){try{if(document.querySelector('#asis.md-c-piensa'))mdCara('')}catch(e){} return x};
+      if(pr&&pr.then)pr.then(fin,function(e){fin(); throw e}); else fin();
+      return pr}}
+  var _upd=updateNavRem;
+  updateNavRem=function(){var r=_upd.apply(this,arguments); try{mdPintarBarra()}catch(e){} return r};
+  var _ref=refreshAll;
+  refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar()}catch(e){} return r}})();
+(function mdInit(){
+  try{
+    mdAplicarAnim(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdRefrescar();
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
+    setInterval(function(){try{mdEncabezado(); mdCaraBase()}catch(e){}},60000);
+    /* si el panel abrió ya con sesión, lo que está a la vista se repinta con la cara nueva */
+    if(!document.body.classList.contains('locked')){
+      var v=asisVista(); if(v==='midia')renderMiDia(); else if(v)show(v)}
+  }catch(e){if(window.console)console.error('moderno',e)}})();
+/* ===== MODERNO FIN ===== */
 </script>
 </body>
 </html>
