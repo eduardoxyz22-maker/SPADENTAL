@@ -12725,7 +12725,7 @@ var ASIS_AYUDA=[
   {q:'¿Cómo registro la atención de una etapa del plan?', k:'etapa plan control registrar atencion sesion seguimiento ortodoncia marcar', v:'pacientes', f:'#pc-q',
    p:['Abrí el plan (paciente → 🦷 Planes → «Abrir plan»), o en la ficha tocá «✓ Marcar realizada».','Tocá «✓ Marcar realizada» en la sesión que toca.','Elegí quién la hizo, la fecha y la plata que trajo, si trajo.','La sesión queda marcada, con su doctora, y el plan se actualiza solo.']},
   {q:'¿Cómo cargo un paquete (por ejemplo, blanqueamiento de 3 sesiones)?', k:'paquete blanqueamiento sesiones pago adelantado precio cerrado combo promo tres consulta junto', v:'atencion', f:'#srv-list',
-   p:['En «Nueva atención» cargá los servicios como siempre: la consulta y el tratamiento (ej. «Blanqueamiento · 3 sesiones»).','Si el nombre dice «3 sesiones» lo reconozco solo; si no, tocá «📦 Es de varias sesiones» en esa fila.','En la misma fila elegí «Hoy se hizo la sesión 1» o «Hoy solo paga».','Poné todo lo que pagó (ej. consulta 150 + paquete 700 = 850) y guardá: el paquete queda creado y lo de más queda adelantado para las próximas sesiones.','Cada vez que venga: «✓ Marcar realizada» en el paquete y elegí quién la hizo.']},
+   p:['Entrá a ＋ Nueva atención, escribí el paciente y por dónde nos encontró.','En «Servicios realizados» tocá «📦 Sesión de un paquete o plan» y elegí el paquete (ej. Blanqueamiento · 3 sesiones · Bs 700).','Marcá qué se hizo hoy (la sesión 1, la consulta), cuánto pagó y cómo. Abajo están las cuentas: 150 + 700 = 850.','Tocá «Cargar en la atención» y después «Guardar atención». Lo que pagó de más queda para las próximas sesiones.','Cada vez que venga: el mismo botón → «✓ Hoy es esta sesión» → Guardar.']},
   {q:'Si cada sesión del paquete la hace una doctora distinta, ¿cómo va la comisión?', k:'comision paquete sesion doctora distinta otra mirna shirley reparte quien atendio', v:'pacientes', f:'#pc-q',
    p:['Cada sesión marcada queda como una atención de la doctora que la hizo, por su parte del precio (700 en 3 = 234 + 233 + 233).','La comisión de cada una sale de sus sesiones, no del pago entero.','Un paquete «de la clínica» lo ve cualquier doctora: cada una marca la sesión que atiende.']},
   {q:'Cargué el paquete entero como una sola atención, ¿cómo lo arreglo?', k:'paquete entero una sola atencion 700 arreglar sesion 1 cobro todo junto pasar', v:'pacientes', f:'#pc-q',
@@ -15336,9 +15336,9 @@ function mdPautaCsv(){
 /* ---------- videos de ayuda: cómo se carga una atención, un paquete y un tratamiento ---------- */
 var MD_VIDEOS=[
   {n:1, t:'Cómo cargar una atención', d:'1 min · paciente, canal, servicio, cobro y guardar'},
-  {n:2, t:'Cómo cargar un paquete', d:'1 min · la primera vez y cuando vuelve para la sesión 2'},
+  {n:2, t:'Cómo cargar un paquete', d:'1 min · en una sola pantalla: qué se hizo, cuánto pagó y las cuentas; y cuando vuelve'},
   {n:3, t:'Cómo armar un tratamiento por etapas', d:'1 min · plan de ortodoncia, pago adelantado y marcar etapas'},
-  {n:4, t:'Cómo marcar las sesiones de un paquete', d:'1 min · cuando vuelve: desde Nueva atención o desde su ficha'},
+  {n:4, t:'Cómo marcar las sesiones de un paquete', d:'1 min · cuando vuelve: «📦 Sesión de un paquete o plan» o desde su ficha'},
   {n:5, t:'Cómo corregir un plan que no quedó marcado', d:'1 min · sesiones que ya se hicieron, pago anotado dos veces'}];
 function mdVideo(n){
   var v=MD_VIDEOS.filter(function(x){return x.n===n})[0]||MD_VIDEOS[0];
