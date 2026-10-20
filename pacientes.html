@@ -1457,6 +1457,40 @@ mark.md-mark{background:#F7E9A8;color:inherit;border-radius:4px;padding:0 1px}
   body:not(.md-anim-siempre) .md-ahora-l::after,body:not(.md-anim-siempre) .md-bl.md-toca,body:not(.md-anim-siempre) #asis .asis-yo svg,body:not(.md-anim-siempre) .md-cara.duerme path,
   body:not(.md-anim-siempre) .md-mas-plata,body:not(.md-anim-siempre) .md-version{animation:none}
   body:not(.md-anim-siempre) .md-ahora-l{transition:none}}
+/* ============ Cuentas del plan o paquete ============ */
+#modal .kpis.md-plan-kpis{display:none}
+.md-cp{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:4px 0 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.md-cp-cab{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.md-cp-cab>b{font-size:16px}
+.md-cp-est{font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px}
+.md-cp-est.ok{background:#DDF3E7;color:#1F5E43}.md-cp-est.falta{background:#FBE6DE;color:#8C3B1C}
+.md-cp-tot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.md-cp-tot>div{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+.md-cp-tot small{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gray)}
+.md-cp-tot b{display:block;font-size:22px;font-weight:900;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-cp-tot b.ok{color:#2E7D5B}.md-cp-tot b.falta{color:var(--clay)}
+.md-cp-barra{display:flex;height:14px;border-radius:8px;overflow:hidden;background:#EEF0E8;margin:14px 0 12px;gap:2px}
+.md-cp-seg{display:block;height:100%}
+.md-cp-seg.at,.md-cp i.at{background:#2E7D5B}.md-cp-seg.us,.md-cp i.us{background:#8BCBAA}
+.md-cp-seg.qu,.md-cp i.qu{background:#B9A4E0}.md-cp-seg.fa{background:repeating-linear-gradient(45deg,#F4D8CC 0 6px,#FBE6DE 6px 12px)}
+.md-cp i.ad{background:linear-gradient(90deg,#8BCBAA 50%,#B9A4E0 50%)}
+.md-anim .md-cp-seg{animation:mdCpCrece .8s cubic-bezier(.2,.8,.2,1) both;transform-origin:left}
+@keyframes mdCpCrece{from{transform:scaleX(0)}to{transform:none}}
+.md-cp-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.md-cp-caja{border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+.md-cp-k{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#3D4136}
+.md-cp i{display:inline-block;width:12px;height:12px;border-radius:4px;flex:0 0 12px}
+.md-cp-caja>b{display:block;font-size:20px;font-weight:900;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.md-cp-caja>small{display:block;font-size:12.5px;color:var(--gray)}
+.md-cp-caja ul{list-style:none;margin:8px 0 0;padding:8px 0 0;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:6px}
+.md-cp-caja li{display:flex;align-items:center;gap:8px;font-size:13px}
+.md-cp-caja li span{flex:1;min-width:0}
+.md-cp-caja li b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.md-cp-queda{background:#F3EEFB;border-radius:10px;padding:6px 8px;margin:0 -8px}
+.md-cp-queda b{color:#5B3F8C}
+.md-cp-nota{margin:10px 0 0;font-size:12px;color:var(--gray)}
+@media(max-width:700px){.md-cp-tot{grid-template-columns:repeat(2,minmax(0,1fr))}.md-cp-cols{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){body:not(.md-anim-siempre) .md-cp-seg{animation:none}}
 /* ===== MODERNO FIN ===== */
 </style>
 </head>
@@ -12668,7 +12702,37 @@ function mdPlanEnModal(nombre,id){
   var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
   var b=$('#modal .barra'); if(!b)return;
   var d=document.createElement('div'); d.innerHTML=mdRecorrido(p);
-  if(d.firstChild)b.parentNode.replaceChild(d.firstChild,b)}
+  var rec=d.firstChild, cp=$('#modal .md-cp');
+  if(rec&&cp){
+    /* con las cuentas nuevas, la plata va en la caja de cuentas y el recorrido queda arriba */
+    var pl=rec.querySelector('.md-plata'); if(pl)pl.parentNode.removeChild(pl);
+    cp.parentNode.insertBefore(rec,cp); b.parentNode.removeChild(b);
+    var k=$('#modal .kpis'); if(k)k.classList.add('md-plan-kpis')}
+  else if(rec)b.parentNode.replaceChild(rec,b)}
+/* Las cuentas del plan o paquete, de un vistazo: lo mismo que antes (mismas cuentas), con barra y cajas */
+function mdCuentasPlanHtml(plan){
+  var c=cuentasPlan(plan), cob=cobradoPlan(plan), sal=saldoPlan(plan), tot=num(plan.total), a=avancePlan(plan), que=plan.paquete?'paquete':'plan';
+  var enAt=Math.max(0,c.enAtenciones), usado=Math.max(0,c.usado), queda=Math.max(0,c.queda);
+  var base=Math.max(tot,enAt+usado+queda+sal,1);
+  var seg=function(v,cls,t){return v>0.009?'<span class="md-cp-seg '+cls+'" style="width:'+(v/base*100).toFixed(2)+'%" title="'+esc(t+': '+bs(v))+'"></span>':''};
+  var caja=function(k,v,cls){return '<div><small>'+k+'</small><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></div>'};
+  return '<section class="md-cp"><div class="md-cp-cab"><b>💰 Cuentas del '+que+'</b>'+
+      (sal>0.009?'<span class="md-cp-est falta">Falta pagar '+bs(sal)+'</span>':'<span class="md-cp-est ok">✓ Pagado completo</span>')+'</div>'+
+    '<div class="md-cp-tot">'+caja('Precio acordado',bs(tot))+caja('Total pagado',bs(cob),'ok')+caja('Falta pagar',bs(sal),sal>0.009?'falta':'ok')+
+      caja('Avance · '+a.pct+'%',a.hechas+' de '+a.total)+'</div>'+
+    '<div class="md-cp-barra" role="img" aria-label="'+esc('En las atenciones '+bs(enAt)+', adelanto usado '+bs(usado)+', adelanto guardado '+bs(queda)+', falta '+bs(sal))+'">'+
+      seg(enAt,'at','Pagado en las atenciones')+seg(usado,'us','Adelanto ya usado')+seg(queda,'qu','Adelanto guardado para las próximas')+seg(sal,'fa','Falta pagar')+'</div>'+
+    '<div class="md-cp-cols">'+
+      '<div class="md-cp-caja"><div class="md-cp-k"><i class="at"></i>Pagado en las atenciones (sus sesiones)</div><b>'+bs(enAt)+'</b>'+
+        '<small>Lo que se cobró el mismo día de cada sesión.</small></div>'+
+      '<div class="md-cp-caja"><div class="md-cp-k"><i class="ad"></i>Pagado por adelantado</div><b>'+bs(c.adelantado)+'</b>'+
+        (c.adelantado>0.009||usado>0.009?'<ul>'+
+          (usado>0.009?'<li><i class="us"></i><span>Ya usado en '+c.nUsos+' sesi'+(c.nUsos===1?'ón':'ones')+'</span><b>−'+bs(usado)+'</b></li>'
+            :'<li><i class="us"></i><span>Todavía no se usó en ninguna sesión</span><b>Bs 0</b></li>')+
+          '<li class="md-cp-queda"><i class="qu"></i><span>💜 Queda adelantado para las próximas</span><b>'+bs(queda)+'</b></li></ul>'
+          :'<small>Todavía no hay pagos adelantados.</small>')+'</div>'+
+    '</div>'+
+    '<p class="md-cp-nota">Lo que se cobró en la misma atención por otra cosa (ej. la consulta) no cuenta para el '+que+'.</p></section>'}
 
 /* ---------- H · la ficha del paciente ---------- */
 function mdIniciales(n){var p=String(n||'').trim().split(/\s+/); return ((p[0]||'').charAt(0)+(p[1]||'').charAt(0)).toUpperCase()||'?'}
@@ -13604,6 +13668,7 @@ function mdRefrescar(){
   openModal=function(){var m=$('#modal'); if(m)m.classList.remove('md-ficha'); return _om.apply(this,arguments)};
   var _vp=verPaciente;
   verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdFicha(nombre)}catch(e){} return r};
+  if(typeof cuentasPlanHtml==='function')cuentasPlanHtml=function(plan){return mdCuentasPlanHtml(plan)};
   var _vpl=verPlan;
   verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPlanEnModal(nombre,id)}catch(e){} return r};
   var _rc=renderCaja;
