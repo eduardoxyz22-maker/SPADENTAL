@@ -818,10 +818,150 @@ body.md-tema-primavera .md-ropa.primavera{display:inline}
 .md-papel{position:absolute;width:8px;height:4px;border-radius:2px;opacity:.85}
 .md-antifaz{position:absolute;width:74px;height:46px}
 
+/* D · Mi día en línea de tiempo + los carriles de cada doctora */
+.md-tl{position:relative}
+.md-tl-fila{display:grid;grid-template-columns:52px 22px minmax(0,1fr);gap:10px}
+.md-tl-hora{font-weight:800;font-size:14px;padding-top:15px;text-align:right;color:var(--ink)}
+.md-tl-eje{display:flex;flex-direction:column;align-items:center}
+.md-tl-eje::after{content:'';flex:1;width:2px;background:var(--line);margin-top:4px}
+.md-tl-punto{width:14px;height:14px;border-radius:50%;margin-top:17px;box-sizing:border-box;background:#fff;border:2px solid #A9AE9C;flex:0 0 auto}
+.md-tl-fila.hecha .md-tl-punto{background:var(--ok);border-color:var(--ok)}
+.md-tl-fila.ya .md-tl-punto{background:var(--lime);border:3px solid #fff;outline:2px solid var(--lime-dk)}
+.md-tl-fila.ya .md-tl-hora{color:var(--lime-dk)}
+.md-tl-fila.novino .md-tl-punto{background:var(--line);border-color:var(--gray)}
+.md-tl-fila.novino .md-tl-card{opacity:.7}
+.md-anim .md-tl-fila.ya .md-tl-punto{animation:mdPulso 1.8s infinite}
+@keyframes mdPulso{0%{box-shadow:0 0 0 0 rgba(46,125,91,.45)}70%{box-shadow:0 0 0 10px rgba(46,125,91,0)}100%{box-shadow:0 0 0 0 rgba(46,125,91,0)}}
+.md-tl-card{min-width:0;padding-bottom:10px}
+.md-tl-card .rem{margin:0}
+.md-tl-ahora{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;margin:2px 0 12px}
+.md-tl-ahora::before{content:'';grid-column:2;height:2px;background:var(--clay);border-radius:2px}
+.md-tl-ahora span{grid-column:1;grid-row:1;font-size:11px;font-weight:800;color:#fff;background:var(--clay);border-radius:999px;padding:3px 8px;white-space:nowrap}
+@media(max-width:760px){.md-tl-fila{grid-template-columns:42px 16px minmax(0,1fr);gap:6px}.md-tl-hora{font-size:12.5px}
+}
+.md-car-w{overflow-x:auto;margin-top:10px;-webkit-overflow-scrolling:touch}
+.md-car-in{min-width:760px;position:relative}
+.md-car-horas{position:relative;height:22px;margin-left:110px}
+.md-car-horas span{position:absolute;top:2px;font-size:11.5px;font-weight:700;color:var(--gray);padding-left:4px}
+.md-car-cuerpo{position:relative}
+.md-carril{display:grid;grid-template-columns:110px minmax(0,1fr);align-items:center;border-top:1px solid var(--line)}
+.md-carril-n{font-weight:700;font-size:14px;padding-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-carril-t{position:relative;height:72px;background-image:linear-gradient(to right,var(--line) 1px,transparent 1px);background-size:calc(100% / 11) 100%}
+.md-bl{position:absolute;top:8px;height:56px;border-radius:11px;padding:5px 6px;text-align:left;overflow:hidden;cursor:pointer;font:inherit;
+  display:flex;flex-direction:column;justify-content:center;border:1px solid transparent;min-width:0}
+.md-bl b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-bl small{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9}
+.md-bl.hecha{background:var(--ok);color:#fff}
+.md-bl.ya{background:var(--lime);color:var(--ink)}
+.md-bl.prox{background:#E4EEF8;color:#163B5E;border-color:#9CBCDD}
+.md-bl.novino{background:#fff;color:var(--gray);border:2px dashed #B9B3A6}
+.md-ahora-l{position:absolute;top:0;bottom:0;width:2px;background:var(--clay);margin-left:110px;pointer-events:none}
+.md-ahora-l span{position:absolute;top:-21px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#fff;background:var(--clay);border-radius:999px;padding:2px 7px}
+.md-car-ley{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12.5px;color:var(--gray)}
+.md-car-ley span{display:flex;align-items:center;gap:6px}
+.md-car-ley span::before{content:'';width:13px;height:13px;border-radius:4px}
+.md-car-ley .hecha::before{background:var(--ok)}.md-car-ley .ya::before{background:var(--lime)}
+.md-car-ley .prox::before{background:#E4EEF8;border:1px solid #9CBCDD}.md-car-ley .novino::before{border:2px dashed #B9B3A6}
+
+/* J · el plan como recorrido */
+.md-recorrido{margin:10px 0 12px}
+.md-pasos{list-style:none;margin:0;padding:0;display:flex;overflow-x:auto;padding-bottom:4px}
+.md-pasos li{flex:1 0 92px;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;min-width:0;padding:0 4px}
+.md-pasos li::before{content:'';position:absolute;top:17px;left:-50%;right:50%;height:5px;background:var(--line);z-index:0}
+.md-pasos li:first-child::before{display:none}
+.md-pasos li.hecha::before,.md-pasos li.sig::before{background:var(--lime)}
+.md-nodo{position:relative;z-index:1;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;box-sizing:border-box;background:#fff;color:var(--gray);border:3px solid var(--line)}
+.md-pasos li.hecha .md-nodo{background:var(--ok);border-color:var(--ok);color:#fff}
+.md-pasos li.sig .md-nodo{background:var(--lime);border-color:#fff;color:var(--ink);box-shadow:0 0 0 2px var(--lime)}
+.md-pasos b{display:block;font-size:12.5px;margin-top:7px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.md-pasos small{display:block;font-size:11.5px;color:var(--gray)}
+.md-recorrido.muchas .md-pasos li{flex-basis:30px}
+.md-recorrido.muchas .md-nodo{width:26px;height:26px;font-size:11px;border-width:2px}
+.md-recorrido.muchas .md-pasos li::before{top:11px;height:4px}
+.md-plata{margin-top:12px}
+.md-plata-b{display:flex;height:14px;border-radius:9px;overflow:hidden;background:var(--line)}
+.md-plata-b i{display:block;height:100%}
+.md-plata-b .u{background:var(--ok)}.md-plata-b .a{background:#8BCBAA}
+.md-plata-l{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:7px;font-size:12.5px}
+.md-plata-l span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.md-plata-l span::before{content:'';width:12px;height:12px;border-radius:3px}
+.md-plata-l .u::before{background:var(--ok)}.md-plata-l .a::before{background:#8BCBAA}.md-plata-l .f::before{background:var(--line);border:1px solid #B9B3A6}
+
+/* H · la ficha del paciente */
+.md-ficha-cab{display:flex;align-items:center;gap:14px;margin:0 30px 4px 0}
+.md-avatar{width:62px;height:62px;flex:0 0 62px;border-radius:50%;background:var(--lime);color:var(--ink);display:flex;align-items:center;justify-content:center;
+  font-size:23px;font-weight:800;letter-spacing:-.02em}
+.md-ficha-txt{flex:1;min-width:0}
+.md-ficha-txt h3{margin:0 0 2px}
+.md-ficha-txt .mini{margin:0}
+.md-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.md-chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+.md-chip.rojo{background:#FBE6DE;color:#8C3B1C}.md-chip.lima{background:var(--lime-sf);color:var(--lime-dk);border:1px solid var(--lime-bd)}
+.md-chip.lila{background:#EFE7F7;color:#5A3F8A}
+.md-wa{background:var(--ok);color:#fff;flex:0 0 auto}
+.md-wa:hover{background:#246349}
+#modal.md-ficha>.kpis{background:var(--ink);border-radius:18px;padding:14px;gap:10px}
+#modal.md-ficha>.kpis .kpi{background:transparent;border:0;box-shadow:none;padding:4px 6px}
+#modal.md-ficha>.kpis .kpi .k{color:#D7DAD0}
+#modal.md-ficha>.kpis .kpi .v{color:#fff!important}
+@media(max-width:560px){.md-ficha-cab{flex-wrap:wrap}.md-avatar{width:50px;height:50px;flex-basis:50px;font-size:19px}}
+
+/* M · caja por forma de pago y el cierre del día */
+.md-met{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:10px;margin:0 0 14px}
+.md-met-t{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+.md-met-h{display:flex;align-items:center;gap:9px;font-weight:700}
+.md-met-i{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--lime-sf);color:var(--lime-dk)}
+.md-met-i svg{width:19px;height:19px}
+.md-met-t b{display:block;font-size:24px;font-weight:800;margin-top:10px;letter-spacing:-.02em}
+.md-met-t small{display:block;font-size:12.5px;color:var(--gray)}
+.m-efectivo .md-met-i{background:#E3F1EA;color:#1F5E43}.m-efectivo .md-prog i{background:var(--ok)}
+.m-tarjeta .md-met-i{background:#E4EEF8;color:#22507C}.m-tarjeta .md-prog i{background:var(--info)}
+.m-transferencia .md-met-i{background:#EFE7F7;color:#5A3F8A}.m-transferencia .md-prog i{background:#7F5DB8}
+.md-cierre{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;margin-top:10px}
+.md-semaforo{background:#20241C;border-radius:22px;padding:10px;display:flex;flex-direction:column;gap:8px;flex:0 0 auto}
+.md-semaforo i{display:block;width:32px;height:32px;border-radius:50%}
+.md-semaforo .r{background:#5B2A1A}.md-semaforo .a{background:#5A4512}.md-semaforo .v{background:#1F3D2E}
+.md-semaforo .r.on{background:#E0533A;box-shadow:0 0 14px rgba(224,83,58,.7)}
+.md-semaforo .a.on{background:#F2B33D;box-shadow:0 0 14px rgba(242,179,61,.7)}
+.md-semaforo .v.on{background:#3FBF83;box-shadow:0 0 14px rgba(63,191,131,.7)}
+.md-cierre-c{flex:1 1 280px;min-width:0}
+.md-cierre-f{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0}
+.md-cierre-f label{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+.md-cierre-f input{width:150px;text-align:right;font-weight:800}
+.md-cierre-m{margin-top:8px;padding:10px 12px;border-radius:12px;font-weight:800}
+.md-cierre-m.verde{background:#E3F1EA;color:#1F5E43}.md-cierre-m.rojo{background:#FBE6DE;color:#8C3B1C}.md-cierre-m.gris{background:var(--paper);color:var(--gray);font-weight:600}
+
+/* G · panel de la dueña con gráficos */
+.md-pv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:14px;margin-top:14px}
+.md-pv-t{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px}
+.md-pv-t h2{margin:0 0 12px;font-size:17px}
+.md-pv-ancho{grid-column:1/-1}
+.md-dona{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.md-dona svg{width:160px;height:160px;flex:0 0 160px;font-family:inherit}
+.md-dona ul{list-style:none;margin:0;padding:0;flex:1;min-width:170px;display:flex;flex-direction:column;gap:9px}
+.md-dona li{display:flex;align-items:center;gap:9px;font-size:14px}
+.md-dona li i{width:13px;height:13px;border-radius:4px;flex:0 0 13px;border:1px solid rgba(0,0,0,.12)}
+.md-dona li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-top{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13.5px;padding:5px 0}
+.md-top span{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-top .md-prog{margin:0;height:12px}
+.md-alt-txt{margin:0 0 10px;font-size:14px}
+.md-alt-txt .sube{color:var(--ok)}.md-alt-txt .baja{color:var(--clay)}
+.md-barras{position:relative;display:flex;align-items:flex-end;gap:4px;height:176px;overflow-x:auto}
+.md-ba{flex:1 0 14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.md-ba i{display:block;width:100%;border-radius:5px 5px 0 0;background:var(--ink)}
+.md-ba.hoy i{background:var(--lime)}
+.md-ba span{font-size:10.5px;color:var(--gray);height:18px;line-height:18px}
+.md-prom{position:absolute;left:0;right:0;border-top:2px dashed var(--gray);z-index:1;pointer-events:none}
+.md-prom span{position:absolute;right:0;top:-19px;font-size:11.5px;font-weight:700;color:var(--gray);background:#fff;padding:0 4px}
+.md-anim .md-ba i{animation:mdSube 1s cubic-bezier(.2,.7,.2,1) both;transform-origin:bottom}
+@keyframes mdSube{from{transform:scaleY(0)}}
+
 /* las animaciones nuevas viven bajo body.md-anim: se apagan en Ajustes › Apariencia,
    y el aparato que pide quietud no las ve */
 @media(prefers-reduced-motion:reduce){.md-anim .mark,.md-anim .md-chispa,.md-anim .md-arco,.md-anim .md-cepillo,.md-anim .md-moneda,
-  .md-anim .md-hoja-cal,.md-anim .md-late,.md-anim .md-prog i,.md-anim .md-check *,.md-anim .md-conf,.md-anim .md-copo,.md-anim .md-tallo{animation:none!important}}
+  .md-anim .md-hoja-cal,.md-anim .md-late,.md-anim .md-prog i,.md-anim .md-ba i,.md-anim .md-tl-fila.ya .md-tl-punto,.md-anim .md-check *,.md-anim .md-conf,.md-anim .md-copo,.md-anim .md-tallo{animation:none!important}}
 /* ===== MODERNO FIN ===== */
 </style>
 </head>
@@ -11953,6 +12093,200 @@ function mdAplicarTema(){
   saludoTemporada=function(){if(mdTemporadaSi())return s1.apply(this,arguments)};
   sonidoTemporada=function(){if(mdTemporadaSi())return s2.apply(this,arguments)}})();
 
+/* ---------- D · Mi día como línea de tiempo (y los carriles de cada doctora) ---------- */
+function mdHoraMin(h){var m=/^(\d{1,2}):(\d{2})/.exec(h||''); return m?(+m[1])*60+(+m[2]):null}
+function mdHHMM(min){var h=Math.floor(min/60), m=min%60; return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
+function mdNombreCorto(n){var p=String(n||'').trim().split(/\s+/); return p[0]+(p[1]?' '+p[1].charAt(0)+'.':'')}
+function mdMiDiaLinea(){
+  var lista=$('#m-lista'); if(!lista)return;
+  var dia=$('#m-dia').value||hoyISO(), prof=$('#m-prof').value, filas=filasDelDia(dia,prof);
+  var cards=Array.prototype.slice.call(lista.children).filter(function(x){return x.classList.contains('rem')});
+  var car=$('#md-carriles');
+  if(!filas.length||cards.length!==filas.length){if(car)car.style.display='none'; return}
+  var esHoy=dia===hoyISO(), d=new Date(), ahora=d.getHours()*60+d.getMinutes(), puesto=!esHoy;
+  var tl=document.createElement('div'); tl.className='md-tl';
+  var marca=function(){tl.insertAdjacentHTML('beforeend','<div class="md-tl-ahora" aria-label="Ahora"><span>Ahora · '+mdHHMM(ahora)+'</span></div>'); puesto=true};
+  filas.forEach(function(r,i){
+    var hm=mdHoraMin(r.hora);
+    if(!puesto&&hm!==null&&hm>ahora)marca();
+    var est=r.estado==='Atendido'?'hecha':(r.estado==='No asistió'?'novino':(esCitaPendiente(r)?(esHoy&&hm!==null&&hm<=ahora?'ya':'prox'):'otro'));
+    var row=document.createElement('div'); row.className='md-tl-fila '+est; row.id='md-tl-'+i;
+    row.innerHTML='<div class="md-tl-hora">'+esc(r.hora||'s/h')+'</div><div class="md-tl-eje"><span class="md-tl-punto"></span></div>';
+    var c=document.createElement('div'); c.className='md-tl-card'; c.appendChild(cards[i]); row.appendChild(c);
+    tl.appendChild(row)});
+  if(!puesto&&filas.some(function(r){return mdHoraMin(r.hora)!==null}))marca();
+  lista.innerHTML=''; lista.appendChild(tl);
+  mdCarriles(dia,filas,esHoy?ahora:null)}
+function mdCarriles(dia,filas,ahora){
+  var conHora=filas.filter(function(r){return mdHoraMin(r.hora)!==null&&r.estado!=='Cancelada'&&r.estado!=='Reprogramada'});
+  var car=$('#md-carriles');
+  if(!car){
+    var card=$('#m-lista')?$('#m-lista').closest('.card'):null; if(!card)return;
+    car=document.createElement('div'); car.className='card'; car.id='md-carriles';
+    card.parentNode.insertBefore(car,card)}
+  if(conHora.length<2){car.style.display='none'; return}
+  car.style.display='';
+  var dur=num(CFG.minCita)||30, ini=8*60, fin=19*60;
+  conHora.forEach(function(r){var m=mdHoraMin(r.hora); ini=Math.min(ini,Math.floor(m/60)*60); fin=Math.max(fin,Math.ceil((m+dur)/60)*60)});
+  var span=fin-ini, pc=function(m){return ((m-ini)/span*100).toFixed(2)+'%'};
+  var docs=[]; conHora.forEach(function(r){var p=r.profesional||'Sin doctora'; if(docs.indexOf(p)<0)docs.push(p)});
+  var horas=''; for(var h=ini; h<fin; h+=60)horas+='<span style="left:'+pc(h)+'">'+mdHHMM(h)+'</span>';
+  var lanes=docs.map(function(p){
+    var bloques=conHora.filter(function(r){return (r.profesional||'Sin doctora')===p}).map(function(r){
+      var m=mdHoraMin(r.hora), i=filas.indexOf(r);
+      var est=r.estado==='Atendido'?'hecha':(r.estado==='No asistió'?'novino':(ahora!==null&&m<=ahora&&esCitaPendiente(r)?'ya':'prox'));
+      return '<button type="button" class="md-bl '+est+'" style="left:calc('+pc(m)+' + 2px);width:calc('+(dur/span*100).toFixed(2)+'% - 4px)" '+
+        'onclick="mdIrFila('+i+')" title="'+esc((r.hora||'')+' · '+(r.paciente||''))+'"><b>'+esc(String(r.paciente||'').trim().split(/\s+/)[0])+'</b>'+
+        '<small>'+esc(srvText(r)||r.proxMotivo||r.estado||'')+'</small></button>'}).join('');
+    return '<div class="md-carril"><div class="md-carril-n">'+esc(p.replace(/^Dra\.?\s*/i,''))+'</div><div class="md-carril-t">'+bloques+'</div></div>'}).join('');
+  var linea=ahora!==null&&ahora>=ini&&ahora<=fin?'<div class="md-ahora-l" style="left:'+pc(ahora)+'"><span>'+mdHHMM(ahora)+'</span></div>':'';
+  car.innerHTML='<h2>El día de un vistazo</h2><p class="hint">Cada doctora en su fila. Tocá un paciente para ir a su tarjeta.</p>'+
+    '<div class="md-car-w"><div class="md-car-in"><div class="md-car-horas">'+horas+'</div>'+
+    '<div class="md-car-cuerpo">'+lanes+linea+'</div></div></div>'+
+    '<div class="md-car-ley"><span class="hecha">Atendida</span><span class="ya">Le toca ahora</span><span class="prox">Por venir</span><span class="novino">No vino</span></div>'}
+function mdIrFila(i){
+  var f=$('#md-tl-'+i); if(!f)return;
+  f.scrollIntoView({behavior:'smooth',block:'center'});
+  f.classList.remove('md-flash'); void f.offsetWidth; f.classList.add('md-flash')}
+
+/* ---------- J · el plan como recorrido ---------- */
+function mdRecorrido(p){
+  var ss=p.sesiones||[]; if(!ss.length)return '';
+  var sig=proxSesion(p), muchas=ss.length>7;
+  var pasos=ss.map(function(s){
+    var cls=s.hecha?'hecha':(sig&&s.n===sig.n?'sig':'pend');
+    return '<li class="'+cls+'"><span class="md-nodo">'+(s.hecha?'✓':s.n)+'</span>'+
+      (muchas?'':'<b>'+esc(s.desc||('Etapa '+s.n))+'</b><small>'+(s.hecha?(s.fecha?fmtFcorta(s.fecha):'hecha'):(cls==='sig'?'sigue':'pendiente'))+'</small>')+'</li>'}).join('');
+  var tot=num(p.total), cob=cobradoPlan(p), c=cuentasPlan(p), queda=Math.min(c.queda,cob), usado=Math.max(0,cob-queda), sal=saldoPlan(p);
+  var base=Math.max(tot,usado+queda+sal);
+  var w=function(x){return base>0?Math.max(0,Math.min(100,x/base*100)).toFixed(1)+'%':'0%'};
+  return '<div class="md-recorrido'+(muchas?' muchas':'')+'"><ol class="md-pasos" style="--n:'+ss.length+'">'+pasos+'</ol>'+
+    (tot>0?'<div class="md-plata" role="img" aria-label="'+esc('Usado '+bs(usado)+', adelantado '+bs(queda)+', falta pagar '+bs(sal))+'">'+
+      '<div class="md-plata-b"><i class="u" style="width:'+w(usado)+'"></i><i class="a" style="width:'+w(queda)+'"></i></div>'+
+      '<div class="md-plata-l"><span class="u">Pagado y usado <b>'+bs(usado)+'</b></span>'+(queda>0.009?'<span class="a">Adelantado <b>'+bs(queda)+'</b></span>':'')+
+      '<span class="f">Falta pagar <b>'+bs(sal)+'</b></span></div></div>':'')+'</div>'}
+function mdPlanEnModal(nombre,id){
+  var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
+  var b=$('#modal .barra'); if(!b)return;
+  var d=document.createElement('div'); d.innerHTML=mdRecorrido(p);
+  if(d.firstChild)b.parentNode.replaceChild(d.firstChild,b)}
+
+/* ---------- H · la ficha del paciente ---------- */
+function mdIniciales(n){var p=String(n||'').trim().split(/\s+/); return ((p[0]||'').charAt(0)+(p[1]||'').charAt(0)).toUpperCase()||'?'}
+function mdFicha(nombre){
+  var modal=$('#modal'), h=$('#modal h3'); if(!modal||!h||h.closest('.md-ficha-cab'))return;
+  var f=pacDe(nombre), nom=h.textContent;
+  var planes=planesVisibles(f.planes).slice().sort(function(a,b){return (a.estado==='activo'?0:1)-(b.estado==='activo'?0:1)});
+  /* el recorrido de cada plan, en el mismo orden en que la ficha los pinta */
+  var barras=mdQ(modal,'.barra');
+  planes.forEach(function(p,i){var b=barras[i]; if(!b)return; var d=document.createElement('div'); d.innerHTML=mdRecorrido(p); if(d.firstChild)b.parentNode.replaceChild(d.firstChild,b)});
+  var chips=[];
+  if(f.med&&f.med.alergias)chips.push('<span class="md-chip rojo">Alergia: '+esc(f.med.alergias)+'</span>');
+  var act=planes.filter(function(p){return p.estado==='activo'});
+  if(act.length)chips.push('<span class="md-chip lima">'+(act.some(function(p){return p.paquete})?'Paquete en curso':'Plan en curso')+'</span>');
+  var cred=creditoLibre(nom); if(cred>0.009)chips.push('<span class="md-chip lila">'+bs(cred)+' a favor</span>');
+  var cel=''; datosVisibles().filter(function(r){return keyPac(r.paciente)===keyPac(nom)}).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})
+    .forEach(function(r){if(!cel&&r.celular)cel=r.celular});
+  var cab=document.createElement('div'); cab.className='md-ficha-cab';
+  cab.innerHTML='<div class="md-avatar" aria-hidden="true">'+esc(mdIniciales(nom))+'</div><div class="md-ficha-txt"></div>'+
+    (cel?'<a class="btn sm md-wa" target="_blank" rel="noopener" href="'+waLink(cel,'Hola '+nom.split(' ')[0]+'! ')+'">WhatsApp</a>':'');
+  var txt=cab.querySelector('.md-ficha-txt'), sub=h.nextElementSibling;
+  h.parentNode.insertBefore(cab,h); txt.appendChild(h);
+  if(sub&&sub.classList.contains('mini'))txt.appendChild(sub);
+  if(chips.length)txt.insertAdjacentHTML('beforeend','<div class="md-chips">'+chips.join('')+'</div>');
+  modal.classList.add('md-ficha');
+  mdEtiquetarTablas(modal)}
+
+/* ---------- M · la caja por forma de pago y el cierre del día ---------- */
+var MD_MET_ICO={Efectivo:'M3 7h18v10H3zM12 9.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z',QR:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2',
+  Tarjeta:'M3 6h18v12H3zM3 10h18M7 15h3',Transferencia:'M4 8h13l-3-3M20 16H7l3 3'};
+function mdCaja(){
+  var met=$('#cj-metodos'); if(!met)return;
+  var por={}, n={}, tot=0;
+  METODOS.forEach(function(m){por[m]=0; n[m]=0});
+  cajaRows().forEach(function(r){pagosDe(r).forEach(function(p){if(por[p.metodo]===undefined)return; por[p.metodo]+=num(p.monto); n[p.metodo]++; tot+=num(p.monto)})});
+  var tiles='<div class="md-met">'+METODOS.map(function(m){
+    var pct=tot?Math.round(por[m]/tot*100):0;
+    return '<div class="md-met-t m-'+m.toLowerCase()+'"><div class="md-met-h"><span class="md-met-i">'+mdIco(MD_MET_ICO[m]||MD_I.caja)+'</span>'+esc(m)+'</div>'+
+      '<b>'+bs(por[m])+'</b><small>'+(n[m]?n[m]+' pago'+(n[m]===1?'':'s')+' · '+pct+'%':'sin pagos')+'</small>'+
+      '<div class="md-prog"><i style="width:'+pct+'%"></i></div></div>'}).join('')+'</div>';
+  var viejo=$('#md-met'); if(viejo)viejo.parentNode.removeChild(viejo);
+  var d=document.createElement('div'); d.id='md-met'; d.innerHTML=tiles; met.parentNode.insertBefore(d,met);
+  mdCierre()}
+function mdCierreDia(){return $('#c-rango').value==='dia'&&$('#c-dia').value?$('#c-dia').value:hoyISO()}
+function mdEfectivoDia(dia){
+  var entra=0, sale=0;
+  filasCajaDia(dia).forEach(function(r){pagosDe(r).forEach(function(p){if(p.metodo==='Efectivo')entra+=num(p.monto)})});
+  (EGR||[]).forEach(function(x){if(x.fecha===dia&&x.metodo==='Efectivo')sale+=num(x.monto)});
+  return Math.round((entra-sale)*100)/100}
+function mdCierre(){
+  var kp=$('#cj-kpis'); if(!kp)return;
+  var c=$('#md-cierre');
+  if(!c){c=document.createElement('div'); c.className='card'; c.id='md-cierre'; kp.parentNode.insertBefore(c,kp.nextSibling)}
+  var dia=mdCierreDia(), panel=mdEfectivoDia(dia), cont=mdPref('CIERRE_'+dia), hay=cont!==null&&cont!==''&&!isNaN(+cont);
+  var dif=hay?Math.round((+cont-panel)*100)/100:0, sinSubir=pend().length;
+  var luz=!hay?'gris':(Math.abs(dif)<0.5?'verde':'rojo');
+  var msg=!hay?'Contá el efectivo de la caja y anotalo acá.':(luz==='verde'?'Cuadra. No falta ni sobra.':(dif<0?'Faltan '+bs(-dif)+' en la caja.':'Sobran '+bs(dif)+' en la caja.'));
+  c.innerHTML='<h2>Cierre de caja · '+(dia===hoyISO()?'hoy':fmtF(dia))+'</h2>'+
+    '<div class="md-cierre"><div class="md-semaforo" role="img" aria-label="'+esc('Semáforo: '+msg)+'"><i class="r'+(luz==='rojo'?' on':'')+'"></i>'+
+      '<i class="a'+(luz!=='rojo'&&sinSubir?' on':'')+'"></i><i class="v'+(luz==='verde'&&!sinSubir?' on':'')+'"></i></div>'+
+    '<div class="md-cierre-c"><div class="md-cierre-f"><span>Efectivo según el panel</span><b>'+bs(panel)+'</b></div>'+
+      '<div class="md-cierre-f"><label for="md-contado">Efectivo contado</label><input id="md-contado" inputmode="decimal" placeholder="0" value="'+(hay?esc(String(cont)):'')+'"></div>'+
+      '<div class="md-cierre-m '+luz+'">'+esc(msg)+'</div>'+
+      (sinSubir?'<p class="hint" style="margin:8px 0 0">Hay '+sinSubir+' registro'+(sinSubir===1?'':'s')+' de este aparato sin subir a la nube: lo cargado en otros aparatos puede no estar sumado todavía.</p>':'')+
+      '<p class="hint" style="margin:8px 0 0">Es el efectivo que entró ese día menos el que salió por egresos. Lo contado queda solo en este aparato: no cambia ningún cobro.</p></div></div>';
+  var inp=$('#md-contado');
+  if(inp)inp.onchange=function(){var v=String(inp.value).replace(',','.').trim(); mdPref('CIERRE_'+dia,v===''?'':+v); mdCierre()}}
+
+/* ---------- G · el panel de la dueña, a la vista ---------- */
+function mdPanelVisual(){
+  var meta=$('#p-meta'); if(!meta||!esAdmin())return;
+  var box=$('#md-pvis');
+  if(!box){box=document.createElement('div'); box.id='md-pvis'; meta.parentNode.insertBefore(box,meta.nextSibling)}
+  var rows=periodoRows().filter(function(r){return r.estado==='Atendido'});
+  var porDoc={}, porSrv={}, tot=0;
+  rows.forEach(function(r){
+    var p=r.profesional||'Sin doctora'; porDoc[p]=(porDoc[p]||0)+num(r.total); tot+=num(r.total);
+    (r.servicios||[]).forEach(function(s){if(!s.nom)return; porSrv[s.nom]=(porSrv[s.nom]||0)+num(s.precio)*(num(s.cant)||1)})});
+  var cols=['var(--ink)','var(--lime)','#7FB8E6','#E2A06B','#B9B3A6'];
+  var docs=Object.keys(porDoc).sort(function(a,b){return porDoc[b]-porDoc[a]});
+  if(docs.length>5){var resto=docs.slice(4).reduce(function(a,k){return a+porDoc[k]},0); docs=docs.slice(0,4); porDoc['Otras']=resto; docs.push('Otras')}
+  var C=376.99, acc=0, arcos='', ley='';
+  docs.forEach(function(k,i){
+    var f=tot?porDoc[k]/tot:0;
+    if(f>0)arcos+='<circle cx="80" cy="80" r="60" fill="none" stroke="'+cols[i]+'" stroke-width="22" stroke-dasharray="'+Math.max(0,C*f-1.5).toFixed(1)+' '+C+'" transform="rotate('+(-90+acc*360).toFixed(1)+' 80 80)"/>';
+    acc+=f;
+    ley+='<li><i style="background:'+cols[i]+'"></i><span>'+esc(k)+'</span><b>'+bs(porDoc[k])+'</b></li>'});
+  var dona='<div class="md-pv-t"><h2>Quién produjo</h2><div class="md-dona"><svg viewBox="0 0 160 160" role="img" aria-label="Facturado por doctora">'+
+    '<circle cx="80" cy="80" r="60" fill="none" stroke="var(--line)" stroke-width="22"/>'+arcos+
+    '<text x="80" y="76" text-anchor="middle" font-size="12" fill="var(--gray)" font-weight="600">Facturado</text>'+
+    '<text x="80" y="95" text-anchor="middle" font-size="15" fill="var(--ink)" font-weight="800">'+esc(bs(tot))+'</text></svg>'+
+    '<ul>'+(ley||'<li><span>Sin atenciones en el periodo</span></li>')+'</ul></div></div>';
+  var srv=Object.keys(porSrv).sort(function(a,b){return porSrv[b]-porSrv[a]}).slice(0,6), maxS=srv.length?porSrv[srv[0]]:1;
+  var top='<div class="md-pv-t"><h2>Qué se vendió más</h2>'+(srv.length?srv.map(function(k){
+    return '<div class="md-top"><span>'+esc(k)+'</span><div class="md-prog"><i style="width:'+Math.round(porSrv[k]/maxS*100)+'%"></i></div><b>'+bs(porSrv[k])+'</b></div>'}).join('')
+    :'<div class="empty">Sin servicios en el periodo.</div>')+'</div>';
+  var altura='';
+  if($('#p-rango').value==='mes'){
+    var ym=$('#p-mes').value, hoy=hoyISO(), y=+ym.slice(0,4), m=+ym.slice(5,7);
+    var ultimo=new Date(y,m,0).getDate(), hasta=ym===hoy.slice(0,7)?+hoy.slice(8,10):ultimo;
+    var prevD=new Date(y,m-2,1), ymP=iso(prevD).slice(0,7), ultP=new Date(y,m-1,0).getDate();
+    var dias={}, llevo=0, antes=0, totP=0, diasP={};
+    filasCaja(DATA).forEach(function(r){
+      var f=r.fecha||'', v=num(r.acuenta);
+      if(f.slice(0,7)===ym){var dd=+f.slice(8,10); dias[dd]=(dias[dd]||0)+v; if(dd<=hasta)llevo+=v}
+      else if(f.slice(0,7)===ymP){var dp=+f.slice(8,10); totP+=v; diasP[dp]=1; if(dp<=Math.min(hasta,ultP))antes+=v}});
+    var prom=Object.keys(diasP).length?totP/Object.keys(diasP).length:0;
+    var max=prom; for(var i=1;i<=hasta;i++)max=Math.max(max,dias[i]||0); max=max||1;
+    var barras='';
+    for(var j=1;j<=hasta;j++)barras+='<div class="md-ba'+(j===hasta&&ym===hoy.slice(0,7)?' hoy':'')+'" title="'+j+': '+esc(bs(dias[j]||0))+'"><i style="height:'+Math.max(2,Math.round((dias[j]||0)/max*150))+'px"></i><span>'+j+'</span></div>';
+    var difp=antes>0?Math.round((llevo-antes)/antes*100):null;
+    altura='<div class="md-pv-t md-pv-ancho"><h2>A esta altura del mes</h2>'+
+      '<p class="md-alt-txt">Llevás <b>'+bs(llevo)+'</b> cobrados al día '+hasta+'. '+(antes>0?'El mes pasado, al mismo día, llevaba '+bs(antes)+
+        ' <b class="'+(difp>=0?'sube':'baja')+'">('+(difp>=0?'+':'')+difp+'%)</b>.':(totP>0?'El mes pasado, al día '+hasta+', todavía no había cobros.':'El mes pasado no tiene cobros para comparar.'))+'</p>'+
+      '<div class="md-barras">'+(prom>0?'<div class="md-prom" style="bottom:'+(18+Math.round(prom/max*150))+'px"><span>promedio diario del mes pasado '+esc(bs(prom))+'</span></div>':'')+barras+'</div></div>'}
+  box.innerHTML='<div class="md-pv">'+dona+top+altura+'</div>'}
+
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
 function mdRefrescar(){
   try{mdEncabezado()}catch(e){}
@@ -11966,12 +12300,23 @@ function mdRefrescar(){
     try{if(v==='config')mdSincAjustes()}catch(e){}
     return r};
   var _mi=renderMiDia;
-  renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdTarjetasVivas()}catch(e){} return r};
+  renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdTarjetasVivas()}catch(e){} try{mdMiDiaLinea()}catch(e){} return r};
+  var _om=openModal;
+  openModal=function(){var m=$('#modal'); if(m)m.classList.remove('md-ficha'); return _om.apply(this,arguments)};
+  var _vp=verPaciente;
+  verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdFicha(nombre)}catch(e){} return r};
+  var _vpl=verPlan;
+  verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPlanEnModal(nombre,id)}catch(e){} return r};
+  var _rc=renderCaja;
+  renderCaja=function(){var r=_rc.apply(this,arguments); try{mdCaja()}catch(e){} return r};
+  var _rp=renderPanel;
+  renderPanel=function(){var r=_rp.apply(this,arguments); try{mdPanelVisual()}catch(e){} return r};
   var _wa=showWhatsappModal;
   showWhatsappModal=function(r){var x=_wa.apply(this,arguments); try{mdFestejo(r)}catch(e){} try{mdEncabezado()}catch(e){} return x};
-  [['renderLista','#v-lista'],['renderCaja','#v-caja'],['renderPacientes','#v-pacientes'],['renderPanel','#v-panel']].forEach(function(p){
+  /* solo las listas de personas y movimientos: los resúmenes de muchas columnas siguen como tabla que se desliza */
+  [['renderLista','#v-lista'],['renderCaja','#cj-body'],['renderPacientes','#v-pacientes']].forEach(function(p){
     var f=window[p[0]]; if(typeof f!=='function')return;
-    window[p[0]]=function(){var r=f.apply(this,arguments); try{mdEtiquetarTablas($(p[1]))}catch(e){} return r}});
+    window[p[0]]=function(){var r=f.apply(this,arguments); try{var el=$(p[1]); mdEtiquetarTablas(el&&el.tagName==='TBODY'?el.closest('table').parentNode:el)}catch(e){} return r}});
   var _toast=toast;
   toast=function(m,err){var r=_toast.apply(this,arguments); if(err)try{mdCara('preocupa',4500)}catch(e){} return r};
   if(typeof pullServer==='function'){
