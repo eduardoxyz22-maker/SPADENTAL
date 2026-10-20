@@ -1354,8 +1354,6 @@ body.md-noche .md-meta-card{background:#1B1E18}
   body.md-anim-siempre .boo{animation:flota 3.2s ease-in-out infinite}
   body.md-anim-siempre .asis-brazo{animation:asisSaluda 3.2s ease-in-out infinite}body.md-anim-siempre .asis-chispa{animation:asisBrilla 2.8s ease-in-out infinite}
   body.md-anim-siempre .asis-salta svg{animation:asisSalta .65s}}
-/* ===== MODERNO FIN ===== */
-
 /* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
 @media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
 .md-pv{grid-auto-flow:row dense}
@@ -1370,35 +1368,7 @@ body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6
 body.md-noche #md-barra button{color:#C9CCBF}
 body.md-noche #md-barra button.on{color:var(--lime)}
 body.md-noche #md-barra button.on:not(.md-mas-grande)::before{background:color-mix(in srgb,var(--lime) 20%,#151812)}
-
-/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
-@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
-.md-pv{grid-auto-flow:row dense}
-.md-dona li.md-vacio span{white-space:normal}
-/* modo noche: lo que quedaba claro */
-body.md-noche .md-ilu{filter:none;background:color-mix(in srgb,var(--lime) 14%,#1B1E18)}
-body.md-noche .md-ilu.verde{background:#1E3128}body.md-noche .md-ilu.azul{background:#1D2A38}body.md-noche .md-ilu.ambar{background:#372C18}body.md-noche .md-ilu.gris{background:#262922}
-body.md-noche .tot-box{background:#0A0B08;color:#ECEEE6;border:1px solid var(--line)}
-body.md-noche .resp-aviso{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}
-body.md-noche .pill.warn{background:#3A2F14;border-color:#5A4A22;color:#F2C969}
-body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6}body.md-noche .banner{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}body.md-noche .banner.conn{background:#1E3128;color:#9BD8B6}
-
-/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
-@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
-.md-pv{grid-auto-flow:row dense}
-.md-dona li.md-vacio span{white-space:normal}
-/* modo noche: lo que quedaba claro */
-body.md-noche .md-ilu{filter:none;background:color-mix(in srgb,var(--lime) 14%,#1B1E18)}
-body.md-noche .md-ilu.verde{background:#1E3128}body.md-noche .md-ilu.azul{background:#1D2A38}body.md-noche .md-ilu.ambar{background:#372C18}body.md-noche .md-ilu.gris{background:#262922}
-body.md-noche .tot-box{background:#0A0B08;color:#ECEEE6;border:1px solid var(--line)}
-body.md-noche .resp-aviso{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}
-body.md-noche .pill.warn{background:#3A2F14;border-color:#5A4A22;color:#F2C969}
-body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6}body.md-noche .banner{background:#2E2715;border-color:#5A4A22;color:#ECEEE6}body.md-noche .banner.conn{background:#1E3128;color:#9BD8B6}
-
-/* ficha del paciente: con el resumen en vivo al costado no entran 5 columnas fijas */
-@media(min-width:761px){#v-atencion .grid.ficha{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}#v-atencion .grid.ficha .c-nombre{grid-column:span 2}}
-.md-pv{grid-auto-flow:row dense}
-.md-dona li.md-vacio span{white-space:normal}
+/* ===== MODERNO FIN ===== */
 </style>
 </head>
 <body class="locked">
@@ -13250,8 +13220,6 @@ function mdPrimerNuevo(r){
      si:function(){return esAdmin()}},
     {id:'md-app', f:'2026-10-20', t:'Instalá el panel como app',
      x:'En ⚙️ Ajustes › Apariencia está cómo dejarlo en la pantalla de inicio del celular. Se abre aunque la señal esté mala.', ayuda:/como app/},
-    {id:'md-noche', f:'2026-10-21', t:'Modo noche',
-     x:'Para el turno de la tarde: el panel se pone oscuro y descansa la vista. En ⚙️ Ajustes › Apariencia elegí «Automático (de 19 a 7)» o «Siempre».', ayuda:/modo noche/},
     {id:'md-color2', f:'2026-10-21', t:'Más color para encontrar todo rápido',
      x:'Cada botón tiene su ícono y su color (WhatsApp verde, cobrar verde, borrar rojo), los campos tienen dibujito y «¿Por dónde nos encontró?» y la forma de pago son tarjetas grandes para tocar.'},
     {id:'md-avisos', f:'2026-10-21', t:'Avisos más claros',
