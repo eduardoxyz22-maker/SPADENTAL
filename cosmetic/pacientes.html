@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- MODERNO HEAD INI -->
+<link rel="manifest" href="pacientes.webmanifest">
+<meta name="theme-color" content="#1E1E1E">
+<link rel="apple-touch-icon" href="iconos/cos-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- MODERNO HEAD FIN -->
 <meta name="color-scheme" content="light">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>Cosmetic Dental &amp; Face Center · Control de pacientes</title>
@@ -957,6 +964,94 @@ body.md-tema-primavera .md-ropa.primavera{display:inline}
 .md-prom span{position:absolute;right:0;top:-19px;font-size:11.5px;font-weight:700;color:var(--gray);background:#fff;padding:0 4px}
 .md-anim .md-ba i{animation:mdSube 1s cubic-bezier(.2,.7,.2,1) both;transform-origin:bottom}
 @keyframes mdSube{from{transform:scaleY(0)}}
+
+/* E · la semana con horas */
+#sem-grid.md-sem{display:block!important;grid-template-columns:none!important}
+.md-sem-w{overflow-x:auto;margin-top:12px;-webkit-overflow-scrolling:touch}
+.md-sem-in{min-width:720px}
+.md-sem-cab,.md-sem-sinh,.md-sem-cuerpo{display:grid;gap:0}
+.md-sem-cab .sem-cab{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;font:inherit;cursor:pointer;padding:6px 0;color:var(--ink);min-height:52px}
+.md-sem-cab .sem-cab small{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase}
+.md-sem-cab .sem-cab b{font-size:17px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.md-sem-cab .sem-cab.hoy b{background:var(--ink);color:#fff}
+.md-sem-sinh{border-top:1px solid var(--line);padding:4px 0}
+.md-sem-sinh>span{font-size:10.5px;color:var(--gray);font-weight:700;text-align:right;padding-right:6px}
+.md-sem-sinh>div{display:flex;flex-wrap:wrap;gap:3px;padding:0 3px}
+.md-sem-cuerpo{border-top:1px solid var(--line)}
+.md-sem-horas{position:relative}
+.md-sem-horas span{position:absolute;right:6px;transform:translateY(2px);font-size:11px;font-weight:600;color:var(--gray)}
+.md-sem-col{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(to bottom,var(--line) 1px,transparent 1px);background-size:100% 52px}
+.md-sem-col.hoy{background-color:var(--lime-sf)}
+.md-hueco{position:absolute;left:0;right:0;border:0;background:transparent;cursor:pointer;padding:0;font-size:0}
+.md-hueco:hover{background:rgba(0,0,0,.035)}
+.md-hueco:focus-visible{outline:2px solid var(--lime-dk);outline-offset:-2px}
+.md-sem-b{position:absolute;left:3px;right:3px;z-index:1;border-radius:9px;padding:4px 6px;line-height:1.25;justify-content:center;text-align:left;overflow:hidden;display:flex;flex-direction:column;
+  font:inherit;cursor:pointer;background:#E4EEF8;border:1px solid #9CBCDD;color:#163B5E;min-width:0}
+.md-sem-b b{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-sem-b small{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.md-sem-b.okk{background:#E3F1EA;border-color:#9FCDB5;color:#1F5E43}
+.md-sem-b.off{background:#F0F0EC;border-color:var(--line);color:var(--gray)}
+.md-sem-b.choca{background:#FBE6DE;border:2px solid var(--clay);color:#8C3B1C}
+.md-sem-b.vencida{background:#FDF3DC;border:2px dashed var(--warn);color:#6B4A05}
+.md-car-ley .choca::before{background:#FBE6DE;border:2px solid var(--clay)}
+
+/* I · dientes con forma de diente */
+.di.md-real{width:30px;flex:0 0 30px;height:auto;padding:3px 1px 2px;border-color:transparent;background:transparent;gap:2px}
+.di.md-real .md-di{width:24px;height:46px;display:block}
+.md-di-r{fill:#F3EFE6;stroke:#9A9486;stroke-width:1.6;stroke-linejoin:round}
+.md-di-c{fill:#fff;stroke:#7d776b;stroke-width:2;stroke-linejoin:round}
+.di.md-real.tratado{background:transparent;border-color:transparent}
+.di.md-real.tratado .md-di-c{fill:var(--lime-sf);stroke:var(--lime-dk)}
+.di.md-real.sel{background:var(--lime-sf);border-color:var(--lime-dk)}
+.di.md-real.sel .md-di-c{fill:var(--ink);stroke:var(--ink)}
+.di.md-real.sel .num,.di.md-real.sel .pt{color:var(--ink)}
+.di.md-real:not([disabled]):hover{background:var(--paper);border-color:var(--line)}
+.di.md-real .pt{background:var(--lime-dk);color:#fff;border-radius:99px;min-width:15px;padding:1px 3px;font-size:9.5px}
+
+/* K · Nueva atención en pasos, con el resumen al costado */
+.md-pasos-at{position:sticky;top:var(--md-hd,96px);z-index:20;display:flex;gap:6px;overflow-x:auto;background:var(--paper);padding:10px 0 8px;margin-top:6px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.md-pasos-at::-webkit-scrollbar{display:none}
+.md-pasos-at button{flex:0 0 auto;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 6px;border-radius:999px;border:1px solid var(--line);
+  background:#fff;font:inherit;font-size:13.5px;font-weight:600;color:var(--gray);cursor:pointer;white-space:nowrap}
+.md-pasos-at .md-pn{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--line);color:var(--gray);font-weight:800;font-size:13px}
+.md-pasos-at button.listo .md-pn{background:var(--ok);color:#fff}
+.md-pasos-at button.on{border-color:var(--ink);color:var(--ink);font-weight:800}
+.md-pasos-at button.on .md-pn{background:var(--lime);color:var(--ink)}
+.md-at-lay{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+.md-at-main{min-width:0}
+.md-at-res{display:none}
+.md-at-pie{display:none}
+@media(min-width:1180px){
+  .md-at-lay{grid-template-columns:minmax(0,1fr) 320px}
+  .md-at-res{display:block;position:sticky;top:calc(var(--md-hd,96px) + 70px);margin-top:14px;background:var(--ink);color:#fff;border-radius:20px;padding:20px;
+    box-shadow:var(--sh)}}
+.md-res-k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+.md-res-p{font-size:20px;font-weight:800;margin-top:6px}
+.md-res-s{font-size:13px;color:#D7DAD0}
+.md-res-l{margin-top:14px;display:flex;flex-direction:column;gap:7px;font-size:14px}
+.md-res-l>div{display:flex;justify-content:space-between;gap:10px}
+.md-res-l span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.md-res-falta{color:#B9BDB0;font-style:italic}
+.md-res-t{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(255,255,255,.2);margin-top:14px;padding-top:12px}
+.md-res-t b{font-size:28px;letter-spacing:-.02em}
+.md-res-f{display:flex;justify-content:space-between;font-size:14px;margin-top:4px;color:#E7E9E1}
+.md-res-f.debe b{color:#F4B8A8}
+.md-res-n{margin-top:12px;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;color:#E7E9E1}
+.md-res-e{margin-top:10px;font-size:13px;color:#D7DAD0}
+.md-res-g{width:100%;margin-top:16px}
+@media(max-width:1179px){
+  body.md-en-atencion:not(.locked) .md-at-pie{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:49;background:var(--ink);color:#fff;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));align-items:center;gap:12px;border-radius:18px 18px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.15)}
+  .md-at-pie>div{flex:1;min-width:0}
+  .md-at-pie small{display:block;font-size:12px;color:#D7DAD0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .md-at-pie b{font-size:20px}.md-at-pie b span{font-size:13px;font-weight:600;color:#D7DAD0}
+  .md-at-pie .btn{flex:0 0 auto}
+  body.md-en-atencion .wrap{padding-bottom:110px}}
+@media(max-width:760px){
+  body.md-en-atencion:not(.locked) .md-at-pie{bottom:calc(68px + env(safe-area-inset-bottom));border-radius:16px;left:8px;right:8px}
+  body.md-en-atencion .wrap{padding-bottom:190px}
+  body.md-en-atencion #asis{bottom:150px}}
 
 /* las animaciones nuevas viven bajo body.md-anim: se apagan en Ajustes › Apariencia,
    y el aparato que pide quietud no las ve */
@@ -11893,7 +11988,8 @@ function mdMontarAjustes(){
   v.insertAdjacentHTML('beforeend','<div class="card" id="md-apariencia"><h2>Apariencia</h2>'+
     '<p class="hint">Cómo se ve el panel en este aparato. No cambia nada para los demás.</p>'+
     '<div class="seg lime" style="margin-top:6px"><label><input type="checkbox" id="md-op-anim"><span>Animaciones y dibujitos que se mueven</span></label></div>'+
-    '<div class="seg lime" style="margin-top:10px"><label><input type="checkbox" id="md-op-temp"><span>Decoración de temporada (Navidad, Carnaval, primavera, Halloween)</span></label></div></div>');
+    '<div class="seg lime" style="margin-top:10px"><label><input type="checkbox" id="md-op-temp"><span>Decoración de temporada (Navidad, Carnaval, primavera, Halloween)</span></label></div>'+
+    '<h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px">App en el celular</h3><div id="md-instalar"></div></div>');
   var cards=$$('#v-config > .card'), usados=[];
   var idx=document.createElement('div'); idx.id='md-aj-indice'; idx.className='md-aj-indice';
   var grupos=MD_AJ_GRUPOS.map(function(g){
@@ -12287,8 +12383,194 @@ function mdPanelVisual(){
       '<div class="md-barras">'+(prom>0?'<div class="md-prom" style="bottom:'+(18+Math.round(prom/max*150))+'px"><span>promedio diario del mes pasado '+esc(bs(prom))+'</span></div>':'')+barras+'</div></div>'}
   box.innerHTML='<div class="md-pv">'+dona+top+altura+'</div>'}
 
+/* ---------- E · la semana con horas ---------- */
+function mdSemanaHoras(){
+  var el=$('#sem-grid'); if(!el)return;
+  el.classList.toggle('md-sem',AG_MODO==='sem'); if(AG_MODO!=='sem')return;
+  if(!SEM_INI)SEM_INI=lunesDe(hoyISO());
+  var prof=$('#q-filtro-prof').value, hoy=hoyISO(), dur=num(CFG.minCita)||30;
+  var dias=[]; for(var i=0;i<7;i++)dias.push(addDias(SEM_INI,i));
+  var por={}, sinHora={}; dias.forEach(function(f){por[f]=[]; sinHora[f]=[]});
+  var ini=8*60, fin=19*60;
+  DATA.forEach(function(r){
+    if(r.fecha<dias[0]||r.fecha>dias[6]||esAnticipo(r))return;
+    if(prof&&r.profesional!==prof&&!(r.profesional==='Por definir'&&r.estado==='Agendada'))return;
+    if(r.estado!=='Agendada'&&r.origen!=='Programada')return;
+    var m=mdHoraMin(r.hora);
+    if(m===null){sinHora[r.fecha].push(r); return}
+    ini=Math.min(ini,Math.floor(m/60)*60); fin=Math.max(fin,Math.ceil((m+dur)/60)*60);
+    por[r.fecha].push(r)});
+  /* el domingo solo aparece si tiene algo */
+  var verDom=por[dias[6]].length||sinHora[dias[6]].length; if(!verDom)dias=dias.slice(0,6);
+  var H=52, alto=(fin-ini)/60*H, DN=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  var horas=''; for(var h=ini; h<fin; h+=60)horas+='<span style="top:'+((h-ini)/60*H)+'px">'+mdHHMM(h)+'</span>';
+  var cab='<div class="md-sem-cab" style="grid-template-columns:52px repeat('+dias.length+',minmax(0,1fr))"><span></span>'+dias.map(function(f,i){
+    return '<button type="button" class="sem-cab'+(f===hoy?' hoy':'')+'" onclick="irAlDia(\''+f+'\')" title="Ver ese día"><small>'+DN[i]+'</small><b>'+(+f.slice(8,10))+'</b></button>'}).join('')+'</div>';
+  var hayS=dias.some(function(f){return sinHora[f].length});
+  var sinH=hayS?'<div class="md-sem-sinh" style="grid-template-columns:52px repeat('+dias.length+',minmax(0,1fr))"><span>sin hora</span>'+dias.map(function(f){
+    return '<div>'+sinHora[f].map(function(r){return '<button type="button" class="sem-chip" onclick="irAlDia(\''+f+'\')">'+esc((r.paciente||'').split(' ')[0])+'</button>'}).join('')+'</div>'}).join('')+'</div>':'';
+  var cols=dias.map(function(f){
+    var huecos=''; for(var h=ini; h<fin; h+=60)huecos+='<button type="button" class="sem-add md-hueco" style="top:'+((h-ini)/60*H)+'px;height:'+H+'px" '+
+      'onclick="mdAgendarHora(\''+f+'\',\''+mdHHMM(h)+'\')" aria-label="'+esc('Agendar el '+fmtF(f)+' a las '+mdHHMM(h))+'"></button>';
+    var bl=por[f].map(function(r){
+      var m=mdHoraMin(r.hora), pend=esCitaPendiente(r), ch=pend?choquesDe(r.fecha,r.hora,r.profesional,r.id):[];
+      var cls=pend?(ch.length?' choca':(f<hoy?' vencida':'')):(r.estado==='Atendido'?' okk':' off');
+      return '<button type="button" class="sem-chip md-sem-b'+cls+'" style="top:'+((m-ini)/60*H+1)+'px;height:'+Math.max(40,dur/60*H-2)+'px" '+
+        'onclick="irAlDia(\''+f+'\')" title="'+esc((r.hora||'')+' · '+(r.paciente||'')+' · '+(r.profesional||'')+(ch.length?' · choca con '+(ch[0].paciente||''):''))+'">'+
+        '<b>'+esc(r.hora)+' · '+esc((r.paciente||'').split(' ')[0])+'</b><small>'+esc((r.profesional||'').replace(/^Dra\.?\s*/i,'')+(r.proxMotivo?' · '+r.proxMotivo:''))+'</small></button>'}).join('');
+    return '<div class="md-sem-col'+(f===hoy?' hoy':'')+'" style="height:'+alto+'px">'+huecos+bl+'</div>'}).join('');
+  el.innerHTML='<div class="md-sem-w"><div class="md-sem-in">'+cab+sinH+
+    '<div class="md-sem-cuerpo" style="grid-template-columns:52px repeat('+dias.length+',minmax(0,1fr))"><div class="md-sem-horas" style="height:'+alto+'px">'+horas+'</div>'+cols+'</div></div></div>'+
+    '<div class="md-car-ley"><span class="prox">Agendada</span><span class="hecha">Atendida</span><span class="choca">Se pisa con otra</span><span class="novino">No vino o se movió</span></div>'}
+function mdAgendarHora(f,h){agendarEse(f); var q=$('#q-hora'); if(q)q.value=h}
+
+/* ---------- I · el odontograma con dientes de verdad ---------- */
+var MD_DIENTE={
+  molar:{c:'M4 48Q4 44 10 44L30 44Q36 44 36 48L36 66Q36 78 26 78Q20 74 14 78Q4 78 4 66Z',r:'M7 45Q6 20 11 5Q16 18 18 45ZM22 45Q24 18 29 5Q34 20 33 45Z'},
+  pre:{c:'M8 48Q8 44 13 44L27 44Q32 44 32 48L32 68Q32 78 20 78Q8 78 8 68Z',r:'M11 45Q13 16 20 3Q27 16 29 45Z'},
+  can:{c:'M10 46L30 46L30 64Q26 78 20 81Q14 78 10 64Z',r:'M12 47Q15 10 20 0Q25 10 28 47Z'},
+  inc:{c:'M9 46L31 46L32 76Q20 80 8 76Z',r:'M13 47Q16 12 20 2Q24 12 27 47Z'}};
+function mdFormaDiente(c){
+  var u=+String(c).slice(1), temp=esTemporal(c);
+  if(temp)return u>=4?'molar':(u===3?'can':'inc');
+  return u>=6?'molar':(u>=4?'pre':(u===3?'can':'inc'))}
+(function(){
+  var orig=dienteHtml;
+  dienteHtml=function(c,mapa,sel,fn){
+    var base=orig(c,mapa,sel,fn), f=MD_DIENTE[mdFormaDiente(c)], q=+String(c).charAt(0), abajo=q===3||q===4||q===7||q===8;
+    var svg='<svg class="md-di" viewBox="0 0 40 82" aria-hidden="true"'+(abajo?' style="transform:scaleY(-1)"':'')+'><path class="md-di-r" d="'+f.r+'"/><path class="md-di-c" d="'+f.c+'"/></svg>';
+    /* la forma va antes del número; los nombres de clase y el clic quedan como estaban */
+    return base.replace(/(<span class="num">)/,(abajo?'$1':svg+'$1')).replace(/(<\/button>)$/,(abajo?svg:'')+'$1')
+      .replace('class="di','class="di md-real'+(abajo?' abajo':''))}})();
+
+/* ---------- K · Nueva atención: los pasos arriba y el resumen al costado ---------- */
+var MD_K={montado:false,raf:0,obs:null};
+function mdPasosAtencion(){
+  var v=$('#v-atencion'); if(!v||MD_K.montado)return; MD_K.montado=true;
+  var cards=mdQ(v,'.card').filter(function(c){return c.querySelector('h2 .n')});
+  if(!cards.length)return;
+  var bar=document.createElement('div'); bar.id='md-pasos-at'; bar.className='md-pasos-at'; bar.setAttribute('role','navigation'); bar.setAttribute('aria-label','Pasos de la atención');
+  bar.innerHTML=cards.map(function(c,i){
+    var h=c.querySelector('h2'), n=h.querySelector('.n').textContent, t=h.textContent.replace(n,'').replace(/\s+/g,' ').trim();
+    c.id=c.id||('md-paso-'+i);
+    return '<button type="button" data-i="'+i+'"><span class="md-pn">'+esc(n)+'</span><span class="md-pt">'+esc(t.replace(/^¿|\?$/g,''))+'</span></button>'}).join('');
+  var lay=document.createElement('div'); lay.className='md-at-lay';
+  var main=document.createElement('div'); main.className='md-at-main';
+  var aside=document.createElement('aside'); aside.className='md-at-res'; aside.id='md-at-res'; aside.setAttribute('aria-label','Resumen de la atención');
+  var hijos=Array.prototype.slice.call(v.children);
+  v.appendChild(bar); v.appendChild(lay); lay.appendChild(main); lay.appendChild(aside);
+  hijos.forEach(function(x){main.appendChild(x)});
+  var pie=document.createElement('div'); pie.id='md-at-pie'; pie.className='md-at-pie'; document.body.appendChild(pie);
+  mdQ(bar,'button').forEach(function(b){b.onclick=function(){
+    var c=cards[+b.getAttribute('data-i')]; if(!c)return;
+    var y=c.getBoundingClientRect().top+window.pageYOffset-((($('header')||{}).offsetHeight||0)+64);
+    window.scrollTo({top:y,behavior:'smooth'})}});
+  if('IntersectionObserver' in window){
+    MD_K.obs=new IntersectionObserver(function(ents){ents.forEach(function(e){
+      if(!e.isIntersecting)return; var i=cards.indexOf(e.target);
+      mdQ(bar,'button').forEach(function(b){b.classList.toggle('on',+b.getAttribute('data-i')===i)})})},{rootMargin:'-35% 0px -55% 0px'});
+    cards.forEach(function(c){MD_K.obs.observe(c)})}
+  v.addEventListener('input',mdResumenLuego,true); v.addEventListener('change',mdResumenLuego,true); v.addEventListener('click',mdResumenLuego,true);
+  MD_K.cards=cards; mdResumen()}
+function mdResumenLuego(){if(MD_K.raf)return; MD_K.raf=(window.requestAnimationFrame||setTimeout)(function(){MD_K.raf=0; mdResumen()})}
+function mdVal(s){var e=$(s); return e?String(e.value||'').trim():''}
+function mdResumen(){
+  var a=$('#md-at-res'), pie=$('#md-at-pie'); if(!a)return;
+  var pac=mdVal('#f-paciente'), pro=mdVal('#f-prof'), fe=mdVal('#f-fecha'), ho=mdVal('#f-hora');
+  var srv=mdQ(document,'#srv-list .s-nom').map(function(s,i){
+    var fila=s.closest('.srv'), pr=fila?fila.querySelector('.s-precio'):null, ca=fila?fila.querySelector('.s-cant'):null;
+    var nom=s.value||''; if(!nom)return null;
+    return {nom:nom, cant:ca?num(ca.value)||1:1, precio:pr?num(pr.value):0}}).filter(Boolean);
+  var tot=num(mdVal('#f-total')), acu=num(mdVal('#f-acuenta')), sal=num(mdVal('#f-saldo'));
+  var met=(mdQ(document,'#v-atencion input[name="metodo"]').filter(function(x){return x.checked})[0]||{}).value||'';
+  var est=(mdQ(document,'#v-atencion input[name="estado"]').filter(function(x){return x.checked})[0]||{}).value||'';
+  var tag=$('#pago-tag'), nota=tag&&tag.textContent.trim()&&getComputedStyle(tag).display!=='none'?tag.textContent.trim():'';
+  var EDIT=typeof EDIT_ID!=='undefined'&&EDIT_ID;
+  a.innerHTML='<div class="md-res-k">Resumen en vivo</div>'+
+    '<div class="md-res-p">'+(pac?esc(pac):'<span class="md-res-falta">Falta el paciente</span>')+'</div>'+
+    '<div class="md-res-s">'+esc([fe?fmtF(fe):'',ho,pro].filter(Boolean).join(' · ')||'Elegí fecha y doctora')+'</div>'+
+    '<div class="md-res-l">'+(srv.length?srv.map(function(s){return '<div><span>'+esc(s.nom)+(s.cant>1?' ×'+s.cant:'')+'</span><b>'+bs(s.precio*s.cant)+'</b></div>'}).join('')
+      :'<div class="md-res-falta">Todavía no hay servicios</div>')+'</div>'+
+    '<div class="md-res-t"><span>Total</span><b>'+bs(tot)+'</b></div>'+
+    '<div class="md-res-f"><span>Cobra hoy'+(met?' · '+esc(met):'')+'</span><b>'+bs(acu)+'</b></div>'+
+    (sal>0.009?'<div class="md-res-f debe"><span>Queda debiendo</span><b>'+bs(sal)+'</b></div>':'')+
+    (nota?'<div class="md-res-n">'+esc(nota)+'</div>':'')+
+    (est?'<div class="md-res-e">Estado: <b>'+esc(est)+'</b></div>':'')+
+    '<button type="button" class="btn md-res-g" onclick="$(\'#btn-save\').click()">'+(EDIT?'Guardar cambios':'Guardar atención')+'</button>';
+  if(pie){
+    pie.innerHTML='<div><small>'+esc(pac||'Nueva atención')+(srv.length?' · '+srv.length+' servicio'+(srv.length===1?'':'s'):'')+'</small><b>'+bs(tot)+
+      (acu>0.009&&Math.abs(acu-tot)>0.009?' <span>· cobra '+bs(acu)+'</span>':'')+'</b></div>'+
+      '<button type="button" class="btn" onclick="$(\'#btn-save\').click()">Guardar</button>'}
+  mdMarcarPasos(pac,pro,fe,srv,est)}
+function mdMarcarPasos(pac,pro,fe,srv,est){
+  var bar=$('#md-pasos-at'); if(!bar||!MD_K.cards)return;
+  var canal=mdQ(document,'#v-atencion input[name="canal"],#v-atencion input[name="origen"]').some(function(x){return x.checked});
+  var ok=MD_K.cards.map(function(c){
+    var t=(c.querySelector('h2')||{}).textContent||'';
+    if(/Visita/.test(t))return !!(fe&&pro);
+    if(/Paciente/.test(t))return !!pac;
+    if(/encontr/.test(t))return canal;
+    if(/Servicios/.test(t))return srv.length>0;
+    if(/Cobro/.test(t))return srv.length>0;
+    if(/Estado/.test(t))return !!est;
+    return false});
+  mdQ(bar,'button').forEach(function(b,i){b.classList.toggle('listo',!!ok[i])})}
+
+/* ---------- Q · el panel como app instalable ---------- */
+var MD_INSTALAR=null;
+function mdApp(){
+  if(!('serviceWorker' in navigator)||!/^https?:$/.test(location.protocol))return;
+  try{navigator.serviceWorker.register('sw-pacientes.js').catch(function(){})}catch(e){}
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault(); MD_INSTALAR=e; mdPintarInstalar()});
+  window.addEventListener('appinstalled',function(){MD_INSTALAR=null; mdPintarInstalar(); toast('Listo: el panel quedó instalado como app')})}
+function mdInstalada(){return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true}
+function mdPintarInstalar(){
+  var box=$('#md-instalar'); if(!box)return;
+  var ios=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
+  box.innerHTML=mdInstalada()?'<p class="hint" style="margin:0">Este aparato ya abre el panel como app.</p>'
+    :(MD_INSTALAR?'<button type="button" class="btn sm" id="md-btn-instalar">Instalar el panel como app</button>'+
+      '<p class="hint" style="margin:8px 0 0">Queda un ícono en la pantalla de inicio y se abre sin la barra del navegador.</p>'
+    :(ios?'<p class="hint" style="margin:0">En el iPhone o iPad: tocá <b>Compartir</b> y después <b>Agregar a inicio</b>.</p>'
+      :'<p class="hint" style="margin:0">En el celular: menú del navegador (⋮) → <b>Instalar app</b> o <b>Agregar a la pantalla de inicio</b>.</p>'));
+  var b=$('#md-btn-instalar');
+  if(b)b.onclick=function(){var e=MD_INSTALAR; if(!e)return; e.prompt(); if(e.userChoice)e.userChoice.then(function(){MD_INSTALAR=null; mdPintarInstalar()})}}
+
+/* ---------- Sonri enseña lo nuevo ---------- */
+(function(){
+  if(typeof ASIS_NOVEDADES==='undefined'||typeof ASIS_AYUDA==='undefined')return;
+  ASIS_NOVEDADES.push(
+    {id:'md-cara', f:'2026-10-20', t:'El panel estrenó cara',
+     x:'Arriba ves cuántos atendiste, cuánto se cobró y cuántos faltan. En el celular las pestañas están abajo, al alcance del pulgar, y «Más» trae el resto.'},
+    {id:'md-midia', f:'2026-10-20', t:'Mi día, como línea de tiempo',
+     x:'Los pacientes van en orden de hora con la marca de «Ahora», y arriba está el día de cada doctora de un vistazo. Tocá un paciente para ir a su tarjeta.', ayuda:/día de cada doctora/},
+    {id:'md-atencion', f:'2026-10-20', t:'Nueva atención con pasos y resumen',
+     x:'Arriba están los pasos (se ponen en verde cuando están completos) y al costado, o abajo en el celular, el resumen con el total y el botón Guardar.', ayuda:/pasos de Nueva atención/},
+    {id:'md-agenda', f:'2026-10-20', t:'La semana con horas',
+     x:'En 📅 Agenda › El calendario cada cita está en su hora. Tocá un hueco vacío para agendar justo ahí.', ayuda:/hueco/},
+    {id:'md-caja', f:'2026-10-20', t:'Cierre de caja con semáforo',
+     x:'En 💰 Caja contá el efectivo, anotalo y el semáforo te dice si cuadra. Lo contado queda en tu aparato: no cambia ningún cobro.', ayuda:/semáforo/,
+     si:function(){return esAdmin()}},
+    {id:'md-app', f:'2026-10-20', t:'Instalá el panel como app',
+     x:'En ⚙️ Ajustes › Apariencia está cómo dejarlo en la pantalla de inicio del celular. Se abre aunque la señal esté mala.', ayuda:/como app/});
+  ASIS_AYUDA.push(
+    {q:'¿Cómo veo el día de cada doctora?', k:'dia vistazo doctoras carril linea tiempo ahora horario quien atiende', v:'midia', f:['#md-carriles','#m-lista'],
+     p:['Entrá a 🏠 Mi día.','Arriba, en «El día de un vistazo», cada doctora tiene su fila con sus pacientes en la hora.','Verde: ya atendido. Lima: le toca ahora. Celeste: por venir.','Tocá un paciente para ir a su tarjeta y atenderlo.']},
+    {q:'¿Cómo uso los pasos de Nueva atención?', k:'pasos resumen nueva atencion guardar total costado verde completo', v:'atencion', f:'#md-pasos-at',
+     p:['Arriba del formulario están los pasos: tocá uno para ir directo a esa parte.','Cuando un paso está completo, su número se pone verde.','El resumen (al costado en la compu, abajo en el celular) muestra el total, lo que cobra hoy y lo que queda debiendo.','Podés guardar desde el resumen: es el mismo «Guardar atención».']},
+    {q:'¿Cómo agendo en un hueco de la semana?', k:'hueco semana calendario hora agendar libre vacio', v:'cita', f:'#sem-grid',
+     p:['Entrá a 📅 Agenda y bajá a «El calendario» (Semana).','Cada cita está en su hora; las rojas se pisan con otra.','Tocá un hueco vacío: la fecha y la hora quedan puestas abajo, en «Agendar una cita nueva».','Completá paciente y motivo y tocá «Agendar».']},
+    {q:'¿Cómo cierro la caja con el semáforo?', k:'cierre caja semaforo efectivo contado cuadra falta sobra', v:'caja', f:'#md-cierre', solo:'adm',
+     p:['Entrá a 💰 Caja: arriba está «Cierre de caja».','Contá el efectivo que hay en la caja y anotalo en «Efectivo contado».','Verde: cuadra. Rojo: falta o sobra plata (te dice cuánto). Amarillo: hay registros de este aparato sin subir.','Lo contado queda solo en este aparato: no cambia ningún cobro.']},
+    {q:'¿Cómo instalo el panel como app?', k:'instalar app celular pantalla inicio icono aplicacion', v:'config', f:'#md-apariencia',
+     p:['Abrí el panel en el celular.','En ⚙️ Ajustes › Apariencia tocá «Instalar el panel como app» (o seguí las indicaciones que aparecen ahí).','Queda un ícono en la pantalla de inicio y se abre sin la barra del navegador.']},
+    {q:'¿Cómo apago las animaciones o la decoración?', k:'apagar animaciones decoracion temporada navidad halloween carnaval moverse dibujitos', v:'config', f:'#md-apariencia',
+     p:['Entrá a ⚙️ Ajustes › Apariencia.','Destildá «Animaciones» o «Decoración de temporada».','Vale solo para este aparato.']});
+})();
+
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
+function mdAltoHeader(){var h=$('header'); if(h)document.documentElement.style.setProperty('--md-hd',h.offsetHeight+'px')}
 function mdRefrescar(){
+  try{mdAltoHeader()}catch(e){}
   try{mdEncabezado()}catch(e){}
   try{mdPintarBarra()}catch(e){}
   try{mdCaraBase()}catch(e){}}
@@ -12297,7 +12579,8 @@ function mdRefrescar(){
   show=function(v){
     var r=_show.apply(this,arguments);
     try{mdRefrescar()}catch(e){}
-    try{if(v==='config')mdSincAjustes()}catch(e){}
+    try{if(v==='config'){mdSincAjustes(); mdPintarInstalar()}}catch(e){}
+    try{document.body.classList.toggle('md-en-atencion',v==='atencion'); if(v==='atencion')mdResumen()}catch(e){}
     return r};
   var _mi=renderMiDia;
   renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdTarjetasVivas()}catch(e){} try{mdMiDiaLinea()}catch(e){} return r};
@@ -12309,6 +12592,11 @@ function mdRefrescar(){
   verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPlanEnModal(nombre,id)}catch(e){} return r};
   var _rc=renderCaja;
   renderCaja=function(){var r=_rc.apply(this,arguments); try{mdCaja()}catch(e){} return r};
+  var _rs=renderSemana;
+  renderSemana=function(){var r=_rs.apply(this,arguments); try{mdSemanaHoras()}catch(e){} return r};
+  ['loadForm','clearForm','recalcSaldo'].forEach(function(n){
+    var f=window[n]; if(typeof f!=='function')return;
+    window[n]=function(){var r=f.apply(this,arguments); try{mdResumenLuego()}catch(e){} return r}});
   var _rp=renderPanel;
   renderPanel=function(){var r=_rp.apply(this,arguments); try{mdPanelVisual()}catch(e){} return r};
   var _wa=showWhatsappModal;
@@ -12332,8 +12620,9 @@ function mdRefrescar(){
   refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar()}catch(e){} return r}})();
 (function mdInit(){
   try{
-    mdAplicarAnim(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdRefrescar();
+    mdAplicarAnim(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
     document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
+    window.addEventListener('resize',function(){try{mdAltoHeader()}catch(e){}});
     setInterval(function(){try{mdEncabezado(); mdCaraBase()}catch(e){}},60000);
     /* si el panel abrió ya con sesión, lo que está a la vista se repinta con la cara nueva */
     if(!document.body.classList.contains('locked')){

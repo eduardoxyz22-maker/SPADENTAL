@@ -120,6 +120,15 @@ Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para segu
 - **El dueño pide que Sonri explique cada función nueva.** Si cambiás un circuito, actualizá sus pasos.
 - No aparece en navegadores automatizados salvo que exista `window.ASIS_PRUEBA`.
 
+## 6b. La cara nueva (bloque MODERNO)
+
+- Va idéntico en los dos paneles: el CSS entre `/* ===== MODERNO INI` y `/* ===== MODERNO FIN ===== */` (antes de `</style></head>`), el JS entre las mismas marcas al final del último `<script>`, y en `<head>` entre `<!-- MODERNO HEAD INI -->` y `<!-- MODERNO HEAD FIN -->` (manifiesto de la app).
+- **Solo pinta y lee**: envuelve funciones que ya existen (`show`, `renderMiDia`, `verPaciente`, `verPlan`, `renderCaja`, `renderPanel`, `renderSemana`, `showWhatsappModal`, `dienteHtml`, `asisSvg`…) y agrega lo suyo después. No guarda nada en la hoja ni cambia ninguna cuenta.
+- Qué trae: encabezado oscuro con anillos del día; pestañas abajo en el celular (+ «Más»); Ajustes agrupados con la tarjeta «Apariencia»; tarjetas con dibujitos en Mi día; Mi día como línea de tiempo con carriles por doctora; festejo al guardar; tablas de Atenciones, Pacientes y Movimientos de caja como tarjetas en el celular; ficha nueva; plan como recorrido con barra de plata; caja por forma de pago y cierre con semáforo (lo contado queda en `localStorage`, no en la hoja); panel de la dueña con dona, top de servicios y «a esta altura del mes»; agenda semanal por horas (tocar un hueco agenda ahí); odontograma con forma de diente; Nueva atención con pasos y resumen en vivo; caras y ropa de temporada de Sonri; temas de temporada; app instalable.
+- Preferencias por aparato (`<prefijo>_MD_ANIM`, `_MD_TEMP`, `_MD_CIERRE_<fecha>`). Animaciones solo bajo `body.md-anim`.
+- App instalable: `pacientes.webmanifest`, `sw-pacientes.js` e `iconos/` en la raíz y en `cosmetic/`. El service worker pide siempre a la red primero (cada publicación llega sola) y guarda copia solo de `pacientes.html`, el manifiesto y los íconos; nunca toca los pedidos a Google. No se registra en `file://` (las pruebas no lo ven).
+- Sonri enseña lo nuevo: entradas `md-*` en `ASIS_NOVEDADES` y preguntas nuevas en `ASIS_AYUDA` (se agregan desde el bloque MODERNO).
+
 ## 7. Pruebas
 
 En el repo hay tres suites. Correr siempre con un guardián que bloquee la red real:

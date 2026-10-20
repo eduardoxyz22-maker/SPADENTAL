@@ -1,0 +1,15 @@
+{
+  "name": "Ezequiel Spadental · Panel",
+  "short_name": "Spadental",
+  "description": "Control de pacientes, agenda y caja de Ezequiel Spadental",
+  "lang": "es",
+  "start_url": "pacientes.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FAFBF6",
+  "theme_color": "#20241C",
+  "icons": [
+    {"src": "iconos/spa-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "iconos/spa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
