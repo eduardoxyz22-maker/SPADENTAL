@@ -3398,7 +3398,11 @@ function api(action,payload,cfg,base,extra){
   return tokenPara(action).then(mandarCon).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
     if(action==='cfgGet'&&r&&r.cfg&&r.cfg.parcial)r.cfg=cfgCompletarParcial(r.cfg);
-    if(!(r&&r.ok===false&&r.error==='sin_sesion'))return r;
+    if(!(r&&r.ok===false&&r.error==='sin_sesion')){
+      /* el servidor renueva la sesión cada vez que se usa: acá también, así
+         no se pide la clave mientras se está trabajando (aunque se recargue) */
+      if(r&&cuerpo.token&&cuerpo.token===SESION.token){SESION.exp=Date.now()+(1800-60)*1000; guardarSesion()}
+      return r}
     /* la sesión venció o el servidor se actualizó recién: una vez más con la
        clave en memoria; si no hay, se le pide a quien está usando el panel */
     SESION.token=''; guardarSesion();
@@ -14115,7 +14119,7 @@ function mdSincPintar(){
   var b=$('.banner.conn'); if(!b||!MD_SINC.estado)return;
   var s=b.querySelector('.md-sinc'); if(!s){s=document.createElement('span'); s.className='md-sinc'; b.appendChild(s)}
   s.className='md-sinc md-sinc-'+MD_SINC.estado;
-  s.textContent=MD_SINC.estado==='trae'?'Trayendo lo último de la hoja…':(MD_SINC.estado==='ok'?'Al día con la hoja · '+MD_SINC.hora:'Sin respuesta de la hoja: se ve lo guardado en esta compu')}
+  s.textContent=MD_SINC.estado==='trae'?'Trayendo lo último de la hoja…':(MD_SINC.estado==='ok'?'Al día con la hoja · '+MD_SINC.hora:(SRV_AUTH&&!sesionViva()?'Falta tu clave para traer lo último: se ve lo guardado en esta compu':'Sin respuesta de la hoja: se ve lo guardado en esta compu'))}
 function mdSinc(est){MD_SINC.estado=est; if(est==='ok')MD_SINC.hora=mdHHMM(new Date().getHours()*60+new Date().getMinutes()); try{mdSincPintar()}catch(e){}}
 
 /* ---------- 11 · listas largas de a 50 y búsqueda que no traba ---------- */
