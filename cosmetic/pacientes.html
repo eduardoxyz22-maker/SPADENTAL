@@ -1370,6 +1370,95 @@ body.md-noche .banner.conn{background:#1E3128;border-color:#2F5241;color:#9BD8B6
 body.md-noche #md-barra button{color:#C9CCBF}
 body.md-noche #md-barra button.on{color:var(--lime)}
 body.md-noche #md-barra button.on:not(.md-mas-grande)::before{background:color-mix(in srgb,var(--lime) 20%,#151812)}
+/* ============ RONDA 3 · animaciones y optimizaciones ============ */
+/* 1 · la pantalla entra desde el lado de su pestaña */
+.md-anim .view.md-desde-der{animation:mdDesdeDer .32s cubic-bezier(.2,.8,.2,1)}
+.md-anim .view.md-desde-izq{animation:mdDesdeIzq .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes mdDesdeDer{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+@keyframes mdDesdeIzq{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:none}}
+/* 3 · el botón Guardar: tocado, subiendo, listo */
+#btn-save,.md-res-g{position:relative;transition:transform .12s,background-color .25s}
+#btn-save.md-g-gira,.md-res-g.md-g-gira{color:transparent!important;pointer-events:none}
+#btn-save.md-g-gira>*,.md-res-g.md-g-gira>*,#btn-save.md-g-listo>*,.md-res-g.md-g-listo>*{opacity:0}
+#btn-save.md-g-gira::after,.md-res-g.md-g-gira::after{content:'';position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-14px 0 0 -14px;border-radius:50%;
+  border:3px solid rgba(0,0,0,.2);border-top-color:var(--ink);animation:mdGiro .8s linear infinite}
+#btn-save.md-g-listo,.md-res-g.md-g-listo{background:#2E7D5B!important;border-color:#2E7D5B!important;color:transparent!important}
+#btn-save.md-g-listo::after,.md-res-g.md-g-listo::after{content:'';position:absolute;left:50%;top:50%;width:11px;height:20px;margin:-14px 0 0 -6px;border:solid #fff;border-width:0 4px 4px 0;
+  transform:rotate(45deg);animation:mdTilde .35s cubic-bezier(.2,.9,.3,1.4) both}
+@keyframes mdTilde{from{opacity:0;transform:rotate(45deg) scale(.3)}to{opacity:1;transform:rotate(45deg) scale(1)}}
+.md-anim #btn-save.md-g-mal,.md-anim .md-res-g.md-g-mal{animation:mdSacude .45s}
+@keyframes mdSacude{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+/* 4 · los números suben con un destello y un cartelito de cuánto entró */
+.md-anillo{position:relative}
+.md-anim .md-sube{animation:mdDestello 1.2s ease-out}
+@keyframes mdDestello{0%{transform:none;text-shadow:none}22%{transform:scale(1.07);text-shadow:0 0 16px rgba(182,201,50,.95)}100%{transform:none;text-shadow:none}}
+.md-sube{transform-origin:left center}
+.md-mas-plata{position:absolute;right:-8px;top:-14px;background:#2E7D5B;color:#fff;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;pointer-events:none;
+  animation:mdMasPlata 2.8s ease forwards;z-index:3}
+@keyframes mdMasPlata{0%{opacity:0;transform:translateY(10px)}12%,70%{opacity:1;transform:translateY(-4px)}100%{opacity:0;transform:translateY(-20px)}}
+/* 5 · solo la tarjeta que cambió se pinta */
+.md-tl-card.md-cambio{position:relative}
+.md-tl-card.md-cambio>.rem{position:relative;overflow:hidden}
+.md-anim .md-tl-card.md-cambio>.rem::after{content:'';position:absolute;inset:0;pointer-events:none;transform-origin:left;animation:mdBarre 2.4s cubic-bezier(.3,.8,.3,1) forwards}
+.md-tl-card.md-cambio-ok>.rem::after{background:linear-gradient(90deg,rgba(46,125,91,.22),rgba(46,125,91,.06))}
+.md-tl-card.md-cambio-otro>.rem::after{background:linear-gradient(90deg,rgba(127,184,230,.3),rgba(127,184,230,.08))}
+@keyframes mdBarre{0%{transform:scaleX(0);opacity:1}35%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+.md-nueva{display:inline-block;vertical-align:middle;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#FBEFD9;color:#8A5A0C;margin-left:4px}
+/* 6 · la línea «Ahora» avanza y late */
+.md-ahora-l{transition:left 1.2s linear}
+.md-ahora-l::after{content:'';position:absolute;bottom:-5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--clay)}
+.md-anim .md-ahora-l::after{animation:mdLateAhora 1.6s ease-in-out infinite}
+@keyframes mdLateAhora{0%,100%{box-shadow:0 0 0 0 rgba(194,81,47,.45)}50%{box-shadow:0 0 0 7px rgba(194,81,47,0)}}
+.md-anim .md-bl.md-toca{animation:mdToca 1.6s ease-out 2}
+@keyframes mdToca{0%{box-shadow:0 0 0 0 rgba(182,201,50,.7)}100%{box-shadow:0 0 0 10px rgba(182,201,50,0)}}
+/* 7 · Sonri reacciona */
+.md-anim #asis.md-c-festeja .asis-yo svg{animation:mdSonriSalta .8s cubic-bezier(.3,.7,.4,1) 3;transform-origin:50% 100%}
+@keyframes mdSonriSalta{0%,100%{transform:none}40%{transform:translateY(-14px)}60%{transform:translateY(0) scale(1.06,.94)}}
+.md-anim #asis.md-c-preocupa .asis-yo svg{animation:mdSonriTiembla .5s ease-in-out 3;transform-origin:50% 100%}
+@keyframes mdSonriTiembla{0%,100%{transform:none}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.md-anim #asis.md-c-duerme .asis-yo svg{animation:mdSonriRespira 4s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes mdSonriRespira{0%,100%{transform:none}50%{transform:scale(1.025,.975)}}
+.md-anim #asis.md-c-duerme .md-cara.duerme path:last-child{animation:mdZzz 3s ease-out infinite}
+@keyframes mdZzz{0%{opacity:0;transform:translate(0,4px)}30%{opacity:1}100%{opacity:0;transform:translate(8px,-10px)}}
+/* 9 · vista rápida al pasar el mouse */
+.md-vr{position:fixed;z-index:120;width:340px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 24px 48px -16px rgba(0,0,0,.35);
+  opacity:0;transform:translateY(6px) scale(.98);pointer-events:none;transition:opacity .16s,transform .2s cubic-bezier(.2,.9,.3,1.2);visibility:hidden}
+.md-vr.on{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+.md-vr-cab{display:flex;gap:11px;align-items:center}
+.md-vr-cab b{display:block;font-size:16px}.md-vr-cab small{display:block;font-size:12.5px;color:var(--gray)}
+.md-vr-av{width:42px;height:42px;font-size:15px;flex:0 0 42px}
+.md-vr-datos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}
+.md-vr-datos div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.md-vr-datos small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--gray)}
+.md-vr-datos b{display:block;font-size:14px;margin-top:1px}
+.md-vr-debe{color:var(--clay)}
+.md-vr-alerg{display:inline-block;font-size:12.5px;font-weight:800;padding:4px 10px;border-radius:999px;background:#FBE6DE;color:#8C3B1C;margin-bottom:10px}
+.md-vr-btn{width:100%;justify-content:center}
+#l-body tr[onclick],#pc-body tr[onclick]{cursor:pointer}
+/* 10 · al día con la hoja */
+.md-sinc{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-weight:700;opacity:.92}
+.md-sinc::before{content:'';width:9px;height:9px;border-radius:50%;background:currentColor;flex:0 0 9px}
+.md-sinc-trae::before{background:transparent;border:2px solid currentColor;border-top-color:transparent;width:8px;height:8px;animation:mdGiro .9s linear infinite}
+.md-sinc-sin{color:#8A5A0C}
+/* 11 · listas de a 50 */
+.md-mas-filas td{text-align:center;color:var(--gray);font-size:13px;font-weight:700;padding:14px!important;background:var(--paper)}
+.md-mas-filas .md-giro{display:inline-block;vertical-align:-4px;margin-right:8px;width:14px;height:14px}
+.md-mas-filas .btn{margin-left:10px}
+mark.md-mark{background:#F7E9A8;color:inherit;border-radius:4px;padding:0 1px}
+/* 12 · aviso de versión nueva */
+.md-version{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:160;width:min(640px,calc(100vw - 24px));background:var(--ink);color:#fff;border-radius:16px;
+  padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 20px 40px -16px rgba(0,0,0,.5);animation:mdVersion .5s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes mdVersion{from{transform:translate(-50%,-140%)}to{transform:translateX(-50%)}}
+.md-version-i{width:40px;height:40px;border-radius:12px;background:var(--lime);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 40px}
+.md-version b{display:block;font-size:15px}.md-version small{display:block;font-size:12.5px;color:#C9CCBF}
+.md-version button{height:42px;border:0;border-radius:12px;font:inherit;font-weight:800;font-size:13.5px;padding:0 14px;cursor:pointer;white-space:nowrap}
+.md-version-luego{margin-left:auto;background:transparent;color:#D7DAD0}
+.md-version-ya{background:var(--lime);color:var(--ink)}
+@media(prefers-reduced-motion:reduce){
+  body:not(.md-anim-siempre) .view.md-desde-der,body:not(.md-anim-siempre) .view.md-desde-izq,body:not(.md-anim-siempre) .md-sube,body:not(.md-anim-siempre) .md-tl-card.md-cambio>.rem::after,
+  body:not(.md-anim-siempre) .md-ahora-l::after,body:not(.md-anim-siempre) .md-bl.md-toca,body:not(.md-anim-siempre) #asis .asis-yo svg,body:not(.md-anim-siempre) .md-cara.duerme path,
+  body:not(.md-anim-siempre) .md-mas-plata,body:not(.md-anim-siempre) .md-version{animation:none}
+  body:not(.md-anim-siempre) .md-ahora-l{transition:none}}
 /* ===== MODERNO FIN ===== */
 </style>
 </head>
@@ -12435,7 +12524,7 @@ function mdCara(c,ms){
   if(c&&ms)MD_CARA_T=setTimeout(function(){mdCara('')},ms)}
 function mdCaraBase(){
   var h=new Date().getHours();
-  MD_CARA_FIJA=(h>=23||h<6)?'duerme':'';
+  MD_CARA_FIJA=(h>=23||h<6||MD_SIESTA)?'duerme':'';
   if(!MD_CARA_T)mdCara('')}
 function mdSonriSvg(base){
   /* la muela de siempre; se agregan las caras y la ropa, que se prenden por clase */
@@ -12565,11 +12654,12 @@ function mdCarriles(dia,filas,ahora){
     var bloques=conHora.filter(function(r){return (r.profesional||'Sin doctora')===p}).map(function(r){
       var m=mdHoraMin(r.hora), i=filas.indexOf(r);
       var est=r.estado==='Atendido'?'hecha':(r.estado==='No asistió'?'novino':(ahora!==null&&m<=ahora&&esCitaPendiente(r)?'ya':'prox'));
-      return '<button type="button" class="md-bl '+est+'" style="left:calc('+pc(m)+' + 2px);width:calc('+(dur/span*100).toFixed(2)+'% - 4px)" '+
+      return '<button type="button" class="md-bl '+est+'" data-m="'+m+'" data-pend="'+(esCitaPendiente(r)?1:0)+'" style="left:calc('+pc(m)+' + 2px);width:calc('+(dur/span*100).toFixed(2)+'% - 4px)" '+
         'onclick="mdIrFila('+i+')" title="'+esc((r.hora||'')+' · '+(r.paciente||''))+'"><b>'+esc(String(r.paciente||'').trim().split(/\s+/)[0])+'</b>'+
         '<small>'+esc(srvText(r)||r.proxMotivo||r.estado||'')+'</small></button>'}).join('');
     return '<div class="md-carril"><div class="md-carril-n">'+esc(p.replace(/^Dra\.?\s*/i,''))+'</div><div class="md-carril-t">'+bloques+'</div></div>'}).join('');
   var linea=ahora!==null&&ahora>=ini&&ahora<=fin?'<div class="md-ahora-l" style="left:'+pc(ahora)+'"><span>'+mdHHMM(ahora)+'</span></div>':'';
+  car.setAttribute('data-ini',ini); car.setAttribute('data-fin',fin);
   car.innerHTML='<h2>El día de un vistazo</h2><p class="hint">Cada doctora en su fila. Tocá un paciente para ir a su tarjeta.</p>'+
     '<div class="md-car-w"><div class="md-car-in"><div class="md-car-horas">'+horas+'</div>'+
     '<div class="md-car-cuerpo">'+lanes+linea+'</div></div></div>'+
@@ -12974,18 +13064,23 @@ function mdEntrada(v){
     e.style.animationDelay=(k++*55)+'ms'; e.classList.add('md-entra')});
   setTimeout(function(){els.forEach(function(e){e.classList.remove('md-entra'); e.style.animationDelay=''})},1500)}
 function mdContar(raiz){
-  if(!mdMueve()||!raiz)return;
-  mdQ(raiz,'.kpi .v, .md-anillo b, .md-met-t b').forEach(function(el){
-    if(el.getAttribute('data-md-contado')===el.textContent)return;
+  if(!raiz)return;
+  mdQ(raiz,'.kpi .v, .md-anillo b, .md-met-t b').forEach(function(el,i){
     var fin=el.textContent, m=/^(Bs\s)?(\d{1,3}(?:\.\d{3})*|\d+)$/.exec(fin.trim()); if(!m)return;
-    var n=+m[2].replace(/\./g,''); if(!(n>0))return;
-    var pre=m[1]||'', t0=null, dur=Math.min(1100,450+String(n).length*90);
+    var n=+m[2].replace(/\./g,''), clave=mdNumClave(el,i), antes=MD_NUM[clave];
+    MD_NUM[clave]=n;
+    if(!mdMueve()||el.getAttribute('data-md-contado')===fin)return;
     el.setAttribute('data-md-contado',fin);
+    /* la primera vez cuenta desde cero; después, desde lo que ya mostraba */
+    var desde=antes===undefined?0:antes; if(desde===n)return;
+    if(antes!==undefined&&n>antes){el.classList.remove('md-sube'); void el.offsetWidth; el.classList.add('md-sube'); setTimeout(function(){el.classList.remove('md-sube')},1300);
+      if(m[1])mdMasPlata(el,n-antes)}
+    var pre=m[1]||'', t0=null, dur=Math.min(1100,450+String(n).length*90);
     var paso=function(ts){
       if(!el.isConnected)return;
       if(t0===null)t0=ts;
       var p=Math.min(1,(ts-t0)/dur), e=1-Math.pow(1-p,3);
-      el.textContent=p<1?pre+Math.round(n*e).toLocaleString('es-BO'):fin;
+      el.textContent=p<1?pre+Math.round(desde+(n-desde)*e).toLocaleString('es-BO'):fin;
       if(p<1)requestAnimationFrame(paso)};
     requestAnimationFrame(paso)})}
 
@@ -13224,6 +13319,224 @@ function mdPrimerNuevo(r){
   var nuevos=DATA.filter(function(x){return esAtencion(x)&&x.tipo==='Nuevo'&&x.fecha===r.fecha&&x.estado==='Atendido'});
   return nuevos.length===1?'<div class="md-primer">Primer paciente nuevo de hoy'+(r.canal?' · llegó por '+esc(r.canal):'')+'</div>':''}
 
+/* =====================================================================
+   RONDA 3: animaciones y optimizaciones (pensado para la compu)
+   ===================================================================== */
+/* ---------- 1 · la pantalla nueva entra desde el lado de su pestaña ---------- */
+var MD_VISTA='';
+function mdOrdenVistas(){return $$('nav button[data-v]').map(function(b){return b.dataset.v})}
+function mdTransicion(de,a){
+  if(!mdMueve()||!de||de===a)return;
+  var L=mdOrdenVistas(), i=L.indexOf(de), j=L.indexOf(a), vista=$('#v-'+a); if(!vista)return;
+  var cls='md-desde-'+(i>=0&&j>=0&&j<i?'izq':'der');
+  vista.classList.remove('md-desde-der','md-desde-izq'); void vista.offsetWidth; vista.classList.add(cls);
+  setTimeout(function(){vista.classList.remove(cls)},450)}
+
+/* ---------- 2 · la tarjeta que tocaste se abre en la ventana ---------- */
+var MD_ORIGEN=null;
+var MD_ORIGEN_SEL='#l-body tr, #pc-body tr, .md-tl-card, .md-bl, #rem-list .rem, #m-lista .rem, .md-vr';
+function mdDesdeOrigen(){
+  var o=MD_ORIGEN; MD_ORIGEN=null;
+  if(!o||Date.now()-o.t>1500||!o.el.isConnected||!mdMueve())return;
+  var m=$('#modal'); if(!m||!m.animate)return;
+  var a=o.rect, b=m.getBoundingClientRect(); if(!b.width||!a.width)return;
+  var dx=(a.left+a.width/2)-(b.left+b.width/2), dy=(a.top+a.height/2)-(b.top+b.height/2);
+  var sx=Math.max(.2,Math.min(1.4,a.width/b.width)), sy=Math.max(.08,Math.min(1,a.height/b.height));
+  m.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+sx+','+sy+')',opacity:.55},{transform:'none',opacity:1}],
+    {duration:380,easing:'cubic-bezier(.2,.8,.2,1)'});
+  Array.prototype.forEach.call(m.children,function(c){c.animate([{opacity:0},{opacity:0,offset:.45},{opacity:1}],{duration:420,easing:'ease-out'})})}
+
+/* ---------- 3 · el botón Guardar cuenta qué está pasando ---------- */
+var MD_GUARDA={on:false,t:0,red:0};
+function mdGuardaEstado(est){
+  [$('#btn-save')].concat(mdQ(document,'.md-res-g')).forEach(function(b){
+    if(!b)return; b.classList.remove('md-g-gira','md-g-listo','md-g-mal'); if(est)b.classList.add('md-g-'+est)})}
+function mdGuardaFin(est){
+  if(!MD_GUARDA.on&&!est)return;
+  MD_GUARDA.on=false; clearTimeout(MD_GUARDA.t);
+  mdGuardaEstado(est||'');
+  if(est)MD_GUARDA.t=setTimeout(function(){mdGuardaEstado('')},est==='listo'?1500:700)}
+/* si no quedó nada esperando a la red (una pregunta que se canceló, un aviso), se suelta enseguida */
+function mdGuardaSiNadaEspera(){setTimeout(function(){if(MD_GUARDA.on&&!MD_GUARDA.red)mdGuardaFin('')},0)}
+
+/* ---------- 4 · los números suben desde el valor de antes ---------- */
+var MD_NUM={};
+function mdNumClave(el,i){
+  var k=el.closest('.kpi,.md-anillo,.md-met-t'), p=el.closest('[id]');
+  return (k&&k.id)||((p?p.id:'')+'#'+i)}
+function mdMasPlata(el,dif){
+  var an=el.closest('.md-anillo'); if(!an||!(dif>0.009))return;
+  var s=document.createElement('span'); s.className='md-mas-plata'; s.textContent='+ '+bs(dif);
+  an.appendChild(s); setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},2800)}
+
+/* ---------- 5 · cambia solo la tarjeta que cambió ---------- */
+var MD_EST_PREV={clave:'',est:{}};
+function mdMiDiaClave(){return ($('#m-dia')&&$('#m-dia').value||hoyISO())+'|'+($('#m-prof')?$('#m-prof').value:'')}
+function mdMiDiaFilas(){return filasDelDia($('#m-dia').value||hoyISO(),$('#m-prof').value)}
+function mdMarcarCambios(){
+  var clave=mdMiDiaClave(), filas=mdMiDiaFilas(), est={}, prev=MD_EST_PREV.clave===clave?MD_EST_PREV.est:null;
+  filas.forEach(function(r,i){
+    if(!r.id)return; est[r.id]=r.estado;
+    var nueva=MD_NUEVAS[r.id]&&Date.now()-MD_NUEVAS[r.id]<600000;
+    var card=$('#md-tl-'+i+' .md-tl-card')||null; if(!card)return;
+    if(nueva&&!card.querySelector('.md-nueva')){var b=card.querySelector('b'); if(b)b.insertAdjacentHTML('afterend',' <span class="md-nueva" title="La cargaron en otra compu">recién llegada</span>')}
+    if(prev&&prev[r.id]!==undefined&&prev[r.id]!==r.estado&&mdMueve()){
+      card.classList.add('md-cambio',r.estado==='Atendido'?'md-cambio-ok':'md-cambio-otro');
+      setTimeout(function(){card.classList.remove('md-cambio','md-cambio-ok','md-cambio-otro')},2600)}});
+  MD_EST_PREV={clave:clave,est:est}}
+
+/* ---------- 6 · la línea «Ahora» avanza sola, minuto a minuto ---------- */
+function mdAhoraMueve(){
+  var car=$('#md-carriles'), v=$('#v-midia');
+  if(!v||!v.classList.contains('on')||($('#m-dia').value||hoyISO())!==hoyISO())return;
+  var d=new Date(), ahora=d.getHours()*60+d.getMinutes();
+  if(car&&car.style.display!=='none'){
+    var ini=+car.getAttribute('data-ini'), fin=+car.getAttribute('data-fin'), cu=car.querySelector('.md-car-cuerpo');
+    if(fin>ini&&cu){
+      var l=cu.querySelector('.md-ahora-l');
+      if(ahora<ini||ahora>fin){if(l)l.parentNode.removeChild(l)}
+      else{
+        if(!l){cu.insertAdjacentHTML('beforeend','<div class="md-ahora-l"><span></span></div>'); l=cu.querySelector('.md-ahora-l')}
+        l.style.left=((ahora-ini)/(fin-ini)*100).toFixed(2)+'%'; l.querySelector('span').textContent=mdHHMM(ahora)}}
+    mdQ(car,'.md-bl.prox[data-m]').forEach(function(b){
+      if(b.getAttribute('data-pend')==='1'&&+b.getAttribute('data-m')<=ahora){b.classList.remove('prox'); b.classList.add('ya','md-toca')}})}
+  /* en la lista, la marca «Ahora» se corre hasta el primer paciente que todavía no llegó */
+  var tl=$('#m-lista .md-tl'), mk=tl&&tl.querySelector('.md-tl-ahora');
+  if(mk){
+    mk.querySelector('span').textContent='Ahora · '+mdHHMM(ahora);
+    var sig=null;
+    Array.prototype.some.call(tl.querySelectorAll('.md-tl-fila'),function(f){var h=mdHoraMin((f.querySelector('.md-tl-hora')||{}).textContent); if(h!==null&&h>ahora){sig=f; return true} return false});
+    if(sig&&mk.nextSibling!==sig)tl.insertBefore(mk,sig); else if(!sig&&mk!==tl.lastChild)tl.appendChild(mk)}}
+
+/* ---------- 7 · Sonri se duerme si nadie usa el panel ---------- */
+var MD_SIESTA=false, MD_ULT_USO=Date.now();
+function mdUso(){
+  MD_ULT_USO=Date.now();
+  if(MD_SIESTA){MD_SIESTA=false; try{mdCaraBase()}catch(e){}}}
+function mdVerSiesta(){
+  if(!MD_SIESTA&&Date.now()-MD_ULT_USO>=15*60000&&!document.body.classList.contains('locked')){MD_SIESTA=true; try{mdCaraBase()}catch(e){}}}
+
+/* ---------- 9 · vista rápida al dejar el mouse sobre un paciente ---------- */
+var MD_VR={t:0,fila:null,nombre:'',ocultarT:0};
+function mdVrPuede(){return !!(window.matchMedia&&window.matchMedia('(hover: hover) and (pointer: fine)').matches)}
+function mdVrNombre(tr){
+  var oc=tr.getAttribute('onclick')||'', m;
+  if((m=/verFicha\('([^']+)'\)/.exec(oc))){var r=DATA.filter(function(x){return x.id===m[1]})[0]; return r?r.paciente:''}
+  if((m=/verPaciente\('((?:[^'\\]|\\.)*)'\)/.exec(oc)))return m[1].replace(/\\(.)/g,'$1');
+  return ''}
+function mdVrHtml(nombre){
+  var k=keyPac(nombre), hoy=hoyISO();
+  var rs=datosVisibles().filter(function(r){return esAtencion(r)&&keyPac(r.paciente)===k}).sort(function(a,b){return ((b.fecha||'')+(b.hora||'')).localeCompare((a.fecha||'')+(a.hora||''))});
+  if(!rs.length)return '';
+  var at=rs.filter(function(r){return r.estado==='Atendido'}), ult=at[0];
+  var verPlata=esAdmin()||esDoctora(), debe=at.reduce(function(a,r){return a+num(r.saldo)},0);
+  var prox=null;
+  rs.forEach(function(r){
+    var f=r.estado==='Agendada'&&r.fecha>=hoy?r.fecha:(r.prox&&r.prox>=hoy?r.prox:'');
+    if(f&&(!prox||f<prox))prox=f});
+  var cel=''; rs.some(function(r){if(r.celular&&!mdCelMalo(r.celular)){cel=r.celular; return true} return false});
+  var p=pacDe(nombre), alerg=p&&p.med&&p.med.alergias, edad=p&&p.nac?edadDe(p.nac):null;
+  var sub=[]; if(edad!==null&&edad!==undefined&&edad!=='')sub.push(edad+' años'); sub.push(at.length===1?'1 visita':at.length+' visitas');
+  var dato=function(k,v,cls){return '<div><small>'+k+'</small><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></div>'};
+  return '<div class="md-vr-cab"><span class="md-av md-vr-av md-av'+mdHash(nombre)%6+'">'+esc(mdIniciales(nombre))+'</span><div><b>'+esc(mdLindo(nombre))+'</b><small>'+esc(sub.join(' · '))+'</small></div></div>'+
+    '<div class="md-vr-datos">'+
+      (verPlata?dato('DEBE',debe>0.009?esc(bs(debe)):'Nada',debe>0.009?'md-vr-debe':''):'')+
+      dato('PRÓXIMA CITA',prox?esc(fmtF(prox)):'Sin agendar')+
+      dato('ÚLTIMA VISITA',ult?esc(ult.fecha===hoy?'Hoy'+(ult.hora?', '+ult.hora:''):fmtF(ult.fecha)):'Todavía no')+
+      dato('CELULAR',cel?esc(cel):'—')+'</div>'+
+    (alerg?'<div class="md-vr-alerg">⚠ Alergia: '+esc(alerg)+'</div>':'')+
+    '<button type="button" class="btn dark md-vr-btn" onclick="mdVrOcultar(true);verPaciente(\''+jss(nombre)+'\')">Abrir ficha</button>'}
+function mdVrOcultar(ya){
+  clearTimeout(MD_VR.t); clearTimeout(MD_VR.ocultarT);
+  var f=function(){var p=$('#md-vr'); if(p)p.classList.remove('on'); MD_VR.fila=null};
+  if(ya)f(); else MD_VR.ocultarT=setTimeout(f,220)}
+function mdVrMostrar(tr){
+  var nombre=mdVrNombre(tr); if(!nombre)return;
+  var html=mdVrHtml(nombre); if(!html)return;
+  var p=$('#md-vr'); if(!p){p=document.createElement('div'); p.id='md-vr'; p.className='md-vr'; p.setAttribute('role','tooltip'); document.body.appendChild(p);
+    p.addEventListener('mouseenter',function(){clearTimeout(MD_VR.ocultarT)}); p.addEventListener('mouseleave',function(){mdVrOcultar()})}
+  p.innerHTML=html; p.classList.remove('on');
+  var r=tr.getBoundingClientRect(), w=340, x=Math.min(Math.max(12,(MD_VR.x||r.left+40)-60),window.innerWidth-w-12);
+  p.style.left=x+'px';
+  var alto=p.offsetHeight||230, y=r.bottom+8; if(y+alto>window.innerHeight-10)y=Math.max(10,r.top-alto-8);
+  p.style.top=y+'px'; void p.offsetWidth; p.classList.add('on'); MD_VR.fila=tr}
+
+/* ---------- 10 · abrir al instante: se ve lo guardado y lo nuevo llega por detrás ---------- */
+var MD_SINC={estado:'',hora:'',t0:0}, MD_NUEVAS={};
+function mdSincPintar(){
+  var b=$('.banner.conn'); if(!b||!MD_SINC.estado)return;
+  var s=b.querySelector('.md-sinc'); if(!s){s=document.createElement('span'); s.className='md-sinc'; b.appendChild(s)}
+  s.className='md-sinc md-sinc-'+MD_SINC.estado;
+  s.textContent=MD_SINC.estado==='trae'?'Trayendo lo último de la hoja…':(MD_SINC.estado==='ok'?'Al día con la hoja · '+MD_SINC.hora:'Sin respuesta de la hoja: se ve lo guardado en esta compu')}
+function mdSinc(est){MD_SINC.estado=est; if(est==='ok')MD_SINC.hora=mdHHMM(new Date().getHours()*60+new Date().getMinutes()); try{mdSincPintar()}catch(e){}}
+
+/* ---------- 11 · listas largas de a 50 y búsqueda que no traba ---------- */
+var MD_PARTES={};
+function mdPorPartes(tb,n){
+  if(!tb)return;
+  var id=tb.id, prev=MD_PARTES[id]; if(prev&&prev.obs)prev.obs.disconnect(); delete MD_PARTES[id];
+  var filas=Array.prototype.slice.call(tb.children);
+  if(filas.length<=n+10)return;
+  var resto=filas.slice(n), cols=(filas[0].children||[]).length||1;
+  resto.forEach(function(f){tb.removeChild(f)});
+  var st={resto:resto,total:filas.length,obs:null};
+  var marca=document.createElement('tr'); marca.className='md-mas-filas';
+  var pintar=function(){marca.innerHTML='<td colspan="'+cols+'"><span class="md-giro"></span>Mostrando '+(st.total-st.resto.length).toLocaleString('es-BO')+' de '+st.total.toLocaleString('es-BO')+
+    ' · bajá y se cargan las siguientes <button type="button" class="btn sm sec md-ver-todas">Ver todas</button></td>'};
+  var mas=function(k){
+    var lote=st.resto.splice(0,k), fr=document.createDocumentFragment(); lote.forEach(function(f){fr.appendChild(f)});
+    tb.insertBefore(fr,marca);
+    if(!st.resto.length){if(st.obs)st.obs.disconnect(); if(marca.parentNode)marca.parentNode.removeChild(marca)} else pintar();
+    try{mdResaltar(tb)}catch(e){}};
+  pintar(); tb.appendChild(marca);
+  marca.addEventListener('click',function(e){if(e.target.closest('.md-ver-todas')){e.stopPropagation(); mas(st.resto.length)}});
+  if(window.IntersectionObserver){st.obs=new IntersectionObserver(function(es){if(es.some(function(x){return x.isIntersecting}))mas(n)},{rootMargin:'400px'}); st.obs.observe(marca)}
+  MD_PARTES[id]=st}
+function mdPlegar(s){return String(s||'').split('').map(function(c){var x=c.normalize?c.normalize('NFD').replace(/[̀-ͯ]/g,''):c; return (x.length===1?x:c).toLowerCase()}).join('')}
+function mdResaltar(tb){
+  if(!tb)return;
+  var inp=tb.id==='l-body'?$('#l-q'):(tb.id==='pc-body'?$('#pc-q'):null), q=mdPlegar(inp&&inp.value.trim());
+  if(q.length<2)return;
+  var w=document.createTreeWalker(tb,NodeFilter.SHOW_TEXT,null), nodos=[];
+  while(w.nextNode()){var n=w.currentNode; if(n.parentNode.closest('button,mark,.md-mas-filas,.md-chip,.pill'))continue; if(mdPlegar(n.textContent).indexOf(q)>=0)nodos.push(n)}
+  nodos.slice(0,400).forEach(function(n){
+    var t=n.textContent, i=mdPlegar(t).indexOf(q); if(i<0)return;
+    var fr=document.createDocumentFragment(), mk=document.createElement('mark'); mk.className='md-mark';
+    fr.appendChild(document.createTextNode(t.slice(0,i))); mk.textContent=t.slice(i,i+q.length); fr.appendChild(mk); fr.appendChild(document.createTextNode(t.slice(i+q.length)));
+    n.parentNode.replaceChild(fr,n)})}
+/* la primera letra filtra al toque; si seguís escribiendo rápido, espera a que pares un instante */
+function mdSinTrabar(inp,nombreFn){
+  if(!inp)return;
+  var t=0, ult=0;
+  inp.oninput=function(){
+    var ahora=Date.now(), fn=function(){ult=Date.now(); window[nombreFn]()};
+    clearTimeout(t);
+    if(ahora-ult>300)fn(); else t=setTimeout(fn,220)}}
+
+/* ---------- 12 · aviso de versión nueva ---------- */
+var MD_VER={base:null,visto:false,t:0};
+function mdVerFirma(){
+  return fetch(location.href.split('#')[0].split('?')[0],{method:'HEAD',cache:'no-store'}).then(function(r){
+    return r.ok?(r.headers.get('etag')||r.headers.get('last-modified')||null):null}).catch(function(){return null})}
+function mdVerRevisar(){
+  if(MD_VER.visto||!navigator.onLine)return;
+  mdVerFirma().then(function(f){
+    if(!f)return;
+    if(MD_VER.base===null){MD_VER.base=f; return}
+    if(f!==MD_VER.base)mdVersionNueva()})}
+function mdVersionNueva(){
+  if(MD_VER.visto||$('#md-version'))return;
+  MD_VER.visto=true;
+  var d=document.createElement('div'); d.id='md-version'; d.className='md-version'; d.setAttribute('role','status');
+  d.innerHTML='<span class="md-version-i" aria-hidden="true">✨</span><div><b>Hay una versión nueva del panel</b><small>Trae mejoras. Tarda unos segundos.</small></div>'+
+    '<button type="button" class="md-version-luego">Después</button><button type="button" class="md-version-ya">Actualizar ahora</button>';
+  document.body.appendChild(d);
+  d.querySelector('.md-version-luego').onclick=function(){d.parentNode.removeChild(d)};
+  d.querySelector('.md-version-ya').onclick=function(){
+    var aMedias=false; try{aMedias=hayAlgoAMedioCargar()||($('#v-atencion').classList.contains('on')&&!!$('#f-paciente').value.trim())}catch(e){}
+    if(aMedias){toast('Primero guardá (o cerrá) lo que estás cargando; después tocá «Actualizar ahora».',1); return}
+    location.reload()}}
+
 /* ---------- Sonri enseña lo nuevo ---------- */
 (function(){
   if(typeof ASIS_NOVEDADES==='undefined'||typeof ASIS_AYUDA==='undefined')return;
@@ -13247,7 +13560,15 @@ function mdPrimerNuevo(r){
      x:'Los avisos ahora salen arriba a la derecha: verde cuando salió bien, rojo cuando algo falló e i azul cuando es solo información. Se van solos.'},
     {id:'md-meta', f:'2026-10-21', t:'Festejo de la meta del mes',
      x:'Si cargaste la meta del mes en ⚙️ Ajustes, el día que se alcanza el panel lo festeja con fuegos artificiales (una sola vez por mes). En 📊 Panel también está «De dónde vienen los nuevos» y «Mes a mes».',
-     si:function(){return esAdmin()}});
+     si:function(){return esAdmin()}},
+    {id:'md-vistarapida', f:'2026-10-21', t:'Pasá el mouse sobre un paciente',
+     x:'En 📋 Atenciones y en 👥 Pacientes, dejá el mouse un momento sobre una fila: aparece una tarjetita con lo que debe, su próxima cita, la última visita y las alergias, sin abrir la ficha.', ayuda:/mouse/},
+    {id:'md-guardar', f:'2026-10-21', t:'El botón Guardar te avisa',
+     x:'Al guardar una atención el botón gira mientras trabaja y se pone verde con ✓ cuando quedó guardada. Mientras gira no se puede tocar dos veces.'},
+    {id:'md-listas', f:'2026-10-21', t:'Listas largas más livianas',
+     x:'Atenciones y Pacientes muestran de a 50 y traen las siguientes cuando bajás («Ver todas» las muestra de una). Al buscar, lo que coincide se pinta de amarillo.', ayuda:/de a 50/},
+    {id:'md-version', f:'2026-10-21', t:'Aviso de versión nueva',
+     x:'Cuando haya mejoras nuevas del panel, arriba aparece «Hay una versión nueva». Tocá «Actualizar ahora» cuando no estés cargando nada.', ayuda:/versión nueva/});
   ASIS_AYUDA.push(
     {q:'¿Cómo veo el día de cada doctora?', k:'dia vistazo doctoras carril linea tiempo ahora horario quien atiende', v:'midia', f:['#md-carriles','#m-lista'],
      p:['Entrá a 🏠 Mi día.','Arriba, en «El día de un vistazo», cada doctora tiene su fila con sus pacientes en la hora.','Verde: ya atendido. Lima: le toca ahora. Celeste: por venir.','Tocá un paciente para ir a su tarjeta y atenderlo.']},
@@ -13264,7 +13585,13 @@ function mdPrimerNuevo(r){
     {q:'¿Cómo pongo el modo noche?', k:'modo noche oscuro negro tarde vista fondo dientecitos claro', v:'config', f:'#md-apariencia',
      p:['Entrá a ⚙️ Ajustes › Apariencia.','En «Modo noche» elegí «Automático (de 19 a 7)» para que se ponga oscuro solo a la noche, o «Siempre».','Ahí mismo podés prender o apagar el «Fondo con dientecitos».','Vale solo para este aparato: no cambia nada de los datos.']},
     {q:'¿Qué significan los colores de los avisos?', k:'aviso cartel mensaje verde rojo azul error salio bien toast', v:'midia', f:'#toast',
-     p:['Verde con ✓: lo que hiciste salió bien (por ejemplo, la atención quedó guardada).','Rojo con !: algo no se pudo hacer; leé el aviso, casi siempre dice qué hacer.','Azul con i: es solo información.','La rayita de abajo muestra cuánto falta para que se vaya solo.']});
+     p:['Verde con ✓: lo que hiciste salió bien (por ejemplo, la atención quedó guardada).','Rojo con !: algo no se pudo hacer; leé el aviso, casi siempre dice qué hacer.','Azul con i: es solo información.','La rayita de abajo muestra cuánto falta para que se vaya solo.']},
+    {q:'¿Cómo veo los datos de un paciente sin abrir la ficha (con el mouse)?', k:'mouse pasar encima vista rapida tarjetita debe alergia proxima cita ultima visita', v:'lista', f:'#l-body',
+     p:['Entrá a 📋 Atenciones o a 👥 Pacientes.','Dejá el mouse quieto medio segundo sobre la fila del paciente.','Aparece una tarjetita con lo que debe, su próxima cita, la última visita, el celular y las alergias.','«Abrir ficha» abre la ficha completa; al mover el mouse afuera, la tarjetita se va.']},
+    {q:'¿Por qué la lista muestra de a 50?', k:'lista larga 50 ver todas cargar mas bajar atenciones pacientes lento', v:'lista', f:'#l-body',
+     p:['Con miles de filas la compu se pone lenta: por eso se muestran de a 50.','Al bajar se cargan solas las siguientes.','«Ver todas» las muestra todas de una vez (por ejemplo, para buscar con Ctrl+F).','Los totales de arriba siempre cuentan todo, no solo lo que se ve.']},
+    {q:'Me apareció «Hay una versión nueva del panel», ¿qué hago?', k:'version nueva actualizar aviso arriba mejoras recargar', v:'midia', f:'#md-version',
+     p:['Significa que se publicaron mejoras del panel.','Si no estás cargando nada, tocá «Actualizar ahora»: tarda unos segundos y no se pierde ningún dato.','Si estás en medio de una atención, guardala primero.','«Después» lo deja para la próxima vez que abras el panel.']});
 })();
 
 /* ---------- los enganches: después de lo que el panel ya hace ---------- */
@@ -13277,11 +13604,16 @@ function mdRefrescar(){
 (function(){
   var _show=show;
   show=function(v){
+    var de=MD_VISTA, y=window.pageYOffset||0;
     var r=_show.apply(this,arguments);
-    if(v==='midia')MD_ANILLOS_FIRMA='';
+    var vista=$('#v-'+v), cambio=!!(vista&&vista.classList.contains('on'))&&de!==v;
+    if(vista&&vista.classList.contains('on')){MD_VISTA=v; if(!cambio&&y)window.scrollTo(0,y)}
+    try{mdVrOcultar(true)}catch(e){}
+    if(v==='midia'&&cambio)MD_ANILLOS_FIRMA='';
     try{mdRefrescar(); mdIndicador()}catch(e){}
     try{mdTitulos(); mdBotones($('#v-'+v))}catch(e){}
-    try{mdEntrada(v); mdContar($('#v-'+v))}catch(e){}
+    try{if(cambio){mdTransicion(de,v); mdEntrada(v)} mdContar($('#v-'+v))}catch(e){}
+    try{if(v==='midia')mdAhoraMueve()}catch(e){}
     try{if(v==='config'){mdSincAjustes(); mdPintarInstalar()}}catch(e){}
     try{document.body.classList.toggle('md-en-atencion',v==='atencion'); if(v==='atencion')mdResumen()}catch(e){}
     return r};
@@ -13329,6 +13661,50 @@ function mdRefrescar(){
   updateNavRem=function(){var r=_upd.apply(this,arguments); try{mdPintarBarra()}catch(e){} return r};
   var _ref=refreshAll;
   refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar(); mdMetaFestejo()}catch(e){} return r}})();
+/* los enganches de la ronda 3 (van por fuera de los de antes) */
+(function(){
+  var _mi=renderMiDia;
+  renderMiDia=function(){var y=window.pageYOffset||0, r=_mi.apply(this,arguments); try{mdMarcarCambios(); mdAhoraMueve()}catch(e){}
+    /* el repintado no te mueve de donde estabas mirando */
+    try{if(y&&MD_VISTA==='midia'&&Math.abs((window.pageYOffset||0)-y)>2)window.scrollTo(0,y)}catch(e){}
+    return r};
+  var _om=openModal;
+  openModal=function(){var r=_om.apply(this,arguments); try{mdVrOcultar(true)}catch(e){} try{mdDesdeOrigen()}catch(e){} try{if(MD_GUARDA.on)mdGuardaFin('')}catch(e){} return r};
+  var _toast=toast;
+  toast=function(m,err){var r=_toast.apply(this,arguments);
+    try{if(MD_GUARDA.on){if(err)mdGuardaFin('mal'); else if(/^Atenci[oó]n (guardada|actualizada)/.test(String(m)))mdGuardaFin('listo')}}catch(e){}
+    if(!err&&/^Atenci[oó]n guardada/.test(String(m)))try{mdCara('festeja',4000)}catch(e){}
+    return r};
+  if(typeof api==='function'){
+    var _api=api;
+    api=function(){
+      MD_GUARDA.red++;
+      var fin=function(){MD_GUARDA.red=Math.max(0,MD_GUARDA.red-1); if(MD_GUARDA.on)mdGuardaSiNadaEspera()};
+      var pr=_api.apply(this,arguments);
+      if(pr&&pr.then)pr.then(fin,fin); else fin();
+      return pr}}
+  if(typeof pullServer==='function'){
+    var _pull=pullServer;
+    pullServer=function(){
+      var antes={}; DATA.forEach(function(r){if(r&&r.id)antes[r.id]=1});
+      var habia=DATA.length>0;
+      mdSinc('trae');
+      var pr=_pull.apply(this,arguments);
+      if(pr&&pr.then)pr.then(function(ok){
+        if(ok){mdSinc('ok'); if(habia){var t=Date.now(); DATA.forEach(function(r){if(r&&r.id&&!antes[r.id])MD_NUEVAS[r.id]=t})}}
+        else mdSinc('sin')},function(){mdSinc('sin')});
+      return pr}}
+  if(typeof banner==='function'){var _ban=banner; banner=function(){var r=_ban.apply(this,arguments); try{mdSincPintar()}catch(e){} return r}}
+  var _ref=refreshAll;
+  refreshAll=function(){
+    /* el primer pedido a la hoja sale antes de que esto exista: se nota porque cambia ultimoPull */
+    try{if(MD_SINC.estado==='trae'&&ultimoPull>MD_SINC.t0)mdSinc('ok')}catch(e){}
+    return _ref.apply(this,arguments)};
+  var _rl=renderLista; renderLista=function(){var r=_rl.apply(this,arguments); try{mdPorPartes($('#l-body'),50); mdResaltar($('#l-body'))}catch(e){} return r};
+  var _rpa=renderPacientes; renderPacientes=function(){var r=_rpa.apply(this,arguments); try{mdPorPartes($('#pc-body'),50); mdResaltar($('#pc-body'))}catch(e){} return r};
+  [['renderRem','#rem-list'],['renderCaja','#v-caja'],['renderPanel','#v-panel']].forEach(function(p){
+    var f=window[p[0]]; if(typeof f!=='function')return;
+    window[p[0]]=function(){var r=f.apply(this,arguments); try{mdContar($(p[1]))}catch(e){} return r}})})();
 (function mdInit(){
   try{
     mdAplicarAnim(); mdAplicarNoche(); document.body.classList.toggle('md-fondo',mdPref('FONDO')!==0);
@@ -13342,7 +13718,33 @@ function mdRefrescar(){
     document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
     window.addEventListener('resize',function(){try{mdAltoHeader(); mdIndicador(true)}catch(e){}});
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){try{mdIndicador(true)}catch(e){}});
-    setInterval(function(){try{mdEncabezado(); mdCaraBase(); mdAplicarNoche()}catch(e){}},60000);
+    setInterval(function(){try{mdEncabezado(); mdCaraBase(); mdAplicarNoche()}catch(e){} try{mdAhoraMueve(); mdVerSiesta()}catch(e){}},60000);
+    /* ronda 3: lo que escucha a la compu */
+    MD_VISTA=(($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset||{}).v||'';
+    ['mousemove','keydown','pointerdown','wheel','touchstart'].forEach(function(ev){document.addEventListener(ev,function(){if(Date.now()-MD_ULT_USO>2000||MD_SIESTA)mdUso()},{passive:true,capture:true})});
+    document.addEventListener('pointerdown',function(e){var el=e.target&&e.target.closest&&e.target.closest(MD_ORIGEN_SEL); MD_ORIGEN=el?{el:el,rect:el.getBoundingClientRect(),t:Date.now()}:null},true);
+    document.addEventListener('click',function(e){
+      var b=e.target&&e.target.closest&&e.target.closest('#btn-save'); if(!b)return;
+      if(MD_GUARDA.on){e.stopImmediatePropagation(); e.preventDefault(); return}
+      MD_GUARDA.on=true; mdGuardaEstado('gira'); clearTimeout(MD_GUARDA.t);
+      MD_GUARDA.t=setTimeout(function(){mdGuardaFin('')},15000);
+      mdGuardaSiNadaEspera()},true);
+    if(mdVrPuede()){
+      document.addEventListener('mouseover',function(e){
+        var tr=e.target&&e.target.closest&&e.target.closest('#l-body tr[onclick], #pc-body tr[onclick]');
+        if(!tr){if(MD_VR.fila&&!(e.target.closest&&e.target.closest('#md-vr')))mdVrOcultar(); return}
+        clearTimeout(MD_VR.ocultarT);
+        if(tr===MD_VR.fila)return;
+        clearTimeout(MD_VR.t); MD_VR.x=e.clientX;
+        MD_VR.t=setTimeout(function(){if(tr.matches(':hover'))mdVrMostrar(tr)},550)});
+      window.addEventListener('scroll',function(){if(MD_VR.fila)mdVrOcultar(true)},{passive:true});
+      document.addEventListener('mousedown',function(e){if(MD_VR.fila&&!(e.target.closest&&e.target.closest('#md-vr')))mdVrOcultar(true)})}
+    mdSinTrabar($('#l-q'),'renderLista'); mdSinTrabar($('#pc-q'),'renderPacientes');
+    if(CONNECTED&&!document.body.classList.contains('locked')){MD_SINC.t0=ultimoPull; mdSinc('trae');
+      setTimeout(function(){if(MD_SINC.estado==='trae'&&ultimoPull===MD_SINC.t0)mdSinc('sin')},25000)}
+    if(/^https?:/.test(location.protocol)&&window.fetch){
+      setTimeout(mdVerRevisar,8000); setInterval(mdVerRevisar,10*60000);
+      document.addEventListener('visibilitychange',function(){if(!document.hidden)mdVerRevisar()})}
     /* si el panel abrió ya con sesión, lo que está a la vista se repinta con la cara nueva */
     if(!document.body.classList.contains('locked')){
       var v=asisVista(); if(v==='midia')renderMiDia(); else if(v)show(v)}
