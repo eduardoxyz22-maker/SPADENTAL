@@ -1866,6 +1866,269 @@ body.rol-pauta #md-barra{display:none!important}
 .md-pt-qr small{display:block;color:#6b6b6b;margin-top:1px}
 .md-pt-qv{font-weight:700;white-space:nowrap}
 .md-pt-qr .md-pt-wa{padding:0 12px}
+/* ----- parte: 10-ajustes.css ----- */
+/* ============ 10 · Ajustes: Profesionales y Canales como listas, claves por rol ============ */
+.md-aj-viejo{display:none!important}
+.md-aj-sub{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin:18px 0 6px}
+.md-aj-der{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+@keyframes mdAjAparece{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+.md-aj-ok{font-size:11.5px;font-weight:800;color:#1F5E43;background:#DDF3E7;border-radius:999px;padding:3px 8px;white-space:nowrap;animation:mdAjAparece .25s ease both}
+.md-aj-ok[hidden]{display:none}
+/* filas */
+.md-aj-lista{margin-top:2px}
+.md-aj-fila{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line);min-height:58px}
+.md-aj-fila:first-child{border-top:0}
+.md-aj-fila.off{opacity:.55}
+.md-aj-fila.md-aj-arrastra{opacity:.35}
+.md-aj-fila.md-aj-sobre{box-shadow:inset 0 3px 0 var(--lime-dk)}
+.md-aj-grip{color:#B9BDB0;font-size:18px;letter-spacing:-6px;width:16px;flex:0 0 16px;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none}
+.md-aj-fila[draggable="false"] .md-aj-grip{cursor:default;opacity:.4}
+.md-aj-av{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;letter-spacing:-.02em;
+  background:color-mix(in srgb,var(--pc,var(--lime-dk)) 16%,var(--panel));color:var(--pc,var(--lime-dk));box-shadow:inset 0 0 0 2px var(--pc,var(--lime-dk))}
+.md-aj-tx{flex:1;min-width:0}
+.md-aj-tx b{display:block;font-size:14.5px}
+.md-aj-tx small{display:block;font-size:12px;color:var(--gray);margin-top:2px}
+.md-aj-tx .pill{vertical-align:middle;margin-right:3px}
+.md-aj-pal{display:flex;gap:5px;flex:0 0 auto}
+.md-aj-pal button{width:18px;height:18px;border-radius:50%;border:0;padding:0;margin:0;cursor:pointer;display:block;box-shadow:none;transition:transform .15s}
+.md-aj-pal button:hover{transform:scale(1.18)}
+.md-aj-pal button.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink)}
+.md-aj-pal button:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+.md-aj-sw{width:40px;height:24px;border-radius:999px;background:#CFD3C6;position:relative;flex:0 0 40px;border:0;padding:0;margin:0;cursor:pointer;transition:background .2s}
+.md-aj-sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s}
+.md-aj-sw.on{background:var(--ok)}
+.md-aj-sw.on::after{left:19px}
+.md-aj-sw:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+.md-aj-mas{flex:0 0 auto}
+.md-aj-ib{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;
+  color:var(--gray);cursor:pointer;font-size:16px;font-weight:800;list-style:none;box-sizing:border-box}
+.md-aj-ib::-webkit-details-marker{display:none}
+.md-aj-mas .md-mas-m{min-width:190px}
+.md-aj-mas .md-mas-m .btn[disabled]{opacity:.4;cursor:default}
+.md-aj-rojo{color:var(--clay)!important}
+.md-aj-cnt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:150px;flex:0 0 150px}
+.md-aj-cnt small{font-size:12px;color:var(--gray);white-space:nowrap}
+.md-aj-cnt .md-prog{width:100%;margin:0}
+.md-aj-fila.off .md-aj-cnt .md-prog i{background:var(--line)}
+.md-aj-fila .md-chip{flex:0 0 auto}
+.md-chip.c-loc{background:#DDF3F1;color:#12605B}
+.md-chip.c-vol{background:#ECEEF2;color:#4F5666}
+.md-chip.c-otro{background:var(--paper);color:var(--gray);border:1px solid var(--line)}
+.md-aj-nuevo{display:flex;gap:8px;align-items:center;margin-top:8px;padding:10px 12px;border:1px dashed var(--lime-bd);border-radius:14px;background:var(--lime-sf);flex-wrap:wrap}
+.md-aj-nuevo[hidden]{display:none}
+.md-aj-nuevo input{flex:1 1 200px;width:auto;height:40px;margin:0}
+.md-aj-ro .md-aj-fila{cursor:default}
+@media(max-width:640px){
+  .md-aj-fila{flex-wrap:wrap;row-gap:8px}
+  .md-aj-tx{flex:1 1 40%}
+  .md-aj-pal,.md-aj-cnt{flex:1 1 100%;width:auto;align-items:flex-start;order:5;padding-left:28px;box-sizing:border-box}
+  .md-aj-cnt .md-prog{max-width:220px}}
+/* claves por rol */
+.md-aj-roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.md-aj-roles{grid-template-columns:1fr}}
+.md-aj-rol{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--panel);display:flex;flex-direction:column;gap:8px}
+.md-aj-rol.fab{border-color:#F0DCA8;background:#FFFCF4}
+body.md-noche .md-aj-rol.fab{background:#2E2715;border-color:#5A4A22}
+.md-aj-rol-t{display:flex;align-items:center;gap:10px}
+.md-aj-rol-t b{font-size:15px;display:block}
+.md-aj-rol-t small{font-size:12px;color:var(--gray);display:block}
+.md-aj-ico{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 46px;
+  background:color-mix(in srgb,var(--pc,var(--lime-dk)) 16%,var(--panel));color:var(--pc,var(--lime-dk))}
+.md-aj-ico svg{width:22px;height:22px}
+.md-aj-rol .md-aj-av{width:46px;height:46px;flex-basis:46px;font-size:15px}
+.md-aj-est{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--gray);flex-wrap:wrap}
+.md-aj-acc{display:flex;gap:6px;margin-top:auto}
+.md-aj-acc[hidden]{display:none}
+.md-aj-frm{border:1px dashed var(--lime-bd);background:var(--lime-sf);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.md-aj-frm input{margin:0;height:38px;font-size:14px}
+.md-aj-frm .ojo-wrap{margin:0}
+.md-aj-frm-b{display:flex;gap:6px;flex-wrap:wrap}
+.md-aj-frm.md-aj-espera{opacity:.6;pointer-events:none}
+.md-aj-err{min-height:0}
+.md-aj-err:empty{display:none}
+.md-aj-lk{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.md-aj-lk-tx{flex:1 1 260px}
+.md-aj-lk-tx b{display:block;font-size:15px}
+.md-aj-lk-tx small{font-size:12.5px;color:var(--gray)}
+/* el color de cada doctora en el carril de Mi día */
+.md-carril.md-aj-col .md-carril-n::before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--pc);margin-right:6px;vertical-align:middle}
+/* ----- parte: 20-panel-caja.css ----- */
+/* 20 · Panel: qué hizo cada doctora y los que más faltan · Caja: la mitad de abajo
+   Todo sale de los tokens de cada clínica (--ink, --lime*, --paper, --panel, --line, --gray, --clay, --ok, --warn, --info). */
+.md-pc-der{margin-left:auto;display:flex;gap:8px;align-items:center;font-weight:600;font-size:13px;color:var(--gray);text-transform:none;letter-spacing:0}
+.md-pc-chip,.md-pc-chips button{height:32px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font:inherit;font-size:13px;font-weight:700;padding:0 12px;
+  display:inline-flex;align-items:center;gap:6px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.md-pc-chip.on,.md-pc-chips button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.md-pc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.md-pc-chips em{font-style:normal;opacity:.7;font-size:11.5px}
+.md-pc-chips.sm button{height:28px;font-size:12px;padding:0 10px}
+.md-pc-chips button:focus-visible,.md-pc-ib:focus-visible,.md-pc-seg:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+/* --- doctoras: leyenda, barras apiladas y dona --- */
+.md-pc-ley{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--gray);margin:0 0 12px}
+.md-pc-ley span{display:inline-flex;align-items:center;gap:5px}
+.md-pc-ley i,.md-pc-dona small i{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px}
+.md-pc-dona small i{width:9px;height:9px;border-radius:50%;margin-right:3px}
+.md-pc-dos{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:16px;align-items:center}
+.md-pc-drow{display:grid;grid-template-columns:38px minmax(110px,150px) minmax(0,1fr) 100px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.md-pc-drow:first-child{border-top:0}
+.md-pc-dn b{font-size:14px;display:block;line-height:1.2}.md-pc-dn small{font-size:12px;color:var(--gray);display:block}
+.md-pc-stack{display:flex;height:22px;border-radius:7px;overflow:hidden;background:var(--line);min-width:28px}
+.md-pc-seg{display:block;height:100%;color:#fff;font-size:10.5px;font-weight:800;font-style:normal;text-align:center;line-height:22px;overflow:hidden;white-space:nowrap;cursor:pointer;transition:filter .15s}
+.md-pc-seg:hover{filter:brightness(1.12)}
+.md-pc-tot{text-align:right;font-variant-numeric:tabular-nums}.md-pc-tot b{font-size:16px;display:block}.md-pc-tot small{display:block;font-weight:600;font-size:11.5px;color:var(--gray)}
+.md-pc-dona{text-align:center}.md-pc-dona svg{width:150px;height:150px;font-family:inherit}
+.md-pc-dona small{display:block;font-size:12px;color:var(--gray);margin-top:4px;line-height:1.6}
+.md-anim .md-pc-stack{animation:mdPcCrece .8s cubic-bezier(.2,.8,.2,1) both;transform-origin:left}
+@keyframes mdPcCrece{from{transform:scaleX(0)}}
+/* --- filas con avatar (faltones, deudas, egresos, sin forma, no cuadran) --- */
+.md-pc-lista{display:flex;flex-direction:column}
+.md-pc-fila{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--line);min-width:0}
+.md-pc-fila:first-child{border-top:0}
+.md-pc-fila.md-pc-clic{cursor:pointer}.md-pc-fila.md-pc-clic:hover{background:var(--lime-sf)}
+.md-pc-tx{flex:1;min-width:0}.md-pc-tx b{display:block;font-size:14.5px;line-height:1.25}
+.md-pc-tx small{display:block;font-size:12px;color:var(--gray);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-pc-num{font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.md-pc-neg{color:var(--clay)}
+.md-pc-acc{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+.md-pc-ib{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;color:var(--gray);cursor:pointer;font:inherit;text-decoration:none;padding:0;flex:none}
+.md-pc-ib svg{width:17px;height:17px}
+.md-pc-ib:hover{color:var(--ink);border-color:var(--gray)}
+.md-pc-ib.rojo:hover{color:var(--clay);border-color:var(--clay)}
+.md-pc-ib.wa{background:#DFF4E6;border-color:#BFE0CD;color:#1C6B3A}
+.md-pc-ib.wa:hover{background:#CDEBD8}
+.md-pc-ib.wa span{display:none}
+.md-pc-fila .btn.xs{padding:5px 10px;font-size:12.5px;border-radius:8px}
+.md-pc-fila .pill{flex:0 0 auto}
+.md-pc-fila .pill.lila{background:#EFE7F7;border-color:#D9CBEE;color:#5A3F8A}
+.md-pc-av-s{width:30px!important;height:30px!important;flex-basis:30px!important;font-size:10px!important}
+.md-pc-c{padding:8px 0;gap:8px}.md-pc-c .md-pc-tx b{font-size:13.5px}.md-pc-c .md-pc-num{font-size:14px}
+.md-pc-catb{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.md-pc-catb svg{width:18px;height:18px}
+.md-pc-k-coral{background:#FDF0EA;color:#C2512F}.md-pc-k-lila{background:#F5F0FB;color:#6B4FA0}.md-pc-k-azul{background:#EEF5FC;color:#2F6FA8}.md-pc-k-ambar{background:#FFF7E6;color:#C27A0E}
+.md-pc-k-rosa{background:#FCEEF4;color:#B83E73}.md-pc-k-teal{background:#EAF7F5;color:#16807A}.md-pc-k-gris{background:#F3F4F6;color:#4F5666}
+.md-pc-ver{display:block;width:100%;text-align:center;font:inherit;font-size:13px;font-weight:700;color:var(--lime-dk);background:transparent;border:0;padding:10px 0 2px;cursor:pointer}
+.md-pc-nota{margin-top:14px;padding:10px 12px;background:var(--paper);border-radius:10px}
+.md-pc-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.md-pc-cats span{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--paper);border:1px solid var(--line);color:var(--gray)}
+.md-pc-cats span b{color:var(--ink)}
+/* --- faltones: pills y cuadritos --- */
+.md-pc-fp{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto}
+.md-pc-pills{display:flex;gap:5px}
+.md-pc-fbar{display:flex;gap:3px;height:8px;width:120px}
+.md-pc-fbar i{display:block;flex:1;height:100%;border-radius:3px;background:var(--line)}
+.md-pc-fbar i.no{background:var(--clay)}.md-pc-fbar i.can{background:var(--warn)}
+.md-pc-fn{width:36px}
+/* --- caja: los cuatro totales, los chips y las dos tarjetas chicas --- */
+#md-pc-top{margin-top:14px}
+.md-pc-kpis .kpi{cursor:pointer;transition:box-shadow .15s}
+.md-pc-kpis .kpi .k{display:flex;align-items:center;gap:6px;min-height:0}
+.md-pc-kpis .kpi .k svg{width:14px;height:14px;flex:none}
+.md-pc-kpis .kpi .v{font-size:24px}
+.md-pc-kpi-coral{background:#FDF0EA;border-color:#F3D3C6}.md-pc-kpi-ambar{background:#FFF7E6;border-color:#F0DCA8}
+.md-pc-kpi-rosa{background:#FCEEF4;border-color:#F2CBDD}.md-pc-kpi-gris{background:#F3F4F6;border-color:#DDE0E6}
+.md-pc-kpis .kpi.on{box-shadow:0 0 0 2px var(--ink)}
+.md-pc-barra{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.md-pc-btns{margin-left:auto}
+.md-pc-btns .row-btn{margin:0!important;gap:6px}
+.md-pc-g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.md-pc-g2>.card{margin-top:0}
+.md-pc-g2.solo{grid-template-columns:minmax(0,1fr)}
+.md-pc-g2 .card>h2.md-h{font-size:16px}
+.md-pc-g2 .md-h-i{width:32px;height:32px;flex-basis:32px}
+.md-pc-g2 .md-h-i svg{width:16px;height:16px}
+/* --- de noche, sin fondos claros --- */
+body.md-noche .md-pc-kpi-coral,body.md-noche .md-pc-kpi-ambar,body.md-noche .md-pc-kpi-rosa,body.md-noche .md-pc-kpi-gris{background:var(--panel);border-color:var(--line)}
+body.md-noche .md-pc-ib.wa{background:#1F3A2A;border-color:#2E5A3F;color:#9BE0B4}
+body.md-noche .md-pc-fila.md-pc-clic:hover{background:rgba(255,255,255,.05)}
+body.md-noche .md-pc-seg{color:#fff}
+/* --- en el celular cada fila es una tarjeta --- */
+@media(max-width:700px){
+  .md-pc-dos{grid-template-columns:1fr}
+  .md-pc-drow{grid-template-columns:38px minmax(0,1fr) auto;grid-template-areas:"av nom tot" "bar bar bar";row-gap:6px}
+  .md-pc-drow .md-av{grid-area:av}.md-pc-dn{grid-area:nom}.md-pc-tot{grid-area:tot}.md-pc-stack{grid-area:bar}
+  .md-pc-f{flex-wrap:wrap;border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:8px;background:var(--panel)}
+  .md-pc-f:first-child{border-top:1px solid var(--line);margin-top:0}
+  .md-pc-f .md-pc-tx{flex-basis:calc(100% - 100px)}
+  .md-pc-f .md-pc-fn{width:auto;font-size:18px;order:0}
+  .md-pc-f .md-pc-fp{flex-direction:row;align-items:center;justify-content:space-between;width:100%;order:3}
+  .md-pc-f .md-pc-acc{width:100%;order:4}
+  .md-pc-f .md-pc-ib.wa{flex:1;height:42px;border-radius:11px;background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700;font-size:13.5px;gap:7px}
+  .md-pc-f .md-pc-ib.wa span{display:inline}
+  .md-pc-f .md-pc-ib.wa svg{width:16px;height:16px}
+  .md-pc-d,.md-pc-e{flex-wrap:wrap}
+  .md-pc-d .md-pc-tx,.md-pc-e .md-pc-tx{flex-basis:calc(100% - 50px)}
+  .md-pc-d .pill,.md-pc-e .pill{margin-left:50px}
+  .md-pc-d .md-pc-num,.md-pc-e .md-pc-num{flex:1;text-align:left}
+  .md-pc-g2{grid-template-columns:minmax(0,1fr)}
+  .md-pc-g2>.card{min-width:0}
+  .md-pc-c{flex-wrap:wrap}
+  .md-pc-c .md-pc-tx{flex:1 1 calc(100% - 40px)}
+  .md-pc-c .pill{margin-left:38px}
+  .md-pc-c .btn.xs{margin-left:auto}
+  .md-pc-btns{margin-left:0;width:100%}
+  .md-pc-btns .row-btn .btn{flex:1}}
+/* ----- parte: 30-fecha.css ----- */
+/* ---------- 30 · una sola barra de fecha para Mi día y Agenda ---------- */
+.md-fe-viejo{display:none !important}
+.md-fe{position:relative;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px;padding:8px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+#v-cita .md-fe{margin-top:10px}
+.md-fe-nav{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.md-fe button{font:inherit;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.md-fe button:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+.md-fe-nb{width:36px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;padding:0}
+.md-fe-nb:hover,.md-fe-hoy:not(.on):hover{border-color:var(--lime-bd);background:var(--lime-sf)}
+.md-fe-f{height:40px;border-radius:11px;border:2px solid var(--lime-bd);background:var(--panel);display:inline-flex;align-items:center;gap:7px;padding:0 10px;font-weight:800;font-size:15px;white-space:nowrap}
+.md-fe-f:hover,.md-fe-f[aria-expanded="true"]{border-color:var(--lime-dk)}
+.md-fe-f svg{width:17px;height:17px;flex:0 0 17px;color:var(--lime-dk)}
+.md-fe-f small{font-weight:600;color:var(--gray);font-size:11px}
+.md-fe-hoy{height:40px;border-radius:11px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;padding:0 12px;font-weight:800}
+.md-fe-hoy.on{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.md-fe-sep{width:1px;height:28px;background:var(--line);margin:0 4px;flex:0 0 1px}
+.md-fe-docs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1 1 auto;min-width:0}
+.md-fe-doc{height:34px;border-radius:999px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;gap:6px;padding:0 10px 0 5px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.md-fe-doc[data-prof=""]{padding-left:10px}
+.md-fe-doc i{width:22px;height:22px;flex:0 0 22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-style:normal;font-weight:800;color:#fff;letter-spacing:-.02em}
+.md-fe-doc em{font-style:normal;font-size:11px;opacity:.7;font-variant-numeric:tabular-nums}
+.md-fe-doc:not(.on):hover{border-color:var(--lime-bd);background:var(--lime-sf)}
+.md-fe-doc.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.md-fe-doc.on em{opacity:.8}
+.md-fe-doc.fijo{cursor:default}
+/* el calendario desplegable */
+.md-fe-pop{position:absolute;left:52px;top:calc(100% + 8px);z-index:40;width:300px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 2px 4px rgba(0,0,0,.05),0 24px 44px -20px rgba(0,0,0,.35);padding:12px 14px 14px;color:var(--ink)}
+.md-fe-pop[hidden]{display:none}
+.md-fe-mh{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:14px;margin-bottom:8px}
+.md-fe-mb{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--panel);display:inline-flex;align-items:center;justify-content:center;font-size:14px;padding:0}
+.md-fe-mb:hover{background:var(--lime-sf);border-color:var(--lime-bd)}
+.md-fe-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:12.5px}
+.md-fe-cal small{font-size:10.5px;font-weight:700;color:var(--gray);text-transform:uppercase;padding:2px 0 4px}
+.md-fe-d{font-weight:600;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:9px;border:0;background:transparent;line-height:1;padding:0}
+.md-fe-d:hover{background:var(--lime-sf)}
+.md-fe-d.mt{color:#B9BDB0}
+.md-fe-d.hy{background:var(--ink);color:var(--panel);font-weight:800}
+.md-fe-d.sel{box-shadow:inset 0 0 0 2px var(--lime);font-weight:800}
+.md-fe-d.sel:not(.hy){background:var(--lime-sf)}
+.md-fe-d i{display:block;width:4px;height:4px;border-radius:50%;background:var(--lime-dk);margin-top:3px}
+.md-fe-d.hy i{background:var(--lime)}
+.md-fe-pie{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12.5px;color:var(--gray)}
+.md-fe-pie span{display:inline-flex;align-items:center;gap:5px}
+.md-fe-pie span i{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--lime-dk)}
+.md-fe-irhoy{border:0;background:transparent;color:var(--lime-dk);font-weight:800;padding:4px 6px;border-radius:8px}
+.md-fe-irhoy:hover{background:var(--lime-sf)}
+/* modo noche: los fondos salen de las variables; solo lo que tenía color fijo */
+body.md-noche .md-fe-d.mt{color:#5B6054}
+body.md-noche .md-fe-pop{box-shadow:0 2px 4px rgba(0,0,0,.3),0 24px 44px -20px rgba(0,0,0,.7)}
+/* en el celular: las flechas arriba y las doctoras en una fila que se desliza */
+@media(max-width:700px){
+  .md-fe{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;padding:8px}
+  .md-fe-nav{justify-content:space-between;min-width:0;width:100%}
+  .md-fe-docs{width:100%}
+  .md-fe-f{flex:1 1 auto;justify-content:center}
+  .md-fe-sep{display:none}
+  .md-fe-docs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 2px 4px;margin:-2px -2px -4px}
+  .md-fe-docs::-webkit-scrollbar{display:none}
+  .md-fe-doc{flex:0 0 auto}
+  .md-fe-pop{left:0;right:0;width:auto;max-width:none}}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -15858,6 +16121,717 @@ function mdRefrescar(){
     if(!document.body.classList.contains('locked')){
       var v=asisVista(); if(v==='midia')renderMiDia(); else if(v)show(v)}
   }catch(e){if(window.console)console.error('moderno',e)}})();
+/* ----- parte: 10-ajustes.js ----- */
+/* =====================================================================
+   10 · AJUSTES: Profesionales y Canales como listas (maqueta 01) y
+   claves por rol (maqueta 05).
+   Los dos «uno por línea» quedan escondidos y se siguen usando por
+   debajo: cada cambio escribe el textarea viejo y dispara su botón de
+   guardar (el mismo saveCfg() de siempre). Lo apagado sale de CFG.prof /
+   CFG.canales y queda en CFG.profOff / CFG.canalesOff; el color de cada
+   doctora va en CFG.profColor. Las claves se cambian con las funciones
+   que ya existen (btn-save-pass, btn-save-pass-admin, btn-save-claves-prof
+   → cambiarClaveServidor / acción «clave»): esta parte solo las viste.
+   ===================================================================== */
+var MD_AJ_PAL=['#2E7D5B','#2F6FA8','#6B4FA0','#B83E73','#C27A0E','#16807A'];
+var MD_AJ_DRAG=null, MD_AJ_T={};
+function mdAjOff(k){var a=CFG&&CFG[k]; return Array.isArray(a)?a.filter(function(x){return typeof x==='string'&&x.trim()}):[]}
+function mdAjOffDe(k){return k==='prof'?'profOff':'canalesOff'}
+function mdProfColor(p){var c=(CFG&&CFG.profColor)||{}; return /^#[0-9a-fA-F]{6}$/.test(c[p]||'')?c[p]:MD_AJ_PAL[mdHash(p)%6]}
+function mdAjMes(){return hoyISO().slice(0,7)}
+function mdAjAtenciones(p,mes){return DATA.filter(function(r){return r.profesional===p&&esAtencion(r)&&r.estado==='Atendido'&&(!mes||(r.fecha||'').slice(0,7)===mes)}).length}
+function mdAjTieneClave(p){var cp=clavesProf(); return credSrv()&&Array.isArray(CFG.clavesProfHay)?CFG.clavesProfHay.indexOf(p)>=0:!!cp[p]}
+function mdAjComision(p){
+  var c=(CFG.comision||{})[p];
+  if(c!=null&&c!=='')return num(c)+'% de comisión';
+  var d=num(CFG.comisionDefault); return d>0?d+'% de comisión (la general)':'sin comisión definida'}
+/* pacientes nuevos por canal en el mes: una persona cuenta una vez */
+function mdAjNuevosCanal(mes){
+  var por={}; datosVisibles().forEach(function(r){
+    if(!esAtencion(r)||r.tipo!=='Nuevo'||(r.fecha||'').slice(0,7)!==mes||!r.canal)return;
+    (por[r.canal]=por[r.canal]||{})[keyPac(r.paciente)||r.id]=1});
+  var out={}; for(var c in por)out[c]=Object.keys(por[c]).length; return out}
+function mdAjCabecera(card,html){
+  var h=card.querySelector('h2'); if(!h)return null;
+  var der=h.querySelector('.md-aj-der'); if(!der){der=document.createElement('span'); der.className='md-aj-der'; h.appendChild(der)}
+  if(html!=null)der.innerHTML=html; return der}
+function mdAjTitulo(h,t){
+  var puesto=false;
+  Array.prototype.slice.call(h.childNodes).forEach(function(n){if(n.nodeType!==3)return; if(!puesto){n.textContent=t; puesto=true} else n.textContent=''});
+  if(!puesto)h.appendChild(document.createTextNode(t))}
+function mdAjTilde(k){
+  var box=$('#md-aj-'+k), card=box&&box.closest('.card'), ok=card&&card.querySelector('.md-aj-ok'); if(!ok)return;
+  ok.hidden=false; clearTimeout(MD_AJ_T[k]); MD_AJ_T[k]=setTimeout(function(){ok.hidden=true},2400)}
+
+/* ---------- las dos listas ---------- */
+function mdAjMenu(i,n,off){
+  return '<details class="md-mas md-aj-mas"><summary class="md-aj-ib" title="Más opciones" aria-label="Más opciones">⋯</summary><div class="md-mas-m">'+
+    (off?'':'<button type="button" class="btn sec sm" data-a="up"'+(i<=0?' disabled':'')+'>▲ Subir</button>'+
+      '<button type="button" class="btn sec sm" data-a="down"'+(i>=n-1?' disabled':'')+'>▼ Bajar</button>')+
+    (off?'<button type="button" class="btn sec sm md-aj-rojo" data-a="quitar">Quitar de la lista</button>':'<button type="button" class="btn sec sm" data-a="off">Apagar</button>')+
+    '</div></details>'}
+function mdAjFilaProf(p,i,n,off,ro,mes){
+  var col=mdProfColor(p), ini=mdIniciales(p.replace(/^Dra?\.?\s*/i,'')), sub;
+  if(off){var tot=ro?0:DATA.filter(function(r){return r.profesional===p}).length;
+    sub='<span class="pill warn">apagada</span> no aparece al cargar'+(tot?' · sus '+tot+' atencion'+(tot===1?'':'es')+' vieja'+(tot===1?'':'s')+' se conserva'+(tot===1?'':'n'):'')}
+  else{var hoy=ro?null:mdAjAtenciones(p,mes);
+    sub=(mdAjTieneClave(p)?'<span class="pill ok">tiene clave</span>':'<span class="pill">sin clave</span>')+
+      (esAdmin()?' '+esc(mdAjComision(p)):'')+(hoy==null?'':' · '+hoy+' atencion'+(hoy===1?'':'es')+' este mes')}
+  return '<div class="md-aj-fila'+(off?' off':'')+'" data-n="'+esc(p)+'" data-k="prof" draggable="'+(ro||off?'false':'true')+'">'+
+    '<span class="md-aj-grip" aria-hidden="true">⋮⋮</span>'+
+    '<span class="md-aj-av" style="--pc:'+col+'" aria-hidden="true">'+esc(ini)+'</span>'+
+    '<div class="md-aj-tx"><b>'+esc(p)+'</b><small>'+sub+'</small></div>'+
+    (ro?'':'<span class="md-aj-pal" role="group" aria-label="Color de su carril">'+MD_AJ_PAL.map(function(c){
+      return '<button type="button" class="'+(c===col?'on':'')+'" style="background:'+c+'" data-c="'+c+'" title="Color de su carril en la agenda y en los gráficos" aria-label="Color '+c+'"></button>'}).join('')+'</span>'+
+      '<button type="button" class="md-aj-sw'+(off?'':' on')+'" role="switch" aria-checked="'+(!off)+'" title="'+(off?'Encender: vuelve a ofrecerse al cargar':'Apagar: deja de ofrecerse al cargar, sus datos quedan')+'"></button>'+
+      mdAjMenu(i,n,off))+'</div>'}
+function mdAjFilaCanal(c,i,n,off,ro,cnt,max){
+  var t=mdCanalTipo(c), v=cnt||0, pct=off?0:Math.round(v/(max||1)*100);
+  return '<div class="md-aj-fila'+(off?' off':'')+'" data-n="'+esc(c)+'" data-k="canal" draggable="'+(ro||off?'false':'true')+'">'+
+    '<span class="md-aj-grip" aria-hidden="true">⋮⋮</span>'+
+    '<span class="md-chip c-'+t+'">'+esc(c)+'</span>'+
+    '<div class="md-aj-tx"><small>'+(off?'apagado · no se ofrece al cargar, los datos viejos quedan':'se elige al cargar la atención')+'</small></div>'+
+    (ro?'':'<div class="md-aj-cnt"><small>'+(v?v+' paciente'+(v===1?'':'s')+' este mes':'ninguno este mes')+'</small><div class="md-prog"><i style="width:'+pct+'%"></i></div></div>'+
+      '<button type="button" class="md-aj-sw'+(off?'':' on')+'" role="switch" aria-checked="'+(!off)+'" title="'+(off?'Encender: vuelve a ofrecerse al cargar':'Apagar: deja de ofrecerse al cargar, sus datos quedan')+'"></button>'+
+      mdAjMenu(i,n,off))+'</div>'}
+function mdAjRender(k){
+  var box=$('#md-aj-'+k); if(!box||!CFG)return;
+  var on=(CFG[k==='prof'?'prof':'canales']||[]).slice(), off=mdAjOff(mdAjOffDe(k)), ro=esDoctora(), mes=mdAjMes();
+  if(k==='prof'){
+    box.innerHTML=on.map(function(p,i){return mdAjFilaProf(p,i,on.length,false,ro,mes)}).concat(off.map(function(p){return mdAjFilaProf(p,-1,0,true,ro,mes)})).join('')}
+  else{
+    var cnt=ro?{}:mdAjNuevosCanal(mes), max=0; for(var c in cnt)max=Math.max(max,cnt[c]);
+    box.innerHTML=on.map(function(c,i){return mdAjFilaCanal(c,i,on.length,false,ro,cnt[c],max)}).concat(off.map(function(c){return mdAjFilaCanal(c,-1,0,true,ro,cnt[c],max)})).join('')}
+  var card=box.closest('.card'); if(card)card.classList.toggle('md-aj-ro',ro)}
+/* guardar = el mecanismo de siempre: el textarea escondido y su botón */
+function mdAjGuardar(k,on,off){
+  if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return false}
+  var lk=k==='prof'?'prof':'canales';
+  on=(on||CFG[lk]||[]).map(function(s){return String(s).trim()}).filter(Boolean);
+  off=(off||mdAjOff(mdAjOffDe(k))).filter(function(x){return on.indexOf(x)<0});
+  if(!on.length){toast(k==='prof'?'Dejá al menos una doctora encendida':'Dejá al menos un canal encendido',1); return false}
+  var ta=$(k==='prof'?'#c-prof':'#c-canal'), b=$(k==='prof'?'#btn-save-prof':'#btn-save-canal'); if(!ta||!b)return false;
+  CFG[mdAjOffDe(k)]=off;
+  ta.value=on.join('\n');
+  b.click();
+  if(JSON.stringify(CFG[lk])!==JSON.stringify(on))return false;
+  mdAjRender(k); mdAjTilde(k); return true}
+function mdAjMover(k,n,d){
+  var l=(CFG[k==='prof'?'prof':'canales']||[]).slice(), i=l.indexOf(n), j=i+d; if(i<0||j<0||j>=l.length)return;
+  l.splice(i,1); l.splice(j,0,n); mdAjGuardar(k,l)}
+function mdAjToggle(k,n,forzar){
+  var l=(CFG[k==='prof'?'prof':'canales']||[]).slice(), off=mdAjOff(mdAjOffDe(k)).slice(), i=l.indexOf(n), prender=forzar!=null?forzar:i<0;
+  if(!prender){if(i<0)return; l.splice(i,1); if(off.indexOf(n)<0)off.push(n)}
+  else{off=off.filter(function(x){return x!==n}); if(i<0)l.push(n)}
+  if(mdAjGuardar(k,l,off))toast(prender?('«'+n+'» vuelve a ofrecerse al cargar'):('«'+n+'» apagad'+(k==='prof'?'a':'o')+': no se ofrece al cargar, sus datos quedan'))}
+function mdAjQuitar(k,n){
+  if(!confirm('¿Quitar «'+n+'» de la lista? Las atenciones ya cargadas no se tocan.'))return;
+  var off=mdAjOff(mdAjOffDe(k)).filter(function(x){return x!==n});
+  if(mdAjGuardar(k,null,off))toast('«'+n+'» quitad'+(k==='prof'?'a':'o')+' de la lista')}
+function mdAjAgregar(k){
+  var inp=$('#md-aj-'+k+'-in'), v=(inp&&inp.value||'').trim();
+  if(!v){toast(k==='prof'?'Escribí el nombre de la doctora':'Escribí el nombre del canal',1); if(inp)inp.focus(); return}
+  var l=(CFG[k==='prof'?'prof':'canales']||[]).slice(), off=mdAjOff(mdAjOffDe(k)).slice();
+  var ya=l.filter(function(x){return keyPac(x)===keyPac(v)})[0]; if(ya){toast('«'+ya+'» ya está en la lista',1); return}
+  var ap=off.filter(function(x){return keyPac(x)===keyPac(v)})[0];
+  if(ap){off=off.filter(function(x){return x!==ap}); l.push(ap)} else l.push(v);
+  if(mdAjGuardar(k,l,off)){inp.value=''; $('#md-aj-'+k+'-nuevo').hidden=true; toast(ap?('«'+ap+'» vuelve a ofrecerse al cargar'):(k==='prof'?'Doctora agregada: ':'Canal agregado: ')+(ap||v))}}
+function mdAjMontarLista(k){
+  var ta=$(k==='prof'?'#c-prof':'#c-canal'); if(!ta||$('#md-aj-'+k))return;
+  var card=ta.closest('.card'); if(!card)return;
+  ta.classList.add('md-aj-viejo');
+  var b=$(k==='prof'?'#btn-save-prof':'#btn-save-canal'); if(b&&b.closest('.row-btn'))b.closest('.row-btn').classList.add('md-aj-viejo');
+  var hint=card.querySelector('.hint');
+  if(hint)hint.textContent=k==='prof'?'Arrastrá ⋮⋮ para ordenarlas como aparecen al cargar. El color es el de su carril en la agenda y en los gráficos. Se guarda solo.'
+    :'En el orden en que se ofrecen. Al lado, cuántos pacientes nuevos trajo cada uno este mes: lo que no trae nada se apaga, no se borra. Se guarda solo.';
+  var box=document.createElement('div'); box.id='md-aj-'+k; box.className='md-aj-lista'; ta.parentNode.insertBefore(box,ta);
+  var nuevo=document.createElement('div'); nuevo.id='md-aj-'+k+'-nuevo'; nuevo.className='md-aj-nuevo'; nuevo.hidden=true;
+  nuevo.innerHTML='<input id="md-aj-'+k+'-in" placeholder="'+(k==='prof'?'Nombre de la doctora nueva (Dra. …)':'Nombre del canal nuevo')+'" autocomplete="off" maxlength="60">'+
+    '<button type="button" class="btn sm" id="md-aj-'+k+'-ok">Agregar</button><button type="button" class="btn sec sm" id="md-aj-'+k+'-no">Cancelar</button>';
+  box.parentNode.insertBefore(nuevo,box.nextSibling);
+  mdAjCabecera(card,'<span class="md-aj-ok" hidden>✓ guardado</span><button type="button" class="btn dark sm" id="md-aj-'+k+'-add">＋ Agregar '+(k==='prof'?'doctora':'canal')+'</button>');
+  $('#md-aj-'+k+'-add').onclick=function(){if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return} nuevo.hidden=!nuevo.hidden; if(!nuevo.hidden)$('#md-aj-'+k+'-in').focus()};
+  $('#md-aj-'+k+'-no').onclick=function(){nuevo.hidden=true; $('#md-aj-'+k+'-in').value=''};
+  $('#md-aj-'+k+'-ok').onclick=function(){mdAjAgregar(k)};
+  $('#md-aj-'+k+'-in').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault(); mdAjAgregar(k)} if(e.key==='Escape')nuevo.hidden=true});
+  box.addEventListener('click',function(e){
+    var f=e.target.closest('.md-aj-fila'); if(!f)return; var n=f.getAttribute('data-n');
+    var pal=e.target.closest('.md-aj-pal button');
+    if(pal){if(esDoctora())return; CFG.profColor=Object.assign({},CFG.profColor||{}); CFG.profColor[n]=pal.getAttribute('data-c'); if(mdAjGuardar('prof'))toast('Color de '+n+' guardado'); return}
+    if(e.target.closest('.md-aj-sw')){mdAjToggle(k,n); return}
+    var a=e.target.closest('[data-a]'); if(!a||a.disabled)return;
+    var d=a.closest('details'); if(d)d.removeAttribute('open');
+    if(a.getAttribute('data-a')==='up')mdAjMover(k,n,-1);
+    else if(a.getAttribute('data-a')==='down')mdAjMover(k,n,1);
+    else if(a.getAttribute('data-a')==='off')mdAjToggle(k,n,false);
+    else if(a.getAttribute('data-a')==='quitar')mdAjQuitar(k,n)});
+  /* arrastrar para ordenar (en la compu); en el celular están ▲ ▼ */
+  box.addEventListener('dragstart',function(e){
+    var f=e.target.closest('.md-aj-fila'); if(!f||f.classList.contains('off')||esDoctora()){e.preventDefault(); return}
+    MD_AJ_DRAG={k:k,n:f.getAttribute('data-n')}; f.classList.add('md-aj-arrastra');
+    try{e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',MD_AJ_DRAG.n)}catch(x){}});
+  box.addEventListener('dragover',function(e){
+    var f=e.target.closest('.md-aj-fila'); if(!f||!MD_AJ_DRAG||MD_AJ_DRAG.k!==k||f.classList.contains('off'))return;
+    e.preventDefault(); try{e.dataTransfer.dropEffect='move'}catch(x){}
+    mdQ(box,'.md-aj-sobre').forEach(function(x){if(x!==f)x.classList.remove('md-aj-sobre')}); f.classList.add('md-aj-sobre')});
+  box.addEventListener('dragleave',function(e){var f=e.target.closest&&e.target.closest('.md-aj-fila'); if(f&&!f.contains(e.relatedTarget))f.classList.remove('md-aj-sobre')});
+  box.addEventListener('drop',function(e){
+    var f=e.target.closest('.md-aj-fila'); if(!f||!MD_AJ_DRAG||MD_AJ_DRAG.k!==k)return;
+    e.preventDefault(); var de=MD_AJ_DRAG.n, a=f.getAttribute('data-n'); MD_AJ_DRAG=null;
+    mdQ(box,'.md-aj-sobre,.md-aj-arrastra').forEach(function(x){x.classList.remove('md-aj-sobre'); x.classList.remove('md-aj-arrastra')});
+    if(de===a)return;
+    var l=(CFG[k==='prof'?'prof':'canales']||[]).slice(), i=l.indexOf(de), j=l.indexOf(a); if(i<0||j<0)return;
+    l.splice(i,1); l.splice(j,0,de); mdAjGuardar(k,l)});
+  box.addEventListener('dragend',function(){MD_AJ_DRAG=null; mdQ(box,'.md-aj-sobre,.md-aj-arrastra').forEach(function(x){x.classList.remove('md-aj-sobre'); x.classList.remove('md-aj-arrastra')})})}
+
+/* ---------- claves por rol ---------- */
+/* Con el servidor nuevo el hash del equipo no viaja al panel: en un aparato
+   donde recepción nunca entró no se sabe, y se dice «sin dato» antes que
+   asustar con un ⚠ falso. */
+function mdAjEquipoEstado(){
+  if(sesionViva()&&SESION.rol==='equipo')return SESION.fabrica?'fab':'propia';
+  var local=(CFG&&hashValido(CFG.passHash))?CFG.passHash:null;
+  if(!local)try{var h=localStorage.getItem(K_PASS); if(hashValido(h))local=h}catch(e){}
+  if(!local&&credSrv())return 'desc';
+  return passHash()===DEFAULT_HASH?'fab':'propia'}
+function mdAjAdminEstado(){
+  if(sesionViva()&&SESION.rol==='admin')return SESION.fabrica?'fab':'propia';
+  if(CFG&&hashValido(CFG.adminHash))return 'propia';
+  return credSrv()?'desc':'fab'}
+function mdAjRol(o){
+  return '<div class="md-aj-rol'+(o.fab?' fab':'')+'" data-rol="'+o.rol+'"'+(o.prof?' data-prof="'+esc(o.prof)+'"':'')+'>'+
+    '<div class="md-aj-rol-t">'+o.ico+'<div><b>'+esc(o.t)+'</b><small>'+esc(o.s)+'</small></div></div>'+
+    '<div class="md-aj-est">'+o.est+'</div>'+
+    '<div class="md-aj-acc"><button type="button" class="btn '+(o.lima?'':'sec ')+'sm md-aj-cambiar">'+esc(o.btn)+'</button></div></div>'}
+function mdAjClaves(){
+  var box=$('#md-aj-roles'); if(!box||!CFG)return;
+  if(box.querySelector('.md-aj-frm'))return;   /* no se pisa un formulario abierto (el refresco repinta Ajustes cada tanto) */
+  var eE=mdAjEquipoEstado(), eA=mdAjAdminEstado(), h='';
+  h+=mdAjRol({rol:'equipo',fab:eE==='fab',ico:'<span class="md-aj-ico" style="--pc:#C27A0E" aria-hidden="true">'+mdIco(MD_I.equipo)+'</span>',
+    t:'Equipo · recepción',s:'abre el panel, no ve montos',btn:'Cambiar',
+    est:eE==='fab'?'<span class="pill warn">⚠ Clave de fábrica</span> todavía es la que vino con el panel':eE==='desc'?'<span class="pill">Sin dato en este aparato</span> si nunca la cambiaron, es la de fábrica':'<span class="pill ok">✓ Clave propia</span> ya no es la de fábrica'});
+  h+=mdAjRol({rol:'admin',fab:eA==='fab',ico:'<span class="md-aj-ico" style="--pc:var(--lime-dk)" aria-hidden="true">'+mdIco('M8 12a4 4 0 100-8 4 4 0 000 8zM12 12h9M18 12v3M21 12v3')+'</span>',
+    t:'Dueña · administradora',s:'caja, panel y totales',btn:'Cambiar',
+    est:eA==='fab'?'<span class="pill warn">⚠ Clave de fábrica</span> cambiala antes de cargar plata':eA==='desc'?'<span class="pill">Sin dato en este aparato</span> entrá como dueña para verla':'<span class="pill ok">✓ Clave propia</span> abre caja, panel y totales'});
+  (CFG.prof||[]).forEach(function(p){
+    var tiene=mdAjTieneClave(p);
+    h+=mdAjRol({rol:'prof',prof:p,lima:!tiene,ico:'<span class="md-aj-av" style="--pc:'+mdProfColor(p)+'" aria-hidden="true">'+esc(mdIniciales(p.replace(/^Dra?\.?\s*/i,'')))+'</span>',
+      t:p,s:tiene?'ve solo lo suyo: cobros, saldos, agenda':'entra con la del equipo',btn:tiene?'Cambiar':'Asignar clave',
+      est:tiene?'<span class="pill ok">✓ Clave propia</span> entra con su clave':'<span class="pill">Sin clave propia</span> no ve montos ni saldos'})});
+  box.innerHTML=h}
+function mdAjFormClave(card){
+  if(card.querySelector('.md-aj-frm'))return;
+  var rol=card.getAttribute('data-rol'), acc=card.querySelector('.md-aj-acc');
+  var campos=rol==='equipo'?[['act','Clave actual del equipo'],['n1','Clave nueva (mínimo 6)'],['n2','Repetir la clave nueva']]:[['n1','Clave nueva (mínimo 6)'],['n2','Repetir la clave nueva']];
+  var f=document.createElement('div'); f.className='md-aj-frm';
+  f.innerHTML=campos.map(function(c){return '<input type="password" class="md-aj-'+c[0]+'" placeholder="'+c[1]+'" autocomplete="new-password" aria-label="'+c[1]+'">'}).join('')+
+    '<div class="cperr md-aj-err"></div><div class="md-aj-frm-b"><button type="button" class="btn sm md-aj-ok-b">Guardar clave</button><button type="button" class="btn sec sm md-aj-no-b">Cancelar</button></div>';
+  if(acc)acc.hidden=true; card.appendChild(f);
+  try{ponerOjos(f)}catch(e){}
+  f.querySelector('.md-aj-no-b').onclick=function(){f.parentNode.removeChild(f); if(acc)acc.hidden=false};
+  f.querySelector('.md-aj-ok-b').onclick=function(){mdAjGuardarClave(card,f)};
+  mdQ(f,'input').forEach(function(i){i.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault(); mdAjGuardarClave(card,f)} if(e.key==='Escape')f.querySelector('.md-aj-no-b').click()})});
+  var p=f.querySelector('input'); if(p)p.focus()}
+/* Escribe los campos de siempre y aprieta el botón de siempre: la validación,
+   el pedido «clave» al servidor y el aviso son los que ya existían. Salió
+   bien cuando ese guardado vació el campo; salió mal cuando avisó en rojo. */
+function mdAjGuardarClave(card,f){
+  var rol=card.getAttribute('data-rol'), prof=card.getAttribute('data-prof')||'', err=f.querySelector('.md-aj-err');
+  var n1=f.querySelector('.md-aj-n1').value, n2=f.querySelector('.md-aj-n2').value, act=(f.querySelector('.md-aj-act')||{}).value||'';
+  err.textContent='';
+  if(n1.length<6){err.textContent='Mínimo 6 caracteres'; return}
+  if(n1!==n2){err.textContent='Las dos claves nuevas no coinciden'; return}
+  if(rol==='equipo'&&!act){err.textContent='Escribí la clave actual del equipo'; return}
+  var inp, btn, cperr=null;
+  if(rol==='equipo'){$('#c-pass-old').value=act; $('#c-pass-new').value=n1; $('#c-pass-new2').value=n1; inp=$('#c-pass-new'); btn=$('#btn-save-pass')}
+  else if(rol==='admin'){$('#c-pass-admin').value=n1; inp=$('#c-pass-admin'); btn=$('#btn-save-pass-admin')}
+  else{inp=$('#cp-'+cssId(prof)); if(!inp){try{pintarClavesProf()}catch(e){} inp=$('#cp-'+cssId(prof))}
+    if(!inp){err.textContent='No encuentro a esa doctora en la lista'; return}
+    inp.value=n1; inp.classList.remove('bad'); cperr=$('#cperr-'+cssId(prof)); if(cperr)cperr.textContent=''; btn=$('#btn-save-claves-prof')}
+  if(!inp||!btn){err.textContent='No se pudo cambiar la clave'; return}
+  var t=$('#toast'); if(t)t.textContent='';
+  var t0=Date.now(); f.classList.add('md-aj-espera'); mdQ(f,'button').forEach(function(b){b.disabled=true});
+  btn.click();
+  var fin=function(ok,msg){
+    f.classList.remove('md-aj-espera'); mdQ(f,'button').forEach(function(b){b.disabled=false});
+    if(ok){if(f.parentNode)f.parentNode.removeChild(f); var acc=card.querySelector('.md-aj-acc'); if(acc)acc.hidden=false; mdAjClaves(); card=$('#md-aj-roles .md-aj-rol[data-rol="'+rol+'"]'+(prof?'[data-prof="'+prof.replace(/"/g,'\\"')+'"]':'')); if(card){card.classList.remove('md-flash'); void card.offsetWidth; card.classList.add('md-flash')}}
+    else{err.textContent=msg||'No se pudo cambiar la clave'; var p=f.querySelector('.md-aj-n1'); if(p)p.focus()}};
+  (function esperar(){
+    if(!f.isConnected)return;
+    if(inp.classList.contains('bad'))return fin(false,(cperr&&cperr.textContent)||'');
+    if(inp.value==='')return fin(true);
+    if(rol!=='prof'&&t&&/\berr\b/.test(t.className)&&t.textContent)return fin(false,t.textContent);
+    if(Date.now()-t0>20000)return fin(false,'Sin respuesta: probá de nuevo');
+    setTimeout(esperar,120)})()}
+function mdAjMontarClaves(){
+  var old=$('#btn-save-pass'); if(!old||$('#md-aj-roles'))return;
+  var card=old.closest('.card'); if(!card)return;
+  card.id='md-aj-claves';
+  Array.prototype.forEach.call(card.children,function(ch){if(ch.tagName!=='H2')ch.classList.add('md-aj-viejo')});
+  var h=card.querySelector('h2'); if(h)mdAjTitulo(h,'Quién entra y con qué clave');
+  card.insertAdjacentHTML('beforeend','<p class="hint">Una tarjeta por rol. De un vistazo se ve quién tiene clave propia y quién sigue con la de fábrica. '+
+    'Frena al curioso, pero <b>no es seguridad de verdad</b>: no compartas el link fuera del consultorio.</p><div class="md-aj-roles" id="md-aj-roles"></div>');
+  $('#md-aj-roles').addEventListener('click',function(e){
+    var b=e.target.closest('.md-aj-cambiar'); if(!b)return;
+    var c=b.closest('.md-aj-rol'); if(c)mdAjFormClave(c)});
+  /* «Bloquear ahora» en su propia tarjeta, explicado */
+  var bl=document.createElement('div'); bl.className='card solo-admin'; bl.id='md-aj-bloquear';
+  bl.innerHTML='<h2 class="md-h md-h-coral"><span class="md-h-i" aria-hidden="true">'+mdIco('M5 11h14v10H5zM8 11V7a4 4 0 018 0v4',2.2)+'</span>Bloquear ahora</h2>'+
+    '<div class="md-aj-lk"><div class="md-aj-lk-tx"><b>Cierra el panel en este aparato</b><small>Para volver a entrar hay que poner la clave. Sirve cuando dejás la compu de recepción sola. '+
+    'Separado de las claves para que nadie lo toque por error.</small></div><button type="button" class="btn dark" id="md-aj-lock">🔒 Bloquear ahora</button></div>';
+  card.parentNode.insertBefore(bl,card.nextSibling);
+  $('#md-aj-lock').onclick=function(){var b=$('#btn-lock'); if(b)b.click(); else bloquear()};
+  /* el índice de Ajustes: el nombre nuevo y la entrada de «Bloquear ahora» */
+  mdQ(document,'#md-aj-indice .md-aj-it').forEach(function(it){
+    var sp=it.querySelector('span'); if(!sp||sp.textContent.trim()!=='Clave de entrada')return;
+    sp.textContent='Quién entra y con qué clave';
+    var nb=document.createElement('button'); nb.type='button'; nb.className='md-aj-it solo-admin'; nb.innerHTML='<span>Bloquear ahora</span><em>Dueña</em>';
+    nb.onclick=function(){bl.scrollIntoView({behavior:'smooth',block:'start'}); bl.classList.remove('md-flash'); void bl.offsetWidth; bl.classList.add('md-flash')};
+    it.parentNode.insertBefore(nb,it.nextSibling)})}
+/* los subtítulos con estilo pegado pasan a una clase */
+function mdAjSub(){mdQ(document,'#v-config h3[style]').forEach(function(h){if(/uppercase/.test(h.getAttribute('style')||'')){h.removeAttribute('style'); h.classList.add('md-aj-sub')}})}
+
+/* ---------- el color de cada doctora donde el panel ya la dibuja ---------- */
+function mdAjColorear(){
+  var pc=(CFG&&CFG.profColor)||{}; if(!Object.keys(pc).length)return;
+  var todas=(CFG.prof||[]).concat(mdAjOff('profOff'));
+  var deCorto=function(n){n=String(n||'').trim(); return todas.filter(function(p){return p===n||p.replace(/^Dra\.?\s*/i,'')===n})[0]};
+  /* la dona «Quién produjo» del Panel */
+  mdQ(document,'#md-pvis .md-pv-t').forEach(function(t){
+    var h=t.querySelector('h2'); if(!h||!/Quién produjo/.test(h.textContent))return;
+    var lis=mdQ(t,'.md-dona ul li'), cs=mdQ(t,'.md-dona svg circle').slice(1);
+    lis.forEach(function(li,i){var n=(li.querySelector('span')||{}).textContent||'', c=pc[deCorto(n)]; if(!c)return;
+      var dot=li.querySelector('i'); if(dot)dot.style.background=c; if(cs[i])cs[i].setAttribute('stroke',c)})});
+  /* los carriles de Mi día */
+  mdQ(document,'#md-carriles .md-carril').forEach(function(l){
+    var n=(l.querySelector('.md-carril-n')||{}).textContent||'', c=pc[deCorto(n)]; if(!c)return;
+    l.classList.add('md-aj-col'); l.style.setProperty('--pc',c)});
+  /* la liquidación de Caja y los chips de doctora del filtro de Atenciones */
+  mdQ(document,'.md-liq-n').forEach(function(x){
+    var b=x.querySelector('b'), c=b&&pc[deCorto(b.textContent)]; if(!c)return;
+    var av=x.querySelector('.md-av'); if(av){av.style.setProperty('background-color',c,'important'); av.style.setProperty('color','#fff','important')}
+    var bar=x.querySelector('.md-liq-b i'); if(bar)bar.style.background=c});
+  mdQ(document,'#v-lista button[data-v] i[class*="md-av"]').forEach(function(i){
+    var c=pc[i.parentNode.getAttribute('data-v')]; if(!c)return;
+    i.style.setProperty('background-color',c,'important'); i.style.setProperty('color','#fff','important')})}
+
+function mdAjMontar(){
+  mdAjMontarLista('prof'); mdAjMontarLista('canal'); mdAjMontarClaves(); mdAjSub();
+  if($('#v-config')&&$('#v-config').classList.contains('on')){mdAjRender('prof'); mdAjRender('canal'); mdAjClaves()}}
+/* los enganches de esta parte */
+(function(){
+  if(typeof renderConfig==='function'){var _rc=renderConfig; renderConfig=function(){var r=_rc.apply(this,arguments); try{mdAjRender('prof'); mdAjRender('canal'); mdAjClaves(); mdAjSub()}catch(e){} return r}}
+  /* lo apagado no se ofrece al cargar, aunque tenga atenciones viejas */
+  if(typeof fillDatalists==='function'){var _fd=fillDatalists; fillDatalists=function(){var r=_fd.apply(this,arguments);
+    try{var off=mdAjOff('profOff'); if(off.length)mdQ($('#dl-prof'),'option').forEach(function(o){if(off.indexOf(o.value)>=0)o.parentNode.removeChild(o)})}catch(e){} return r}}
+  ['renderPanel','renderMiDia','renderCaja','renderLista'].forEach(function(n){
+    var f=window[n]; if(typeof f!=='function')return;
+    window[n]=function(){var r=f.apply(this,arguments); try{mdAjColorear()}catch(e){} return r}});
+  try{mdAjMontar()}catch(e){if(window.console)console.error('moderno/ajustes',e)}})();
+/* ----- parte: 20-panel-caja.js ----- */
+/* ---------- 20 · Panel de la dueña (qué hizo cada doctora, los que más faltan) y la mitad de abajo de la Caja ----------
+   Solo pinta. Las cuentas son las mismas que ya hace el panel (acumularPanel, periodoRowsTodo,
+   cajaRows, egresosRango, saldosNoCuadran, faltaPagar) y los botones llaman a lo que ya existe
+   (verFicha, cobrarSaldo, editarEgreso, borrarEgreso, arreglarSaldo, verPaciente). Lo viejo que
+   reemplaza queda guardado en MD_PC.viejo para poder compararlo en las pruebas. */
+var MD_PC={filtro:'todo',orden:'viejas',todas:false,viejo:{},deudas:[],egresos:[],cards:null,top:[]};
+/* un color por servicio (los 6 que más facturan; el resto va gris) y otro por doctora (el mismo tono que su avatar) */
+var MD_PC_COL=['#2E7D5B','#2F6FA8','#6B4FA0','#C27A0E','#B83E73','#16807A'], MD_PC_OTROS='#9AA08E';
+var MD_PC_DOC=['#8A5A06','#22507C','#8E2C58','#1F5E43','#5A3F8A','#12605B'];
+var MD_PC_I={barras:'M4 20V10M10 20V4M16 20v-7M22 20H2',reloj:'M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z',aviso:'M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z',
+  sale:'M12 5v14M5 12l7 7 7-7',lapiz:'M4 20h4l10-10-4-4L4 16z',cruz:'M6 6l12 12M18 6L6 18'};
+/* ícono y color según la categoría del egreso */
+var MD_PC_CAT=[[/alquiler/i,'M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z','coral'],[/sueldo|comisi/i,MD_I.equipo,'lila'],
+  [/laborat/i,'M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3','lila'],[/insumo|material/i,'M3 8l9-4 9 4-9 4zM3 8v8l9 4 9-4V8M12 12v8','azul'],
+  [/servicio|luz|agua|internet/i,'M13 2L4 14h7l-1 8 9-12h-7z','ambar'],[/publicid|pauta/i,'M3 11v2a2 2 0 002 2h2l5 4V5L7 9H5a2 2 0 00-2 2zM16 8a5 5 0 010 8','rosa'],
+  [/equip|manten/i,'M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.4 2.4-2.1-2.1z','teal'],[/impuesto/i,'M6 2h9l5 5v15H6zM14 2v6h6M9 13h6M9 17h6','gris']];
+var MD_PC_MET={Efectivo:'ok',QR:'lila',Tarjeta:'info',Transferencia:'info'};
+function mdPcCat(c){for(var i=0;i<MD_PC_CAT.length;i++)if(MD_PC_CAT[i][0].test(c||''))return MD_PC_CAT[i]; return [null,'M3 8l9-4 9 4-9 4zM3 8v8l9 4 9-4V8M12 12v8','gris']}
+function mdPcAv(nombre,i,cls){return '<span class="md-av md-av'+((i==null?mdHash(nombre):i)%6)+(cls?' '+cls:'')+'" aria-hidden="true">'+esc(mdIniciales(nombre))+'</span>'}
+function mdPcCorto(d){return String(d||'').replace(/^Dra?\.\s*/i,'')}
+function mdPcQue(r){var s=(r.servicios||[]).filter(function(x){return x.nom}).map(function(x){return x.nom}); if(!s.length)return r._anticipo?'anticipo':'sin servicios'; return s.slice(0,2).join(', ')+(s.length>2?' +'+(s.length-2):'')}
+function mdPcPeriodoPanel(){var r=$('#p-rango')?$('#p-rango').value:''; return r==='mes'?mesLabel($('#p-mes').value):(r==='anio'?'el año '+$('#p-anio').value:'todo el tiempo')}
+function mdPcPeriodoCaja(){var rg=$('#c-rango').value; return rg==='mes'?mesLabel($('#c-mes').value):(rg==='quincena'?quincenaLabel($('#c-mes').value,$('#c-quin').value):(rg==='dia'?fmtF($('#c-dia').value):(rg==='anio'?'el año '+$('#c-anio').value:'todo el tiempo')))}
+/* el título de la tarjeta con su ícono, su color y lo que va a la derecha */
+function mdPcCab(card,cls,ico,der,hint){
+  var h=card&&card.querySelector('h2'); if(!h)return;
+  if(!h.classList.contains('md-h'))h.classList.add('md-h');
+  if(!h.querySelector('.md-h-i'))h.insertAdjacentHTML('afterbegin','<span class="md-h-i" aria-hidden="true">'+mdIco(ico,2.2)+'</span>');
+  ['ambar','azul','coral','lila','teal','verde','gris','rosa','lima'].forEach(function(c){h.classList.remove('md-h-'+c)}); h.classList.add('md-h-'+cls);
+  var d=h.querySelector('.md-pc-der'); if(!d){d=document.createElement('span'); d.className='md-pc-der'; h.appendChild(d)} d.innerHTML=der||'';
+  if(hint){var p=h.nextElementSibling; if(p&&p.classList.contains('hint'))p.textContent=hint}}
+/* la dona: partes [{v,col}], y dos renglones en el centro */
+function mdPcDona(partes,c1,c2){
+  var C=339.3, tot=0, acc=0, arcos=''; partes.forEach(function(p){tot+=p.v});
+  partes.forEach(function(p){var f=tot?p.v/tot:0;
+    if(f>0)arcos+='<circle cx="75" cy="75" r="54" fill="none" stroke="'+p.col+'" stroke-width="22" stroke-dasharray="'+Math.max(0,C*f-1.5).toFixed(1)+' '+C+'" transform="rotate('+(-90+acc*360).toFixed(1)+' 75 75)"/>';
+    acc+=f});
+  return '<svg viewBox="0 0 150 150" role="img" aria-label="'+esc(c1+' '+c2)+'"><circle cx="75" cy="75" r="54" fill="none" stroke="var(--line)" stroke-width="22"/>'+arcos+
+    '<text x="75" y="72" text-anchor="middle" font-size="19" font-weight="800" fill="var(--ink)">'+esc(c1)+'</text>'+
+    '<text x="75" y="89" text-anchor="middle" font-size="10.5" fill="var(--gray)">'+esc(c2)+'</text></svg>'}
+
+/* ===== Panel › Servicios › Qué hizo cada doctora: una barra apilada por doctora y la dona del reparto ===== */
+function mdPcDoctoras(){
+  var el=$('#p-srv-prof'); if(!el||(getRadio('psec')||'pacientes')!=='servicios')return;
+  var card=el.closest('.card'); MD_PC.viejo.srvProf=el.innerHTML;
+  var ACU=acumularPanel(periodoRows()), srvProf=ACU.srvProf, prof=ACU.prof, serv=ACU.serv, periodo=mdPcPeriodoPanel();
+  mdPcCab(card,'lima',MD_PC_I.barras,'<span class="md-pc-chip on">'+esc(periodo)+'</span>',
+    'Cada barra es lo que facturó una doctora, partida por servicio. Tocá un tramo para ver esas atenciones.');
+  var totDoc={}, docs=Object.keys(srvProf);
+  docs.forEach(function(d){var t=0; Object.keys(srvProf[d]).forEach(function(s){t+=srvProf[d][s].bs}); totDoc[d]=t});
+  docs.sort(function(a,b){return totDoc[b]-totDoc[a]});
+  if(!docs.length){el.innerHTML='<div class="empty">Sin datos en este periodo.</div>'; return}
+  var top=MD_PC.top=Object.keys(serv).sort(function(a,b){return serv[b].bs-serv[a].bs}).slice(0,6);
+  var gran=0, max=1; docs.forEach(function(d){gran+=totDoc[d]; max=Math.max(max,totDoc[d])});
+  var ley='<div class="md-pc-ley">'+top.map(function(s,i){return '<span><i style="background:'+MD_PC_COL[i]+'"></i>'+esc(s)+'</span>'}).join('')+
+    (Object.keys(serv).length>top.length?'<span><i style="background:'+MD_PC_OTROS+'"></i>Otros</span>':'')+'</div>';
+  var filas=docs.map(function(d,i){
+    var segs=top.map(function(s,j){return {s:s,v:srvProf[d][s]?srvProf[d][s].bs:0,col:MD_PC_COL[j]}}), otros=0;
+    Object.keys(srvProf[d]).forEach(function(s){if(top.indexOf(s)<0)otros+=srvProf[d][s].bs});
+    if(otros>0)segs.push({s:'',v:otros,col:MD_PC_OTROS});
+    var n=prof[d]?prof[d].n:0, t=totDoc[d];
+    var barra=segs.filter(function(x){return x.v>0}).map(function(x){
+      return '<i class="md-pc-seg" style="width:'+(t?x.v/t*100:0).toFixed(1)+'%;background:'+x.col+'" title="'+esc((x.s||'Otros servicios')+' · '+bs(x.v))+'" role="button" tabindex="0" '+
+        'onclick="mdPcVerSeg(\''+jss(d)+'\',\''+jss(x.s)+'\')" onkeydown="if(event.key===\'Enter\')this.click()">'+((x.v/max*100)>=10?n0(x.v):'')+'</i>'}).join('');
+    return '<div class="md-pc-drow" data-doc="'+esc(d)+'" data-tot="'+Math.round(t)+'">'+mdPcAv(mdPcCorto(d),i)+
+      '<div class="md-pc-dn"><b>'+esc(d)+'</b><small>'+n0(n)+' atenci'+(n===1?'ón':'ones')+'</small></div>'+
+      '<div class="md-pc-stack" style="width:'+(t/max*100).toFixed(1)+'%">'+barra+'</div>'+
+      '<div class="md-pc-tot"><b>'+esc(bs(t))+'</b><small>ticket '+esc(bs(n?t/n:0))+'</small></div></div>'}).join('');
+  var rg=$('#p-rango')?$('#p-rango').value:'';
+  var dona=mdPcDona(docs.map(function(d,i){return {v:totDoc[d],col:MD_PC_DOC[i%6]}}),n0(gran),'Bs en '+(rg==='mes'?periodo.replace(/\s+\d{4}$/,''):(rg==='anio'?$('#p-anio').value:'total')));
+  var rep=docs.map(function(d,i){return '<i style="background:'+MD_PC_DOC[i%6]+'"></i>'+esc(mdPcCorto(d).split(' ')[0])+' '+(gran?Math.round(totDoc[d]/gran*100):0)+'%'}).join(' · ');
+  el.innerHTML=ley+'<div class="md-pc-dos"><div class="md-pc-drows">'+filas+'</div><div class="md-pc-dona">'+dona+'<small>'+rep+'</small></div></div>'+
+    '<p class="mini" style="margin-top:10px">Bolivianos facturados por servicio: el total de cada doctora es el mismo que muestra <b>Equipo</b>. '+
+    '«Otros» junta lo que no entra en los '+top.length+' servicios de la leyenda.</p>'}
+/* tocar un tramo: las atenciones de esa doctora con ese servicio en el periodo */
+function mdPcVerSeg(doc,srv){
+  var rows=periodoRows().filter(function(r){return visitaReal(r)&&(r.profesional||'Sin asignar')===doc}), top=MD_PC.top||[], lineas=[];
+  rows.forEach(function(r){(r.servicios||[]).forEach(function(s){if(!s.nom)return; if(srv?s.nom===srv:top.indexOf(s.nom)<0)lineas.push({r:r,s:s,v:num(s.precio)*(num(s.cant)||1)})})});
+  lineas.sort(function(a,b){return (b.r.fecha||'').localeCompare(a.r.fecha||'')});
+  var tot=lineas.reduce(function(a,x){return a+x.v},0);
+  openModal('<h3>'+esc(srv||'Otros servicios')+' · '+esc(doc)+' <span class="pill">'+lineas.length+'</span></h3>'+
+    '<p class="hint">'+esc(mdPcPeriodoPanel())+' · <b>'+esc(bs(tot))+'</b>. Tocá una fila para abrir la atención.</p>'+
+    (lineas.length?'<div class="md-pc-lista">'+lineas.map(function(x){
+      return '<div class="md-pc-fila md-pc-c md-pc-clic" onclick="verFicha(\''+x.r.id+'\')">'+mdPcAv(x.r.paciente,null,'md-pc-av-s')+
+        '<div class="md-pc-tx"><b>'+esc(x.r.paciente||'—')+'</b><small>'+fmtFcorta(x.r.fecha)+' · '+esc(x.s.nom)+((num(x.s.cant)||1)>1?' ×'+x.s.cant:'')+'</small></div>'+
+        '<span class="md-pc-num">'+esc(bs(x.v))+'</span></div>'}).join('')+'</div>':'<div class="empty">Sin atenciones.</div>')+
+    '<div class="row-btn"><button type="button" class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
+
+/* ===== Panel › Agenda › Los que más faltan: filas con avatar, cuadritos por cita perdida y WhatsApp al lado =====
+   La cuenta es la de siempre: citas del periodo con origen «Programada» que terminaron en «No asistió» o «Canceló». */
+function mdPcFaltones(){
+  var el=$('#p-ag-faltones'); if(!el||(getRadio('psec')||'pacientes')!=='agenda')return;
+  var card=el.closest('.card'); MD_PC.viejo.faltones=el.innerHTML;
+  var citas=periodoRowsTodo().filter(function(r){return r.origen==='Programada'}), falt={};
+  citas.forEach(function(r){
+    if(r.estado!=='No asistió'&&r.estado!=='Canceló')return;
+    var k=(r.paciente||'').trim(); if(!k)return;
+    if(!falt[k])falt[k]={no:0,can:0,cel:r.celular,ult:'',prof:'',hist:[]};
+    var f=falt[k]; if(r.estado==='No asistió')f.no++; else f.can++;
+    if(!f.cel&&r.celular)f.cel=r.celular;
+    if((r.fecha||'')>=f.ult){f.ult=r.fecha||''; f.prof=r.profesional||''}
+    f.hist.push({f:r.fecha||'',e:r.estado})});
+  var arr=Object.keys(falt).map(function(k){var f=falt[k];
+      return {k:k,v:f.no+f.can,no:f.no,can:f.can,cel:f.cel,ult:f.ult,prof:f.prof,hist:f.hist.sort(function(a,b){return a.f.localeCompare(b.f)})}})
+    .sort(function(a,b){return b.v-a.v}).slice(0,15);
+  mdPcCab(card,'coral',MD_I.agenda,'<span class="md-pc-chip on">'+esc(mdPcPeriodoPanel())+'</span>',
+    'A estos conviene confirmarles un día antes. Cada cuadrito es una cita perdida: rojo no vino, ámbar canceló.');
+  if(!arr.length){el.innerHTML='<div class="empty">Ningún paciente faltó todavía 🎉</div>'; return}
+  var maxC=Math.min(8,Math.max(3,arr[0].v)), pendPor={};
+  citasPend().forEach(function(c){var k=keyPac(c.r.paciente); if(!pendPor[k])pendPor[k]=c.r});
+  el.innerHTML='<div class="md-pc-lista">'+arr.map(function(f){
+    var prox=pendPor[keyPac(f.k)], txt=prox?txtCita(prox):mdPcTxtFalta(f);
+    var cuad=f.hist.slice(-maxC).map(function(h){return '<i class="'+(h.e==='No asistió'?'no':'can')+'" title="'+esc(fmtF(h.f)+' · '+h.e)+'"></i>'}).join('');
+    for(var i=Math.min(f.v,maxC);i<maxC;i++)cuad+='<i></i>';
+    return '<div class="md-pc-fila md-pc-f" data-pac="'+esc(f.k)+'" data-no="'+f.no+'" data-can="'+f.can+'">'+mdPcAv(f.k)+
+      '<div class="md-pc-tx"><b>'+esc(f.k)+'</b><small>última falta '+fmtFcorta(f.ult)+(f.prof?' · '+esc(f.prof):'')+(f.cel?' · '+esc(f.cel):'')+'</small></div>'+
+      '<div class="md-pc-fp"><span class="md-pc-pills">'+(f.no?'<span class="pill bad">✖ '+n0(f.no)+' no vino</span>':'')+(f.can?'<span class="pill warn">🚫 '+n0(f.can)+' canceló</span>':'')+'</span>'+
+        '<span class="md-pc-fbar" aria-hidden="true">'+cuad+'</span></div>'+
+      '<span class="md-pc-num md-pc-fn">'+n0(f.v)+'</span><div class="md-pc-acc">'+
+      (f.cel?'<a class="md-pc-ib wa" target="_blank" rel="noopener" href="'+waLink(f.cel,txt)+'" title="WhatsApp">'+mdIco(MD_I.mensaje)+'<span>'+(prox?'Confirmar':'Reagendar')+' por WhatsApp</span></a>'
+        :'<span class="mini md-pc-sincel">sin celular</span>')+
+      '<button type="button" class="btn sec sm" onclick="verPaciente(\''+jss(f.k)+'\')">Ficha</button></div></div>'}).join('')+'</div>'}
+function mdPcTxtFalta(f){return 'Hola '+f.k.split(' ')[0]+'! 👋 Le escribimos de *'+clinica()+'*.\nNo pudimos verle en su cita del *'+fmtF(f.ult)+'*. ¿Le agendamos una nueva fecha? 🦷'}
+
+/* ===== Caja › la mitad de abajo: cuatro totales, chips para filtrar, y las cuatro tarjetas como filas ===== */
+function mdPcCajaArmar(){
+  var eg=$('#cj-egresos'), de=$('#cj-deuda'), sm=$('#cj-sinmetodo'), nc=$('#cj-nocuadra'); if(!eg||!de||!sm||!nc)return null;
+  var cEg=eg.closest('.card'), cDe=de.closest('.card'), cSm=sm.closest('.card'), cNc=nc.closest('.card'); if(!cEg||!cDe||!cSm||!cNc)return null;
+  if(!$('#md-pc-top')){
+    var top=document.createElement('div'); top.id='md-pc-top';
+    top.innerHTML='<div class="kpis md-pc-kpis" id="md-pc-kpis"></div><div class="md-pc-barra"><div class="md-pc-chips" id="md-pc-chips"></div><div class="md-pc-btns" id="md-pc-btns"></div></div>';
+    cEg.parentNode.insertBefore(top,cEg);
+    /* los botones «Registrar egreso / anticipo» se mudan tal cual: conservan lo que ya tenían enganchado */
+    var rb=cEg.querySelector('.row-btn'); if(rb)top.querySelector('#md-pc-btns').appendChild(rb);
+    cEg.parentNode.insertBefore(cDe,cEg);
+    var g2=document.createElement('div'); g2.className='md-pc-g2'; cSm.parentNode.insertBefore(g2,cSm); g2.appendChild(cSm); g2.appendChild(cNc);
+    cDe.classList.add('md-pc-card'); cEg.classList.add('md-pc-card'); cSm.classList.add('md-pc-card'); cNc.classList.add('md-pc-card');
+    mdPcCab(cDe,'ambar',MD_PC_I.reloj,'','Cada saldo con su paciente, qué fue y hace cuánto. WhatsApp manda el recordatorio con el monto; Cobrar abre el cobro.');
+    mdPcCab(cEg,'coral',MD_PC_I.sale,'','Todo lo que sale de caja. Sin esto la Caja cuenta solo la mitad. Tocá el lápiz para corregir uno.');
+    mdPcCab(cSm,'rosa',MD_PC_I.aviso,'','Entró plata y no se marcó cómo. Completar abre la atención para anotarlo.');
+    mdPcCab(cNc,'gris',MD_PC_I.aviso,'','El saldo anotado supera lo que falta pagar (casi siempre vienen así del Excel). «Dejar en» lo corrige.')}
+  return {cEg:cEg,cDe:cDe,cSm:cSm,cNc:cNc}}
+function mdPcKpi(k,cls,ico,t,v,d){return '<div class="kpi md-pc-kpi-'+cls+'" data-f="'+k+'" role="button" tabindex="0" onclick="mdPcFiltro(\''+k+'\')" onkeydown="if(event.key===\'Enter\')this.click()"><div class="k">'+mdIco(ico)+esc(t)+'</div><div class="v">'+esc(v)+'</div><div class="d">'+d+'</div></div>'}
+function mdPcFiltro(f){MD_PC.filtro=(MD_PC.filtro===f&&f!=='todo')?'todo':f; mdPcFiltrar()}
+function mdPcFiltrar(){
+  var C=MD_PC.cards; if(!C)return; var f=MD_PC.filtro;
+  var ver=function(card,k){card.style.display=(f==='todo'||f===k)?'':'none'};
+  ver(C.cDe,'deuda'); ver(C.cEg,'egresos'); ver(C.cSm,'sinmetodo'); ver(C.cNc,'nocuadra');
+  var g2=C.cSm.parentNode; if(g2&&g2.classList.contains('md-pc-g2')){g2.style.display=(f==='todo'||f==='sinmetodo'||f==='nocuadra')?'':'none'; g2.classList.toggle('solo',f==='sinmetodo'||f==='nocuadra')}
+  mdQ(document,'#md-pc-chips button, #md-pc-kpis .kpi').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')===f)})}
+function mdPcCaja(){
+  var C=MD_PC.cards=mdPcCajaArmar(); if(!C)return;
+  MD_PC.viejo.deuda=$('#cj-deuda').innerHTML; MD_PC.viejo.egresos=$('#cj-egresos').innerHTML; MD_PC.viejo.sinmetodo=$('#cj-sinmetodo').innerHTML; MD_PC.viejo.nocuadra=$('#cj-nocuadra').innerHTML;
+  var rows=cajaRows(), egrs=egresosRango(), hoy=hoyISO(), periodo=MD_PC.periodo=mdPcPeriodoCaja();
+  /* las mismas cuentas que hace renderCaja para esas tablas */
+  var sinMetodo=[]; rows.forEach(function(r){var suma=sumaPagos(pagosDe(r)); if(num(r.acuenta)>0&&Math.abs(suma-num(r.acuenta))>0.01)sinMetodo.push({r:r,identificado:suma})});
+  var falta=sinMetodo.filter(function(x){return !esImportada(x.r)}), hist=sinMetodo.filter(function(x){return esImportada(x.r)});
+  var sinExpl=function(L){return L.reduce(function(a,x){return a+num(x.r.acuenta)-x.identificado},0)}, bsFalta=sinExpl(falta), bsHist=sinExpl(hist);
+  var nc=saldosNoCuadran(), bsNc=nc.reduce(function(a,r){return a+num(r.saldo)-faltaPagar(r)},0);
+  var deudas=[]; DATA.forEach(function(r){if(num(r.saldo)<=0||!r.fecha)return; var d=diasEntre(r.fecha,hoy); if(d<0)return; deudas.push({r:r,dias:d})});
+  var totDeuda=0, pacs={}, viejas=0; deudas.forEach(function(x){totDeuda+=num(x.r.saldo); pacs[keyPac(x.r.paciente)||'—']=1; if(x.dias>90)viejas++});
+  var nPac=Object.keys(pacs).length;
+  var egr=egrs.reduce(function(a,x){return a+num(x.monto)},0), egrEf=egrs.reduce(function(a,x){return a+(x.metodo==='Efectivo'?num(x.monto):0)},0);
+  MD_PC.deudas=deudas; MD_PC.egresos=egrs;
+  $('#md-pc-kpis').innerHTML=
+    mdPcKpi('egresos','coral',MD_PC_I.sale,'Egresos',bs(egr),n0(egrs.length)+' movimiento'+(egrs.length===1?'':'s')+' · '+esc(bs(egrEf))+' en efectivo')+
+    mdPcKpi('deuda','ambar',MD_PC_I.reloj,'Por cobrar',bs(totDeuda),n0(nPac)+' paciente'+(nPac===1?'':'s')+(viejas?' · '+n0(viejas)+(viejas===1?' deuda vieja':' deudas viejas'):' · ninguna de más de 90 días'))+
+    mdPcKpi('sinmetodo','rosa',MD_PC_I.aviso,'Sin forma de pago',n0(falta.length),falta.length?esc(bs(bsFalta))+' sin saber cómo entró':'todo conciliado ✅')+
+    mdPcKpi('nocuadra','gris',MD_PC_I.aviso,'No cuadran',n0(nc.length),nc.length?esc(bs(bsNc))+' de más en «por cobrar»':'todos los saldos cuadran ✅');
+  $('#md-pc-chips').innerHTML=[['todo','Todo',null],['deuda','Por cobrar',nPac],['egresos','Egresos',egrs.length],['sinmetodo','Sin forma de pago',falta.length],['nocuadra','No cuadran',nc.length]]
+    .map(function(c){return '<button type="button" data-f="'+c[0]+'" onclick="mdPcFiltro(\''+c[0]+'\')">'+c[1]+(c[2]!=null?' <em>'+n0(c[2])+'</em>':'')+'</button>'}).join('');
+  mdPcDeudaPintar();
+  /* egresos: ícono por categoría, pill de forma de pago, lápiz para editar */
+  var egrCat={}; egrs.forEach(function(x){egrCat[x.categoria]=(egrCat[x.categoria]||0)+num(x.monto)});
+  var cats=Object.keys(egrCat).sort(function(a,b){return egrCat[b]-egrCat[a]});
+  $('#cj-egresos').innerHTML=egrs.length
+    ? '<div class="md-pc-lista">'+egrs.map(function(x){var c=mdPcCat(x.categoria), pm=MD_PC_MET[x.metodo];
+        return '<div class="md-pc-fila md-pc-e" data-id="'+esc(x.id)+'"><span class="md-pc-catb md-pc-k-'+c[2]+'" aria-hidden="true">'+mdIco(c[1])+'</span>'+
+          '<div class="md-pc-tx"><b>'+esc(x.detalle||x.categoria)+'</b><small>'+fmtFcorta(x.fecha)+(x.proveedor?' · '+esc(x.proveedor):'')+(x.detalle?' · '+esc(x.categoria):'')+'</small></div>'+
+          '<span class="pill'+(pm?' '+pm:'')+'">'+esc(x.metodo)+'</span><span class="md-pc-num md-pc-neg">− '+esc(bs(x.monto))+'</span>'+
+          '<div class="md-pc-acc"><button type="button" class="md-pc-ib" title="Editar" aria-label="Editar egreso" onclick="editarEgreso(\''+x.id+'\')">'+mdIco(MD_PC_I.lapiz)+'</button>'+
+          '<button type="button" class="md-pc-ib rojo" title="Borrar" aria-label="Borrar egreso" onclick="borrarEgreso(\''+x.id+'\')">'+mdIco(MD_PC_I.cruz)+'</button></div></div>'}).join('')+'</div>'+
+      (cats.length>1?'<div class="md-pc-cats">'+cats.map(function(c){return '<span>'+esc(c)+' <b>'+esc(bs(egrCat[c]))+'</b></span>'}).join('')+'</div>':'')+
+      '<p class="mini" style="margin-top:8px">💵 En efectivo salieron '+esc(bs(egrEf))+' · el resto por QR, tarjeta o transferencia.</p>'
+    : '<div class="empty">No hay egresos cargados en este periodo.</div>';
+  mdPcCab(C.cEg,'coral',MD_PC_I.sale,'<span class="mini"><b>'+esc(bs(egr))+'</b> en '+esc(periodo)+'</span>');
+  /* sin forma de pago */
+  $('#cj-sinmetodo').innerHTML=(falta.length
+    ? '<div class="md-pc-lista">'+falta.slice(0,50).map(function(x){var r=x.r;
+        return '<div class="md-pc-fila md-pc-c" data-id="'+esc(r.id)+'">'+mdPcAv(r.paciente,null,'md-pc-av-s')+
+          '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+fmtFcorta(r.fecha)+' · '+esc(mdPcQue(r))+(x.identificado?' · '+n0(x.identificado)+' sí anotado':'')+'</small></div>'+
+          '<span class="pill bad">'+esc(bs(num(r.acuenta)-x.identificado))+'</span>'+
+          '<button type="button" class="btn sec xs" onclick="verFicha(\''+r.id+'\')">Completar</button></div>'}).join('')+'</div>'
+    : '<div class="empty">Todas las atenciones cargadas en el panel tienen su forma de pago ✅</div>')+
+    (hist.length?'<p class="mini md-pc-nota">📓 Aparte hay <b>'+n0(hist.length)+(hist.length===1?' atención</b> importada':' atenciones</b> importadas')+' de los cuadernos (<b>'+esc(bs(bsHist))+'</b>) que nunca van a tener forma de pago: el cuaderno no la anotaba. No hace falta hacer nada con ellas.</p>':'');
+  /* saldos que no cuadran */
+  $('#cj-nocuadra').innerHTML=nc.length
+    ? '<div class="md-pc-lista">'+nc.slice(0,80).map(function(r){var fp=faltaPagar(r);
+        return '<div class="md-pc-fila md-pc-c" data-id="'+esc(r.id)+'">'+mdPcAv(r.paciente,null,'md-pc-av-s')+
+          '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+fmtFcorta(r.fecha)+' · '+esc(mdPcQue(r))+' · '+(fp>0?'pagó '+n0(r.acuenta)+' de '+n0(r.total):'pagó todo')+'</small></div>'+
+          '<span class="pill warn">dice '+n0(r.saldo)+'</span>'+
+          '<button type="button" class="btn sec xs" onclick="arreglarSaldo(\''+r.id+'\')">Dejar en '+n0(fp)+'</button></div>'}).join('')+'</div>'+
+      '<p class="mini" style="margin-top:8px">'+n0(nc.length)+(nc.length===1?' atención':' atenciones')+' · de más en «por cobrar»: <b>'+esc(bs(bsNc))+'</b>. Si lo mal anotado era el total, abrila y corregila con ✏️ Editar.</p>'
+    : '<div class="empty">Todos los saldos cuadran con el total y lo cobrado ✅</div>';
+  mdPcFiltrar()}
+/* cuentas por cobrar: una fila por saldo, ordenadas por antigüedad o por plata */
+function mdPcDeudaPintar(){
+  var el=$('#cj-deuda'), C=MD_PC.cards; if(!el||!C)return;
+  var L=MD_PC.deudas.slice();
+  L.sort(MD_PC.orden==='plata'?function(a,b){return num(b.r.saldo)-num(a.r.saldo)||b.dias-a.dias}:function(a,b){return b.dias-a.dias||num(b.r.saldo)-num(a.r.saldo)});
+  var tot=0, pacs={}; L.forEach(function(x){tot+=num(x.r.saldo); pacs[keyPac(x.r.paciente)||'—']=1}); var nPac=Object.keys(pacs).length;
+  mdPcCab(C.cDe,'ambar',MD_PC_I.reloj,L.length?'<span class="md-pc-chips sm"><button type="button" class="'+(MD_PC.orden!=='plata'?'on':'')+'" onclick="mdPcOrden(\'viejas\')">Más viejas</button>'+
+    '<button type="button" class="'+(MD_PC.orden==='plata'?'on':'')+'" onclick="mdPcOrden(\'plata\')">Más plata</button></span>':'');
+  if(!L.length){el.innerHTML='<div class="empty">No hay saldos pendientes 🎉</div>'; return}
+  var N=6, ver=MD_PC.todas?L:L.slice(0,N);
+  el.innerHTML='<div class="md-pc-lista">'+ver.map(function(x){var r=x.r, cls=x.dias<=30?'ok':(x.dias<=90?'warn':'bad'), total=deudaDe(r.paciente);
+      return '<div class="md-pc-fila md-pc-d" data-id="'+esc(r.id)+'" data-dias="'+x.dias+'" data-saldo="'+Math.round(num(r.saldo))+'">'+mdPcAv(r.paciente)+
+        '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+esc(mdPcQue(r))+' · '+fmtFcorta(r.fecha)+(r.profesional?' · '+esc(r.profesional):'')+'</small></div>'+
+        '<span class="pill '+cls+'">'+x.dias+' día'+(x.dias===1?'':'s')+'</span><span class="md-pc-num">'+esc(bs(r.saldo))+'</span><div class="md-pc-acc">'+
+        (r.celular?'<a class="md-pc-ib wa" target="_blank" rel="noopener" title="Recordar por WhatsApp" href="'+waLink(r.celular,txtSaldo({paciente:r.paciente,saldo:total>0.009?total:num(r.saldo),ultima:r.fecha}))+'">'+mdIco(MD_I.mensaje)+'</a>':'')+
+        '<button type="button" class="btn sm" onclick="cobrarSaldo(\''+r.id+'\')">Cobrar</button></div></div>'}).join('')+'</div>'+
+    (L.length>N?'<button type="button" class="md-pc-ver" onclick="MD_PC.todas=!MD_PC.todas;mdPcDeudaPintar()">'+(MD_PC.todas?'Ver menos ‹':'Ver los '+n0(L.length)+' saldos ›')+'</button>':'')+
+    '<p class="mini" style="margin-top:8px">Total por cobrar <b>'+esc(bs(tot))+'</b> de '+n0(nPac)+' paciente'+(nPac===1?'':'s')+'. Mira <b>toda</b> la historia, no solo el periodo elegido: una deuda vieja sigue siendo deuda. '+
+    'Si un paciente debe varias, el WhatsApp va con lo que debe en total.</p>'}
+function mdPcOrden(o){MD_PC.orden=o; mdPcDeudaPintar()}
+
+/* los enganches: después de que el panel y la caja pintan lo suyo */
+(function(){
+  var _rp=renderPanel; renderPanel=function(){var r=_rp.apply(this,arguments); try{mdPcDoctoras()}catch(e){} try{mdPcFaltones()}catch(e){} return r};
+  var _rc=renderCaja; renderCaja=function(){var r=_rc.apply(this,arguments); try{mdPcCaja()}catch(e){} return r};
+  /* si el panel ya estaba abierto en Caja o Panel cuando esto cargó, se repinta con la cara nueva */
+  try{if(!document.body.classList.contains('locked')&&typeof asisVista==='function'){var v=asisVista(); if(v==='caja')renderCaja(); else if(v==='panel')renderPanel()}}catch(e){}})();
+/* ----- parte: 30-fecha.js ----- */
+/* ---------- 30 · una sola barra de fecha para Mi día y Agenda ----------
+   Reemplaza (oculta) los dos selectores repetidos: «¿Quién sos? / Día / ◀ Hoy ▶»
+   de Mi día y «Día / ◀ Hoy ▶ / Profesional» de Agenda. La barra tiene flechas,
+   Hoy, la fecha en palabras con un calendario del mes (puntito en los días con
+   citas), y las doctoras como chips con su color y cuántas citas tienen.
+   NO cambia cómo se calcula nada: sigue escribiendo en los mismos inputs que
+   leen renderMiDia (#m-dia, #m-prof) y renderCitasProximas (#q-dia,
+   #q-filtro-prof) y llama a esas mismas funciones. Los botones viejos siguen
+   existiendo (ocultos) y funcionando: la barra los sigue. La fecha y la doctora
+   se comparten entre las dos pestañas y quedan en este aparato (mdPref). */
+var MD_FE={mes:'',abierto:false,vista:'midia',ultimo:'',ev:null};
+var MD_FE_PAL=['#2E7D5B','#2F6FA8','#6B4FA0','#C27A0E','#B83E73','#16807A','#C2512F','#4F5666'];
+var MD_FE_FUERA={'Canceló':1,'Reprogramó':1,'Cancelada':1,'Reprogramada':1};
+function mdFeColor(p){
+  try{if(typeof mdColorProf==='function'){var c=mdColorProf(p); if(c)return c}}catch(e){}
+  try{var cc=CFG&&(CFG.colorProf||CFG.coloresProf||CFG.profColor); if(cc&&cc[p])return cc[p]}catch(e){}
+  var i=(CFG&&CFG.prof||[]).indexOf(p);
+  if(i<0)i=mdHash(p)%MD_FE_PAL.length;
+  return MD_FE_PAL[i%MD_FE_PAL.length]}
+function mdFeCorto(p){return String(p||'').replace(/^Dra?\.?\s*/i,'').trim()||String(p||'')}
+/* qué vista manda: la que está a la vista; si ninguna de las dos, la última */
+function mdFeVista(){
+  var c=$('#v-cita'), m=$('#v-midia');
+  if(c&&c.classList.contains('on'))return 'cita';
+  if(m&&m.classList.contains('on'))return 'midia';
+  return MD_FE.vista||'midia'}
+function mdFeIn(v){return v==='cita'?{dia:$('#q-dia'),prof:$('#q-filtro-prof')}:{dia:$('#m-dia'),prof:$('#m-prof')}}
+function mdFeBloqueada(){
+  if(esDoctora())return true;
+  var a=mdFeIn(mdFeVista()).prof; return !!(a&&a.disabled)}
+/* la misma regla que las listas: no cuenta el anticipo ni la cita que se canceló o se movió;
+   en Agenda solo lo que se agendó (origen Programada), en Mi día todo lo del día */
+function mdFeVale(r,vista){
+  if(!r||!r.fecha||esAnticipo(r)||MD_FE_FUERA[r.estado])return false;
+  if(vista==='cita'&&r.origen!=='Programada')return false;
+  return true}
+function mdFeEs(r,prof){return !prof||r.profesional===prof||(r.profesional==='Por definir'&&r.estado==='Agendada')}
+function mdFeDoctoras(){
+  if(mdFeBloqueada())return [PROF_ACTUAL||((mdFeIn(mdFeVista()).prof||{}).value||'')].filter(Boolean);
+  var out=(CFG&&CFG.prof||[]).slice(), vis={}; out.forEach(function(p){vis[p]=1});
+  var extra=[]; DATA.forEach(function(r){var p=r&&r.profesional; if(p&&p!=='Por definir'&&!vis[p]){vis[p]=1; extra.push(p)}});
+  return out.concat(extra.sort())}
+function mdFeCuentas(dia,vista,docs){
+  var del=DATA.filter(function(r){return r.fecha===dia&&mdFeVale(r,vista)}), por={};
+  docs.forEach(function(p){por[p]=del.filter(function(r){return mdFeEs(r,p)}).length});
+  return {total:del.length,por:por}}
+function mdFeConCitas(mes,vista,prof){
+  var s={}; DATA.forEach(function(r){if(r&&r.fecha&&r.fecha.slice(0,7)===mes&&mdFeVale(r,vista)&&mdFeEs(r,prof))s[r.fecha]=1}); return s}
+function mdFeTexto(dia){var d=parseISO(dia); return DOW[d.getDay()].slice(0,3).toLowerCase()+' '+d.getDate()+' '+MESES[d.getMonth()].slice(0,3)}
+function mdFeLargo(dia){var d=parseISO(dia); return DOW[d.getDay()].toLowerCase()+' '+d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear()}
+function mdFeMes(ym,n){var p=ym.split('-'), d=new Date(+p[0],+p[1]-1+n,1); return iso(d).slice(0,7)}
+function mdFeGuardar(dia,prof){mdPref('FECHA',{dia:dia,prof:prof||'',t:hoyISO()})}
+/* escribe una opción en el select si no la tiene (una doctora que solo aparece en los datos) */
+function mdFeSelect(sel,v){
+  if(!sel)return; if(sel.disabled)return;
+  if(v&&!Array.prototype.some.call(sel.options,function(o){return o.value===v})){var o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o)}
+  sel.value=v||''}
+/* lo que eligió en la barra: va a los inputs de las dos vistas y se repinta la que está a la vista */
+function mdFeFijar(dia,prof){
+  var v=mdFeVista(), a=mdFeIn(v), b=mdFeIn(v==='cita'?'midia':'cita');
+  if(!dia)dia=(a.dia&&a.dia.value)||hoyISO();
+  if(prof===undefined)prof=(a.prof&&a.prof.value)||'';
+  if(mdFeBloqueada())prof=PROF_ACTUAL||((a.prof||{}).value||'');
+  if(a.dia)a.dia.value=dia; if(b.dia)b.dia.value=dia;
+  mdFeSelect(a.prof,prof); mdFeSelect(b.prof,prof);
+  mdFeGuardar(dia,prof);
+  MD_FE.mes=dia.slice(0,7);
+  if(v==='cita')renderCitasProximas(); else renderMiDia()}
+/* después de que una vista se pintó (por la barra, por los botones viejos o por otro código):
+   la otra vista toma la misma fecha y doctora, y la barra se vuelve a pintar */
+function mdFeSinc(v){
+  var el=$('#v-'+(v==='cita'?'cita':'midia'));
+  var otra=$('#v-'+(v==='cita'?'midia':'cita'));
+  if(el&&!el.classList.contains('on')&&otra&&otra.classList.contains('on'))return;
+  var a=mdFeIn(v), b=mdFeIn(v==='cita'?'midia':'cita');
+  var dia=(a.dia&&a.dia.value)||hoyISO(), prof=(a.prof&&a.prof.value)||'';
+  if(b.dia&&b.dia.value!==dia)b.dia.value=dia;
+  if(b.prof&&!b.prof.disabled&&b.prof.value!==prof)mdFeSelect(b.prof,prof);
+  if(el&&el.classList.contains('on'))MD_FE.vista=v;
+  mdFeGuardar(dia,prof);
+  mdFePintar()}
+function mdFeMontar(){
+  var bar=$('#md-fe'); if(bar)return bar;
+  bar=document.createElement('div'); bar.id='md-fe'; bar.className='md-fe'; bar.setAttribute('role','group'); bar.setAttribute('aria-label','Día y doctora');
+  bar.addEventListener('click',mdFeClick);
+  bar.addEventListener('keydown',function(e){if(e.key==='Escape'&&MD_FE.abierto){mdFeAbrir(false); var b=$('#md-fe-cal'); if(b)b.focus()}});
+  /* un clic adentro de la barra puede repintarla (el botón tocado ya no está en el DOM cuando llega acá): no es «afuera» */
+  document.addEventListener('click',function(e){if(MD_FE.abierto&&e!==MD_FE.ev&&!(e.target.closest&&e.target.closest('#md-fe')))mdFeAbrir(false)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&MD_FE.abierto)mdFeAbrir(false)});
+  /* los selectores viejos quedan en su lugar, ocultos: siguen funcionando para quien los llame */
+  ['#m-dia','#q-dia'].forEach(function(s){var el=$(s), g=el&&el.closest('.grid'); if(g)g.classList.add('md-fe-viejo')});
+  return bar}
+function mdFeUbicar(bar,v){
+  var ancla=v==='cita'?$('#q-dia'):$('#m-dia'); if(!ancla)return;
+  var g=ancla.closest('.grid')||ancla;
+  if(bar.nextSibling===g&&bar.parentNode===g.parentNode)return;
+  g.parentNode.insertBefore(bar,g)}
+function mdFeAbrir(si){
+  MD_FE.abierto=!!si;
+  var p=$('#md-fe-pop'), b=$('#md-fe-cal'); if(!p||!b)return;
+  if(si){var a=mdFeIn(mdFeVista()); MD_FE.mes=((a.dia&&a.dia.value)||hoyISO()).slice(0,7); p.innerHTML=mdFeCalHtml(); p.hidden=false}
+  else p.hidden=true;
+  b.setAttribute('aria-expanded',si?'true':'false');
+  if(si){var s=p.querySelector('.md-fe-d.sel')||p.querySelector('.md-fe-d.hy'); if(s)try{s.focus({preventScroll:true})}catch(e){}}}
+function mdFeCalHtml(){
+  var v=mdFeVista(), a=mdFeIn(v), dia=(a.dia&&a.dia.value)||hoyISO(), prof=(a.prof&&a.prof.value)||'';
+  var mes=MD_FE.mes||dia.slice(0,7), hoy=hoyISO(), con=mdFeConCitas(mes,v,prof);
+  var p=mes.split('-'), y=+p[0], m=+p[1]-1, d1=new Date(y,m,1), ini=(d1.getDay()+6)%7, nd=new Date(y,m+1,0).getDate();
+  var h='<div class="md-fe-mh"><button type="button" class="md-fe-mb" data-m="-1" aria-label="Mes anterior">‹</button><b>'+esc(MESES[m].charAt(0).toUpperCase()+MESES[m].slice(1)+' '+y)+'</b><button type="button" class="md-fe-mb" data-m="1" aria-label="Mes siguiente">›</button></div>';
+  h+='<div class="md-fe-cal" role="grid">'+['L','M','M','J','V','S','D'].map(function(x){return '<small>'+x+'</small>'}).join('');
+  var dd=new Date(y,m,1-ini);
+  for(var i=0;i<42;i++){
+    var f=iso(dd), mt=dd.getMonth()!==m;
+    if(i>=35&&mt)break;
+    h+='<button type="button" class="md-fe-d'+(mt?' mt':'')+(f===hoy?' hy':'')+(f===dia?' sel':'')+(con[f]?' con':'')+'" data-f="'+f+'" aria-label="'+esc(mdFeLargo(f)+(con[f]?' · con citas':''))+'"'+(f===dia?' aria-current="date"':'')+'>'+dd.getDate()+(con[f]?'<i></i>':'')+'</button>';
+    dd.setDate(dd.getDate()+1)}
+  h+='</div><div class="md-fe-pie"><span><i></i> con citas'+(prof?' de '+esc(mdFeCorto(prof)):'')+'</span><button type="button" class="md-fe-irhoy">Ir a hoy</button></div>';
+  return h}
+function mdFePintar(){
+  var v=mdFeVista(), a=mdFeIn(v); if(!a.dia||!a.prof)return;
+  var bar=mdFeMontar(); mdFeUbicar(bar,v);
+  var dia=a.dia.value||hoyISO(), prof=a.prof.value||'', hoy=hoyISO(), bloq=mdFeBloqueada();
+  var docs=mdFeDoctoras(), c=mdFeCuentas(dia,v,docs);
+  var firma=[v,dia,prof,bloq?1:0,c.total,docs.map(function(p){return p+':'+c.por[p]}).join(','),DATA.length,MD_FE.abierto?1:0].join('|');
+  if(firma===MD_FE.ultimo&&bar.querySelector('#md-fe-cal'))return;
+  MD_FE.ultimo=firma; MD_FE.vista=v;
+  var chips;
+  if(bloq)chips=docs.map(function(p){return '<span class="md-fe-doc on fijo" data-prof="'+esc(p)+'" title="Con tu clave ves lo tuyo"><i style="background:'+mdFeColor(p)+'">'+esc(mdIniciales(mdFeCorto(p)))+'</i>'+esc(mdFeCorto(p))+' <em>'+c.por[p]+'</em></span>'}).join('');
+  else chips='<button type="button" class="md-fe-doc'+(prof?'':' on')+'" data-prof="" aria-pressed="'+(prof?'false':'true')+'">Todas <em>'+c.total+'</em></button>'+
+    docs.map(function(p){return '<button type="button" class="md-fe-doc'+(p===prof?' on':'')+'" data-prof="'+esc(p)+'" aria-pressed="'+(p===prof?'true':'false')+'" title="'+esc(p)+'"><i style="background:'+mdFeColor(p)+'">'+esc(mdIniciales(mdFeCorto(p)))+'</i>'+esc(mdFeCorto(p))+' <em>'+c.por[p]+'</em></button>'}).join('');
+  bar.innerHTML='<div class="md-fe-nav">'+
+    '<button type="button" class="md-fe-nb" id="md-fe-ayer" aria-label="Día anterior">◀</button>'+
+    '<button type="button" class="md-fe-f" id="md-fe-cal" aria-haspopup="dialog" aria-expanded="'+(MD_FE.abierto?'true':'false')+'" title="'+esc(mdFeLargo(dia))+'">'+mdIco(MD_I.agenda,2.2)+'<span>'+esc(mdFeTexto(dia))+'</span><small>▾</small></button>'+
+    '<button type="button" class="md-fe-nb" id="md-fe-manana" aria-label="Día siguiente">▶</button>'+
+    '<button type="button" class="md-fe-hoy'+(dia===hoy?' on':'')+'" id="md-fe-hoy">Hoy</button></div>'+
+    '<span class="md-fe-sep" aria-hidden="true"></span>'+
+    '<div class="md-fe-docs" id="md-fe-docs" role="group" aria-label="Doctora">'+chips+'</div>'+
+    '<div class="md-fe-pop" id="md-fe-pop" role="dialog" aria-label="Elegir el día"'+(MD_FE.abierto?'':' hidden')+'>'+(MD_FE.abierto?mdFeCalHtml():'')+'</div>'}
+function mdFeClick(e){
+  MD_FE.ev=e;
+  var t=e.target.closest&&e.target.closest('button'); if(!t)return;
+  var a=mdFeIn(mdFeVista()), dia=(a.dia&&a.dia.value)||hoyISO();
+  if(t.id==='md-fe-ayer'){mdFeFijar(addDias(dia,-1)); return}
+  if(t.id==='md-fe-manana'){mdFeFijar(addDias(dia,1)); return}
+  if(t.id==='md-fe-hoy'){mdFeFijar(hoyISO()); mdFeAbrir(false); return}
+  if(t.id==='md-fe-cal'){mdFeAbrir(!MD_FE.abierto); return}
+  if(t.classList.contains('md-fe-doc')){if(mdFeBloqueada())return; mdFeFijar(dia,t.getAttribute('data-prof')||''); return}
+  if(t.classList.contains('md-fe-mb')){MD_FE.mes=mdFeMes(MD_FE.mes||dia.slice(0,7),+t.getAttribute('data-m')); var p=$('#md-fe-pop'); if(p)p.innerHTML=mdFeCalHtml(); return}
+  if(t.classList.contains('md-fe-d')){var f=t.getAttribute('data-f'); mdFeAbrir(false); mdFeFijar(f); return}
+  if(t.classList.contains('md-fe-irhoy')){mdFeAbrir(false); mdFeFijar(hoyISO()); return}}
+/* al abrir: lo que se eligió la última vez en este aparato (la fecha solo si fue hoy mismo) */
+function mdFeArrancar(){
+  var p=mdPref('FECHA')||{}, hoy=hoyISO();
+  var dia=(p.t===hoy&&/^\d{4}-\d\d-\d\d$/.test(String(p.dia||'')))?p.dia:hoy;
+  var prof=esDoctora()?PROF_ACTUAL:(typeof p.prof==='string'?p.prof:(typeof miProf==='function'?miProf():''));
+  var cambio=false;
+  ['midia','cita'].forEach(function(v){var a=mdFeIn(v);
+    if(a.dia&&a.dia.value!==dia){a.dia.value=dia; cambio=true}
+    if(a.prof&&!a.prof.disabled&&(a.prof.value||'')!==(prof||'')){mdFeSelect(a.prof,prof); if((a.prof.value||'')===(prof||''))cambio=true}});
+  return cambio}
+(function(){
+  var _mi=renderMiDia; renderMiDia=function(){var r=_mi.apply(this,arguments); try{mdFeSinc('midia')}catch(e){} return r};
+  var _cp=renderCitasProximas; renderCitasProximas=function(){var r=_cp.apply(this,arguments); try{mdFeSinc('cita')}catch(e){} return r};
+  var _show=show; show=function(v){var r=_show.apply(this,arguments); try{if(v==='midia'||v==='cita'){mdFeAbrir(false); mdFePintar()}}catch(e){} return r};
+  var _ar=aplicarRol; aplicarRol=function(){var r=_ar.apply(this,arguments); try{MD_FE.ultimo=''; mdFePintar()}catch(e){} return r};
+  try{
+    var cambio=mdFeArrancar();
+    mdFePintar();
+    if(cambio&&!document.body.classList.contains('locked')){var v=mdFeVista(); if(v==='cita'&&$('#v-cita').classList.contains('on'))renderCitasProximas(); else if($('#v-midia').classList.contains('on'))renderMiDia()}
+  }catch(e){if(window.console)console.error('moderno fecha',e)}})();
 /* ===== MODERNO FIN ===== */
 </script>
 </body>
