@@ -2382,6 +2382,74 @@ body.md-noche .md-pr-tot{background:#0E100C}
   .md-prp-cuotas{font-weight:700;margin:14px 0 0;font-size:14px}
   .md-prp-nota{color:#444;font-size:12.5px;margin:10px 0 0}
   .md-prp-pie{margin-top:24px;border-top:1px solid #ccc;padding-top:8px;font-size:11px;color:#555;line-height:1.6}}
+/* ----- parte: 80-anuncio.css ----- */
+/* 📢 el anuncio de la clínica: el grito de Sonri, el botón y la ventana */
+.anu-grito{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:radial-gradient(circle at 30% 40%,rgba(40,44,34,.78),rgba(14,16,12,.9));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);cursor:pointer}
+.anu-grito[hidden]{display:none}
+.anu-grito .ag-c{display:flex;align-items:center;gap:22px;width:100%;max-width:900px}
+.anu-grito .ag-yo{position:relative;flex:0 0 230px;height:300px}
+.anu-grito .ag-yo>svg:first-child{position:absolute;left:30px;top:0;width:200px;height:266px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
+.anu-grito .ag-mega{position:absolute;left:-58px;top:-6px;width:140px;height:94px;transform:rotate(-16deg);transform-origin:80% 60%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+.anu-grito .ag-ondas{position:absolute;left:-96px;top:-34px;width:90px;height:110px;pointer-events:none}
+.anu-grito .ag-ondas i{position:absolute;left:30px;top:20px;width:60px;height:70px;border:5px solid var(--lime);border-right:0;border-top-color:transparent;border-bottom-color:transparent;border-radius:50%;opacity:0}
+.anu-grito .ag-ondas i:nth-child(2){left:14px;top:8px;width:84px;height:94px}
+.anu-grito .ag-ondas i:nth-child(3){left:-2px;top:-4px;width:108px;height:118px}
+.anu-grito.ag-va .ag-ondas i{animation:ag-onda 1.1s ease-out infinite}
+.anu-grito.ag-va .ag-ondas i:nth-child(2){animation-delay:.18s}
+.anu-grito.ag-va .ag-ondas i:nth-child(3){animation-delay:.36s}
+@keyframes ag-onda{0%{opacity:0;transform:translateX(18px) scale(.8)}35%{opacity:1}100%{opacity:0;transform:translateX(-14px) scale(1.08)}}
+.anu-grito .ag-burbuja{position:relative;flex:1;background:#fff;color:#1d1f1a;border-radius:26px;padding:24px 26px 18px;box-shadow:0 24px 60px rgba(0,0,0,.4);cursor:default}
+.anu-grito .ag-burbuja::before{content:"";position:absolute;left:-16px;top:46%;border:16px solid transparent;border-right-color:#fff;border-left:0}
+.anu-grito .ag-tag{display:inline-block;background:var(--lime);color:var(--ink,#1d1f1a);font-style:normal;font-weight:800;border-radius:999px;padding:5px 13px;font-size:13px;letter-spacing:.02em}
+.anu-grito #ag-t{display:block;font-size:clamp(22px,2.6vw + 8px,38px);line-height:1.18;letter-spacing:-.02em;margin:14px 0 10px;font-weight:900}
+.anu-grito #ag-x{display:block;color:#5b6155;font-size:14px;line-height:1.45}
+.anu-grito .ag-acc{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.anu-grito .ag-acc button{min-height:44px;border-radius:14px;padding:0 18px;font:inherit;font-weight:800;font-size:15px;cursor:pointer;border:1px solid rgba(0,0,0,.14);background:#fff;color:#1d1f1a}
+.anu-grito .ag-acc .ag-ok{background:var(--lime);border-color:transparent}
+.anu-grito .ag-pie{display:block;margin-top:12px;font-size:12px;color:#8a8f84}
+.anu-grito.ag-va .ag-yo{animation:ag-entra .55s cubic-bezier(.2,1.4,.4,1) both}
+.anu-grito.ag-va .ag-burbuja{animation:ag-burb .5s .12s cubic-bezier(.2,1.3,.4,1) both}
+.anu-grito.ag-va .ag-mega{animation:ag-grita .5s .3s ease-in-out 3}
+@keyframes ag-entra{0%{opacity:0;transform:translateY(60px) scale(.6)}100%{opacity:1;transform:none}}
+@keyframes ag-burb{0%{opacity:0;transform:scale(.7)}100%{opacity:1;transform:none}}
+@keyframes ag-grita{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(-22deg) scale(1.08)}}
+body.anu-tiembla .anu-grito .ag-c,body.anu-tiembla>:not(.anu-grito):not(#ov):not(#toast){animation:anu-sacude .5s linear 2}
+@keyframes anu-sacude{0%,100%{transform:none}15%{transform:translate(-7px,2px) rotate(-.6deg)}30%{transform:translate(6px,-3px) rotate(.5deg)}45%{transform:translate(-5px,3px)}60%{transform:translate(5px,-2px) rotate(.4deg)}75%{transform:translate(-3px,1px)}90%{transform:translate(2px,-1px)}}
+@media(max-width:700px){
+  .anu-grito .ag-c{flex-direction:column;gap:6px}
+  .anu-grito .ag-yo{flex:0 0 auto;width:170px;height:190px}
+  .anu-grito .ag-yo>svg:first-child{left:40px;width:130px;height:173px}
+  .anu-grito .ag-mega{left:-30px;width:100px;height:67px}
+  .anu-grito .ag-ondas{left:-62px;top:-40px;transform:scale(.75)}
+  .anu-grito .ag-burbuja::before{left:50%;top:-16px;border:16px solid transparent;border-bottom-color:#fff;border-top:0;margin-left:-16px}
+  .anu-grito .ag-burbuja{padding:20px 18px 14px}}
+@media(prefers-reduced-motion:reduce){
+  .anu-grito *,body.anu-tiembla>*{animation:none!important}}
+/* el botón de Mi día */
+.anu-btn{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 15px;border-radius:999px;border:1px solid rgba(0,0,0,.14);background:#fff;color:inherit;font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;margin-left:auto}
+.anu-btn:hover{background:#f6f7f2}
+.anu-btn.anu-on{background:#FFF1EC;border-color:#F2B8A4;color:#9a3412}
+.anu-btn .anu-pt{width:9px;height:9px;border-radius:50%;background:#e2552d;box-shadow:0 0 0 0 rgba(226,85,45,.6);animation:anu-pt 1.6s infinite}
+@keyframes anu-pt{0%{box-shadow:0 0 0 0 rgba(226,85,45,.55)}70%{box-shadow:0 0 0 9px rgba(226,85,45,0)}100%{box-shadow:0 0 0 0 rgba(226,85,45,0)}}
+/* la ventana para escribirlo */
+.anu-cab{display:flex;gap:14px;align-items:flex-start}
+.anu-cab>svg{flex:0 0 56px;width:56px;height:75px}
+.anu-cab h3{margin:2px 0 4px}
+.anu-hoy{margin:12px 0 4px;padding:11px 13px;border-radius:14px;background:#FFF1EC;border:1px solid #F2B8A4;font-size:14px;line-height:1.45}
+.anu-hoy q{display:block;font-weight:800;font-size:16px;margin:4px 0 2px}
+.anu-hoy small{color:#7c6f69}
+.anu-hoy.anu-no{background:#f6f7f2;border-color:rgba(0,0,0,.08);color:#5b6155}
+.anu-l{display:block;font-weight:700;margin-top:12px}
+#anu-txt{width:100%;margin-top:6px;font-size:16px;min-height:84px;resize:vertical}
+.anu-n{font-size:12px;color:#8a8f84;text-align:right;margin-top:4px}
+.anu-est{font-size:14px;margin-top:6px;min-height:1px}
+.anu-est.mal{color:#b42318;font-weight:600}
+.anu-sonri{padding:8px 14px 0}
+.anu-sonri .asis-b{width:100%}
+/* Sonri fuera de su rincón: una sola cara (gritando en el anuncio, la de siempre en la ventana) */
+.anu-grito .md-cara,.anu-cab .md-cara{display:none}
+.anu-grito .md-cara.festeja,.anu-cab .md-cara.n{display:inline}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -18481,6 +18549,267 @@ function mdPrEnAtencion(id){
     ASIS_AYUDA.push({q:'¿Cómo le mando un presupuesto prolijo?', k:'presupuesto prolijo imagen cotizacion mandar whatsapp imprimir descuento cuotas validez armar', v:'pacientes', f:'#pc-q',
       p:['Abrí la ficha del paciente (lupa o 👥 Pacientes) y tocá «📄 Armar presupuesto» (también está en la ventana del plan y en la atención donde anotaste lo recomendado).','Los tratamientos ya vienen con su precio: cambiá lo que haga falta, agregá o quitá líneas, y si corresponde poné descuento, cuotas y hasta cuándo vale (15 días si no tocás nada).','Tocá «📤 Mandar por WhatsApp»: en el celular se comparte la imagen; en la compu se descarga y se abre el chat para adjuntarla. «🖨 Imprimir» saca una hoja limpia y «📲 Solo el texto» manda el mensaje de siempre.','En la ficha, la recomendación queda con «📄 Presupuesto entregado el …». No cobra ni acepta nada: eso sigue como siempre.']})}
 })();
+/* ----- parte: 80-anuncio.js ----- */
+/* ============================================================================
+   📢 EL ANUNCIO DE LA CLÍNICA (28/10, como en el panel de Multiespumas)
+   La dueña o recepción escriben un aviso («Hoy no hay rayos X», «Mañana
+   cerramos a las 14:00») y Sonri se lo dice a TODOS los aparatos:
+   · Al entrar al panel (o cuando ponen uno nuevo) lo GRITA UNA VEZ: pantalla
+     entera con Sonri y su megáfono, la pantalla tiembla, sirena y la voz del
+     navegador leyendo el aviso. Se cierra tocando en cualquier lado, con
+     «Entendido» o Esc; si nadie lo toca, se va solo al terminar de hablar.
+   · Después, cada 3 minutos, solo su globito en la esquina, callado, hasta
+     que lo quiten. Va primero en sus avisos.
+   · Si la persona está escribiendo, espera a que termine. Con 🔇 de Sonri
+     sale sin sirena ni voz. «Reducir movimiento» del aparato le saca el temblor.
+   · El navegador no deja sonar sin un toque: si abre la página y todavía no
+     tocó nada, el grito sale callado y el primer toque lo hace gritar.
+   Vive en la configuración de la clínica (CFG.anuncio = {v, t, d, ts, por}),
+   la misma que ya viaja a todos los aparatos: no hace falta otro Apps Script.
+   Quitarlo = dejar t vacío. Lo escriben la dueña y recepción (las doctoras no
+   tocan la configuración). Solo avisa: no cambia nada del panel.
+   ========================================================================== */
+var ANUNCIO_CADA_MS=3*60000, ANUNCIO_TIC_MS=15000, ANUNCIO_GLOBO_MS=20000, ANUNCIO_GRITO_MS=12000, ANUNCIO_ESCRIBE_MS=8000, ANUNCIO_MAX=240;
+var ANUNCIO={ts:0, ult:0, t0:0, cierra:0, tiembla:0, sinVoz:0, gen:0, tecla:0, env:0, vozLista:0};
+function anuncioLeer(){
+  var o=CFG&&CFG.anuncio; if(!o||typeof o!=='object')return null;
+  var t=String(o.t||'').replace(/\s+/g,' ').trim(); if(!t)return null;
+  return {t:t.slice(0,ANUNCIO_MAX), d:String(o.d||''), ts:Number(o.ts)||0, por:String(o.por||'')}}
+function anuncioPuedeEscribir(){return esAdmin()&&ROL!=='pauta'}
+/* «hoy a las 14:20» / «el 27/10 a las 14:20» */
+function anuncioDesde(a){
+  var m=/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})/.exec(String(a&&a.d||'')); if(!m)return '';
+  return (m[1]===hoyISO()?'hoy':'el '+fmtFcorta(m[1]))+' a las '+m[2]}
+function anuncioPie(a){
+  var des=anuncioDesde(a);
+  return anuncioPuedeEscribir()
+    ?'Sonri lo grita en todos los aparatos al entrar al panel y lo recuerda cada 3 minutos'+(des?' desde '+des:'')+', hasta que lo quites.'
+    :(des?'Desde '+des+'. ':'')+'Te lo recuerdo cada 3 minutos hasta que lo quiten.'}
+/* en los avisos de Sonri va primero (sin «En 1 hora»: es hasta nuevo aviso) */
+function anuncioAviso(){
+  var a=anuncioLeer(); if(!a)return null;
+  return {k:'anuncio|'+a.ts, sev:'ro', ico:'📢', nov:1, anuncio:1, t:a.t, x:anuncioPie(a),
+    b:anuncioPuedeEscribir()?['✏️ Cambiar o quitar',function(){anuncioAbrir()}]:null}}
+(function(){
+  if(typeof asisAvisos!=='function')return;
+  var orig=asisAvisos;
+  asisAvisos=function(){
+    var A=orig.apply(this,arguments), av=anuncioAviso();
+    if(!av||asisOculto(av.k))return A;
+    ASIS.anunciados[av.k]=1;   // el globito del anuncio lo saca anuncioTic, con su ritmo
+    return [av].concat(A)}})();
+
+/* el reloj: uno nuevo se grita en el acto; el mismo, cada 3 minutos en el globito */
+function anuncioTic(){
+  if(!ASIS.montado||!document.body||document.body.classList.contains('locked'))return;
+  anuncioBtnPintar();
+  var a=anuncioLeer();
+  if(!a){ANUNCIO.ts=0; anuncioGritoCerrar(); var gl=$('#asis-globo'); if(gl&&gl.classList.contains('anu-globo')){gl.hidden=true; gl.classList.remove('anu-globo')} return}
+  var ahora=Date.now();
+  if(a.ts!==ANUNCIO.ts){
+    if(anuncioEscribiendo()||ASIS_TOUR)return;   // espera a que termine: el próximo tic lo grita
+    ANUNCIO.ts=a.ts; ANUNCIO.ult=ahora;
+    anuncioGrito(a); return}
+  if(ahora-ANUNCIO.ult<ANUNCIO_CADA_MS||anuncioGritoAbierto())return;
+  ANUNCIO.ult=ahora;
+  anuncioRecordar(a)}
+function anuncioRecordar(a){
+  if(ASIS.abierto){var yo=$('#asis-yo'); if(yo){yo.classList.remove('asis-salta'); void yo.offsetWidth; yo.classList.add('asis-salta')} return}
+  asisGlobo({ico:'📢', t:a.t, x:anuncioPie(a), ms:ANUNCIO_GLOBO_MS}, true);
+  var gl=$('#asis-globo'); if(gl)gl.classList.add('anu-globo')}
+/* cualquier otro globito de Sonri ya no es el del anuncio */
+(function(){if(typeof asisGlobo!=='function')return; var g0=asisGlobo; asisGlobo=function(){var gl=$('#asis-globo'); if(gl)gl.classList.remove('anu-globo'); return g0.apply(this,arguments)}})();
+function anuncioEscribiendo(){
+  var el=document.activeElement, tag=el?String(el.tagName||'').toUpperCase():'';
+  if(!(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(el&&el.isContentEditable)))return false;
+  return Date.now()-ANUNCIO.tecla<ANUNCIO_ESCRIBE_MS}
+function anuncioPuedeSonar(){
+  if(navigator.userActivation)return !!navigator.userActivation.hasBeenActive;
+  var C=asisAudio(); return !C||C.state!=='suspended'}
+
+/* ---------- 📣 el grito ---------- */
+function anuncioMegafono(){
+  return '<svg class="ag-mega" viewBox="0 0 120 80" aria-hidden="true" focusable="false">'+
+    '<path d="M86 30 L30 8 C24 6 20 10 20 16 L20 64 C20 70 24 74 30 72 L86 50 Z" fill="var(--lime)" stroke="#2b2f27" stroke-width="3.2" stroke-linejoin="round"/>'+
+    '<rect x="84" y="27" width="18" height="26" rx="5" fill="#fff" stroke="#2b2f27" stroke-width="3.2"/>'+
+    '<path d="M92 53 L96 72" stroke="#2b2f27" stroke-width="5" stroke-linecap="round"/>'+
+    '<path d="M32 22 L32 58" stroke="rgba(255,255,255,.65)" stroke-width="4" stroke-linecap="round"/></svg>'}
+function anuncioGrito(a){
+  var box=$('#anu-grito');
+  if(!box){
+    box=document.createElement('div'); box.id='anu-grito'; box.className='anu-grito';
+    box.setAttribute('role','alertdialog'); box.setAttribute('aria-labelledby','ag-t'); box.setAttribute('aria-describedby','ag-x');
+    box.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('.ag-cambiar'))return; if(Date.now()-ANUNCIO.t0>700)anuncioGritoCerrar()};
+    document.body.appendChild(box)}
+  box.innerHTML='<div class="ag-c">'+
+      '<div class="ag-yo" aria-hidden="true">'+asisSvg()+anuncioMegafono()+'<span class="ag-ondas"><i></i><i></i><i></i></span></div>'+
+      '<div class="ag-burbuja">'+
+        '<em class="ag-tag">📢 Anuncio de la clínica</em>'+
+        '<strong id="ag-t">'+esc(a.t)+'</strong>'+
+        '<small id="ag-x">'+esc(anuncioPie(a))+'</small>'+
+        '<div class="ag-acc"><button type="button" class="ag-ok" onclick="anuncioGritoCerrar()">👍 Entendido</button>'+
+          (anuncioPuedeEscribir()?'<button type="button" class="ag-cambiar" onclick="anuncioGritoCerrar();anuncioAbrir()">✏️ Cambiar o quitar</button>':'')+'</div>'+
+        '<span class="ag-pie">Tocá en cualquier lado para cerrar</span>'+
+      '</div></div>';
+  box.hidden=false;
+  box.classList.remove('ag-va'); void box.offsetWidth; box.classList.add('ag-va');
+  ANUNCIO.t0=Date.now(); ANUNCIO.gen++;
+  anuncioTemblar();
+  anuncioCierraEn(ANUNCIO_GRITO_MS);
+  ANUNCIO.sinVoz=0;
+  anuncioSonar(a)}
+function anuncioTemblar(){
+  var b=document.body; if(!b)return;
+  b.classList.remove('anu-tiembla'); void b.offsetWidth; b.classList.add('anu-tiembla');
+  clearTimeout(ANUNCIO.tiembla); ANUNCIO.tiembla=setTimeout(function(){b.classList.remove('anu-tiembla')},1000)}
+/* se cierra solo, pero no mientras la pestaña está escondida (si no, nadie lo veía) */
+function anuncioCierraEn(ms){
+  clearTimeout(ANUNCIO.cierra);
+  ANUNCIO.cierra=setTimeout(function(){if(document.hidden)anuncioCierraEn(3000); else anuncioGritoCerrar()},ms)}
+function anuncioGritoAbierto(){var b=$('#anu-grito'); return !!b&&!b.hidden}
+function anuncioGritoCerrar(){
+  clearTimeout(ANUNCIO.cierra);
+  var box=$('#anu-grito'), abierto=!!box&&!box.hidden;
+  if(box)box.hidden=true;
+  if(abierto){ANUNCIO.gen++; ANUNCIO.sinVoz=0; try{if(window.speechSynthesis)window.speechSynthesis.cancel()}catch(e){}}}
+/* 🚨 sirena (dos tonos, ~1,3 s) y después la voz. Con 🔇, nada. Sin un toque todavía, queda pendiente. */
+function anuncioSonar(a){
+  if(asisMudo()||!asisActivo())return;
+  if(!anuncioPuedeSonar()){ANUNCIO.sinVoz=1; return}
+  var gen=ANUNCIO.gen, dur=anuncioSirena();
+  setTimeout(function(){if(gen===ANUNCIO.gen&&anuncioGritoAbierto())anuncioHablar(a,gen)},Math.round(dur*1000)+150)}
+function anuncioSirena(){
+  var C=asisAudio(); if(!C)return 0;
+  try{
+    if(C.state==='suspended')C.resume();
+    var t=C.currentTime+0.02, o=C.createOscillator(), f=C.createBiquadFilter(), g=C.createGain(), i;
+    o.type='sawtooth'; f.type='lowpass'; f.frequency.value=2200;
+    for(i=0;i<4;i++)o.frequency.setValueAtTime(i%2?740:980,t+i*0.32);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.12,t+0.04);
+    g.gain.setValueAtTime(0.12,t+1.2); g.gain.exponentialRampToValueAtTime(0.0001,t+1.3);
+    o.connect(f); f.connect(g); g.connect(C.destination); o.start(t); o.stop(t+1.32);
+    ANUNCIO.sirenas=(ANUNCIO.sirenas||0)+1;
+    return 1.32}catch(e){return 0}}
+/* la voz del navegador, en castellano (de Latinoamérica si hay), sin emojis (los leería por su nombre) */
+function anuncioVoz(){
+  var S=window.speechSynthesis, V=[]; if(!S||!S.getVoices)return null;
+  try{V=S.getVoices()||[]}catch(e){}
+  var es=V.filter(function(v){return /^es([-_]|$)/i.test(String(v.lang||''))}); if(!es.length)return null;
+  var lat=function(v){return /^es[-_](US|MX|419|BO|AR|CO|CL|PE|PY|UY|EC|VE)/i.test(String(v.lang||''))};
+  return es.filter(lat)[0]||es[0]}
+function anuncioTextoVoz(t){return String(t||'').replace(/[\uD800-\uDFFF]/g,'').replace(/[←-⯿️‍]/g,'').replace(/\s+/g,' ').trim()}
+function anuncioHablar(a,gen){
+  var S=window.speechSynthesis, U=window.SpeechSynthesisUtterance;
+  if(asisMudo()||!S||!U)return;
+  try{
+    S.cancel();
+    var u=new U('¡Atención, atención! '+anuncioTextoVoz(a.t)), v=anuncioVoz();
+    if(v){u.voice=v; u.lang=v.lang} else u.lang='es-419';
+    u.rate=1; u.pitch=1; u.volume=1;
+    /* mientras habla no se cierra solo; al terminar, un ratito más */
+    u.onstart=function(){if(gen===ANUNCIO.gen)anuncioCierraEn(45000)};
+    u.onend=function(){if(gen===ANUNCIO.gen)anuncioCierraEn(2500)};
+    S.speak(u)}catch(e){}}
+/* las orejas: teclas (¿está escribiendo?), Esc/Enter para cerrar, y el primer toque, que deja sonar */
+(function(){
+  var marca=function(){ANUNCIO.tecla=Date.now()};
+  document.addEventListener('input',marca,true);
+  document.addEventListener('keydown',function(e){
+    if(anuncioGritoAbierto()&&(e.key==='Escape'||e.key==='Enter')){e.preventDefault(); anuncioGritoCerrar(); return}
+    marca()},true);
+  var toque=function(){
+    if(!ANUNCIO.vozLista&&window.speechSynthesis&&window.SpeechSynthesisUtterance)try{
+      var u=new SpeechSynthesisUtterance(' '); u.volume=0; window.speechSynthesis.speak(u); window.speechSynthesis.getVoices(); ANUNCIO.vozLista=1}catch(e){}
+    if(ANUNCIO.sinVoz&&anuncioGritoAbierto()){   // salió callado al abrir: este toque lo hace gritar (y no lo cierra)
+      var a=anuncioLeer(); ANUNCIO.sinVoz=0;
+      if(a){ANUNCIO.t0=Date.now(); anuncioTemblar(); anuncioCierraEn(ANUNCIO_GRITO_MS); setTimeout(function(){anuncioSonar(a)},30)}}};
+  ['touchend','click','keydown'].forEach(function(ev){document.addEventListener(ev,toque,true)});
+  try{if(window.speechSynthesis&&window.speechSynthesis.getVoices)window.speechSynthesis.getVoices()}catch(e){}
+  setInterval(function(){try{anuncioTic()}catch(e){}},ANUNCIO_TIC_MS);
+  /* después de cada refresco con la hoja (ahí llega el anuncio de otro aparato) */
+  if(typeof pullServer==='function'){var p0=pullServer; pullServer=function(){var r=p0.apply(this,arguments); try{Promise.resolve(r).then(function(){setTimeout(function(){try{anuncioTic()}catch(e){}},300)})}catch(e){} return r}}
+  if(typeof asisMontar==='function'){var m0=asisMontar; asisMontar=function(){var r=m0.apply(this,arguments); setTimeout(function(){try{anuncioTic()}catch(e){}},1500); return r}}})();
+
+/* ---------- la ventana para escribirlo (dueña y recepción) ---------- */
+function anuncioAbrir(){
+  if(!anuncioPuedeEscribir()){toast('El anuncio lo ponen la dueña o recepción 🔐',1);return}
+  try{asisCerrar()}catch(e){}
+  var a=anuncioLeer(), des=a?anuncioDesde(a):'';
+  openModal('<div class="anu-cab">'+asisSvg()+'<div><h3 id="anu-h3">📢 Decir anuncio</h3>'+
+      '<p class="mini">Sonri lo <b>grita</b> en todos los aparatos al entrar al panel (pantalla entera, sirena y voz) y después lo recuerda cada 3 minutos con su globito, hasta que lo quites.</p></div></div>'+
+    (a?'<div class="anu-hoy"><b>🔴 Ahora están escuchando:</b><q>'+esc(a.t)+'</q><small>'+esc([des?'desde '+des:'',a.por].filter(Boolean).join(' · '))+'</small></div>'
+      :'<div class="anu-hoy anu-no">No hay ningún anuncio puesto.</div>')+
+    '<label class="anu-l" for="anu-txt">'+(a?'Cambiarlo por':'Qué querés que diga')+'</label>'+
+    '<textarea id="anu-txt" maxlength="'+ANUNCIO_MAX+'" rows="3" placeholder="Ej.: Hoy no hay rayos X: derivar las radiografías a mañana." oninput="anuncioContar()">'+esc(a?a.t:'')+'</textarea>'+
+    '<div class="anu-n"><span id="anu-n">'+(a?a.t.length:0)+'</span> de '+ANUNCIO_MAX+' letras</div>'+
+    '<div id="anu-est" class="anu-est" aria-live="polite"></div>'+
+    '<div class="row-btn" style="margin-top:10px">'+
+      '<button type="button" class="btn" id="anu-pub" onclick="anuncioGuardar(false)">📢 '+(a?'Cambiar el anuncio':'Publicar anuncio')+'</button>'+
+      (a?'<button type="button" class="btn sec" id="anu-quitar" onclick="anuncioGuardar(true)">🗑 Quitar anuncio</button>':'')+
+      '<button type="button" class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  setTimeout(function(){var t=$('#anu-txt'); if(t)try{t.focus(); t.setSelectionRange(t.value.length,t.value.length)}catch(e){}},60)}
+function anuncioContar(){var t=$('#anu-txt'), n=$('#anu-n'); if(t&&n)n.textContent=String(t.value.length); anuncioEstado('')}
+function anuncioEstado(txt,mal){var e=$('#anu-est'); if(e){e.textContent=txt||''; e.classList.toggle('mal',!!mal)}}
+function anuncioGuardar(quitar){
+  if(ANUNCIO.env)return;
+  if(!anuncioPuedeEscribir()){anuncioEstado('El anuncio lo ponen la dueña o recepción 🔐',true);return}
+  var ta=$('#anu-txt'), t=quitar?'':String(ta&&ta.value||'').replace(/\s+/g,' ').trim().slice(0,ANUNCIO_MAX);
+  if(!quitar&&!t){anuncioEstado('Escribí qué querés que diga Sonri.',true);return}
+  var a=anuncioLeer();
+  if(!quitar&&a&&a.t===t){anuncioEstado('Es el mismo anuncio que ya está puesto.',true);return}
+  if(!CONNECTED){anuncioEstado('Sin internet: el anuncio tiene que llegar a todos los aparatos. Probá cuando vuelva la conexión.',true);return}
+  var d=new Date(), z=function(n){return (n<10?'0':'')+n};
+  var o={v:1, t:t, d:hoyISO()+' '+z(d.getHours())+':'+z(d.getMinutes()), ts:Date.now(), por:asisQuien()};
+  var antes=CFG.anuncio;
+  CFG.anuncio=o; CFG.ts=new Date().toISOString(); saveCfgObj(CFG);
+  ANUNCIO.env=1; anuncioEstado('Guardando en la hoja…');
+  ['#anu-pub','#anu-quitar'].forEach(function(s){var b=$(s); if(b)b.disabled=true});
+  var fin=function(ok,txt){
+    ANUNCIO.env=0;
+    ['#anu-pub','#anu-quitar'].forEach(function(s){var b=$(s); if(b)b.disabled=false});
+    if(!ok){CFG.anuncio=antes; saveCfgObj(CFG); anuncioEstado(txt,true); return}
+    closeModal();
+    toast(quitar?'🗑 Anuncio quitado: Sonri deja de decirlo.':'📢 Listo: Sonri lo grita al entrar al panel y lo recuerda cada 3 minutos.');
+    anuncioBtnPintar();
+    try{asisRefrescar()}catch(e){}
+    setTimeout(function(){try{anuncioTic()}catch(e){}},400)};
+  Promise.resolve().then(subirCfg).then(function(res){
+    if(res&&res.ok)fin(true);
+    else fin(false,'⚠️ No se guardó'+(res&&res.error?' ('+res.error+')':'')+'. Probá de nuevo en un rato.')},
+  function(){fin(false,'⚠️ No se guardó: sin respuesta de Google. Probá de nuevo.')})}
+
+/* el botón: en Mi día (arriba) y en la ventana de Sonri; dice si hay uno puesto */
+function anuncioBtnPintar(){
+  var cab=document.querySelector('#v-midia .mi-cab'), b=$('#anu-btn');
+  if(!anuncioPuedeEscribir()){if(b)b.remove(); return}
+  if(!b&&cab){
+    b=document.createElement('button'); b.type='button'; b.id='anu-btn'; b.className='anu-btn';
+    b.onclick=function(){anuncioAbrir()};
+    cab.appendChild(b)}
+  if(!b)return;
+  var a=anuncioLeer();
+  b.classList.toggle('anu-on',!!a);
+  b.innerHTML=a?'<span class="anu-pt"></span>📢 Anuncio puesto':'📢 Decir anuncio';
+  b.title=a?'Ahora: «'+a.t+'». Tocá para cambiarlo o quitarlo.':'Escribí un aviso: Sonri lo grita en todos los aparatos y lo recuerda cada 3 minutos'}
+(function(){
+  if(typeof asisPanelPintar!=='function')return;
+  var orig=asisPanelPintar;
+  asisPanelPintar=function(){
+    var r=orig.apply(this,arguments), p=$('#asis-panel');
+    if(p&&!p.hidden&&anuncioPuedeEscribir()&&!p.querySelector('.anu-sonri')){
+      var pie=p.querySelector('.asis-pie');
+      if(pie)pie.insertAdjacentHTML('beforebegin','<div class="anu-sonri"><button type="button" class="asis-b si" onclick="anuncioAbrir()">📢 '+(anuncioLeer()?'Cambiar o quitar el anuncio':'Decir un anuncio a todos')+'</button></div>')}
+    return r}})();
+(function(){
+  if(typeof show!=='function')return;
+  var s0=show; show=function(){var r=s0.apply(this,arguments); try{anuncioBtnPintar()}catch(e){} return r}})();
+
+try{
+  ASIS_NOVEDADES.push({id:'anuncio', f:'2026-10-28', t:'📢 Anuncios para todo el equipo',
+    x:'La dueña o recepción tocan «📢 Decir anuncio» (arriba en Mi día, o en mi ventana) y escriben un aviso, por ejemplo «Hoy no hay rayos X». Yo lo grito una vez en todos los aparatos al entrar al panel y después lo recuerdo cada 3 minutos con mi globito, hasta que lo quiten.', ayuda:/anuncio a todo el equipo/,
+    si:function(){return anuncioPuedeEscribir()}});
+  ASIS_AYUDA.push({q:'¿Cómo pongo un anuncio para todo el equipo?', k:'anuncio avisar aviso equipo todos doctoras recepcion megafono gritar decir comunicar importante', v:'midia', f:'#anu-btn',
+    p:['En Mi día, arriba a la derecha, tocá «📢 Decir anuncio» (también está en mi ventana, abajo).','Escribí el aviso, por ejemplo «Mañana cerramos a las 14:00», y tocá «Publicar anuncio».','Lo grito una vez en todos los aparatos al entrar al panel (pantalla entera, sirena y voz) y después lo recuerdo cada 3 minutos con mi globito.','Para cambiarlo o quitarlo, volvé a tocar el botón (dice «📢 Anuncio puesto») y elegí «🗑 Quitar anuncio».','Lo ponen la dueña o recepción. Si alguien tiene mi sonido apagado (🔇), lo ve igual pero sin sirena ni voz.']})}catch(e){}
 /* ===== MODERNO FIN ===== */
 </script>
 </body>
