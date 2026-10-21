@@ -2450,6 +2450,229 @@ body.anu-tiembla .anu-grito .ag-c,body.anu-tiembla>:not(.anu-grito):not(#ov):not
 /* Sonri fuera de su rincón: una sola cara (gritando en el anuncio, la de siempre en la ventana) */
 .anu-grito .md-cara,.anu-cab .md-cara{display:none}
 .anu-grito .md-cara.festeja,.anu-cab .md-cara.n{display:inline}
+/* ----- parte: 90-mes-caja.css ----- */
+/* 90 · la barra de periodo de Panel y Caja, y la franja «entró, salió, queda» de la Caja
+   Usa los tokens de cada clínica (--ink, --lime*, --paper, --panel, --line, --gray, --clay, --ok) y la misma
+   botonera (.md-seg) y flechas (.md-paso) que la barra de Atenciones. */
+.md-mc-viejo,#cj-kpis.md-mc-oculto{display:none!important}
+.md-mc-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:10px;margin-top:10px}
+.md-mc-seg button{min-width:0}
+.md-mc-seg button:focus-visible,.md-mc-paso>button:focus-visible,.md-mc-hoy:focus-visible,.md-mc-ch:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+.md-mc-paso .md-mc-l{min-width:190px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-mc-paso.sin>button[data-d]{display:none}
+.md-mc-paso.sin .md-mc-l{border:0;cursor:default}
+.md-mc-pick{position:absolute;left:40px;right:40px;bottom:0;height:1px!important;min-width:0;opacity:0;pointer-events:none;padding:0!important;border:0!important}
+.md-mc-hoy{height:40px;padding:0 15px;border-radius:12px;border:1px solid var(--lime);background:var(--lime);color:var(--ink);font:inherit;font-size:13.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+.md-mc-hoy.ya{background:var(--lime-sf);border-color:var(--lime-bd);color:var(--lime-dk)}
+.md-mc-cmp{font-size:13.5px;color:var(--gray);white-space:nowrap}
+.md-mc-cmp b{font-weight:800}.md-mc-cmp.up b{color:var(--ok)}.md-mc-cmp.down b{color:var(--clay)}.md-mc-cmp.igual b{color:var(--ink)}
+.md-mc-der{margin-left:auto;display:flex;gap:8px}
+.md-mc-der .md-mc-btn{width:auto!important;height:40px;white-space:nowrap}
+/* --- la franja de la Caja --- */
+.md-mc-fr{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px;margin-top:14px}
+.md-mc-fr h3{margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gray)}
+.md-mc-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.md-mc-n{border-radius:16px;padding:14px 16px;background:var(--paper);border:1px solid var(--line);min-width:0}
+.md-mc-n small{display:block;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gray)}
+.md-mc-n b{display:block;font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md-mc-n em{display:block;font-style:normal;font-size:12.5px;color:var(--gray);margin-top:2px}
+.md-mc-n.e b{color:var(--ok)}.md-mc-n.s b{color:var(--clay)}
+.md-mc-n.q{background:var(--ink);border-color:var(--ink)}.md-mc-n.q small,.md-mc-n.q em{color:rgba(255,255,255,.72)}.md-mc-n.q b{color:var(--lime)}
+.md-mc-n.q.neg b{color:#FF9A7A}
+.md-mc-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.md-mc-ch{display:inline-flex;align-items:center;gap:5px;min-height:32px;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;font-weight:700;line-height:1.25;border:1px solid transparent;background:var(--paper);color:var(--ink)}
+button.md-mc-ch{cursor:pointer}
+.md-mc-ch.warn{background:#FFF1D6;color:#7A4E00}.md-mc-ch.ok{background:#E3F2EA;color:#1F5E43}
+.md-mc-ch.bad{background:#FBE6DE;color:#8C3B1C}.md-mc-ch.gris,.md-mc-ch.i{background:var(--paper);border-color:var(--line);color:var(--gray)}
+.md-mc-ch.lila{background:#EFE7F7;color:#5A3F8A}
+.md-mc-exp{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--gray);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.md-mc-don{display:flex;align-items:center;gap:16px}
+.md-mc-don svg{width:150px;height:150px;flex:0 0 150px;font-family:inherit}
+.md-mc-don ul{list-style:none;margin:0;padding:0;flex:1;min-width:0;font-size:14px}
+.md-mc-don li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.md-mc-don li:last-child{border-bottom:0}
+.md-mc-don li i{width:12px;height:12px;border-radius:4px;flex:0 0 12px}
+.md-mc-don li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-mc-don li em{font-style:normal;font-size:12px;color:var(--gray)}
+.md-mc-don li b{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.md-mc-don li.vacio span{color:var(--gray)}
+.md-mc-banco{margin:12px 0 0;font-size:13.5px;color:var(--gray);line-height:1.6}
+.md-mc-banco b{color:var(--ink)}
+.md-mc-banco>span{white-space:nowrap}
+.md-mc-banco small{display:block;font-size:12px}
+.md-anim .md-mc-fr .md-mc-n{animation:mdMcSube .45s cubic-bezier(.2,.8,.2,1) both}
+.md-anim .md-mc-fr .md-mc-n.s{animation-delay:.06s}.md-anim .md-mc-fr .md-mc-n.q{animation-delay:.12s}
+@keyframes mdMcSube{from{opacity:0;transform:translateY(6px)}}
+@media(max-width:1100px){.md-mc-n b{font-size:24px}}
+@media(max-width:900px){.md-mc-fr{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:420px){.md-mc-don li em{display:none}}
+@media(max-width:700px){
+  .md-mc-bar{padding:8px;gap:8px}
+  .md-mc-seg{display:flex;width:100%}.md-mc-seg button{flex:1 1 auto;padding:0 6px}
+  .md-mc-paso{flex:1 1 100%}.md-mc-paso .md-mc-l{flex:1;min-width:0}
+  .md-mc-hoy{flex:0 0 auto}
+  .md-mc-cmp{white-space:normal;flex:1 1 0;min-width:0}
+  .md-mc-der{margin-left:0;flex:1 1 100%}.md-mc-der .md-mc-btn{flex:1}
+  .md-mc-fr{gap:18px}
+  .md-mc-3{grid-template-columns:minmax(0,1fr);gap:8px}
+  .md-mc-n{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:11px 14px}
+  .md-mc-n b{grid-column:2;grid-row:1/span 2;font-size:26px;margin:0}
+  .md-mc-n em{grid-column:1}
+  .md-mc-don{gap:12px}.md-mc-don svg{width:124px;height:124px;flex-basis:124px}
+  .md-mc-don ul{font-size:13.5px}
+}
+body.md-noche .md-mc-n.q{background:#0B0D09;border-color:var(--line)}
+body.md-noche .md-mc-ch.warn{background:#3A2E12;color:#F2C56A}body.md-noche .md-mc-ch.ok{background:#16301F;color:#7FD6A8}
+body.md-noche .md-mc-ch.bad{background:#3A1E14;color:#F08A70}body.md-noche .md-mc-ch.lila{background:#2A2238;color:#C7B2EC}
+body.md-noche .md-mc-bar .md-seg,body.md-noche .md-mc-bar .md-paso{background:var(--panel)}
+body.md-noche .md-mc-bar .md-seg button.on{background:var(--lime);color:#11130F}
+body.md-noche .md-mc-hoy{color:#11130F}
+body.md-noche .md-mc-hoy.ya{background:transparent;color:var(--lime);border-color:var(--lime)}
+/* ----- parte: 91-odonto.css ----- */
+/* 🦷 91 · el odontograma con colores: leyenda, piezas por estado y la ventana de la pieza */
+.md-odo-leg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--gray);margin:6px 0 8px}
+.md-odo-leg span{display:inline-flex;align-items:center;gap:6px}
+.md-odo-leg span.cero{opacity:.7}
+.md-odo-leg b{color:var(--ink);font-weight:800}
+.md-odo-leg i{width:14px;height:14px;border-radius:4px;display:inline-block;flex:0 0 14px}
+.md-odo-lh i{background:#CFEBDD;border:1.5px solid #2E7D5B}
+.md-odo-lp i{background:#FFF0CC;border:1.5px dashed #B07A00}
+.md-odo-lc i{background:#FBD9D1;border:1.5px solid #B4552F}
+.md-odo-la i{background:#e7e7e2;border:1.5px solid #c9c9c2;opacity:.6}
+/* las piezas (con forma de diente) */
+.odon .di.md-real.md-odo-h .md-di-c{fill:#CFEBDD;stroke:#2E7D5B}
+.odon .di.md-real.md-odo-h .md-di-r{stroke:#2E7D5B}
+.odon .di.md-real.md-odo-p .md-di-c{fill:#FFF0CC;stroke:#B07A00;stroke-dasharray:4 3}
+.odon .di.md-real.md-odo-p .md-di-r{stroke:#B07A00}
+.odon .di.md-real.md-odo-c .md-di-c{fill:#FBD9D1;stroke:#B4552F}
+.odon .di.md-real.md-odo-c .md-di-r{stroke:#B4552F}
+.odon .di.md-real.md-odo-c .num{color:#B4552F}
+.odon .di.md-real.md-odo-a{opacity:.38}
+.odon .di.md-real.md-odo-a .md-di-c{fill:#e7e7e2;stroke:#a9a9a0}
+.odon .di.md-real.md-odo-h .pt{background:#2E7D5B}
+/* sin la forma de diente (por si acaso): el botón entero */
+.odon .di.md-odo-h:not(.md-real){background:#CFEBDD;border-color:#2E7D5B}
+.odon .di.md-odo-p:not(.md-real){background:#FFF0CC;border:1px dashed #B07A00}
+.odon .di.md-odo-c:not(.md-real){background:#FBD9D1;border-color:#B4552F}
+.odon .di.md-odo-a:not(.md-real){opacity:.38}
+.odon.md-odo-ficha .di:focus-visible{outline:2px solid var(--lime-dk);outline-offset:1px}
+/* elegir piezas en la atención: solo un puntito, la selección se ve como siempre */
+.odon .di.md-odo-fc,.odon .di.md-odo-fa{position:relative}
+.odon .di.md-odo-fc::after,.odon .di.md-odo-fa::after{content:"";position:absolute;top:1px;right:2px;width:7px;height:7px;border-radius:50%;background:#D2553A;box-shadow:0 0 0 1.5px #fff}
+.odon .di.md-odo-fa::after{background:#a9a9a0}
+.md-odo-fnota{margin:6px 0 0}
+.md-odo-fc-i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#D2553A;vertical-align:middle;margin-right:2px}
+/* la ventana de la pieza */
+.md-odo-pz{background:#1F221C;color:#fff;border-radius:16px;padding:14px 16px 10px;margin-top:2px;font-size:14px;line-height:1.45}
+.md-odo-pz .md-odo-cab{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.md-odo-pz h3{color:#fff;margin:0}
+.md-odo-pz h4{margin:12px 0 2px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--lime)}
+.md-odo-sub{margin:2px 0 4px;color:rgba(255,255,255,.7);font-size:13px}
+.md-odo-chip{flex:0 0 auto;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;background:rgba(255,255,255,.12);color:#fff}
+.md-odo-eh .md-odo-chip{background:#CFEBDD;color:#1d5a40}
+.md-odo-ep .md-odo-chip{background:#FFF0CC;color:#7a5400;outline:1.5px dashed #B07A00;outline-offset:-1.5px}
+.md-odo-ec .md-odo-chip{background:#FBD9D1;color:#8a3a1c}
+.md-odo-ea .md-odo-chip{background:#e7e7e2;color:#55554f}
+.md-odo-fila{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid rgba(255,255,255,.12);padding:6px 0}
+.md-odo-sec>.md-odo-fila:first-child{border-top:0}
+.md-odo-fila em{font-style:normal;color:rgba(255,255,255,.65);font-size:12.5px}
+.md-odo-fila small{flex:0 0 auto;color:rgba(255,255,255,.75);font-size:12.5px;text-align:right}
+.md-odo-fila[role=button]{cursor:pointer;border-radius:8px}
+.md-odo-fila[role=button]:hover,.md-odo-fila[role=button]:focus-visible{background:rgba(255,255,255,.07);outline:0}
+.md-odo-vacio{margin:4px 0;color:rgba(255,255,255,.6);font-size:13px}
+.md-odo-acc{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.md-odo-acc .md-odo-bc{background:#B4552F;border-color:#B4552F;color:#fff}
+.md-odo-candado{margin:10px 0 0;font-size:13px;color:var(--gray)}
+@media (max-width:520px){
+  .md-odo-fila{flex-direction:column;gap:1px}
+  .md-odo-fila small{text-align:left}
+  .md-odo-acc .btn{flex:1 1 100%}
+}
+/* ----- parte: 92-recordatorios-conexion.css ----- */
+/* ---------- 92 · Recordatorios más limpio ---------- */
+.md-rf-viejo{display:none !important}
+.md-rf-k{font-size:11.5px;font-weight:800;letter-spacing:.07em;color:var(--gray);text-transform:uppercase;white-space:nowrap}
+.md-rf-docs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+.md-rf-docs .md-rf-k{margin-right:4px}
+.md-rf-docs button{font-family:inherit;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.md-rf-docs .md-fe-doc{font-size:13.5px;height:34px}
+.md-rf-docs button:focus-visible,.md-rf-bar button:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+.md-rf-docs .md-fe-doc.on{color:var(--panel)}
+/* las tarjetas: cuatro por fila, más bajitas, y la elegida bien remarcada */
+#v-agenda .kpis.md-rf-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 !important}
+#v-agenda .kpi.md-rk{padding:11px 13px;min-height:0}
+#v-agenda .kpi.md-rk .k{min-height:0}
+#v-agenda .kpi.md-rk .v{font-size:28px}
+#v-agenda .kpi.md-rk .md-rk-i{width:32px;height:32px;font-size:16px}
+#v-agenda .kpi.md-rk.md-rk-on{box-shadow:var(--sh);outline:2.5px solid var(--ink);outline-offset:2px;transform:translateY(-2px)}
+#v-agenda .kpi.md-rk:focus-visible{outline:2.5px solid var(--lime-dk);outline-offset:2px}
+/* «Mostrando …» y lo que no tiene tarjeta */
+.md-rf-bar{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin:14px 0 2px;font-size:14px;color:var(--gray)}
+.md-rf-m{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.md-rf-m small{font-size:12.5px}
+.md-rf-x,.md-rf-todo{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:var(--panel);border:0;border-radius:999px;padding:5px 12px;font:inherit;font-size:13.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+.md-rf-todo{cursor:default;background:var(--paper);color:var(--ink);border:1px solid var(--line)}
+.md-rf-x i{font-style:normal;font-size:11px;opacity:.8}
+.md-rf-x:hover i{opacity:1}
+.md-rf-mas{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.md-rf-op{display:inline-flex;align-items:center;gap:6px;height:32px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:12.5px;font-weight:700;padding:0 11px;cursor:pointer;white-space:nowrap}
+.md-rf-op em{font-style:normal;font-size:11px;font-weight:800;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.07);display:inline-flex;align-items:center;justify-content:center}
+.md-rf-op.urg em{background:#C2412D;color:#fff}
+.md-rf-op:not(.on):hover{border-color:var(--lime-bd);background:var(--lime-sf)}
+.md-rf-op.on{background:var(--ink);border-color:var(--ink);color:var(--panel)}
+.md-rf-op.on em{background:rgba(255,255,255,.22);color:inherit}
+#rem-list h3.md-rf-foco{color:var(--ink) !important}
+.md-anim #rem-list h3.md-rf-foco{animation:mdRfFoco 1.6s ease}
+@keyframes mdRfFoco{0%{background:var(--lime-sf)}100%{background:transparent}}
+body.md-noche .md-rf-op em{background:rgba(255,255,255,.1)}
+@media(max-width:980px){#v-agenda .kpis.md-rf-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){
+  #v-agenda .kpis.md-rf-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #v-agenda .kpi.md-rk .v{font-size:24px}
+  .md-rf-docs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 2px 4px;margin:2px -2px 8px}
+  .md-rf-docs::-webkit-scrollbar{display:none}
+  .md-rf-docs>*{flex:0 0 auto}
+  .md-rf-m small{display:none}
+  .md-rf-bar{gap:8px}}
+
+/* ---------- 92 · la conexión como puntito ---------- */
+#conn-banner.md-pt-rutina{display:none !important}
+.md-pt-fila{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;margin-top:4px}
+.md-pt-fila .md-linea{margin-top:0}
+.md-pt{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#E9F2C6;border-radius:999px;
+  padding:3px 11px;font:inherit;font-size:12.5px;font-weight:700;line-height:1.35;cursor:pointer;white-space:nowrap;max-width:100%;-webkit-tap-highlight-color:transparent}
+.md-pt[hidden]{display:none}
+.md-pt span{overflow:hidden;text-overflow:ellipsis}
+.md-pt:hover{background:rgba(255,255,255,.17)}
+.md-pt:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.md-pt i,.md-pt-gt i{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#7BE0A6;box-shadow:0 0 0 3px rgba(123,224,166,.25)}
+.md-pt-am i{background:#FFC34D;box-shadow:0 0 0 3px rgba(255,195,77,.25)}
+.md-pt-ro i{background:#FF7A5C;box-shadow:0 0 0 3px rgba(255,122,92,.25)}
+.md-pt.md-pt-ro{color:#FFD9CF}
+.md-anim .md-pt-am i{animation:mdPtLate 1.2s ease-in-out infinite}
+@keyframes mdPtLate{50%{box-shadow:0 0 0 5px rgba(255,195,77,.08)}}
+.md-pt-globo{position:fixed;z-index:70;width:310px;max-width:calc(100vw - 16px);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 2px 4px rgba(0,0,0,.06),0 24px 44px -20px rgba(0,0,0,.4);padding:12px 14px;font-size:13.5px;line-height:1.45}
+.md-pt-globo[hidden]{display:none}
+.md-pt-globo p{margin:8px 0 0}
+.md-pt-gt{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px}
+.md-pt-gt.md-pt-ok i{background:#2E9E62;box-shadow:0 0 0 3px rgba(46,158,98,.18)}
+.md-pt-gt.md-pt-am i{background:#E0A21B}
+.md-pt-gt.md-pt-ro i{background:#D9472B}
+.md-pt-sinc{color:#8A5A0C;font-weight:700}
+.md-pt-hora{color:var(--gray);font-size:12.5px}
+.md-pt-acc{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.md-pt-acc small{color:var(--gray);font-size:12px}
+body.md-noche .md-pt-sinc{color:#E8C27A}
+@media(max-width:760px){
+  .md-pt-fila{margin-top:3px;gap:4px 8px}
+  .md-pt{font-size:11.5px;padding:2px 9px;gap:6px}
+  .md-pt i{width:7px;height:7px;flex-basis:7px}}
+/* celular: las tarjetas de citas y recordatorios en dos filas (antes el texto quedaba en una columna de 0 px con los botones encima) */
+@media(max-width:640px){
+  .rem.md-r{grid-template-columns:44px minmax(0,1fr)!important;row-gap:10px}
+  .rem.md-r>.acts{grid-column:1/-1!important;grid-row:auto!important;flex-wrap:wrap!important;justify-content:flex-start!important;width:auto!important;position:static!important}
+}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -6886,7 +7109,8 @@ function llenarRemProf(){
 
 function renderRem(){
   var hoy=hoyISO(), f=getRadio('remf')||'citas', rprof=llenarRemProf();
-  var mismaProf=function(r){return !rprof||r.profesional===rprof||(r.profesional==='Por definir'&&r.estado==='Agendada')};
+  /* las citas pendientes vienen como {r, dias}: se mira la atención de adentro (antes no encontraba la doctora y las citas salían en 0) */
+  var mismaProf=function(x){var r=x&&x.r?x.r:x; return !rprof||r.profesional===rprof||(r.profesional==='Por definir'&&r.estado==='Agendada')};
   var cit=citasPend().filter(mismaProf), sal=saldosPend(rprof), dor=dormidos();
   var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
       sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
@@ -18810,6 +19034,771 @@ try{
     si:function(){return anuncioPuedeEscribir()}});
   ASIS_AYUDA.push({q:'¿Cómo pongo un anuncio para todo el equipo?', k:'anuncio avisar aviso equipo todos doctoras recepcion megafono gritar decir comunicar importante', v:'midia', f:'#anu-btn',
     p:['En Mi día, arriba a la derecha, tocá «📢 Decir anuncio» (también está en mi ventana, abajo).','Escribí el aviso, por ejemplo «Mañana cerramos a las 14:00», y tocá «Publicar anuncio».','Lo grito una vez en todos los aparatos al entrar al panel (pantalla entera, sirena y voz) y después lo recuerdo cada 3 minutos con mi globito.','Para cambiarlo o quitarlo, volvé a tocar el botón (dice «📢 Anuncio puesto») y elegí «🗑 Quitar anuncio».','Lo ponen la dueña o recepción. Si alguien tiene mi sonido apagado (🔇), lo ve igual pero sin sirena ni voz.']})}catch(e){}
+/* ----- parte: 90-mes-caja.js ----- */
+/* ---------- 90 · Panel y Caja: la barra de periodo («◀ Octubre 2026 ▶») y la franja «entró, salió, queda» ----------
+   Solo pinta y mueve los controles de siempre. NO cambia ninguna cuenta:
+   - La barra lee las opciones reales de #p-rango / #c-rango (no inventa periodos), escribe en los mismos
+     campos (#p-mes, #p-anio · #c-dia, #c-mes, #c-quin, #c-anio) y dispara el mismo evento que el navegador
+     (input/change): renderPanel y renderCaja hacen lo de siempre. Los controles viejos quedan ocultos en el DOM.
+   - La comparación «vs. septiembre» es lo cobrado del periodo anterior con las mismas funciones del panel
+     (totalCobros(filasCobrosPanel()) en Panel, cajaRows() en Caja): se ponen un instante los campos en el
+     periodo anterior, se pregunta, y se dejan como estaban (sin eventos, sin repintar).
+   - La franja de la Caja hace exactamente las cuentas de renderCaja (cajaRows, egresosRango, pagosDe,
+     sumaPagos, METODOS, esImportada) para Entró = Cobrado, Salió = Egresos, Queda = Caja neta, Por cobrar,
+     Sin identificar, y la dona por forma de pago. #cj-kpis queda en el DOM, oculto (lo leen otras pruebas). */
+var MD_MC={ult:{}};
+var MD_MC_CFG={
+  panel:{vista:'#v-panel', rango:'#p-rango', mes:'#p-mes', anio:'#p-anio'},
+  caja:{vista:'#v-caja', rango:'#c-rango', dia:'#c-dia', mes:'#c-mes', quin:'#c-quin', anio:'#c-anio'}};
+var MD_MC_COL={Efectivo:'var(--ok)',QR:'var(--lime)',Tarjeta:'var(--info)',Transferencia:'#7F5DB8'}, MD_MC_SIN='#B9B3A6', MD_MC_OTRO='#9AA08E';
+var MD_MC_ICO={Efectivo:'💵',QR:'📱',Tarjeta:'💳',Transferencia:'🏦'};
+
+/* ===== el periodo: leer, mover y escribir ===== */
+function mdMcEl(k,campo){var s=MD_MC_CFG[k][campo]; return s?$(s):null}
+function mdMcLeer(k){
+  var g=function(c){var e=mdMcEl(k,c); return e?String(e.value||''):''}, h=hoyISO();
+  return {r:g('rango'), dia:g('dia')||h, ym:g('mes')||h.slice(0,7), q:g('quin')||'1', anio:g('anio')||h.slice(0,4)}}
+function mdMcMesMas(ym,d){var x=parseISO(ym+'-01'); x.setMonth(x.getMonth()+d); return iso(x).slice(0,7)}
+/* el periodo de al lado (d = -1 o 1), sin tocar nada */
+function mdMcPaso(v,d){
+  var o={r:v.r,dia:v.dia,ym:v.ym,q:v.q,anio:v.anio};
+  if(v.r==='dia')o.dia=addDias(v.dia,d);
+  else if(v.r==='mes')o.ym=mdMcMesMas(v.ym,d);
+  else if(v.r==='anio')o.anio=String((+v.anio||+hoyISO().slice(0,4))+d);
+  else if(v.r==='quincena'){
+    if(d>0){if(String(v.q)==='1')o.q='2'; else {o.q='1'; o.ym=mdMcMesMas(v.ym,1)}}
+    else{if(String(v.q)==='2')o.q='1'; else {o.q='2'; o.ym=mdMcMesMas(v.ym,-1)}}}
+  return o}
+function mdMcHoy(r){var h=hoyISO(); return {r:r,dia:h,ym:h.slice(0,7),q:(+h.slice(8,10)<=15)?'1':'2',anio:h.slice(0,4)}}
+function mdMcEsHoy(v){
+  var h=mdMcHoy(v.r);
+  return v.r==='dia'?v.dia===h.dia:(v.r==='mes'?v.ym===h.ym:(v.r==='anio'?v.anio===h.anio:(v.r==='quincena'?(v.ym===h.ym&&String(v.q)===h.q):true)))}
+/* escribe los campos que cambian; con eventos, solo el último dispara (así se repinta una sola vez) */
+function mdMcEscribir(k,v,silencio){
+  var campos=[['dia',v.dia],['mes',v.ym],['anio',v.anio],['quin',v.q]], ult=null;
+  campos.forEach(function(c){var e=mdMcEl(k,c[0]); if(!e)return;
+    var usa=(v.r==='dia'&&c[0]==='dia')||((v.r==='mes'||v.r==='quincena')&&c[0]==='mes')||(v.r==='quincena'&&c[0]==='quin')||(v.r==='anio'&&c[0]==='anio');
+    if(!usa||String(e.value)===String(c[1]))return;
+    e.value=c[1]; ult=e});
+  if(!silencio&&ult)mdMcDisparar(ult);
+  return !!ult}
+function mdMcDisparar(e){
+  if(e.tagName!=='SELECT')e.dispatchEvent(new Event('input',{bubbles:true}));
+  e.dispatchEvent(new Event('change',{bubbles:true}))}
+/* pregunta algo con los campos puestos un instante en otro periodo, y los deja como estaban */
+function mdMcCon(k,v,fn){
+  var guardo={}; ['dia','mes','anio','quin'].forEach(function(c){var e=mdMcEl(k,c); if(e)guardo[c]=e.value});
+  try{mdMcEscribir(k,v,true); return fn()}
+  finally{Object.keys(guardo).forEach(function(c){mdMcEl(k,c).value=guardo[c]})}}
+function mdMcCobrado(k){
+  if(k==='panel')return totalCobros(filasCobrosPanel());
+  return cajaRows().reduce(function(a,r){return a+num(r.acuenta)},0)}
+
+/* ===== los textos ===== */
+function mdMcCap(s){return String(s||'').replace(/^./,function(c){return c.toUpperCase()})}
+function mdMcUltimoDia(ym){return new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate()}
+function mdMcTexto(v){
+  var h=hoyISO();
+  if(v.r==='mes')return mdMesTexto(v.ym);
+  if(v.r==='anio')return String(v.anio);
+  if(v.r==='quincena')return (String(v.q)==='1'?'1 al 15':'16 al '+mdMcUltimoDia(v.ym))+' de '+MESES[+v.ym.slice(5,7)-1]+' '+v.ym.slice(0,4);
+  if(v.r==='dia'){var d=parseISO(v.dia); return DOW[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()]+(v.dia.slice(0,4)!==h.slice(0,4)?' '+v.dia.slice(0,4):'')}
+  return 'Todo el historial'}
+function mdMcNombreAnterior(v,p){
+  var h=hoyISO();
+  if(v.r==='mes')return MESES[+p.ym.slice(5,7)-1]+(p.ym.slice(0,4)!==v.ym.slice(0,4)?' '+p.ym.slice(0,4):'');
+  if(v.r==='anio')return String(p.anio);
+  if(v.r==='quincena')return 'la quincena anterior';
+  if(v.r==='dia')return p.dia===addDias(h,-1)?'ayer':'el '+fmtFcorta(p.dia);
+  return ''}
+function mdMcHoyTxt(r){return {dia:'Hoy',quincena:'Esta quincena',mes:'Este mes',anio:'Este año'}[r]||''}
+function mdMcUnidad(r){return {dia:'Día',quincena:'Quincena',mes:'Mes',anio:'Año'}[r]||'Periodo'}
+/* «vs. septiembre: ▲ 18% cobrado» (la misma regla que los KPIs del Panel: sin cobros antes, no se compara) */
+function mdMcComparar(k,v){
+  if(v.r==='todo'||!v.r)return null;
+  var p=mdMcPaso(v,-1), a=mdMcCobrado(k), b=mdMcCon(k,p,function(){return mdMcCobrado(k)});
+  if(!(b>0.009))return null;
+  var d=(a-b)/b*100, pc=Math.abs(d), nom=mdMcNombreAnterior(v,p);
+  var tit='Cobrado en '+mdMcTexto(v).toLowerCase()+': '+bs(a)+' · en '+mdMcTexto(p).toLowerCase()+': '+bs(b);
+  if(pc<1)return {a:a,b:b,cls:'igual',html:'vs. '+esc(nom)+': <b>= igual</b> cobrado',tit:tit};
+  return {a:a,b:b,cls:d>0?'up':'down',html:'vs. '+esc(nom)+': <b>'+(d>0?'▲':'▼')+' '+(pc>=10?Math.round(pc):pc.toFixed(1))+'%</b> cobrado',tit:tit}}
+
+/* ===== la barra ===== */
+function mdMcBarra(k){
+  var C=MD_MC_CFG[k], vista=$(C.vista), rg=mdMcEl(k,'rango'); if(!vista||!rg)return;
+  var grid=rg.closest('.grid'); if(!grid)return;
+  var bar=$('#md-mc-bar-'+k);
+  if(!bar){
+    bar=document.createElement('div'); bar.id='md-mc-bar-'+k; bar.className='md-mc-bar'; bar.setAttribute('role','group'); bar.setAttribute('aria-label','Periodo');
+    bar.innerHTML='<div class="md-seg md-mc-seg"></div>'+
+      '<div class="md-paso md-mc-paso"><button type="button" data-d="-1">◀</button><button type="button" class="md-paso-l md-mc-l"></button>'+
+        '<input class="md-mc-pick" tabindex="-1" aria-hidden="true"><button type="button" data-d="1">▶</button></div>'+
+      '<button type="button" class="md-mc-hoy"></button><span class="md-mc-cmp"></span><div class="md-mc-der"></div>';
+    grid.parentNode.insertBefore(bar,grid); grid.classList.add('md-mc-viejo');
+    /* lo que ya había a la derecha: en Panel el botón del informe se muda tal cual (mismo id, mismo aviso) */
+    var der=bar.querySelector('.md-mc-der');
+    if(k==='panel'){var bi=$('#btn-informe'); if(bi){bi.style.width=''; bi.classList.add('md-mc-btn'); der.appendChild(bi)}}
+    else der.innerHTML='<button type="button" class="btn sec sm md-mc-btn" id="md-mc-xls" onclick="var b=$(\'#btn-xls-caja\'); if(b)b.click()">⬇ Excel de caja</button>';
+    bar.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b||!bar.contains(b))return;
+      if(b.hasAttribute('data-r')){var s=mdMcEl(k,'rango'); if(s.value!==b.getAttribute('data-r')){s.value=b.getAttribute('data-r'); mdMcDisparar(s)} return}
+      if(b.hasAttribute('data-d')){mdMcEscribir(k,mdMcPaso(mdMcLeer(k),+b.getAttribute('data-d'))); return}
+      if(b.classList.contains('md-mc-hoy')){var v=mdMcLeer(k); mdMcEscribir(k,mdMcHoy(v.r)); return}
+      if(b.classList.contains('md-mc-l'))mdMcAbrirPicker(k)});
+    bar.querySelector('.md-mc-pick').addEventListener('change',function(){mdMcPicker(k,this.value)})}
+  var v=mdMcLeer(k);
+  /* un botón por cada opción que el select tiene de verdad */
+  bar.querySelector('.md-mc-seg').innerHTML=Array.prototype.map.call(rg.options,function(o){
+    var t=mdMcCap(String(o.textContent||'').trim().replace(/^(un|una)\s+/i,''));
+    return '<button type="button" data-r="'+esc(o.value)+'" class="'+(o.value===v.r?'on':'')+'" aria-pressed="'+(o.value===v.r)+'">'+esc(t)+'</button>'}).join('');
+  var hay=v.r!=='todo'&&!!v.r, u=mdMcUnidad(v.r).toLowerCase();
+  var paso=bar.querySelector('.md-mc-paso'), lbl=bar.querySelector('.md-mc-l'), hoyB=bar.querySelector('.md-mc-hoy');
+  paso.classList.toggle('sin',!hay);
+  paso.querySelector('[data-d="-1"]').setAttribute('aria-label',mdMcCap(u)+' anterior');
+  paso.querySelector('[data-d="1"]').setAttribute('aria-label',mdMcCap(u)+' siguiente');
+  lbl.textContent=mdMcTexto(v);
+  lbl.title=(v.r==='dia'||v.r==='mes'||v.r==='quincena')?'Tocá para elegir '+(v.r==='dia'?'el día':'el mes'):'';
+  lbl.setAttribute('aria-label',mdMcTexto(v)+(lbl.title?' · '+lbl.title.toLowerCase():''));
+  var esHoy=hay&&mdMcEsHoy(v);
+  hoyB.textContent=mdMcHoyTxt(v.r); hoyB.style.display=hay?'':'none'; hoyB.classList.toggle('ya',esHoy);
+  var act={dia:'hoy',quincena:'la quincena actual',mes:'el mes actual',anio:'el año actual'}[v.r]||'';
+  hoyB.title=esHoy?'Ya estás mirando '+act:'Volver a '+act;
+  var cmp=bar.querySelector('.md-mc-cmp'), c=null;
+  try{c=mdMcComparar(k,v)}catch(e){c=null}
+  MD_MC.ult[k]=c;
+  cmp.className='md-mc-cmp'+(c?' '+c.cls:''); cmp.innerHTML=c?c.html:''; cmp.title=c?c.tit:''; cmp.style.display=c?'':'none'}
+/* tocar el nombre del periodo abre el calendario del navegador (día o mes) */
+function mdMcAbrirPicker(k){
+  var bar=$('#md-mc-bar-'+k), p=bar&&bar.querySelector('.md-mc-pick'), v=mdMcLeer(k); if(!p)return;
+  if(v.r==='dia'){p.type='date'; p.value=v.dia}
+  else if(v.r==='mes'||v.r==='quincena'){p.type='month'; p.value=v.ym}
+  else return;
+  try{if(p.showPicker)p.showPicker(); else p.focus()}catch(e){try{p.focus()}catch(x){}}}
+function mdMcPicker(k,val){
+  if(!val)return; var v=mdMcLeer(k);
+  if(v.r==='dia'&&/^\d{4}-\d\d-\d\d$/.test(val))v.dia=val;
+  else if((v.r==='mes'||v.r==='quincena')&&/^\d{4}-\d\d$/.test(val))v.ym=val;
+  else return;
+  mdMcEscribir(k,v)}
+
+/* ===== Caja: entró, salió, queda (las cuentas de renderCaja, tal cual) ===== */
+function mdMcCuentas(){
+  var rows=cajaRows(), egrs=egresosRango();
+  var egr=egrs.reduce(function(a,x){return a+num(x.monto)},0);
+  var tot=0,cobr=0,sal=0,porMetodo={},sinMetodo=[];
+  METODOS.forEach(function(m){porMetodo[m]=0});
+  rows.forEach(function(r){
+    tot+=num(r.total); cobr+=num(r.acuenta); sal+=num(r.saldo);
+    var ps=pagosDe(r), suma=sumaPagos(ps);
+    ps.forEach(function(p){porMetodo[p.metodo]=(porMetodo[p.metodo]||0)+num(p.monto)});
+    if(num(r.acuenta)>0&&Math.abs(suma-num(r.acuenta))>0.01)sinMetodo.push({r:r,identificado:suma})});
+  var faltaCargar=sinMetodo.filter(function(x){return !esImportada(x.r)});
+  var delHistorico=sinMetodo.filter(function(x){return esImportada(x.r)});
+  var identificado=METODOS.reduce(function(a,m){return a+porMetodo[m]},0);
+  var egrEf=egrs.reduce(function(a,x){return a+(x.metodo==='Efectivo'?num(x.monto):0)},0);
+  return {rows:rows,egrs:egrs,egr:egr,egrEf:egrEf,tot:tot,cobr:cobr,sal:sal,porMetodo:porMetodo,identificado:identificado,sinIdent:cobr-identificado,neto:cobr-egr,
+    faltaCargar:faltaCargar,delHistorico:delHistorico,
+    nAt:rows.filter(function(r){return !r._soloCobro}).length,
+    historico:rows.some(function(r){return r._cobroHistorico}),
+    anticipos:rows.filter(function(r){return r._anticipo}).reduce(function(a,r){return a+num(r.acuenta)},0)}}
+function mdMcDona(partes,total){
+  var C=339.3, acc=0, arcos='';
+  partes.forEach(function(p){var f=total>0?p.v/total:0;
+    if(f>0)arcos+='<circle cx="75" cy="75" r="54" fill="none" stroke="'+p.col+'" stroke-width="22" stroke-dasharray="'+Math.max(0,C*f-(partes.length>1?1.5:0)).toFixed(1)+' '+C+'" transform="rotate('+(-90+acc*360).toFixed(1)+' 75 75)"/>';
+    acc+=f});
+  return '<svg viewBox="0 0 150 150" role="img" aria-label="'+esc('Cobrado por forma de pago: '+bs(total))+'"><circle cx="75" cy="75" r="54" fill="none" stroke="var(--line)" stroke-width="22"/>'+arcos+
+    '<text x="75" y="70" text-anchor="middle" font-size="11" fill="var(--gray)" font-weight="600">cobrado</text>'+
+    '<text x="75" y="89" text-anchor="middle" font-size="'+(bs(total).length>10?15:17)+'" font-weight="800" fill="var(--ink)">'+esc(bs(total))+'</text></svg>'}
+function mdMcFranja(){
+  var kp=$('#cj-kpis'); if(!kp||!kp.parentNode)return;
+  var fr=$('#md-mc-caja');
+  if(!fr){fr=document.createElement('div'); fr.id='md-mc-caja'; fr.className='card md-mc-fr'; kp.parentNode.insertBefore(fr,kp)}
+  kp.classList.add('md-mc-oculto');
+  var X=mdMcCuentas(), M=X.porMetodo, periodo=(typeof mdPcPeriodoCaja==='function'?mdPcPeriodoCaja():'el periodo');
+  var titulo=mdMcCap(String(periodo).replace(/^el año /,'año ').replace(/^todo el tiempo$/,'todo el historial'));
+  var cuant=function(n,s,p){return n0(n)+' '+(n===1?s:p)};
+  var neg=X.neto<0;
+  var nums='<div class="md-mc-3">'+
+    '<div class="md-mc-n e" data-k="entro" data-v="'+X.cobr+'"><small>Entró</small><b>'+esc(bs(X.cobr))+'</b><em>cobrado · '+cuant(X.nAt,'atención','atenciones')+'</em></div>'+
+    '<div class="md-mc-n s" data-k="salio" data-v="'+X.egr+'"><small>Salió</small><b>'+esc(bs(X.egr))+'</b><em>'+cuant(X.egrs.length,'egreso','egresos')+'</em></div>'+
+    '<div class="md-mc-n q'+(neg?' neg':'')+'" data-k="queda" data-v="'+X.neto+'"><small>Queda</small><b>'+esc(bs(X.neto))+'</b><em>entró − salió</em></div></div>';
+  /* los chips: por cobrar, sin identificar (o todo conciliado), y los avisos que antes eran texto suelto */
+  var ch=[];
+  ch.push('<span class="md-mc-ch '+(X.sal>0?'warn':'ok')+'" data-k="porcobrar" data-v="'+X.sal+'" title="Saldo de las atenciones de '+esc(periodo)+'">⏳ Por cobrar '+esc(bs(X.sal))+'</span>');
+  if(X.faltaCargar.length)
+    ch.push('<button type="button" class="md-mc-ch bad" data-k="sinident" data-v="'+X.sinIdent+'" onclick="mdMcIrSinForma()" title="Entró plata y no se marcó cómo. Tocá para ver cuáles.">⚠️ Sin identificar '+esc(bs(X.sinIdent))+' · '+n0(X.faltaCargar.length)+' por completar'+(X.delHistorico.length?' · '+n0(X.delHistorico.length)+' del cuaderno':'')+'</button>');
+  else if(Math.abs(X.sinIdent)>0.01)
+    ch.push('<span class="md-mc-ch gris" data-k="sinident" data-v="'+X.sinIdent+'" title="Atenciones importadas del cuaderno: no anotaba la forma de pago y no se puede recuperar.">Sin identificar '+esc(bs(X.sinIdent))+' · '+n0(X.delHistorico.length)+' del cuaderno</span>');
+  else ch.push('<span class="md-mc-ch ok" data-k="sinident" data-v="'+X.sinIdent+'">✅ Todo conciliado</span>');
+  var exp=[];
+  if(X.historico)exp.push(AVISO_COBROS_HISTORICOS);
+  if(X.anticipos>0)exp.push('💜 Lo cobrado incluye '+bs(X.anticipos)+' de anticipos (saldo a favor de pacientes). Cuando se usen en una atención no vuelven a entrar a la caja.');
+  if(X.anticipos>0)ch.push('<span class="md-mc-ch lila" data-k="anticipos" data-v="'+X.anticipos+'">💜 Incluye '+esc(bs(X.anticipos))+' de anticipos</span>');
+  if(X.historico)ch.push('<button type="button" class="md-mc-ch i" data-k="historico" aria-expanded="false" aria-controls="md-mc-exp" title="'+esc(AVISO_COBROS_HISTORICOS)+'" onclick="mdMcExplicar(this)">ⓘ Hay cobros del histórico</button>');
+  var abierta=!!MD_MC.exp;
+  var expH=exp.length?'<p class="md-mc-exp" id="md-mc-exp"'+(abierta?'':' hidden')+'>'+exp.map(esc).join('<br>')+'</p>':'';
+  /* la dona: cada forma de pago con plata, y lo sin identificar en gris (así suma lo cobrado) */
+  var partes=METODOS.filter(function(m){return M[m]>0.009}).map(function(m){return {k:m,v:M[m],col:MD_MC_COL[m]||MD_MC_OTRO,ico:MD_MC_ICO[m]||''}});
+  if(X.sinIdent>0.01)partes.push({k:'Sin identificar',v:X.sinIdent,col:MD_MC_SIN,ico:'❔'});
+  var totD=partes.reduce(function(a,p){return a+p.v},0);
+  var ley=partes.length?partes.map(function(p){
+      return '<li data-m="'+esc(p.k)+'" data-v="'+p.v+'"><i style="background:'+p.col+'"></i><span>'+esc(p.k)+'</span><em>'+(X.cobr?Math.round(p.v/X.cobr*100):0)+'%</em><b>'+esc(bs(p.v))+'</b></li>'}).join('')
+    :'<li class="vacio"><span>Sin cobros en '+esc(periodo)+'</span></li>';
+  var banco=(M.QR||0)+(M.Transferencia||0), cajon=M.Efectivo||0, tarj=M.Tarjeta||0;
+  var bancoH='<p class="md-mc-banco" data-banco="'+banco+'" data-cajon="'+cajon+'"><span title="QR + transferencias del periodo">🏦 En el banco debería haber <b>'+esc(bs(banco))+'</b></span>'+
+    ' <span title="Efectivo cobrado en el periodo. Los egresos en efectivo salen de acá: el arqueo día por día y el cierre los descuentan.">· 💵 en el cajón <b>'+esc(bs(cajon))+'</b></span>'+
+    (tarj>0.009?' <span>· 💳 por tarjeta <b>'+esc(bs(tarj))+'</b></span>':'')+
+    (X.egrEf>0.009?'<small>De ese efectivo salieron '+esc(bs(X.egrEf))+' en egresos.</small>':'')+'</p>';
+  fr.innerHTML='<div class="md-mc-iz"><h3>'+esc(titulo)+' · lo que pasó con la plata</h3>'+nums+'<div class="md-mc-chips">'+ch.join('')+'</div>'+expH+'</div>'+
+    '<div class="md-mc-de"><h3>Por forma de pago</h3><div class="md-mc-don" data-total="'+totD+'">'+mdMcDona(partes,totD)+'<ul>'+ley+'</ul></div>'+bancoH+'</div>'}
+function mdMcExplicar(b){
+  var p=$('#md-mc-exp'); if(!p)return;
+  MD_MC.exp=p.hidden; p.hidden=!p.hidden; if(b)b.setAttribute('aria-expanded',String(!p.hidden))}
+/* «Sin identificar» lleva a la tarjeta de los cobros sin forma de pago */
+function mdMcIrSinForma(){
+  try{if(typeof mdPcFiltro==='function'&&MD_PC&&MD_PC.cards){MD_PC.filtro='todo'; mdPcFiltro('sinmetodo')}}catch(e){}
+  var c=$('#cj-sinmetodo'); c=c&&c.closest('.card'); if(c&&c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'})}
+
+/* los enganches: después de que Panel y Caja pintan lo suyo */
+(function(){
+  var _rp=renderPanel; renderPanel=function(){var r=_rp.apply(this,arguments); try{mdMcBarra('panel')}catch(e){} return r};
+  var _rc=renderCaja; renderCaja=function(){var r=_rc.apply(this,arguments); try{mdMcBarra('caja')}catch(e){} try{mdMcFranja()}catch(e){} return r};
+  /* Sonri: la ayuda de la caja ahora señala la franja nueva */
+  try{ASIS_AYUDA.forEach(function(a){if(a&&a.q==='¿Dónde veo la caja del día?'){a.f=['#md-mc-caja','#cj-kpis'];
+    a.p=['Entrá a 💰 Caja y tocá «Día» en la barra de arriba (con ◀ ▶ pasás de un día a otro, «Hoy» te vuelve).','Arriba ves lo que entró, lo que salió y lo que queda, y la dona con cada forma de pago; abajo, cada cobro.','Los pagos de saldos y de planes entran el día que se pagan.']}})}catch(e){}
+  try{if(!document.body.classList.contains('locked')&&typeof asisVista==='function'){var v=asisVista(); if(v==='caja')renderCaja(); else if(v==='panel')renderPanel()}}catch(e){}})();
+
+try{
+  ASIS_NOVEDADES.push({id:'md-mes-caja', f:'2026-10-21', t:'🗓 Panel y Caja: el mes con un toque, y la caja en tres números',
+    x:'Arriba de 📊 Panel y 💰 Caja ahora hay una barra: elegís Día, Quincena, Mes o Año y pasás con ◀ ▶ («Este mes» te vuelve). Al lado te digo cuánto se cobró contra el periodo anterior. En la Caja, arriba de todo: Entró, Salió y Queda, lo que falta cobrar, y una dona por forma de pago con lo que tiene que haber en el banco y en el cajón.',
+    ayuda:/entró, salió y queda/, si:function(){return esAdmin()}});
+  ASIS_AYUDA.push({q:'¿Cómo veo cuánto entró, salió y queda en un mes?', k:'mes periodo cambiar elegir anterior siguiente quincena año dia caja panel entro salio queda neta cobrado egresos banco cajon efectivo qr dona forma pago comparar septiembre',
+    v:'caja', f:['#md-mc-bar-caja','#md-mc-caja'], solo:'adm',
+    p:['Entrá a 💰 Caja (o a 📊 Panel). Arriba está la barra del periodo: tocá Día, Quincena, Mes o Año.','Con ◀ ▶ pasás al anterior o al siguiente; «Este mes» (o «Hoy», «Este año») te vuelve al actual. Tocando el nombre del mes se abre el calendario.','Al lado te digo cuánto se cobró contra el periodo anterior, por ejemplo «vs. septiembre: ▲ 18% cobrado».','En la Caja, la franja de arriba dice Entró (lo cobrado), Salió (los egresos) y Queda (entró − salió), lo que falta cobrar y si hay plata sin identificar.','A la derecha, la dona por forma de pago y cuánto tiene que haber en el banco (QR + transferencias) y en el cajón (efectivo).']})}catch(e){}
+/* ----- parte: 91-odonto.js ----- */
+/* ============================================================================
+   🦷 91 · EL ODONTOGRAMA CON COLORES (en la ficha del paciente)
+   Cada pieza se pinta según su estado, con la leyenda arriba:
+   · Hecho (verde): se le hizo algo en una visita atendida (lo de odontoDe).
+   · En el plan (amarillo, punteado): figura en una sesión PENDIENTE de un plan
+     activo que la doctora ve (las piezas salen del texto de la sesión con
+     piezasDeDetalle), o en un servicio recomendado sin respuesta que la nombra.
+   · Caries / a tratar (rojo) y Ausente (gris, atenuada): las marca la doctora
+     a mano desde la ventana de la pieza.
+   Prioridad si coinciden: ausente > caries > en el plan > hecho (el número
+   verde de veces queda igual). Una caries con una visita atendida en esa pieza
+   POSTERIOR a la marca (otro día, o el mismo día cargada después) se ve como
+   hecho: quedó tratada. La marca no se borra: queda como historia.
+   La marca vive en la ficha: PAC[k].med.odonto = {"16":{e:"caries"|"ausente",
+   f:"AAAA-MM-DD", por:"Dra. …", ts:ISO}} y sube con savePac. La hoja guarda
+   med entero en _med_json y el servidor junta med campo a campo (fusion3) y
+   copia las claves que no conoce (fusionarFichas): no hace falta otro Apps
+   Script. Para que el panel no la pierda, pacNormalize y pacVacia la conocen.
+   Permisos: la doctora marca solo piezas de sus pacientes (bloqueaAjeno; el
+   servidor igual rechaza la ficha de un paciente de otra), la clave de pauta
+   no ve fichas médicas. El formulario de atención (elegir piezas) solo muestra
+   la caries marcada como ayuda: la selección no cambia.
+   ========================================================================== */
+var ODO_EST_TXT={h:'Hecho', p:'En el plan', c:'Caries / a tratar', a:'Ausente'};
+var ODO_CTX=null, ODO_FORM=null;
+function odoPuedeVer(){return ROL!=='pauta'}
+function odoPuedeMarcar(nombre){return odoPuedeVer()&&!pacAjeno(nombre)}
+
+/* lo guardado, limpio: solo piezas FDI de verdad y estados conocidos */
+function odoLimpio(o){
+  if(!o||typeof o!=='object'||Array.isArray(o))return null;
+  var out={}, n=0;
+  Object.keys(o).forEach(function(c){
+    var m=o[c]; if(!esFDI(c)||!m||typeof m!=='object')return;
+    var e=m.e==='caries'||m.e==='ausente'?m.e:''; if(!e)return;
+    var x={e:e, f:/^\d{4}-\d{2}-\d{2}$/.test(String(m.f||''))?String(m.f):''};
+    if(m.por)x.por=String(m.por);
+    if(m.ts)x.ts=String(m.ts);
+    out[c]=x; n++});
+  return n?out:null}
+(function(){
+  if(typeof pacNormalize!=='function')return;
+  var pn=pacNormalize;
+  pacNormalize=function(p){
+    var m=p&&p.med; if(typeof m==='string'){try{m=JSON.parse(m)}catch(e){m=null}}
+    var od=odoLimpio(m&&m.odonto), b=pn.apply(this,arguments);
+    if(od&&b&&b.med)b.med.odonto=od;
+    return b}})();
+(function(){
+  if(typeof pacVacia!=='function')return;
+  var pv=pacVacia;
+  /* una ficha con solo marcas en el odontograma ya no está vacía: se guarda */
+  pacVacia=function(p){return pv.apply(this,arguments)&&!(p&&p.med&&p.med.odonto&&Object.keys(p.med.odonto).length)}})();
+
+function odoMarcas(nombre){var f=pacDe(nombre); return (f&&f.med&&f.med.odonto)||{}}
+/* la caries quedó tratada: una visita atendida en esa pieza después de marcarla */
+function odoTratada(m,hist){
+  if(!m||m.e!=='caries'||!hist||!hist.length)return null;
+  var ts={};
+  DATA.forEach(function(r){ts[r.id]=r.ts||''});
+  return hist.filter(function(x){
+    return (x.fecha||'')>(m.f||'')||((x.fecha||'')===(m.f||'')&&!!m.ts&&String(ts[x.id]||'')>m.ts)})
+    .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})[0]||null}
+
+/* lo pendiente de los planes activos (los que ve quien mira) y lo recomendado sin respuesta */
+function odoPlan(nombre){
+  var out={}, cita=null;
+  try{cita=citaFuturaDe(nombre)}catch(e){}
+  var add=function(c,x){if(esFDI(c))(out[c]=out[c]||[]).push(x)};
+  planesVisiblesDe(nombre).forEach(function(p){
+    if(!p||p.estado!=='activo')return;
+    var sig=proxSesion(p);
+    (p.sesiones||[]).forEach(function(s){
+      if(!s||s.hecha)return;
+      piezasDeDetalle(s.desc).forEach(function(c){
+        add(c,{plan:p.nombre||'Plan', planId:p.id, n:s.n, desc:s.desc||('Etapa '+s.n), precio:s.precio,
+          cita:(sig&&sig.n===s.n&&cita)?cita.fecha:''})})})});
+  try{presuPendDe(nombre).forEach(function(x){
+    piezasDeDetalle([x.p.nom,x.p.motivo].join(' ')).forEach(function(c){
+      add(c,{rec:true, desc:x.p.nom, fecha:x.fecha||''})})})}catch(e){}
+  return out}
+
+/* lo hecho: lo de odontoDe (visitas atendidas) más las sesiones ya hechas de
+   sus planes que nombran la pieza (la visita de «✓ Marcar realizada» lleva la
+   pieza en el nombre del servicio, que odontoDe no lee) */
+function odoHechos(nombre){
+  var mapa=odontoDe(nombre), porId={};
+  DATA.forEach(function(r){porId[r.id]=r});
+  planesVisiblesDe(nombre).forEach(function(p){
+    if(!p||p.estado==='cancelado')return;
+    (p.sesiones||[]).forEach(function(s){
+      if(!s||!s.hecha)return;
+      var r=s.atencionId?porId[s.atencionId]:null;
+      if(r&&r.estado!=='Atendido')return;
+      piezasDeDetalle(s.desc).forEach(function(c){
+        var l=mapa[c]=mapa[c]||[];
+        if(s.atencionId&&l.some(function(x){return x.id===s.atencionId}))return;
+        l.push({fecha:s.fecha||(r&&r.fecha)||'', servicio:s.desc||('Etapa '+s.n), det:p.nombre||'', id:s.atencionId||'', prof:(r&&r.profesional)||'', plan:1})})})});
+  Object.keys(mapa).forEach(function(c){mapa[c].sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})});
+  return mapa}
+
+/* el estado de cada pieza que tiene algo */
+function odoEstados(nombre){
+  var mapa=odoHechos(nombre), marcas=odoMarcas(nombre), plan=odoPlan(nombre), out={}, ks={};
+  [mapa,marcas,plan].forEach(function(o){Object.keys(o).forEach(function(c){if(esFDI(c))ks[c]=1})});
+  Object.keys(ks).forEach(function(c){
+    var m=marcas[c], hist=mapa[c]||[], e='';
+    if(m&&m.e==='ausente')e='a';
+    else if(m&&m.e==='caries'&&!odoTratada(m,hist))e='c';
+    else if(plan[c])e='p';
+    else if(hist.length)e='h';
+    if(e)out[c]=e});
+  return out}
+function odoCuenta(est){var n={h:0,p:0,c:0,a:0}; Object.keys(est).forEach(function(c){n[est[c]]++}); return n}
+
+/* «molar inferior derecho», «canino superior izquierdo · de leche» */
+function odoNombrePieza(c){
+  var q=+String(c).charAt(0), u=+String(c).charAt(1), temp=esTemporal(c);
+  var tipo=temp?['','incisivo central','incisivo lateral','canino','primer molar','segundo molar'][u]
+    :['','incisivo central','incisivo lateral','canino','primer premolar','segundo premolar','primer molar','segundo molar','tercer molar'][u];
+  var sup=(q-1)%4<2, der=q%4===1||q%4===0;
+  return (tipo||'pieza')+' '+(sup?'superior':'inferior')+' '+(der?'derecho':'izquierdo')+(temp?' · de leche':'')}
+
+/* ---------- las piezas: el color va como clase, el clic y la selección quedan igual ---------- */
+(function(){
+  if(typeof dienteHtml!=='function')return;
+  var dh=dienteHtml;
+  dienteHtml=function(c,mapa,sel,fn){
+    /* en la ficha (con su contexto): todas las piezas se tocan, aunque no tengan nada */
+    if(ODO_CTX&&(fn==='verDientePac'||!fn)){
+      if(!ODO_CTX.est)ODO_CTX.est=odoEstados(ODO_CTX.nombre);
+      var e=ODO_CTX.est[c], h=dh.call(this,c,mapa,sel,'verDientePac');
+      if(!e)return h;
+      return h.replace('class="di','class="di md-odo-'+e).replace('title="','title="'+esc(ODO_EST_TXT[e])+' · ')}
+    var base=dh.apply(this,arguments);
+    /* elegir piezas en la atención: la caries o la ausencia marcadas, solo como ayuda */
+    if(fn==='togglePieza'&&ODO_FORM&&ODO_FORM[c]){
+      var f=ODO_FORM[c];
+      return base.replace('class="di','class="di md-odo-f'+f).replace('title="','title="'+(f==='c'?'Caries marcada en la ficha':'Marcada ausente en la ficha')+' · ')}
+    return base}})();
+(function(){
+  if(typeof tieneTemporales!=='function')return;
+  var tt=tieneTemporales;
+  tieneTemporales=function(mapa){
+    if(ODO_CTX){if(!ODO_CTX.est)ODO_CTX.est=odoEstados(ODO_CTX.nombre); if(Object.keys(ODO_CTX.est).some(esTemporal))return true}
+    return tt.apply(this,arguments)}})();
+
+/* ---------- la ficha: leyenda arriba y el texto de ayuda ---------- */
+function odoLeyendaHtml(est){
+  var n=odoCuenta(est||{});
+  return '<div class="md-odo-leg" id="md-odo-leg" role="list" aria-label="Qué quiere decir cada color">'+
+    ['h','p','c','a'].map(function(k){
+      return '<span role="listitem" class="md-odo-l'+k+(n[k]?'':' cero')+'"><i aria-hidden="true"></i>'+ODO_EST_TXT[k]+(n[k]?' <b>'+n[k]+'</b>':'')+'</span>'}).join('')+'</div>'}
+function odoFicha(nombre){
+  var m=$('#modal'); if(!m||m.querySelector('#md-odo-leg'))return;
+  if(keyPac(ODON_PAC)!==keyPac(nombre))return;
+  var hOdo=mdQ(m,'h4').filter(function(h){return /^odontograma$/i.test(h.textContent.trim())})[0]; if(!hOdo)return;
+  var od=null, s=hOdo.nextElementSibling;
+  while(s&&!od){if(s.classList&&s.classList.contains('odon'))od=s; else if(s.querySelector&&s.querySelector('.odon'))od=s.querySelector('.odon'); s=s.nextElementSibling}
+  if(!od)return;
+  var est=odoEstados(ODON_PAC), txt=hOdo.nextElementSibling;
+  if(txt&&txt.tagName==='P'&&txt.classList.contains('mini'))
+    txt.innerHTML=odoPuedeMarcar(ODON_PAC)?'Tocá una pieza para ver qué se le hizo y qué está en el plan, o para marcar <b>caries</b> o <b>ausente</b>.'
+      :'Tocá una pieza para ver qué se le hizo y qué está en el plan.';
+  od.insertAdjacentHTML('beforebegin',odoLeyendaHtml(est));
+  od.classList.add('md-odo-ficha')}
+(function(){
+  if(typeof verPaciente!=='function')return;
+  var vp=verPaciente;
+  verPaciente=function(nombre){
+    var prev=ODO_CTX;
+    ODO_CTX=odoPuedeVer()?{nombre:nombre, est:null}:null;
+    try{return vp.apply(this,arguments)}
+    finally{ODO_CTX=prev; try{if(odoPuedeVer())odoFicha(nombre)}catch(e){if(window.console)console.error('odontograma ficha',e)}}}})();
+
+/* ---------- la ventana de la pieza ---------- */
+(function(){
+  if(typeof verDiente!=='function')return;
+  var vd0=verDiente;
+  verDiente=function(nombre,c){
+    if(!odoPuedeVer())return vd0.apply(this,arguments);
+    c=String(c);
+    var mapa=odoHechos(nombre), hist=mapa[c]||[], marcas=odoMarcas(nombre), m=marcas[c]||null, plan=(odoPlan(nombre)[c])||[];
+    var est=odoEstados(nombre)[c]||'', trat=odoTratada(m,hist), nj=jss(nombre), puede=odoPuedeMarcar(nombre);
+    var fila=function(ico,izq,der,on){return '<div class="md-odo-fila"'+(on?' role="button" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="'+on+'"':'')+'><span>'+ico+' '+izq+'</span><small>'+der+'</small></div>'};
+    var hHist=hist.length?hist.map(function(x){
+        return fila('✓','<b>'+esc(x.servicio||'Tratamiento')+'</b>'+(x.det?' <em>('+esc(x.det)+')</em>':''),
+          esc(fmtFcorta(x.fecha))+(x.prof?' · '+esc(x.prof):''),x.id?'verFicha(\''+x.id+'\')':'')}).join('')
+      :'<p class="md-odo-vacio">Todavía no se le hizo nada en una visita atendida.</p>';
+    var hPlan=plan.length?plan.map(function(x){
+        if(x.rec)return fila('💬','Recomendado: <b>'+esc(x.desc)+'</b>',x.fecha?'el '+esc(fmtFcorta(x.fecha)):'');
+        return fila('⏳','<b>'+esc(x.desc)+'</b> <em>('+esc(x.plan)+', sesión '+x.n+')</em>',
+          (x.cita?'cita el '+esc(fmtFcorta(x.cita)):'pendiente')+(x.precio>0?' · '+esc(bs(x.precio)):''))}).join('')
+      :'<p class="md-odo-vacio">No figura en ninguna sesión pendiente de un plan.</p>';
+    var hMarca='';
+    if(m){
+      var quien=(m.f?'el '+esc(fmtFcorta(m.f)):'')+(m.por?' · '+esc(m.por):'');
+      hMarca=m.e==='ausente'?fila('⚪','Marcada <b>ausente</b>',quien)
+        :fila('🔴','Marcada <b>caries / a tratar</b>',quien)+(trat?fila('✅','Ya se trató: <b>'+esc(trat.servicio||'visita')+'</b>','el '+esc(fmtFcorta(trat.fecha))):'')}
+    var bts='';
+    if(puede){
+      bts='<div class="md-odo-acc">'+
+        (m&&m.e==='caries'&&!trat?'':'<button type="button" class="btn sm md-odo-bc" onclick="odoMarcar(\''+nj+'\',\''+c+'\',\'caries\')">🔴 '+(trat?'Volver a marcar caries':'Marcar caries / a tratar')+'</button>')+
+        (m&&m.e==='ausente'?'':'<button type="button" class="btn sec sm md-odo-ba" onclick="odoMarcar(\''+nj+'\',\''+c+'\',\'ausente\')">⚪ Marcar ausente</button>')+
+        (m?'<button type="button" class="btn sec sm md-odo-bq" onclick="odoMarcar(\''+nj+'\',\''+c+'\',\'\')">✕ Quitar marca</button>':'')+
+        '</div>'}
+    else bts='<p class="md-odo-candado">🔐 Las marcas de esta pieza las pone la doctora del paciente, la dueña o recepción.</p>';
+    openModal('<div class="md-odo-pz md-odo-e'+(est||'n')+'">'+
+        '<div class="md-odo-cab"><h3>🦷 Pieza '+esc(c)+'</h3><span class="md-odo-chip">'+(est?esc(ODO_EST_TXT[est]):'Sin nada')+'</span></div>'+
+        '<p class="md-odo-sub">'+esc(odoNombrePieza(c))+' · '+esc(nombre)+'</p>'+
+        (hMarca?'<div class="md-odo-sec">'+hMarca+'</div>':'')+
+        '<h4>Lo hecho</h4><div class="md-odo-sec">'+hHist+'</div>'+
+        '<h4>En el plan</h4><div class="md-odo-sec">'+hPlan+'</div>'+
+      '</div>'+bts+
+      '<div class="row-btn"><button class="btn sec" onclick="verPaciente(\''+nj+'\')">Volver a la ficha</button>'+
+      '<button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}})();
+
+/* marcar, cambiar o quitar (e='') la marca de una pieza */
+function odoMarcar(nombre,c,e){
+  if(!odoPuedeVer()){toast('Las fichas médicas no se ven con esta clave 🔐',1);return}
+  if(bloqueaAjeno(nombre))return;
+  c=String(c); if(!esFDI(c))return;
+  if(e&&e!=='caries'&&e!=='ausente')return;
+  if(identidadAmbigua(nombre)){toast(AVISO_IDENTIDAD,1);return}
+  conFichaFresca(nombre,function(){verDiente(nombre,c)},function(){
+    var f=pacDe(nombre); if(!f.nombre)f.nombre=String(nombre).trim();
+    var od=JSON.parse(JSON.stringify((f.med&&f.med.odonto)||{}));
+    if(!e&&!od[c]){verDiente(nombre,c);return}
+    if(e)od[c]={e:e, f:hoyISO(), por:asisQuien(), ts:new Date().toISOString()};
+    else delete od[c];
+    if(Object.keys(od).length)f.med.odonto=od; else delete f.med.odonto;
+    savePac(f);
+    toast(e==='caries'?'🔴 Pieza '+c+' marcada: caries / a tratar':e==='ausente'?'⚪ Pieza '+c+' marcada ausente':'Marca de la pieza '+c+' quitada');
+    verDiente(nombre,c)})}
+
+/* ---------- elegir piezas en la atención: la caries marcada, como ayuda ---------- */
+function odoFormMarcas(nombre){
+  if(!odoPuedeVer()||!String(nombre||'').trim())return null;
+  var marcas=odoMarcas(nombre), mapa=null, out={}, n=0;
+  Object.keys(marcas).forEach(function(c){
+    var m=marcas[c];
+    if(m.e==='ausente'){out[c]='a'; n++; return}
+    if(!mapa)mapa=odoHechos(nombre);
+    if(!odoTratada(m,mapa[c]||[])){out[c]='c'; n++}});
+  return n?out:null}
+(function(){
+  if(typeof pintarPiezas!=='function')return;
+  var pp=pintarPiezas;
+  pintarPiezas=function(){
+    var prev=ODO_FORM, marcas=null;
+    try{marcas=odoFormMarcas($('#f-paciente').value.trim())}catch(e){}
+    ODO_FORM=marcas;
+    try{return pp.apply(this,arguments)}
+    finally{ODO_FORM=prev;
+      try{var od=$('#modal .odon');
+        if(marcas&&od&&!$('#md-odo-fnota')){
+          var car=Object.keys(marcas).filter(function(c){return marcas[c]==='c'}).sort(), aus=Object.keys(marcas).filter(function(c){return marcas[c]==='a'}).sort();
+          od.insertAdjacentHTML('afterend','<p class="mini md-odo-fnota" id="md-odo-fnota">'+
+            (car.length?'<span class="md-odo-fc-i" aria-hidden="true"></span> Caries marcada en la ficha: <b>'+car.join(', ')+'</b>':'')+
+            (car.length&&aus.length?' · ':'')+(aus.length?'Ausente'+(aus.length>1?'s':'')+': '+aus.join(', '):'')+'</p>')}}catch(e){}}}})();
+
+try{
+  ASIS_NOVEDADES.push({id:'odonto-colores', f:'2026-10-21', t:'🦷 El odontograma con colores',
+    x:'En la ficha del paciente cada pieza tiene su color: verde lo hecho, amarillo lo que está en el plan, rojo la caries y gris la que falta. Tocá una pieza para ver su historia y marcar caries o ausente.', ayuda:/caries o una pieza ausente/,
+    si:function(){return odoPuedeVer()}});
+  ASIS_AYUDA.push({q:'¿Cómo marco una caries o una pieza ausente en el odontograma?', k:'odontograma pieza piezas diente dientes muela caries ausente falta marcar colores color plan hecho tratar', v:'pacientes', f:'#pc-q',
+    p:['Abrí la ficha del paciente (👤 Pacientes → tocalo).','En «Odontograma», arriba está qué quiere decir cada color: verde hecho, amarillo en el plan, rojo caries / a tratar, gris ausente.','Tocá la pieza: ves lo que se le hizo (con fecha y doctora) y lo que está pendiente en su plan.','Tocá «🔴 Marcar caries / a tratar» o «⚪ Marcar ausente». Para sacarla, «✕ Quitar marca».','Cuando se le hace algo a esa pieza en una visita después de marcarla, se pone verde sola: la caries quedó tratada.','La doctora marca solo a sus pacientes. Al cargar una atención, al elegir piezas la caries marcada aparece con un puntito rojo.']})}catch(e){}
+/* ----- parte: 92-recordatorios-conexion.js ----- */
+/* ============================================================================
+   92 · RECORDATORIOS MÁS LIMPIO y LA CONEXIÓN COMO PUNTITO
+   (A) Recordatorios: la fila de botones «Citas · Saldos · …» (#seg-rem) y el
+       select «Ver de» (#rem-prof) quedan en el DOM pero ocultos: siguen siendo
+       los que mandan. Las tarjetas pasan a ser los filtros (tocar una elige su
+       opción de #seg-rem y dispara el mismo change → renderRem); abajo dice
+       «Mostrando … ✕». Las opciones que no tienen tarjeta («Sin volver»,
+       «Cuotas vencidas», «Todos») quedan como botoncitos al lado. Las doctoras
+       son chips con su color (los mismos de Mi día/Agenda) que escriben el
+       select oculto. NO cambia cómo se calcula nada: es renderRem de siempre.
+   (B) La franja #conn-banner, cuando dice lo de rutina (conectado y al día),
+       no se muestra: en el encabezado oscuro, al lado de la fecha, queda una
+       pastilla verde/ámbar/roja. Tocarla abre un globito con el texto completo.
+       Cualquier otro aviso (modo local, sin respuesta, falta la clave, cosas
+       sin subir que no salen, cargado por otra sesión…) se sigue viendo igual.
+   ========================================================================== */
+var MD_RF={card:'', foco:'', firma:''};
+/* el grupo de la lista que corresponde a cada tarjeta de citas (las tres usan «Citas») */
+var MD_RF_GRUPO={'k-venc':/^⚠/, 'k-hoy':/^🟢/, 'k-sem':/^📅 Próximas/};
+function mdRfEvento(el,tipo){
+  if(!el)return; var e;
+  try{e=new Event(tipo,{bubbles:true})}catch(x){e=document.createEvent('HTMLEvents'); e.initEvent(tipo,true,false)}
+  el.dispatchEvent(e)}
+/* repinta solo si cambió (comparando con lo último que se escribió: el navegador reescribe el HTML a su modo) */
+function mdRfHtml(el,h){if(el._mdH===h&&el.childNodes.length)return; el._mdH=h; el.innerHTML=h}
+function mdRfIds(){return typeof MD_RK==='object'&&MD_RK?Object.keys(MD_RK):[]}
+function mdRfFiltroDe(id){return ((typeof MD_RK==='object'&&MD_RK&&MD_RK[id])||[])[2]||''}
+function mdRfActual(){return getRadio('remf')||'citas'}
+/* las opciones de verdad: las de #seg-rem, con su texto (sin el numerito que le pone el MODERNO) */
+function mdRfOpciones(){
+  return mdQ(document,'#seg-rem label').map(function(l){
+    var i=l.querySelector('input'), sp=l.querySelector('span'); if(!i||!sp)return null;
+    var c=sp.cloneNode(true), n=c.querySelector('.md-rk-n'); if(n)n.parentNode.removeChild(n);
+    return {v:i.value, t:c.textContent.replace(/\s+/g,' ').trim(), i:i}}).filter(Boolean)}
+function mdRfConTarjeta(){var s={}; mdRfIds().forEach(function(id){if($('#'+id))s[mdRfFiltroDe(id)]=1}); return s}
+function mdRfTitulo(id){
+  var k=$('#'+id), t=k&&k.querySelector('.k'), ic=((typeof MD_RK==='object'&&MD_RK[id])||[])[0]||'';
+  return (ic?ic+' ':'')+(t?t.textContent.replace(/\s+/g,' ').trim():'')}
+/* elegir: pone el radio y dispara su change (lo que escucha renderRem); si ya estaba, repinta igual */
+function mdRfElegir(v,card,scroll){
+  var op=mdRfOpciones().filter(function(o){return o.v===v})[0]; if(!op)return;
+  MD_RF.card=card||''; MD_RF.foco=scroll?(card||v):'';
+  if(!op.i.checked){op.i.checked=true; mdRfEvento(op.i,'change')}
+  else window.renderRem()}
+/* una tarjeta está «elegida» si su filtro es el actual y es ella la que se tocó (o la única con ese filtro) */
+function mdRfElegida(id){
+  var f=mdRfFiltroDe(id); if(f!==mdRfActual())return false;
+  if(MD_RF.card)return MD_RF.card===id;
+  return mdRfIds().filter(function(x){return $('#'+x)&&mdRfFiltroDe(x)===f}).length===1}
+function mdRfTocarTarjeta(id){
+  if(mdRfElegida(id))mdRfElegir('todos','',false);
+  else mdRfElegir(mdRfFiltroDe(id),id,true)}
+/* cuántos «Sin volver» y «Cuotas vencidas» hay, con el mismo filtro de doctora que usa renderRem */
+function mdRfCuentaExtra(v){
+  try{
+    var sel=$('#rem-prof'), rprof=sel?sel.value:'', pac=null;
+    if(rprof){pac={}; DATA.forEach(function(r){if(r.profesional===rprof){var k=keyPac(r.paciente); if(k)pac[k]=1}})}
+    var de=function(x){return !pac||!!pac[keyPac(x.paciente)]};
+    if(v==='dormidos'&&typeof dormidos==='function')return dormidos().filter(de).length;
+    if(v==='cuotas'&&typeof cuotasVencidas==='function')return cuotasVencidas().filter(de).length}catch(e){}
+  return null}
+function mdRfMontar(){
+  var vista=$('#v-agenda'), kp=vista&&vista.querySelector('.kpis'); if(!kp)return null;
+  var seg=$('#seg-rem'); if(seg)seg.classList.add('md-rf-viejo');
+  var sel=$('#rem-prof'), g=sel&&sel.closest('.grid'); if(g)g.classList.add('md-rf-viejo');
+  kp.classList.add('md-rf-kpis'); kp.setAttribute('role','group'); kp.setAttribute('aria-label','Filtrar recordatorios');
+  var docs=$('#md-rf-docs');
+  if(!docs){
+    docs=document.createElement('div'); docs.id='md-rf-docs'; docs.className='md-rf-docs'; docs.setAttribute('role','group'); docs.setAttribute('aria-label','Ver de');
+    docs.addEventListener('click',function(e){
+      var b=e.target.closest&&e.target.closest('button.md-fe-doc'); if(!b)return;
+      var s=$('#rem-prof'); if(!s||s.disabled)return;
+      var p=b.getAttribute('data-prof')||''; if(s.value===p)return;
+      s.value=p; mdRfEvento(s,'change')});
+    kp.parentNode.insertBefore(docs,kp)}
+  var bar=$('#md-rf-bar');
+  if(!bar){
+    bar=document.createElement('div'); bar.id='md-rf-bar'; bar.className='md-rf-bar';
+    bar.addEventListener('click',function(e){
+      var b=e.target.closest&&e.target.closest('button'); if(!b)return;
+      if(b.classList.contains('md-rf-x')){mdRfElegir('todos','',false); return}
+      var v=b.getAttribute('data-rf'); if(!v)return;
+      if(v!=='todos'&&v===mdRfActual()&&!MD_RF.card)mdRfElegir('todos','',false);
+      else mdRfElegir(v,'',true)});
+    kp.parentNode.insertBefore(bar,kp.nextSibling)}
+  return {docs:docs,bar:bar,kp:kp}}
+function mdRfPintar(){
+  var m=mdRfMontar(); if(!m)return;
+  var f=mdRfActual(), ops=mdRfOpciones(), con=mdRfConTarjeta();
+  if(MD_RF.card&&(mdRfFiltroDe(MD_RF.card)!==f||!$('#'+MD_RF.card)))MD_RF.card='';
+  /* las tarjetas: filtros (el clic viejo del MODERNO buscaba data-md-f: ahora lo maneja esta parte) */
+  mdRfIds().forEach(function(id){
+    var k=$('#'+id); if(!k||!k.classList.contains('md-rk'))return;
+    var kf=mdRfFiltroDe(id), on=kf===f&&(!MD_RF.card||MD_RF.card===id), el=on&&mdRfElegida(id);
+    k.removeAttribute('data-md-f'); k.setAttribute('data-md-rf',kf);
+    k.classList.toggle('md-rk-on',on);
+    k.setAttribute('aria-pressed',on?'true':'false');
+    k.title=el?'Tocá de nuevo para ver todo':'Ver solo: '+mdRfTitulo(id).replace(/^\S+\s/,'')});
+  /* «Ver de»: chips con el color de cada doctora; con la clave de una doctora, uno solo y fijo */
+  var sel=$('#rem-prof'), prof=sel?sel.value:'', opts=sel?Array.prototype.slice.call(sel.options).map(function(o){return o.value}).filter(Boolean):[];
+  var chip=function(p,btn){
+    var on=btn?p===prof:true, cor=p?mdFeCorto(p):'';
+    return (btn?'<button type="button"':'<span')+' class="md-fe-doc'+(on?' on':'')+(btn?'':' fijo')+'" data-prof="'+esc(p)+'"'+
+      (btn?' aria-pressed="'+(on?'true':'false')+'" title="'+esc(p||'Todas las doctoras')+'"':' title="Con tu clave ves lo tuyo"')+'>'+
+      (p?'<i style="background:'+mdFeColor(p)+'">'+esc(mdIniciales(cor))+'</i>'+esc(cor):'Todas')+(btn?'</button>':'</span>')};
+  var dh='<b class="md-rf-k">Ver de</b>';
+  if(sel&&sel.disabled)dh+=opts.map(function(p){return chip(p,false)}).join('');
+  else dh+=chip('',true)+opts.map(function(p){return chip(p,true)}).join('');
+  mdRfHtml(m.docs,dh);
+  /* «Mostrando …» y lo que no tiene tarjeta */
+  var cual=MD_RF.card?mdRfTitulo(MD_RF.card):((ops.filter(function(o){return o.v===f})[0]||{}).t||f);
+  var izq=f==='todos'
+    ?'<span class="md-rf-m">Mostrando <b class="md-rf-todo">todo</b><small> · tocá una tarjeta para ver solo eso</small></span>'
+    :'<span class="md-rf-m">Mostrando <button type="button" class="md-rf-x" aria-label="'+esc('Dejar de filtrar por '+cual+' y ver todo')+'">'+esc(cual)+' <i aria-hidden="true">✕</i></button>'+
+      '<small> · tocá otra tarjeta para cambiar, o la misma para ver todo</small></span>';
+  var extras=ops.filter(function(o){return !con[o.v]}).map(function(o){
+    var n=o.v==='todos'?null:mdRfCuentaExtra(o.v), on=o.v===f;
+    return '<button type="button" class="md-rf-op'+(on?' on':'')+(o.v==='cuotas'&&n>0?' urg':'')+'" data-rf="'+esc(o.v)+'" aria-pressed="'+(on?'true':'false')+'">'+
+      esc(o.v==='todos'?'Ver todo':o.t)+(n!=null?' <em>'+n+'</em>':'')+'</button>'}).join('');
+  var bh=izq+(extras?'<span class="md-rf-mas"><span class="md-rf-k">También</span>'+extras+'</span>':'');
+  mdRfHtml(m.bar,bh);
+  if(MD_RF.foco){var fo=MD_RF.foco; MD_RF.foco=''; mdRfIrA(fo)}}
+/* después de tocar: el grupo de la lista que se eligió, a la vista (sin saltar si ya se ve) */
+function mdRfIrA(cual){
+  var l=$('#rem-list'); if(!l)return;
+  var rx=MD_RF_GRUPO[cual], h=null;
+  if(rx)Array.prototype.some.call(l.children,function(x){if(x.tagName==='H3'&&rx.test(x.textContent.trim())){h=x; return true} return false});
+  var obj=h||$('#md-rf-bar')||l;
+  if(h){h.classList.remove('md-rf-foco'); void h.offsetWidth; h.classList.add('md-rf-foco'); setTimeout(function(){h.classList.remove('md-rf-foco')},1800)}
+  var r=obj.getBoundingClientRect(), hd=document.querySelector('header'), alto=hd?hd.getBoundingClientRect().bottom:0;
+  if(r.top>=alto+4&&r.top<window.innerHeight-120)return;
+  try{window.scrollTo({top:Math.max(0,window.pageYOffset+r.top-alto-12),behavior:mdMueve()?'smooth':'auto'})}catch(e){}}
+(function(){
+  try{
+    if(typeof renderRem==='function'){var _r=renderRem; renderRem=function(){var r=_r.apply(this,arguments); try{mdRfPintar()}catch(e){if(window.console)console.error('moderno recordatorios',e)} return r}}
+    document.addEventListener('click',function(e){
+      var k=e.target&&e.target.closest&&e.target.closest('#v-agenda .md-rk[data-md-rf]'); if(!k)return;
+      mdRfTocarTarjeta(k.id)});
+    var va=document.getElementById&&document.getElementById('v-agenda');
+    if(va&&va.classList.contains('on')&&!document.body.classList.contains('locked'))renderRem();
+  }catch(e){if(window.console)console.error('moderno recordatorios',e)}})();
+
+/* ---------------- (B) la conexión como puntito ---------------- */
+var MD_PT={abierto:false, pendDesde:0, tGracia:0};
+var MD_PT_GRACIA=6000;   // una subida normal tarda menos: recién si sigue ahí, sale la franja con «Reintentar»
+function mdPtEnLinea(){return !(window.navigator&&navigator.onLine===false)}
+function mdPtCola(){var t=pend(), m=t.filter(colaEsMia).length; return {todo:t.length, mias:m, ajenos:t.length-m}}
+function mdPtEstado(){
+  if(!CONNECTED)return null;
+  var c=mdPtCola(), sin=MD_SINC.estado==='sin', esp=c.todo?' · '+c.todo+' en espera':'';
+  if(sin&&SRV_AUTH&&!sesionViva())return {c:'ro', t:'Falta tu clave'+esp};
+  if(sin||!mdPtEnLinea())return {c:'ro', t:'Sin internet'+esp};
+  if(c.mias)return {c:'am', t:'Subiendo '+c.mias+'…'};
+  if(c.ajenos)return {c:'am', t:c.ajenos+' en espera'};
+  if(!MD_SINC.hora)return {c:'ok', t:MD_SINC.estado==='trae'?'Conectando…':'Conectado'};
+  return {c:'ok', t:'Al día · '+MD_SINC.hora}}
+/* ¿lo que dice la franja es lo de rutina? Solo «Conectado… / Al día / Trayendo», o una subida que todavía está en camino */
+function mdPtRutina(){
+  var cb=$('#conn-banner'); if(!CONNECTED||!cb||cb.children.length!==1)return false;
+  var b=cb.children[0]; if(!b.classList||!b.classList.contains('banner'))return false;
+  if(MD_SINC.estado==='sin')return false;
+  if(b.classList.contains('conn'))return !b.querySelector('.mini');
+  if(b.classList.contains('pend'))return mdPtEnLinea()&&!!MD_PT.pendDesde&&Date.now()-MD_PT.pendDesde<MD_PT_GRACIA&&mdPtCola().ajenos===0;
+  return false}
+function mdPtMontar(){
+  var p=$('#md-pt'); if(p)return p;
+  var lin=$('#md-linea'); if(!lin||!lin.parentNode)return null;
+  var fila=document.createElement('div'); fila.className='md-pt-fila';
+  lin.parentNode.insertBefore(fila,lin); fila.appendChild(lin);
+  p=document.createElement('button'); p.type='button'; p.id='md-pt'; p.className='md-pt';
+  p.setAttribute('aria-haspopup','dialog'); p.setAttribute('aria-expanded','false');
+  p.onclick=function(e){if(e)e.stopPropagation(); mdPtAbrir(!MD_PT.abierto)};
+  fila.appendChild(p);
+  return p}
+function mdPtPintar(){
+  var c=mdPtCola();
+  if(c.mias){
+    if(!MD_PT.pendDesde){MD_PT.pendDesde=Date.now(); clearTimeout(MD_PT.tGracia); MD_PT.tGracia=setTimeout(function(){try{mdPtPintar()}catch(e){}},MD_PT_GRACIA+80)}}
+  else MD_PT.pendDesde=0;
+  var cb=$('#conn-banner'); if(cb)cb.classList.toggle('md-pt-rutina',mdPtRutina());
+  var p=mdPtMontar(); if(!p)return;
+  var st=mdPtEstado();
+  if(!st){p.hidden=true; if(MD_PT.abierto)mdPtAbrir(false); return}
+  p.hidden=false;
+  p.className='md-pt md-pt-'+st.c;
+  var h='<i aria-hidden="true"></i><span>'+esc(st.t)+'</span>';
+  mdRfHtml(p,h);
+  p.title='Conexión con la hoja de Google: '+st.t+'. Tocá para ver más.';
+  if(MD_PT.abierto)mdPtGlobo()}
+/* el globito: el texto completo de la franja, la hora del último refresco y, si hay cola, «Reintentar» */
+function mdPtGlobo(){
+  var g=$('#md-pt-globo'), st=mdPtEstado(); if(!g)return;
+  if(!st){mdPtAbrir(false); return}
+  var b=$('#conn-banner .banner'), txt='', stx='';
+  if(b){
+    var cl=b.cloneNode(true); mdQ(cl,'button,.md-sinc').forEach(function(x){x.parentNode.removeChild(x)});
+    txt=cl.textContent.replace(/\s+/g,' ').replace(/\s+·\s*$/,'').trim();
+    var s=b.querySelector('.md-sinc'); stx=s?s.textContent.replace(/\s+/g,' ').trim():''}
+  var c=mdPtCola();
+  var h='<div class="md-pt-gt md-pt-'+st.c+'"><i aria-hidden="true"></i>'+esc(st.t)+'</div>'+
+    (txt?'<p>'+esc(txt)+'</p>':'')+
+    (stx&&!/^Al día/.test(stx)?'<p class="md-pt-sinc">'+esc(stx)+'</p>':'')+
+    '<p class="md-pt-hora">🔄 '+esc(MD_SINC.hora?'Último refresco con la hoja: '+MD_SINC.hora:'Todavía no se trajo nada de la hoja desde que abriste el panel')+'</p>'+
+    (c.mias?'<div class="md-pt-acc"><button type="button" class="btn sm" id="md-pt-reint">↻ Reintentar</button><small>'+c.mias+' sin subir: quedan guardados acá</small></div>':'');
+  mdRfHtml(g,h);
+  mdPtUbicar()}
+function mdPtUbicar(){
+  var g=$('#md-pt-globo'), p=$('#md-pt'); if(!g||g.hidden||!p)return;
+  var r=p.getBoundingClientRect(), w=g.offsetWidth||300, vw=document.documentElement.clientWidth||window.innerWidth;
+  g.style.left=Math.max(8,Math.min(r.left,vw-w-8))+'px';
+  g.style.top=Math.round(r.bottom+8)+'px'}
+function mdPtAbrir(si){
+  MD_PT.abierto=!!si;
+  var p=$('#md-pt'), g=$('#md-pt-globo');
+  if(p)p.setAttribute('aria-expanded',si?'true':'false');
+  if(!si){if(g)g.hidden=true; return}
+  if(!g){
+    g=document.createElement('div'); g.id='md-pt-globo'; g.className='md-pt-globo'; g.setAttribute('role','dialog'); g.setAttribute('aria-label','Conexión con la hoja de Google');
+    g.addEventListener('click',function(e){e.stopPropagation(); if(e.target&&e.target.closest&&e.target.closest('#md-pt-reint'))mdPtReintentar()});
+    document.body.appendChild(g)}
+  g.hidden=false; mdPtGlobo()}
+/* lo que ya existe: reintentarCola sube la cola (con sus avisos); cuando se vació, se trae lo último */
+function mdPtReintentar(){
+  var c=mdPtCola();
+  if(!c.mias){if(typeof refrescarSiCorresponde==='function')refrescarSiCorresponde(true); return}
+  reintentarCola();
+  var t0=Date.now();
+  (function esperar(){
+    if(!mdPtCola().mias){if(MD_SINC.estado==='sin'&&typeof refrescarSiCorresponde==='function')refrescarSiCorresponde(true); return}
+    if(Date.now()-t0<30000)setTimeout(esperar,800)})()}
+(function(){
+  try{
+    if(typeof banner==='function'){var _b=banner; banner=function(){var r=_b.apply(this,arguments); try{mdPtPintar()}catch(e){} return r}}
+    if(typeof mdSincPintar==='function'){var _s=mdSincPintar; mdSincPintar=function(){var r=_s.apply(this,arguments); try{mdPtPintar()}catch(e){} return r}}
+    var rep=function(){try{mdPtPintar()}catch(e){}};
+    if(window.addEventListener){
+      window.addEventListener('online',rep); window.addEventListener('offline',rep);
+      window.addEventListener('resize',function(){try{mdPtUbicar()}catch(e){}});
+      window.addEventListener('scroll',function(){try{mdPtUbicar()}catch(e){}},{passive:true})}
+    document.addEventListener('click',function(e){if(MD_PT.abierto&&!(e.target&&e.target.closest&&e.target.closest('#md-pt,#md-pt-globo')))mdPtAbrir(false)});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&MD_PT.abierto){mdPtAbrir(false); var p=$('#md-pt'); if(p)try{p.focus()}catch(x){}}});
+    setInterval(rep,30000);
+    rep();
+  }catch(e){if(window.console)console.error('moderno conexión',e)}})();
+
+/* Sonri lo enseña */
+try{
+  ASIS_NOVEDADES.push({id:'md-rem-tarjetas', f:'2026-10-21', t:'🔔 Recordatorios: las tarjetas son los filtros',
+    x:'En 🔔 Recordatorios tocá una tarjeta (por ejemplo «Próximos 7 días» o «Saldos por cobrar») y abajo queda solo eso; tocala de nuevo o la ✕ para ver todo. «Sin volver» y «Cuotas vencidas» están al lado de «Mostrando», y las doctoras son chips con su color.', ayuda:/tarjetas de Recordatorios/});
+  ASIS_NOVEDADES.push({id:'md-conexion-punto', f:'2026-10-21', t:'🟢 La conexión, en un puntito arriba',
+    x:'La franja verde «Conectado a la hoja de Google» ya no ocupa lugar: ahora es una pastilla al lado de la fecha. Verde: al día. Ámbar: subiendo. Roja: sin internet. Tocala para ver el detalle y «Reintentar». Si pasa algo fuera de lo común, el aviso grande sale igual.', ayuda:/puntito de la conexión/});
+  ASIS_AYUDA.push({q:'¿Cómo filtro con las tarjetas de Recordatorios?', k:'recordatorios filtrar filtro tarjetas cuadros ver solo citas vencidas hoy proximos saldos cumpleanos controles planes frenados recomendados sin volver cuotas vencidas todos doctora chips ver de mostrando', v:'agenda', f:['#md-rf-bar','#v-agenda .kpis'],
+    p:['Entrá a 🔔 Recordatorios.','Tocá una tarjeta, por ejemplo «Próximos 7 días» o «Saldos por cobrar»: queda remarcada y abajo dice «Mostrando …» con lo que estás viendo.','Para volver a ver todo, tocá la misma tarjeta otra vez o la ✕ de «Mostrando».','«Sin volver», «Cuotas vencidas» y «Ver todo» están al lado, en los botoncitos de «También».','Arriba, en «Ver de», tocá el chip de una doctora para ver solo sus pacientes, o «Todas».']});
+  ASIS_AYUDA.push({q:'¿Qué significa el puntito de la conexión arriba?', k:'conexion internet conectado hoja google sincronizar al dia subiendo sin internet espera pendientes sin subir reintentar puntito pastilla verde ambar roja franja', v:'midia', f:'#md-pt',
+    p:['Arriba, al lado de la fecha, hay una pastilla con un puntito.','🟢 Verde «Al día · 18:20»: está todo en la hoja de Google; la hora es el último refresco.','🟡 Ámbar «Subiendo 2…»: lo que cargaste está guardado acá y se está subiendo.','🔴 Roja «Sin internet · 3 en espera»: no hay conexión; lo cargado queda guardado en este aparato y sube solo cuando vuelve.','Tocala para ver el detalle y, si hay cosas sin subir, «↻ Reintentar». Si pasa algo fuera de lo común, el aviso grande sigue saliendo arriba de la pantalla.']})}catch(e){}
 /* ===== MODERNO FIN ===== */
 </script>
 </body>
