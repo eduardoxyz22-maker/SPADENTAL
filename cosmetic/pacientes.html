@@ -6887,7 +6887,8 @@ function llenarRemProf(){
 function renderRem(){
   var hoy=hoyISO(), f=getRadio('remf')||'citas', rprof=llenarRemProf();
   var mismaProf=function(r){return !rprof||r.profesional===rprof||(r.profesional==='Por definir'&&r.estado==='Agendada')};
-  var cit=citasPend().filter(mismaProf), sal=saldosPend(rprof), dor=dormidos();
+  /* citasPend() da {r, dias}: el filtro mira la cita, no el envoltorio */
+  var cit=citasPend().filter(function(c){return mismaProf(c.r)}), sal=saldosPend(rprof), dor=dormidos();
   var venc=cit.filter(function(c){return c.dias<0}), hy=cit.filter(function(c){return c.dias===0}),
       sem=cit.filter(function(c){return c.dias>0&&c.dias<=7});
   /* filtrar por doctora filtra todo: también cumpleaños, controles,

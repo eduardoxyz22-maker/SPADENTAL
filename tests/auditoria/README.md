@@ -13,6 +13,7 @@ PANEL=spa node -r ./netguard.js s21-paquete-en-la-fila.js   # una sola (PANEL=sp
 - `lib.js` tiene ayudas comunes (abrir, entrar, cargar una atención). Las claves de fábrica se leen del HTML.
 - `s08b`…`s22`: una prueba por tema (anticipos, corregir cobro, planes, pagos de doctoras, servidor, paquetes, script anterior, paquete desde la atención, pacientes sin visitas, borrar pagos, paquete en la fila, caso real con latencia, y s23 con los tres defectos del diagnóstico del 19/10).
 - `e2e-circuito.js`: recorrido completo con clics en Chromium real (planes, paquetes, pagos, doctora que marca una sesión, borrado). Necesita un Chromium (`CHROMIUM=/ruta`).
+- `e2e-md-rem-doctora.js`: Recordatorios filtrados por doctora («Ver de» de la dueña y una doctora con su clave): ve sus citas y no las de otras.
 - `viejo-spa.gs` / `viejo-cos.gs`: el Apps Script anterior (`2026-10-15-b`), para probar el panel nuevo con el script viejo.
 
 Además están las pruebas del repo en `tests/*.cjs` (regresión, Sonri y permisos).
