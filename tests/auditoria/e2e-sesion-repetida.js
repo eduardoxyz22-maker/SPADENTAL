@@ -76,6 +76,12 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   await B.evaluate((d) => { DATA.push(normalize(d)); saveLocal(); queue('save', normalize(d), null); return flushQueue(); }, dup); await B.waitForTimeout(1500);
   const tB2 = await B.evaluate(() => TOASTS.slice(-3));
   OK('B: «No se guardó: la sesión 2 ya está marcada en la visita del …», sin cola y sin la visita', tB2.some(t => /No se guardó: la sesión 2 del paquete ya está marcada en la visita del/.test(t)) && (await plan(B)).cola === 0 && (await plan(B)).vis === 2, [tB2, await plan(B)]);
+  /* y no queda ninguna sesión «fantasma»: en la hoja, cada sesión hecha apunta a una visita que existe */
+  const hoja = server.ctx.doList();
+  const ids = new Set(hoja.registros.map(r => r.id));
+  const fant = hoja.pacientes.filter(p => p.nombre === PAC).flatMap(p => p.planes).flatMap(pl => pl.sesiones).filter(x => x.hecha && !ids.has(x.atencionId));
+  OK('en la hoja no quedó ninguna sesión marcada con una visita inexistente', fant.length === 0 && JSON.stringify(hoja.pacientes.filter(p => p.nombre === PAC)[0].planes[0].sesiones.map(x => !!x.hecha)) === '[true,true,false,false]', fant);
+  OK('B tampoco: la sesión 3 sigue libre', JSON.stringify((await plan(B)).ses.map(x => x[1])) === '[true,true,false,false]');
   /* una repetida que ya quedó guardada (de antes del arreglo) se ve en rojo en la ficha */
   server.ctx.getSheet().appendRow(server.ctx.filaDeRegistro(dup));
   await B.evaluate(() => pullServer()); await B.waitForTimeout(800);

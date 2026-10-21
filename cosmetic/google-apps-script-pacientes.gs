@@ -548,17 +548,22 @@ function leerCfg() {
 /* ---------------------------------------------------------------- acciones */
 function doList(ses) {
   /* los egresos de la clínica son de la dueña y recepción: a una doctora no se le mandan */
-  var egr = (ses && (ses.rol === 'doctora' || ses.rol === 'pauta')) ? [] : doListEgr();
+  var pauta = !!(ses && ses.rol === 'pauta');
+  var egr = (ses && (ses.rol === 'doctora' || pauta)) ? [] : doListEgr();
+  /* la clave de pauta lee solo lo que necesita: sin metas ni comisiones, y sin fichas médicas */
+  var cfg = pauta ? cfgSinSesion(leerCfg()) : cfgPublica(leerCfg());
+  var pacs = doListPac();
+  if (pauta) pacs = pacs.map(function (p) { return { nombre: p.nombre, nac: '', med: {}, planes: p.planes || [], ts: p.ts || '' }; });
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [], cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: egr };
+  if (n < 2) return { ok: true, registros: [], cfg: cfg, pacientes: pacs, egresos: egr };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out, cfg: cfgPublica(leerCfg()), pacientes: doListPac(), egresos: egr };
+  return { ok: true, registros: out, cfg: cfg, pacientes: pacs, egresos: egr };
 }
 
 function doSave(r, base, ses) {
@@ -635,6 +640,10 @@ function doSave(r, base, ses) {
         '⚠ Separada: la misma cita la atendió también ' + actual.profesional + '. Revisar.';
       separada.nroDia = Math.max(cuantas, maxNro) + 1;
       delete separada.correccionesCobro;
+      if (separada.estado === 'Atendido' && separada.planId && separada.planEtapa) {
+        var repSep = sesionRepetidaSrv(separada, sh);
+        if (repSep) return { ok: false, error: 'sesion_repetida', etapa: Number(separada.planEtapa), fecha: repSep.fecha || '', atencionId: repSep.atencionId || '' };
+      }
       /* la visita separada también usa saldo a favor: se controla igual que
          cualquier otra (la de la primera doctora ya está guardada y contada) */
       var ajusteSep = 0, favSep = favorDeSrv(separada);
@@ -1194,7 +1203,7 @@ var ANTICIPO_DOCTORAS = false;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-25-credito';
+var VERSION_SCRIPT = '2026-10-26-revision';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
@@ -1650,7 +1659,7 @@ function doPost(e) {
     if (body.action === 'login') return json(doLogin(body));
     /* Solo la configuracion: el list arrastra miles de atenciones y tarda
        segundos. Sin material de claves. */
-    if (body.action === 'cfgGet') return json({ ok: true, cfg: sesionDe(body.token) ? cfgPublica(leerCfg()) : cfgSinSesion(leerCfg()) });
+    if (body.action === 'cfgGet') { var sg = sesionDe(body.token); return json({ ok: true, cfg: sg && sg.rol !== 'pauta' ? cfgPublica(leerCfg()) : cfgSinSesion(leerCfg()) }); }
     /* De acá para abajo, leer pacientes o escribir: sin sesión válida no se
        ve ni se toca nada (un panel viejo, o alguien que encontró la dirección,
        queda afuera). */

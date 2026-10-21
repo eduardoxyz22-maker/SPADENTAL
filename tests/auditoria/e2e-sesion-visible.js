@@ -176,6 +176,22 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   const chips = await D.evaluate(() => [...document.querySelectorAll('#vp-chips button')].map(b => b.textContent));
   OK('8 en la venta no está el botón «Solo el paquete» (la plata paga primero la consulta)', chips.length === 3 && !chips.some(c => /Solo el paquete/.test(c)) && chips.some(c => /Todo/.test(c)) && chips.some(c => /Solo la consulta/.test(c)), chips);
   await D.evaluate(() => closeModal()); await D.evaluate(() => clearForm());
+  /* ===== «hoy solo paga» con consulta: el WhatsApp igual dice los 700 del paquete; borrar el monto no lo rellena ===== */
+  await D.fill('#f-prof', 'Dra. Mirna'); await D.fill('#f-paciente', 'Paciente Solo Paga'); await D.fill('#f-cel', '70011177'); await D.dispatchEvent('#f-paciente', 'change'); await D.waitForTimeout(400);
+  await D.evaluate(() => { const i = document.querySelector('#seg-canal input'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); });
+  await D.click('#btn-paq-srv'); await D.waitForTimeout(300); await D.locator('#modal button', { hasText: /📦 BLANQUEAMIENTO/ }).first().click(); await D.waitForTimeout(300);
+  await D.fill('#vp-cons-p', '150'); await D.dispatchEvent('#vp-cons-p', 'input');
+  await D.fill('#vp-paga', ''); await D.dispatchEvent('#vp-paga', 'input'); await D.waitForTimeout(100);
+  OK('9 borrar «¿Cuánto paga hoy?» lo deja vacío (paga Bs 0), no lo rellena', await D.evaluate(() => $('#vp-paga').value === '' && /paga Bs 0/.test($('#vp-cuentas').innerText)));
+  await D.locator('#vp-chips button', { hasText: /Todo/ }).click(); await D.evaluate(() => { $('#vp-hoy').checked = false; setRadio('vp-met', 'QR'); vpCambio(); }); await D.waitForTimeout(100);
+  OK('9 sin sesión hoy: las cuentas dicen que el paquete queda pagado entero', /hoy no se hace ninguna sesión/.test(await D.locator('#vp-cuentas').innerText()) && /las 3 sesiones ya están pagadas/.test(await D.locator('#vp-cuentas').innerText()));
+  await D.locator('#modal button', { hasText: /Cargar en la atención/ }).click(); await D.waitForTimeout(400);
+  await D.click('#btn-save'); await D.waitForTimeout(2000);
+  const wa9 = await D.locator('#wa-txt').innerText();
+  OK('9 el WhatsApp dice los 850 recibidos: 150 de la consulta y 700 adelantados para su paquete, reservados', /Recibido hoy: \*Bs 850\*/.test(wa9) && /Bs 150 por lo de hoy/.test(wa9) && /Bs 700 adelantados para su paquete/.test(wa9) && /Reservado para su plan: Bs 700/.test(wa9), wa9);
+  await D.evaluate(() => closeModal()); await D.waitForTimeout(800);
+  const p9 = await D.evaluate(() => { const p = planesDe('Paciente Solo Paga')[0]; return p ? [avancePlan(p).hechas, cobradoPlan(p), saldoPlan(p)] : null; });
+  OK('9 el paquete quedó 0/3 con 700 pagados', p9 && p9[0] === 0 && p9[1] === 700 && p9[2] === 0, p9);
   OK('no quedan cosas sin subir', await D.evaluate(() => pend().length) === 0);
   OK('sin errores de página ni red real', !errs.length && !red.length, errs.concat(red).slice(0, 3));
   await b.close();

@@ -664,11 +664,11 @@ body.locked #asis{display:none}
 /* «¡Oye, leeme!»: golpea la pantalla cuando se juntan avisos sin mirar */
 .asis-golpea svg{animation:asisGolpea 1.1s cubic-bezier(.3,.1,.3,1)}
 @keyframes asisGolpea{0%,100%{transform:none}12%{transform:translate(-18px,-6px) rotate(-14deg)}22%{transform:translate(2px,0) rotate(4deg) scale(1.06,.94)}36%{transform:translate(-18px,-6px) rotate(-14deg)}46%{transform:translate(2px,0) rotate(4deg) scale(1.06,.94)}60%{transform:translate(-18px,-6px) rotate(-14deg)}70%{transform:translate(2px,0) rotate(4deg) scale(1.06,.94)}}
-body.asis-tiembla{animation:asisTiembla .5s}
+body.asis-tiembla > :not(#asis):not(#ov):not(#toast):not(#ses-pedir){animation:asisTiembla .5s}
 @keyframes asisTiembla{0%,100%{transform:none}15%{transform:translate(-5px,2px)}30%{transform:translate(5px,-2px)}45%{transform:translate(-4px,1px)}60%{transform:translate(4px,-1px)}75%{transform:translate(-2px,0)}}
 .asis-globo.asis-oye{border-top-color:var(--clay);font-size:15px}
 .asis-globo.asis-oye b{font-size:17px}
-@media (prefers-reduced-motion:reduce){.asis-golpea svg,body.asis-tiembla{animation:none}}
+@media (prefers-reduced-motion:reduce){.asis-golpea svg,body.asis-tiembla > *{animation:none}}
 /* ===== fin de Sonri ===== */
 /* ===== MODERNO INI · la cara nueva del panel (va igual en los dos paneles; los colores salen de --lime) ===== */
 /* A · encabezado oscuro con el diente que flota y los anillos del día */
@@ -3362,7 +3362,7 @@ function abrirSesion(clave){
   return fetchApi({action:'login',clave:clave}).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
     if(r&&r.ok&&r.token){
-      SESION={token:r.token,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes,fotos:!!r.fotos};
+      SESION={token:r.token,ttl:num(r.ttl)||1800,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes,fotos:!!r.fotos};
       CLAVE_MEM=clave; guardarSesion(); return r}
     if(r&&r.error==='accion_desconocida')SRV_AUTH=false;
     if(r&&r.error==='clave_incorrecta'&&CLAVE_MEM===clave)CLAVE_MEM='';
@@ -3388,11 +3388,13 @@ function api(action,payload,cfg,base,extra){
   var mandarCon=function(tok){if(tok)cuerpo.token=tok; else delete cuerpo.token; return fetchApi(cuerpo)};
   return tokenPara(action).then(mandarCon).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
-    if(action==='cfgGet'&&r&&r.cfg&&r.cfg.parcial)r.cfg=cfgCompletarParcial(r.cfg);
+    var parcial=action==='cfgGet'&&r&&r.cfg&&r.cfg.parcial;
+    if(parcial)r.cfg=cfgCompletarParcial(r.cfg);
     if(!(r&&r.ok===false&&r.error==='sin_sesion')){
       /* el servidor renueva la sesión cada vez que se usa: acá también, así
-         no se pide la clave mientras se está trabajando (aunque se recargue) */
-      if(r&&cuerpo.token&&cuerpo.token===SESION.token){SESION.exp=Date.now()+(1800-60)*1000; guardarSesion()}
+         no se pide la clave mientras se está trabajando (aunque se recargue).
+         Solo si de verdad la validó (no con la config parcial ni ocupado). */
+      if(r&&r.ok!==false&&!parcial&&cuerpo.token&&cuerpo.token===SESION.token){SESION.exp=Date.now()+((SESION.ttl||1800)-60)*1000; guardarSesion()}
       return r}
     /* la sesión venció o el servidor se actualizó recién: una vez más con la
        clave en memoria; si no hay, se le pide a quien está usando el panel */
@@ -3960,7 +3962,13 @@ function mandarYa(k){
     if(r&&r.error==='sesion_repetida'){
       /* la misma sesión ya estaba marcada en otra visita (otra pantalla la marcó antes): esta no se guarda */
       setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
-      var rid=item.rec&&item.rec.id; if(rid){DATA=DATA.filter(function(x){return x.id!==rid}); delete SNAP_R[rid]; saveLocal()}
+      var rid=item.rec&&item.rec.id;
+      if(rid){var rr=DATA.filter(function(x){return x.id===rid})[0];
+        /* la ficha ya tenía la sesión marcada con esta visita: se libera, así el pac que sigue no la lleva */
+        if(rr)try{liberarSesionPlan(rr)}catch(e){}
+        if(SNAP_R[rid]){var viejo=normalize(JSON.parse(SNAP_R[rid])); DATA=DATA.map(function(x){return x.id===rid?viejo:x})}   // era una edición: vuelve lo guardado
+        else DATA=DATA.filter(function(x){return x.id!==rid});
+        saveLocal()}
       toast('No se guardó: la sesión '+(r.etapa||'')+' del paquete ya está marcada en la visita del '+(r.fecha?fmtF(r.fecha):'otro día')+' (la marcó otra pantalla). Se recargan los datos.',1);
       pullServer().then(function(){refreshAll()}); return r}
     if(r&&(r.error==='sin_permiso'||r.error==='otra_clinica'||r.error==='anticipo_usado')){
@@ -5201,7 +5209,8 @@ function guardarAtencion(){
     'Atención guardada ✅'+(alPlanF.length?' · '+bs(sumaPagos(alPlanF))+' quedaron como pago del plan':'')+(CONNECTED?' · subiendo a la nube (mirá el aviso de arriba)':''));
   if(cerrados)toast(cerrados===1?'Se cerró 1 tratamiento que estaba recomendado ✅'
     :('Se cerraron '+cerrados+' tratamientos recomendados ✅'));
-  showWhatsappModal(rec,cita,favorUsado,sumaPagos(alPlanF));
+  var paqSolo=(PAQ_PAGO_SOLO&&PAQ_PAGO_SOLO.clave===keyPac(rec.paciente))?sumaPagos(PAQ_PAGO_SOLO.pagos):0;
+  showWhatsappModal(rec,cita,favorUsado,sumaPagos(alPlanF)+paqSolo,paqSolo?PAQ_PAGO_SOLO.planId:'',paqSolo);
   try{asisAlGuardar(rec)}catch(e){}
   try{paqueteDespuesDeGuardar(rec)}catch(e){}}
 
@@ -8563,10 +8572,11 @@ function nuevaParaPaciente(nombre){
   $('#f-nac').value=pacDe(nombre).nac||'';
   setRadio('tipo',rs?'Recurrente':'Nuevo'); refrescarFichaForm(''); show('atencion'); refreshNro()}
 
-function showWhatsappModal(r,cita,fav,alPlan){
+function showWhatsappModal(r,cita,fav,alPlan,planIdPaq,sinRegistrar){
   fav=num(fav); alPlan=num(alPlan);
-  /* lo libre y lo reservado al plan son cosas distintas: no se mezclan en el mensaje */
-  var cr=creditosEn(DATA,r.paciente), quedaFav=num(cr.general), reservado=r.planId?num(cr.planes[r.planId]||0):0;
+  /* lo libre y lo reservado al plan son cosas distintas: no se mezclan en el mensaje.
+     Si el pago del paquete todavía no se registró (hoy solo paga), se cuenta igual. */
+  var pid=r.planId||planIdPaq||'', cr=creditosEn(DATA,r.paciente), quedaFav=num(cr.general), reservado=(pid?num(cr.planes[pid]||0):0)+num(sinRegistrar);
   var t='Hola '+(r.paciente||'').split(' ')[0]+'! 👋 Gracias por su visita a *'+clinica()+'*.\n\n';
   t+='📅 '+fmtF(r.fecha)+(r.hora?' · '+r.hora:'')+'\n';
   if((r.servicios||[]).length)t+='🦷 '+srvText(r)+'\n';
@@ -8576,7 +8586,7 @@ function showWhatsappModal(r,cita,fav,alPlan){
       /* el día de la venta del paquete: lo recibido entero, y cómo se repartió */
       t+='💵 Recibido hoy: *'+bs(cash+alPlan)+'*\n';
       t+='   · '+bs(cash)+' por lo de hoy ('+srvText(r)+' · total '+bs(r.total)+')\n';
-      t+='   · 💜 '+bs(alPlan)+' adelantados para sus próximas sesiones\n'}
+      t+='   · 💜 '+bs(alPlan)+' adelantados para '+(r.planId?'sus próximas sesiones':'su paquete')+'\n'}
     else{t+='💵 Total: '+bs(r.total)+'\n';
       if(cash>0.009)t+='✅ A cuenta: '+bs(cash)+'\n'}
     /* con plan, lo descontado sale del adelanto del plan; sin plan, del saldo a favor de siempre */
@@ -9014,6 +9024,8 @@ function atencionDePlan(nombre,planId,n){
       if(s2&&s2.hecha){AT_PLAN=null; toast('Esa etapa ya está hecha'+(s2.fecha?' (visita del '+fmtF(s2.fecha)+')':'')+': la marcó otra pantalla hace un rato',1); verPlan(nombre,planId)}}).catch(function(){})}
   /* hay una atención de este paciente a medio cargar: casi siempre la sesión es
      esa misma visita (si no, quedaban dos atenciones del mismo día) */
+  if(!EDIT_ID&&desdeLaAtencion(nombre)&&formEnUso()&&$('#f-plan').value===planId){
+    toast('Esa sesión ya va en la atención que estás cargando: guardala y queda marcada',1); show('atencion'); return}
   if(!EDIT_ID&&!AT_PLAN_OTRA&&desdeLaAtencion(nombre)&&formEnUso()&&$('#f-plan').value!==planId){
     openModal('<h3>✓ '+esc(s.desc||('Etapa '+s.n))+'</h3><p class="mini">'+esc(nombre)+' · '+esc(p.nombre)+'</p>'+
       '<p style="margin:14px 0 4px;font-size:17px"><b>Estás cargando una atención de '+esc(nombre.split(' ')[0])+'. ¿La sesión es esa misma visita?</b></p>'+
@@ -9088,7 +9100,7 @@ function guardarAtencionPlan(){
       hora:(cita&&cita.hora)||('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2),
       nroDia:(cita&&cita.fecha===fecha&&cita.nroDia)?cita.nroDia:nroDelDia(fecha,cita?cita.id:null),
       profesional:prof, paciente:(ult.paciente||nombre).trim(), celular:ult.celular||(cita&&cita.celular)||'',
-      ci:ult.ci||'', edad:ult.edad||'', tipo:primera&&!cita?'Nuevo':'Recurrente', canal:ult.canal||canalHistorico(nombre)||'', canalDetalle:ult.canalDetalle||'',
+      ci:ult.ci||'', edad:ult.edad||'', tipo:cita?(cita.tipo||'Recurrente'):(primera?'Nuevo':'Recurrente'), canal:ult.canal||canalHistorico(nombre)||'', canalDetalle:ult.canalDetalle||'',
       origen:cita?'Programada':'Espontánea', agendaPor:cita?(cita.agendaPor||''):'', citaDe:cita?(cita.citaDe||''):'', resueltaTs:cita?new Date().toISOString():'',
       servicios:[{nom:s.desc||('Etapa '+s.n),det:p.nombre,cant:1,precio:precio}],
       total:precio, acuenta:cash, saldo:Math.max(0,Math.round((precio-cash)*100)/100),
@@ -9634,7 +9646,8 @@ function sesionHoySi(nombre,id){
   elegirPlanEnForm(id);
   var s=proxSesion(p);
   try{$('#srv-list').scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
-  toast('Abajo quedó la sesión 1'+(s?' ('+bs(s.precio)+')':'')+(SRV.filter(function(x){return x.nom}).length>1?' junto con lo demás':'')+'. Poné TODO lo que pagó hoy (consulta + paquete) y guardá la atención: se reparte solo')}
+  var hayCons=SRV.some(function(x){return x.nom&&mdEsConsulta(x.nom)});
+  toast('Abajo quedó la sesión 1'+(s?' ('+bs(s.precio)+')':'')+(SRV.filter(function(x){return x.nom}).length>1?' junto con lo demás':'')+'. '+(hayCons?'Poné TODO lo que pagó hoy (consulta + paquete)':'Si también cobraste la consulta, agregala como servicio; poné todo lo que pagó')+' y guardá la atención: se reparte solo')}
 /* «No»: el paquete NO queda elegido en la atención que se está cargando (si no,
    la consulta de hoy contaba como sesión 1 sin que nadie lo viera) */
 function sesionHoyNo(nombre,id){
@@ -9816,7 +9829,7 @@ function vpCambio(tocoPaga){
   var h=$('#vp-hoy'), c=$('#vp-cons'), cp=$('#vp-cons-p'), pg=$('#vp-paga'); if(!h||!pg)return;
   VP.hoy=h.checked; if(c)VP.conCons=c.checked; if(cp)VP.consPrecio=num(cp.value);
   VP.metodo=getRadio('vp-met');
-  if(tocoPaga)VP.paga=pg.value===''?null:num(pg.value);
+  if(tocoPaga)VP.paga=pg.value===''?0:num(pg.value);   // lo borró a propósito: queda en 0, no se rellena
   if(VP.paga===null)pg.value=vpTot()||'';
   var tot=vpTot(), cons=vpCons(), chips=[['Todo · '+bs(tot),tot]];
   if(cons>0)chips.push(['Solo la consulta · '+bs(cons),cons]);
@@ -15170,12 +15183,14 @@ function mdFotoCompartir(nombre,id){
   var f=mdFotoDe(nombre,id); if(!f)return;
   mdFotoGrande(id).then(function(d){return fetch(d).then(function(r){return r.blob()})}).then(function(b){
     var file=new File([b],mdFotoNombre(nombre,f),{type:'image/jpeg'});
-    if(navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Su '+(f.tipo==='despues'?'resultado':'foto')+' en '+clinica()+' 🦷'}).catch(function(){});
-    /* en la compu: se baja la foto y se abre su WhatsApp para adjuntarla */
-    mdFotoBajar(nombre,id);
-    var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
-    if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su foto de '+clinica()+' 🦷'),'_blank','noopener');
-    toast('La foto se descargó: adjuntala en el chat de WhatsApp')},function(){toast('No se pudo preparar la foto',1)})}
+    /* en la compu (o si compartir falla porque el permiso del toque venció): se baja la foto y se abre su WhatsApp para adjuntarla */
+    var bajar=function(){
+      mdFotoBajar(nombre,id);
+      var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
+      if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su foto de '+clinica()+' 🦷'),'_blank','noopener');
+      toast('La foto se descargó: adjuntala en el chat de WhatsApp')};
+    if(navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Su '+(f.tipo==='despues'?'resultado':'foto')+' en '+clinica()+' 🦷'}).catch(function(e){if(!(e&&e.name==='AbortError'))bajar()});
+    bajar()},function(){toast('No se pudo preparar la foto',1)})}
 /* El antes y el después en una sola imagen, con el nombre de la clínica:
    para mandárselo al paciente (o guardarlo para publicidad si lo autorizó). */
 function mdImg(src){return new Promise(function(ok,mal){var i=new Image(); i.onload=function(){ok(i)}; i.onerror=function(){mal(new Error('imagen'))}; i.src=src})}
@@ -15199,12 +15214,15 @@ function mdCmpMandar(nombre,ida,idd,compartir){
   toast('Armando la imagen…');
   mdCmpArmar(nombre,a,d).then(function(b){
     var file=new File([b],mdNomArch('Antes y despues '+nombre+' '+d.fecha)+'.jpg',{type:'image/jpeg'});
-    if(compartir&&navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Su antes y después en '+clinica()+' 🦷✨'}).catch(function(){});
-    var url=URL.createObjectURL(b), x=document.createElement('a'); x.href=url; x.download=file.name; document.body.appendChild(x); x.click(); setTimeout(function(){URL.revokeObjectURL(url); x.remove()},1500);
-    if(compartir){var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
-      if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su antes y después de '+clinica()+' 🦷✨'),'_blank','noopener');
-      toast('La imagen se descargó: adjuntala en el chat de WhatsApp')}
-    else toast('Imagen descargada ✅')},function(){toast('No se pudo armar la imagen: revisá la conexión',1)})}
+    var bajar=function(){
+      var url=URL.createObjectURL(b), x=document.createElement('a'); x.href=url; x.download=file.name; document.body.appendChild(x); x.click(); setTimeout(function(){URL.revokeObjectURL(url); x.remove()},1500);
+      if(compartir){var cel=(DATA.filter(function(r){return keyPac(r.paciente)===keyPac(nombre)&&r.celular}).pop()||{}).celular;
+        if(cel)window.open(waLink(cel,'Hola '+String(nombre).split(' ')[0]+'! 👋 Le mandamos su antes y después de '+clinica()+' 🦷✨'),'_blank','noopener');
+        toast('La imagen se descargó: adjuntala en el chat de WhatsApp')}
+      else toast('Imagen descargada ✅')};
+    /* si compartir falla (el permiso del toque venció mientras se armaba), se baja igual; si lo canceló, nada */
+    if(compartir&&navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Su antes y después en '+clinica()+' 🦷✨'}).catch(function(e){if(!(e&&e.name==='AbortError'))bajar()});
+    bajar()},function(){toast('No se pudo armar la imagen: revisá la conexión',1)})}
 function mdFotoBorrar(nombre,id){
   if(!confirm('¿Borrar esta foto? Va a la papelera de Google Drive de la clínica.'))return;
   api('fotoBorrar',null,undefined,undefined,{consulta:{id:id}}).then(function(r){
@@ -15264,8 +15282,9 @@ function mdPautaCohortes(n){
   var hoy=hoyISO(), mesAct=hoy.slice(0,7), meses=[]; for(var i=n-1;i>=0;i--)meses.push(mdYm(mesAct,-i));
   var pac={};
   DATA.forEach(function(r){var k=keyPac(r.paciente); if(!k)return;
-    var P=pac[k]=pac[k]||{k:k,nombre:r.paciente,ats:[],cob:{},cel:''};
+    var P=pac[k]=pac[k]||{k:k,nombre:r.paciente,ats:[],cob:{},cel:'',min:''};
     if(r.celular)P.cel=r.celular;
+    if(r.fecha&&(!P.min||r.fecha<P.min))P.min=r.fecha;
     var ym=(r.fecha||'').slice(0,7);
     if(esAnticipo(r)){P.cob[ym]=(P.cob[ym]||0)+num(r.acuenta); return}
     if(!esAtencion(r)||r.estado!=='Atendido')return;
@@ -15273,8 +15292,9 @@ function mdPautaCohortes(n){
   var lista=Object.keys(pac).map(function(k){var P=pac[k]; if(!P.ats.length)return null;
     P.ats.sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.hora||'').localeCompare(b.hora||'')});
     var r0=P.ats[0]; P.ym=r0.fecha.slice(0,7); P.nombre=r0.paciente;
-    /* si su primera visita en el panel no es «Nuevo», ya era paciente de antes: no cuenta como pauta */
-    P.pre=!!r0.tipo&&r0.tipo!=='Nuevo'; P.red=P.pre?'Ya era paciente':mdRedOrigen(r0.canal); P.srv=mdPrincipal([r0]);
+    /* si su primera visita en el panel no es «Nuevo» y no hay nada suyo anterior (cita, anticipo),
+       ya era paciente de antes: no cuenta como pauta */
+    P.pre=!!r0.tipo&&r0.tipo!=='Nuevo'&&!(P.min&&P.min<r0.fecha); P.red=P.pre?'Ya era paciente':mdRedOrigen(r0.canal); P.srv=mdPrincipal([r0]);
     var tr=P.ats.filter(function(r){return (r.servicios||[]).some(function(x){return x.nom&&!mdEsConsulta(x.nom)})})[0];
     P.dias=tr?Math.max(0,diasEntre(r0.fecha,tr.fecha)):null;
     P.volvio=P.ats.length>1; return P}).filter(Boolean);

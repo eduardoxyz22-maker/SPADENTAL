@@ -45,6 +45,9 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
     at('Fb Oct Uno', '2026-10-05', C('face'), cons, 150); at('Fb Oct Dos', '2026-10-07', C('face'), cons, 150);
     /* ya era paciente antes del panel: su primera visita cargada no es «Nuevo» */
     at('Ya Era Antes', '2026-09-15', C('antig'), lim, 150, 'Recurrente'); at('Ya Era Antes', '2026-10-12', C('antig'), lim, 150, 'Recurrente');
+    /* llegó por Instagram: primero pagó el paquete (anticipo) y su primera atención quedó «Recurrente»: igual es nuevo de octubre */
+    { const an = normalize({ id: uid(), fecha: '2026-10-05', hora: '09:00', paciente: 'Ig Con Anticipo', profesional: 'Dra. Mirna', estado: 'Anticipo', tipo: 'Nuevo', canal: C('insta'), celular: '70049999', servicios: [], total: 0, acuenta: 700, saldo: 0, metodo: 'QR', pagos: [{ metodo: 'QR', monto: 700 }], ts: new Date().toISOString() }); DATA.push(an); queue('save', an, null); }
+    at('Ig Con Anticipo', '2026-10-07', C('insta'), blq, 0, 'Recurrente');
     saveLocal(); return flushQueue(); });
   await D.waitForTimeout(1500);
   /* Caja › Movimientos: el buscador por paciente deja solo sus pagos del periodo */
@@ -68,6 +71,14 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('si no hay nadie, lo dice', /Nadie con «zzzz»/.test(await D.evaluate(() => $('#cj-q-res').innerText)));
   await D.fill('#cj-q', ''); await D.dispatchEvent('#cj-q', 'input');
   await D.evaluate(() => show('midia')); await D.waitForTimeout(300);
+  /* paciente nuevo con cita agendada: la sesión marcada desde la ficha queda «Nuevo», no «Recurrente» */
+  await D.evaluate(() => { const r = normalize({ id: uid(), fecha: hoyISO(), hora: '11:00', paciente: 'Cita Nueva Hoy', profesional: 'Dra. Mirna', estado: 'Agendada', tipo: 'Nuevo', canal: CFG.canales[0], origen: 'Programada', celular: '70048888', servicios: [], total: 0, acuenta: 0, saldo: 0, pagos: [], ts: new Date().toISOString() }); DATA.push(r); queue('save', r, null); saveLocal();
+    const f = pacDe('Cita Nueva Hoy'); f.nombre = 'Cita Nueva Hoy'; f.planes.push(planNormalize({ nombre: 'Blanqueamiento', total: 700, paquete: true, deClinica: true, sesiones: [{ desc: 'sesión 1', precio: 234 }, { desc: 'sesión 2', precio: 233 }, { desc: 'sesión 3', precio: 233 }] })); savePac(f); return flushQueue(); });
+  await D.waitForTimeout(800);
+  await D.evaluate(() => { const p = planesDe('Cita Nueva Hoy')[0]; atencionDePlan('Cita Nueva Hoy', p.id, 1); }); await D.waitForTimeout(500);
+  await D.evaluate(() => { const e = $('#ap-prof'); if (e && !e.readOnly && !e.value) { e.value = 'Dra. Mirna'; e.dispatchEvent(new Event('change', { bubbles: true })); } });
+  await D.click('#ap-ok'); await D.waitForTimeout(1200); await D.evaluate(() => closeModal());
+  OK('«Marcar realizada» sobre la cita de un paciente nuevo deja la atención como «Nuevo»', await D.evaluate(() => { const v = DATA.filter(r => r.paciente === 'Cita Nueva Hoy' && esAtencion(r) && r.estado === 'Atendido')[0]; return !!v && v.tipo === 'Nuevo'; }));
   OK('la dueña no ve la pestaña Pauta', !(await D.locator('#nav-pauta').isVisible()));
   await D.evaluate(() => show('panel')); await D.waitForTimeout(800);
   const rp = await D.locator('#md-pauta .md-pa-rec').innerText();
@@ -86,6 +97,7 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('la pauta que más rindió: Facebook de septiembre', /Facebook de septiembre: 3 nuevos que ya dejaron Bs 1[.,]?850/.test(txt), txt.slice(0, 300));
   OK('los que volvieron en octubre, por dónde habían llegado', /volvieron en octubre/.test(txt) && /Facebook · septiembre/.test(txt) && /Facebook · agosto/.test(txt) && /Sin dato · mayo/.test(txt));
   OK('cuánto tardan en hacerse el tratamiento', /Cuánto tardan/.test(txt) && /el mismo día/.test(txt));
+  OK('el que pagó el paquete antes de su primera atención cuenta como nuevo de Instagram', await P.evaluate(() => { const C = mdPautaCohortes(3), c = C.celdas['2026-10|' + (CFG.canales.find(c => /insta/i.test(c)) || 'Instagram')]; return !!c && c.pacs.some(p => p.nombre === 'Ig Con Anticipo') && !C.lista.filter(p => p.nombre === 'Ig Con Anticipo')[0].pre; }));
   OK('el que ya era paciente no cuenta como nuevo de la pauta', await P.evaluate(() => { const C = mdPautaCohortes(3); return !Object.keys(C.celdas).some(k => C.celdas[k].pacs.some(p => p.nombre === 'Ya Era Antes')) && !C.celdas['2026-09|Sin dato']; }));
   OK('pero aparece entre los que volvieron, como paciente de antes', /Ya eran pacientes antes del panel/.test(txt));
   await P.locator('#pauta-box tr.md-pt-clic[onclick*="2026-09"]', { hasText: 'Facebook' }).locator('td').first().click(); await P.waitForTimeout(300);
@@ -111,6 +123,10 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   /* no puede escribir nada, aunque lo intente */
   const w = await P.evaluate(() => Promise.all(['save', 'pac', 'cfg', 'foto', 'delete'].map(a => api(a, { id: 'zz', paciente: 'X' }, {}, undefined, { foto: {} }).then(r => r && r.error))));
   OK('el servidor no deja escribir con la clave de pauta', w.every(e => e === 'sin_permiso'), w);
+  const tokP = server.ctx.nuevaSesion({ rol: 'pauta', prof: '', h: server.ctx.VERIF_PAUTA, fabrica: false });
+  const lp = server.handle({ action: 'list', token: tokP }, { panel: true }), cg = server.handle({ action: 'cfgGet', token: tokP }, { panel: true });
+  const sinPriv = c => c === null || (c.parcial === true && !('metaMes' in c) && !('comision' in c));
+  OK('con la clave de pauta el servidor no manda metas ni comisiones ni fichas médicas', lp.ok && sinPriv(lp.cfg) && lp.pacientes.every(p => !Object.keys(p.med || {}).length) && sinPriv(cg.cfg), [lp.cfg && Object.keys(lp.cfg).filter(k => /meta|comision/.test(k)), lp.pacientes.length]);
   await P.reload(); await P.waitForTimeout(1800);
   OK('al recargar sigue en Pauta (misma sesión)', await P.evaluate(() => ROL === 'pauta' && $('#v-pauta').classList.contains('on')));
   OK('no quedan cosas sin subir', await P.evaluate(() => pend().length) === 0);

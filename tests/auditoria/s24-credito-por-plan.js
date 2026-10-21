@@ -71,5 +71,33 @@ console.log('PANEL', SPA ? 'Spa' : 'Cosmetic');
   const retry = save(s, sh, cita, tok('Dra. Shirley'));
   OK('B2 el reintento no crea otra visita ni gasta más', retry.ok && list(s).length === 3 && usado(list(s)) === 100, list(s).length);
 }
+/* revisión 21/10: la visita separada entre doctoras tampoco marca una sesión ya hecha en otra visita */
+{
+  const s = gsServer(GS), pac = 'Prueba cita y sesion';
+  s.handle({ action: 'pac', registro: { nombre: pac, med: {}, planes: [plan('plan-S', 100)] } });
+  save(s, advance('ant-S', pac, 200, 'plan-S'));
+  save(s, row('hecha-1', pac, 100, { planId: 'plan-S', planEtapa: 1, fecha: '2026-10-18' }), null);
+  s.handle({ action: 'pac', registro: { nombre: pac, med: {}, planes: [Object.assign(plan('plan-S', 100), { sesiones: [{ n: 1, desc: 'Sesion 1', precio: 100, hecha: true, fecha: '2026-10-18', atencionId: 'hecha-1' }, { n: 2, desc: 'Sesion 2', precio: 100 }] })] } });
+  const v = s.ctx.leerVerif(); v.prof = { 'Dra. Mirna': 'a'.repeat(64), 'Dra. Shirley': 'b'.repeat(64) }; s.ctx.guardarVerif(v);
+  const tok = prof => s.ctx.nuevaSesion({ rol: 'doctora', prof, h: v.prof[prof], fabrica: false });
+  const cita = save(s, row('cita2', pac, 0, { profesional: 'Por definir', estado: 'Agendada', servicios: [], pagos: [], metodo: '' }), null).registro;
+  const m = row('cita2', pac, 100, { profesional: 'Dra. Mirna', planId: 'plan-S', planEtapa: 2 }), sh = row('cita2', pac, 100, { profesional: 'Dra. Shirley', planId: 'plan-S', planEtapa: 1 });
+  const first = save(s, m, cita, tok('Dra. Mirna')), second = save(s, sh, cita, tok('Dra. Shirley'));
+  OK('B2b la 1ra doctora marca la sesión 2 (libre)', first.ok && !first.separada, first.error);
+  OK('B2b la 2da, separada, manda la sesión 1 que ya está hecha: rechazada', second.ok === false && second.error === 'sesion_repetida' && second.etapa === 1, second);
+  OK('B2b no se creó la visita separada', list(s).length === 3, list(s).length);
+}
+/* la clave de pauta: solo lectura y sin metas, comisiones ni fichas médicas */
+{
+  const s = gsServer(GS); s.ctx.VERIF_PAUTA = s.ctx.shaHex('pauta-prueba-s24');
+  s.handle({ action: 'pac', registro: { nombre: 'Con Ficha', med: { alergias: 'penicilina' }, planes: [] } });
+  s.ctx.PropertiesService.getScriptProperties().setProperty(s.ctx.K_CFG, JSON.stringify({ metaMes: 50000, comision: 30, precios: [] }));
+  const tokP = s.ctx.nuevaSesion({ rol: 'pauta', prof: '', h: s.ctx.VERIF_PAUTA, fabrica: false });
+  const lp = s.handle({ action: 'list', token: tokP }, { panel: true }), cg = s.handle({ action: 'cfgGet', token: tokP }, { panel: true });
+  OK('pauta: lista sin metas, comisiones, egresos ni fichas médicas', lp.ok && lp.cfg.parcial === true && !('metaMes' in lp.cfg) && !('comision' in lp.cfg) && lp.egresos.length === 0 && lp.pacientes.every(p => !Object.keys(p.med || {}).length), [Object.keys(lp.cfg).filter(k => /meta|comision/.test(k))]);
+  OK('pauta: cfgGet también sin lo privado', cg.ok && cg.cfg.parcial === true && !('metaMes' in cg.cfg));
+  const ld = s.handle({ action: 'list' });
+  OK('la dueña sí ve todo', ld.cfg.metaMes === 50000 && ld.pacientes[0].med.alergias === 'penicilina');
+}
 console.log(fallas ? 'FALLAS: ' + fallas : 'TODO OK');
 process.exit(fallas ? 1 : 0);
