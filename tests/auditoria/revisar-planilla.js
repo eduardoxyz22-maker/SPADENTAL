@@ -89,10 +89,15 @@ async function pedir(action, extra) {
     Object.keys(plan).forEach(p => { const pl = porId[p]; const libre = !pl ? plan[p] : Math.max(0, Math.min(plan[p], R((plan[p] + (cobAt[p] || 0)) - num(pl.total)))); if (libre > 0.009) { plan[p] = R(plan[p] - libre); gen = R(gen + libre); } });
     if (gen < -0.009) add('saldo_a_favor_usado_de_mas', { paciente: rs[0].paciente, fecha: '', id: '' }, 'se descontó ' + R(-gen) + ' más de saldo a favor del que pagó', gen);
   });
+  /* 12: lo que deja la unión vieja de «Pacientes repetidos»: la ficha del nombre que se unió sigue en la hoja (sin visitas) y su plan quedó en dos fichas */
+  const fichaLlena = p => !!(p && ((p.planes || []).length || p.nac || (p.med && (p.med.alergias || p.med.medicacion || p.med.notas || (p.med.antecedentes || []).length || p.med.consent))));
+  pacs.forEach(p => { const k = key(p.nombre); if (!porPac[k] && fichaLlena(p)) add('ficha_sin_visitas', { paciente: p.nombre, fecha: '', id: '' }, 'ficha con ' + [(p.planes || []).length ? (p.planes || []).length + ' plan(es)' : '', p.med && p.med.alergias ? 'alergia' : '', p.med && p.med.notas ? 'notas' : '', p.nac ? 'nacimiento' : ''].filter(Boolean).join(', ') + ' y ninguna visita ni pago (¿quedó de una unión?)', ''); });
+  const dondePlan = {}; pacs.forEach(p => (p.planes || []).forEach(pl => { if (pl && pl.id) (dondePlan[pl.id] = dondePlan[pl.id] || []).push(p.nombre); }));
+  Object.keys(dondePlan).forEach(id => { const l = [...new Set(dondePlan[id])]; if (l.length > 1) add('plan_en_dos_fichas', { paciente: l.join(' / '), fecha: '', id }, 'el mismo plan está en ' + l.length + ' fichas: ' + l.join(' y '), ''); });
   /* 10: planes de pacientes sin ninguna fila (ficha huérfana) solo informativo */
   pacs.forEach(p => { const k = key(p.nombre); if ((planesDe[k] || []).some(x => x.estado === 'activo') && !porPac[k]) add('plan_activo_sin_visitas_ni_pagos', { paciente: p.nombre, fecha: '', id: '' }, 'tiene plan activo pero ninguna atención ni pago', ''); });
 
-  const orden = ['etapa_en_dos_visitas', 'sesion_apunta_a_visita_borrada', 'saldo_a_favor_usado_de_mas', 'saldo_no_cuadra', 'saldo_negativo', 'visita_de_plan_sin_marcar', 'adelanto_de_plan_inexistente', 'atencion_de_plan_inexistente', 'planes_activos_repetidos', 'sesion_hecha_sin_visita', 'sin_forma_de_pago', 'total_cero_con_servicios', 'plan_activo_sin_visitas_ni_pagos', 'descuento', 'importado_sin_forma_de_pago'];
+  const orden = ['plan_en_dos_fichas', 'ficha_sin_visitas', 'etapa_en_dos_visitas', 'sesion_apunta_a_visita_borrada', 'saldo_a_favor_usado_de_mas', 'saldo_no_cuadra', 'saldo_negativo', 'visita_de_plan_sin_marcar', 'adelanto_de_plan_inexistente', 'atencion_de_plan_inexistente', 'planes_activos_repetidos', 'sesion_hecha_sin_visita', 'sin_forma_de_pago', 'total_cero_con_servicios', 'plan_activo_sin_visitas_ni_pagos', 'descuento', 'importado_sin_forma_de_pago'];
   H.sort((a, b) => orden.indexOf(a.tipo) - orden.indexOf(b.tipo) || String(a.paciente).localeCompare(b.paciente) || String(a.fecha).localeCompare(b.fecha));
   const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
   fs.writeFileSync(OUT, '﻿' + ['tipo;paciente;fecha;id;detalle;monto'].concat(H.map(h => [h.tipo, h.paciente, h.fecha, h.id, h.detalle, h.monto].map(q).join(';'))).join('\r\n'));

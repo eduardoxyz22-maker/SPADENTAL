@@ -47,6 +47,8 @@ if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
     case "$r" in "TODO OK"*) echo "OK     e2e-md-mensajes ($p)";; *) echo "FALLA  e2e-md-mensajes ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-md-presupuesto.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-md-presupuesto ($p)";; *) echo "FALLA  e2e-md-presupuesto ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-nombre.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-nombre ($p)";; *) echo "FALLA  e2e-nombre ($p): $r"; fallas=$((fallas+1));; esac
   done
 else echo "(sin Chromium: se saltea e2e-circuito)"; fi
 echo; [ $fallas -eq 0 ] && echo "TODO OK" || echo "FALLAS: $fallas"

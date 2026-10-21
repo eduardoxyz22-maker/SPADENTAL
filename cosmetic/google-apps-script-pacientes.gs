@@ -181,6 +181,8 @@ function doListPac() {
    base, lo que mandó este equipo se junta con lo que ya había. */
 function doGuardarPac(p, base, ses) {
   if (!p || !p.nombre) return { ok: false, error: 'sin_nombre' };
+  /* una pantalla que todavía tiene el nombre viejo guarda la ficha que conocía: va a la del nombre corregido */
+  if (base && typeof base === 'object') { var nv = nombreRenombrado(p.nombre); if (nv !== p.nombre) p.nombre = nv; }
   var doctora = !!(ses && ses.rol === 'doctora');
   if (doctora && pacienteDeOtra(fClavePac(p.nombre), ses.prof)) return { ok: false, error: 'sin_permiso' };
   var sh = getSheetPac();
@@ -205,6 +207,93 @@ function doGuardarPac(p, base, ses) {
     for (var d = 0; d < destinos.length; d++) sh.getRange(destinos[d], 1, 1, COLS_PAC.length).setValues([fila]);
   } else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_PAC.length).setValues([fila]);
   return { ok: true, paciente: pacienteDeFila(fila), conflictos: conf };
+}
+
+/* =====================================================================
+   CORREGIR EL NOMBRE DE UN PACIENTE (y unir dos historias)
+   Cambiar el nombre en una atención mueve solo esa visita: la historia
+   queda partida. Esto lo corrige en TODA la historia de una vez, con el
+   candado puesto: visitas, citas, pagos y adelantos, la ficha (si ya hay
+   otra con el nombre nuevo, se juntan) y las fotos. No cambia ningún monto.
+   Queda anotado en _Correcciones. Una pantalla que todavía tiene el nombre
+   viejo y guarda la ficha que ya conocía (con base) va a la ficha nueva
+   durante RENOMBRES_DIAS días, así no reaparece el paciente viejo.
+   ===================================================================== */
+var RENOMBRES_DIAS = 30;
+function leerRenombres() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('RENOMBRES') || '{}') || {}; } catch (e) { return {}; }
+}
+function guardarRenombres(m) { PropertiesService.getScriptProperties().setProperty('RENOMBRES', JSON.stringify(m)); }
+function nombreRenombrado(nombre) {
+  var m = leerRenombres(), k = fClavePac(nombre), lim = Date.now() - RENOMBRES_DIAS * 864e5, n = 0;
+  while (m[k] && Number(m[k].t) > lim && n++ < 6) { nombre = m[k].a; k = fClavePac(nombre); }
+  return nombre;
+}
+function doRenombrar(q, ses) {
+  q = q || {};
+  var de = String(q.de || '').replace(/\s+/g, ' ').trim(), a = String(q.a || '').replace(/\s+/g, ' ').trim();
+  var kDe = fClavePac(de), kA = fClavePac(a), idem = String(q.idem || '');
+  if (!kDe || a.length < 3) return { ok: false, error: 'nombre_invalido' };
+  if (de === a) return { ok: false, error: 'mismo_nombre' };
+  if (ses.rol === 'doctora' && (pacienteDeOtra(kDe, ses.prof) || (kA !== kDe && pacienteDeOtra(kA, ses.prof)))) return { ok: false, error: 'sin_permiso' };
+  if (idem && correccionYaHecha(idem)) return { ok: true, ya: true, de: de, a: a };
+  var ts = new Date().toISOString(), filas = 0, conA = 0;
+  /* visitas, citas, pagos y adelantos: solo la columna del nombre (y ts) */
+  var sh = getSheet(), n = sh.getLastRow();
+  if (n >= 2) {
+    var col = sh.getRange(2, 1, n - 1, 7).getValues();
+    for (var i = 0; i < col.length; i++) {
+      if (!col[i][0]) continue;
+      var k = fClavePac(col[i][6]);
+      if (k === kA && kA !== kDe) conA++;
+      if ((k === kDe || k === kA) && String(col[i][6]) !== a) {
+        sh.getRange(i + 2, 7, 1, 1).setValues([[a]]); sh.getRange(i + 2, 2, 1, 1).setValues([[ts]]);
+        if (k === kDe) filas++;
+      }
+    }
+  }
+  /* la ficha: se juntan la del nombre viejo y la del nuevo (si había) y queda una sola fila */
+  var sp = getSheetPac(), np = sp.getLastRow(), ficha = null, fichaA = null, dest = [];
+  if (np >= 2) {
+    var fp = sp.getRange(2, 1, np - 1, COLS_PAC.length).getValues();
+    for (var j = 0; j < fp.length; j++) {
+      if (!fp[j][0]) continue;
+      var kp = fClavePac(fp[j][0]);
+      if (kp !== kDe && kp !== kA) continue;
+      var pf = pacienteDeFila(fp[j]);
+      if (kp === kA && kA !== kDe) fichaA = fusionarFichas(fichaA, pf); else ficha = fusionarFichas(ficha, pf);
+      dest.push(j + 2);
+    }
+  }
+  var final = fichaA && ficha ? fusionarFichas(fichaA, ficha) : (fichaA || ficha), pacFinal = null;
+  if (final) {
+    final.nombre = a; final.ts = ts;
+    var fila = filaDePaciente(final);
+    sp.getRange(dest[0], 1, 1, COLS_PAC.length).setValues([fila]);
+    for (var d = dest.length - 1; d >= 1; d--) sp.deleteRow(dest[d]);
+    pacFinal = pacienteDeFila(fila);
+  }
+  /* las fotos (si la clínica ya tiene la hoja) */
+  var fotos = 0, sf = getSpreadsheet().getSheetByName(HOJA_FOTOS);
+  if (sf && sf.getLastRow() >= 2) {
+    var cf = sf.getRange(2, 1, sf.getLastRow() - 1, 2).getValues();
+    for (var f = 0; f < cf.length; f++) {
+      var kf = fClavePac(cf[f][1]);
+      if ((kf === kDe || kf === kA) && String(cf[f][1]) !== a) { sf.getRange(f + 2, 2, 1, 1).setValues([[a]]); if (kf === kDe) fotos++; }
+    }
+  }
+  if (!filas && !ficha && !fotos) return { ok: false, error: 'no_existe' };
+  /* una pantalla con el nombre viejo no vuelve a crear su ficha */
+  var m = leerRenombres(), lim = Date.now() - RENOMBRES_DIAS * 864e5, x;
+  for (x in m) if (Object.prototype.hasOwnProperty.call(m, x) && !(Number(m[x].t) > lim)) delete m[x];
+  if (kA !== kDe) { m[kDe] = { a: a, t: Date.now() }; delete m[kA]; }
+  for (x in m) if (Object.prototype.hasOwnProperty.call(m, x) && fClavePac(m[x].a) === kDe && kA !== kDe) m[x].a = a;
+  guardarRenombres(m);
+  var unidos = kA !== kDe && (conA > 0 || !!fichaA);
+  hojaCorr().appendRow([ts, idem || ('nombre-' + ts), '', de + ' → ' + a, '', '', '', '', '',
+    (unidos ? 'Historias unidas' : 'Nombre corregido') + ': ' + filas + ' fila(s) de la hoja' + (fotos ? ', ' + fotos + ' foto(s)' : '') + (ficha ? ' y la ficha' : '') + '. No cambia montos.',
+    responsableDe(ses)]);
+  return { ok: true, de: de, a: a, filas: filas, fotos: fotos, unidos: unidos, paciente: pacFinal };
 }
 
 /* Igual que el panel (pacAjeno): el paciente es de otra doctora si tiene
@@ -1205,7 +1294,7 @@ var ANTICIPO_DOCTORAS = false;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-27-cierre';
+var VERSION_SCRIPT = '2026-10-28-nombre';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
@@ -1279,6 +1368,7 @@ function cfgPublica(cfg) {
   o.pagoPlanDoctoras = true;
   o.paquetes = true;
   o.cierres = true;
+  o.renombrar = true;
   return o;
 }
 /* Una configuración que llega del panel no puede tocar las claves. */
@@ -1333,7 +1423,7 @@ function doLogin(body) {
   s.h = h; s.fabrica = esDeFabrica(h);
   var tok = nuevaSesion(s);
   /* pagoPlan: este script acepta los pagos de plan que carga la doctora */
-  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true, fotos: true };
+  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true, fotos: true, renombrar: true };
 }
 
 /* Cambiar una clave: la dueña cambia cualquiera; recepción, la suya
@@ -1763,6 +1853,7 @@ function doPost(e) {
     if (body.action === 'clave') return json(doCambiarClave(body, ses));
     if (body.action === 'corregirCobro') return json(doCorregirCobro(body.correccion, ses));
     if (body.action === 'pasarAlPlan') return json(doPasarAlPlan(body.pase, ses));
+    if (body.action === 'renombrar') return json(doRenombrar(body.renombre, ses));
     if (body.action === 'pac') return json(doGuardarPac(reg, base, ses));
     if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));

@@ -670,6 +670,13 @@ body.asis-tiembla > :not(#asis):not(#ov):not(#toast):not(#ses-pedir){animation:a
 .asis-globo.asis-oye b{font-size:17px}
 @media (prefers-reduced-motion:reduce){.asis-golpea svg,body.asis-tiembla > *{animation:none}}
 /* ===== fin de Sonri ===== */
+/* corregir el nombre en toda la historia */
+.cn-btn{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:999px;border:1px solid rgba(0,0,0,.16);font-size:12px;font-weight:600;line-height:1.6;cursor:pointer;white-space:nowrap;vertical-align:baseline;user-select:none}
+.cn-btn:hover{background:rgba(0,0,0,.05)}
+.cn-btn:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.cn-l{display:block;font-weight:600;margin-top:10px}
+.cn-l input{display:block;width:100%;margin-top:6px;font-size:17px}
+.cn-otro{background:#FFF6E0;border:1px solid #F0D58A;border-radius:12px;padding:10px 12px;margin-top:6px;font-size:14px;line-height:1.45}
 /* ===== MODERNO INI · la cara nueva del panel (va igual en los dos paneles; los colores salen de --lime) ===== */
 /* A · encabezado oscuro con el diente que flota y los anillos del día */
 header .hd{background:var(--ink);color:#fff;box-shadow:0 0 0 100vmax var(--ink);clip-path:inset(0 -100vmax);
@@ -3869,7 +3876,7 @@ function abrirSesion(clave){
   return fetchApi({action:'login',clave:clave}).then(function(r){
     if(r&&r.auth)SRV_AUTH=true;
     if(r&&r.ok&&r.token){
-      SESION={token:r.token,ttl:num(r.ttl)||1800,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes,fotos:!!r.fotos};
+      SESION={token:r.token,ttl:num(r.ttl)||1800,exp:Date.now()+((num(r.ttl)||1800)-60)*1000,rol:r.rol,prof:r.prof||'',fabrica:!!r.fabrica,pagoPlan:!!r.pagoPlan,paquetes:!!r.paquetes,fotos:!!r.fotos,renombrar:!!r.renombrar};
       CLAVE_MEM=clave; guardarSesion(); return r}
     if(r&&r.error==='accion_desconocida')SRV_AUTH=false;
     if(r&&r.error==='clave_incorrecta'&&CLAVE_MEM===clave)CLAVE_MEM='';
@@ -5539,6 +5546,8 @@ var FAVOR_TOPE=null;
 function submitAtencion(){
   /* Sonri pregunta antes si la visita es una etapa del plan (ver asisAntesDeGuardar) */
   /* una fila marcada como paquete crea el paquete antes de guardar (ver PAQUETES) */
+  /* el nombre cambiado en una visita ya guardada: ¿en toda la historia o es otra persona? */
+  try{if(nombreAntesDeGuardar())return}catch(e){}
   try{if(paquetesDeFilas())return}catch(e){}
   try{if(asisAntesDeGuardar())return}catch(e){}
   /* el paquete entero cargado como una sola atención (ver PAQUETES) */
@@ -8525,6 +8534,8 @@ function unirPacientes(queda,sale){
       nAtenciones(suyas)+' de «'+sale+'» '+
       'pasan a «'+queda+'».\n\nEsto no se deshace solo.'))return;
 
+  /* con el Apps Script nuevo se une en el servidor, de una vez (también la ficha vieja y las fotos) */
+  if(srvRenombra()){renombrarPaciente(sale,queda).then(function(){renderRepetidos()}); return}
   suyas.forEach(function(r){r.paciente=queda; r.ts=new Date().toISOString(); enviar('save',r)});
 
   /* la ficha clínica también se une: lo que tenga una y la otra no, se suma */
@@ -8553,6 +8564,147 @@ function sonDistintos(a,b){
   saveCfg();
   toast('Anotado: son dos personas distintas');
   renderRepetidos()}
+
+/* =====================================================================
+   CORREGIR EL NOMBRE (en toda la historia) Y UNIR HISTORIAS
+   Cambiar el nombre en una atención mueve solo esa visita: la historia
+   queda partida en dos. «✏️ Corregir nombre» (en la ficha) y el aviso al
+   guardar una atención con otro nombre lo corrigen en TODO: visitas, citas,
+   pagos, la ficha y las fotos, de una vez y en el servidor (acción
+   renombrar, con el candado). Si el nombre nuevo ya es de otro paciente,
+   se unen las dos historias. No cambia ningún monto. Necesita el Apps
+   Script 2026-10-28-nombre o posterior (CFG.renombrar).
+   ===================================================================== */
+function srvRenombra(){return !!((CFG&&CFG.renombrar===true)||(SESION&&SESION.renombrar))}
+function puedeRenombrar(nombre){return !!keyPac(nombre)&&ROL!=='pauta'&&!pacAjeno(nombre)}
+function nombreLimpio(x){return String(x==null?'':x).replace(/\s+/g,' ').trim()}
+function nombreConMayusculas(x){
+  return nombreLimpio(x).toLowerCase().replace(/(^|[\s\-'])([a-záéíóúñü])/g,function(m,a,b){return a+b.toUpperCase()})
+    .replace(/\s(De|Del|La|Las|Los|Y)(?=\s)/g,function(m){return m.toLowerCase()})}
+/* lo que tiene un nombre en este panel: para contarlo antes de corregir */
+function historiaDe(nombre){
+  var k=keyPac(nombre), rs=k?DATA.filter(function(r){return keyPac(r.paciente)===k}):[];
+  var f=k?PAC[k]:null, cel='';
+  rs.slice().sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')}).forEach(function(r){if(!cel&&r.celular)cel=r.celular});
+  return {k:k, visitas:rs.filter(function(r){return esAtencion(r)}).length,
+    citas:rs.filter(function(r){return r.estado==='Agendada'}).length,
+    pagos:rs.filter(esAnticipo).length, planes:f&&f.planes?f.planes.length:0,
+    ficha:!!(f&&!pacVacia(f)), fotos:(window.MD_FOTOS&&MD_FOTOS[k]||[]).length, cel:cel, nombre:rs.length?nombreLimpio(rs[0].paciente):(f&&f.nombre)||'',
+    hay:rs.length>0||!!(f&&!pacVacia(f))}}
+function historiaTexto(h){
+  var p=[];
+  if(h.visitas)p.push(h.visitas+(h.visitas===1?' visita':' visitas'));
+  if(h.citas)p.push(h.citas+(h.citas===1?' cita':' citas'));
+  if(h.pagos)p.push(h.pagos+(h.pagos===1?' pago':' pagos'));
+  if(h.planes)p.push(h.planes===1?'su plan':h.planes+' planes');
+  if(h.ficha)p.push('la ficha');
+  if(h.fotos)p.push(h.fotos+(h.fotos===1?' foto':' fotos'));
+  return p.length?p.length===1?p[0]:p.slice(0,-1).join(', ')+' y '+p[p.length-1]:'su ficha'}
+
+/* El cambio, en el servidor y después acá. Devuelve una promesa con true si quedó. */
+function renombrarPaciente(de,a){
+  de=nombreLimpio(de); a=nombreLimpio(a);
+  var kDe=keyPac(de), kA=keyPac(a);
+  if(!kDe||a.length<3){toast('Escribí el nombre completo',1);return Promise.resolve(false)}
+  if(de===a)return Promise.resolve(true);
+  if(!srvRenombra()){toast('Para corregir el nombre en toda la historia hace falta el Apps Script nuevo (2026-10-28-nombre). Pedile a Eduardo que lo pegue.',1);return Promise.resolve(false)}
+  if(!CONNECTED){toast('Para corregir el nombre hace falta internet: se cambia en la hoja, en todas las pantallas a la vez.',1);return Promise.resolve(false)}
+  var suyos=function(){return pend().filter(function(q){var r=q.rec||{}; var k=keyPac(r.paciente||r.nombre); return k===kDe||k===kA})};
+  var antes=suyos().length?Promise.resolve(flushQueue()).catch(function(){}):Promise.resolve();
+  return antes.then(function(){
+    if(suyos().length){toast('Todavía se está subiendo algo de este paciente. Probá de nuevo en unos segundos.',1);return false}
+    return api('renombrar',null,null,undefined,{renombre:{de:de,a:a,idem:uid()}}).then(function(r){
+      if(!r||r.ok===false){
+        var e=r&&r.error;
+        toast(e==='sin_permiso'?'Ese paciente es de otra doctora 🔐':
+          e==='no_existe'?'No encontré a «'+de+'» en la hoja. Si lo cargaste recién, esperá a que se suba.':
+          e==='ocupado'?'Google está ocupado: probá de nuevo en un momento.':
+          e==='accion_desconocida'?'Falta pegar el Apps Script nuevo (2026-10-28-nombre).':
+          'No se pudo corregir el nombre ('+(e||'sin respuesta')+')',1);
+        return false}
+      aplicarRenombreLocal(de,a,r.paciente);
+      var h=r.unidos?'Historias unidas en «'+a+'» ✅':'Nombre corregido en toda la historia ✅';
+      toast(h+(r.filas?' ('+r.filas+(r.filas===1?' fila':' filas')+(r.fotos?' y '+r.fotos+(r.fotos===1?' foto':' fotos'):'')+')':''));
+      try{pullServer()}catch(e){}
+      return true})}).catch(function(){toast('Sin respuesta de Google: no se cambió nada. Probá de nuevo.',1);return false})}
+function aplicarRenombreLocal(de,a,ficha){
+  var kDe=keyPac(de), kA=keyPac(a), ts=new Date().toISOString();
+  DATA.forEach(function(r){var k=keyPac(r.paciente); if((k===kDe||k===kA)&&r.paciente!==a){r.paciente=a; r.ts=ts}});
+  if(ficha){PAC[kA]=pacNormalize(JSON.parse(JSON.stringify(ficha))); SNAP_P[kA]=JSON.stringify(ficha)}
+  else if(PAC[kDe]&&kDe!==kA){var f=PAC[kDe]; f.nombre=a; PAC[kA]=f}
+  if(kDe!==kA){delete PAC[kDe]; delete SNAP_P[kDe]}
+  try{if(window.MD_FOTOS){delete MD_FOTOS[kDe]; delete MD_FOTOS[kA]}}catch(e){}
+  saveLocal(); savePacLocal(); refreshAll()}
+
+/* «✏️ Corregir nombre» desde la ficha */
+var CN={de:''};
+function corregirNombre(nombre){
+  if(!puedeRenombrar(nombre)){toast('Ese paciente es de otra doctora 🔐',1);return}
+  CN.de=nombreLimpio(nombre); var h=historiaDe(nombre);
+  openModal('<h3 id="cn-h3">✏️ Corregir el nombre</h3>'+
+    '<p class="mini">Se corrige en <b>toda su historia</b>: '+esc(historiaTexto(h))+'. No cambia ningún cobro.</p>'+
+    '<label class="cn-l">Nombre completo<input id="cn-nom" type="text" autocomplete="off" value="'+esc(CN.de)+'"></label>'+
+    '<div class="row-btn" style="margin:4px 0 8px"><button type="button" class="btn sec xs" id="cn-may" onclick="cnMayusculas()">Aa Poner mayúsculas</button></div>'+
+    '<div id="cn-info"></div>'+
+    '<div class="row-btn" style="margin-top:12px"><button type="button" class="btn" id="cn-ok" onclick="cnOk()">✏️ Corregir nombre</button>'+
+    '<button type="button" class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  var i=$('#cn-nom'); i.addEventListener('input',cnVer); setTimeout(function(){try{i.focus(); i.setSelectionRange(i.value.length,i.value.length)}catch(e){}},50);
+  cnVer()}
+function cnMayusculas(){var i=$('#cn-nom'); i.value=nombreConMayusculas(i.value); cnVer()}
+function cnVer(){
+  var a=nombreLimpio($('#cn-nom').value), kDe=keyPac(CN.de), kA=keyPac(a), info=$('#cn-info'), ok=$('#cn-ok');
+  var otro=kA&&kA!==kDe?historiaDe(a):null;
+  ok.disabled=!kA||a.length<3||a===CN.de;
+  if(otro&&otro.hay){
+    ok.textContent='🔗 Es la misma persona: unir y corregir';
+    info.innerHTML='<div class="cn-otro"><b>Ya hay un paciente «'+esc(otro.nombre||a)+'»</b> con '+esc(historiaTexto(otro))+(otro.cel?' · 📱 '+esc(otro.cel):'')+
+      '.<br>Si es la misma persona, se unen las dos historias en una sola (visitas, pagos, ficha, planes y fotos). Si es otra persona, cambiá el nombre.</div>'}
+  else{
+    ok.textContent='✏️ Corregir nombre';
+    info.innerHTML=kA&&kA===kDe&&a!==CN.de?'<p class="mini">Solo cambia cómo se escribe.</p>':''}}
+function cnOk(){
+  var a=nombreLimpio($('#cn-nom').value), b=$('#cn-ok'); if(b.disabled)return;
+  b.disabled=true; b.textContent='Corrigiendo…';
+  renombrarPaciente(CN.de,a).then(function(ok){
+    if(!ok){b.disabled=false; cnVer(); return}
+    closeModal(); verPaciente(a)})}
+
+/* Al guardar una atención con otro nombre: ¿se corrige en toda la historia o es otra persona? */
+var NOMBRE_OK='';
+function nombreAntesDeGuardar(){
+  if(!EDIT_ID)return false;
+  var prev=DATA.filter(function(r){return r.id===EDIT_ID})[0]; if(!prev)return false;
+  var de=nombreLimpio(prev.paciente), a=nombreLimpio($('#f-paciente').value), kDe=keyPac(de), kA=keyPac(a);
+  if(!kDe||!kA||kDe===kA||NOMBRE_OK===EDIT_ID+'|'+kA)return false;
+  var otras=DATA.filter(function(r){return keyPac(r.paciente)===kDe&&r.id!==EDIT_ID});
+  if(!otras.length&&!(PAC[kDe]&&!pacVacia(PAC[kDe])))return false;
+  if(!puedeRenombrar(de))return false;
+  var h=historiaDe(de), otro=historiaDe(a), id=EDIT_ID;
+  openModal('<h3 id="nm-h3">✏️ Cambiaste el nombre</h3>'+
+    '<p>De <b>«'+esc(de)+'»</b> a <b>«'+esc(a)+'»</b>.</p>'+
+    '<div class="avisomed" style="margin:8px 0">Así como está, <b>solo esta visita</b> pasa al nombre nuevo. Lo demás ('+esc(historiaTexto({visitas:otras.filter(esAtencion).length,citas:otras.filter(function(r){return r.estado==='Agendada'}).length,pagos:otras.filter(esAnticipo).length,planes:h.planes,ficha:h.ficha,fotos:h.fotos}))+') queda con el nombre viejo: la historia quedaría partida en dos.</div>'+
+    (otro.hay?'<p class="mini">Ojo: ya hay un paciente «'+esc(otro.nombre||a)+'» con '+esc(historiaTexto(otro))+'. Corregir en toda la historia une las dos.</p>':'')+
+    '<div class="row-btn" style="margin-top:10px;flex-direction:column;align-items:stretch">'+
+      '<button type="button" class="btn" id="nm-todo">'+(otro.hay?'🔗 Es la misma persona: unir y corregir todo':'✏️ Corregir el nombre en toda su historia')+'</button>'+
+      '<button type="button" class="btn sec" id="nm-solo">Es otra persona: solo esta visita</button>'+
+      '<button type="button" class="btn sec" onclick="closeModal()">Cancelar</button></div>');
+  $('#nm-solo').onclick=function(){NOMBRE_OK=id+'|'+kA; closeModal(); submitAtencion()};
+  $('#nm-todo').onclick=function(){var b=this; b.disabled=true; b.textContent='Corrigiendo…';
+    renombrarPaciente(de,a).then(function(ok){
+      if(!ok){b.disabled=false; b.textContent='Probar de nuevo'; return}
+      NOMBRE_OK=id+'|'+kA; closeModal(); if(EDIT_ID===id)submitAtencion()})};
+  return true}
+
+/* «Pacientes repetidos»: también encuentra un nombre que contiene al otro
+   («Melvy Buceta» y «Melvy Buceta Pérez»): pasa cuando se agrega un apellido. */
+function paresContenidos(por,sumar){
+  var porPal={};
+  Object.keys(por).forEach(function(k){var w=normNombre(por[k].nombre).split(' ').filter(Boolean); if(w.length<2)return; (porPal[w[0]]=porPal[w[0]]||[]).push({k:k,w:w})});
+  Object.keys(porPal).forEach(function(p0){var l=porPal[p0]; if(l.length<2||l.length>60)return;
+    for(var i=0;i<l.length;i++)for(var j=0;j<l.length;j++){
+      if(i===j)continue; var c=l[i], g=l[j]; if(c.w.length>=g.w.length)continue;
+      if(c.w.every(function(x){return g.w.indexOf(x)>=0}))sumar(c.k,g.k,'un nombre contiene al otro (¿se agregó un apellido?)')}})}
+
 
 /* Un paciente sin ninguna visita (se borraron, o solo pagó un paquete) no
    desaparece si tiene ficha (ficha médica, nacimiento o planes) o pagos: sigue
@@ -9025,7 +9177,8 @@ function verPaciente(nombre){
       (edad!==''&&edad!=null?' · '+esc(edad)+' años':'')+
       (f.nac?' · 🎂 '+fmtF(f.nac):'')+
       (p0.canal?' · llegó por <b>'+esc(p0.canal)+'</b>':'')+
-      (p0.fecha?' · paciente desde '+fmtF(p0.fecha):'')+'</p>'+
+      (p0.fecha?' · paciente desde '+fmtF(p0.fecha):'')+
+      (puedeRenombrar(nom)?' <span class="cn-btn" role="button" tabindex="0" title="Corregir el nombre en toda su historia" onkeydown="if(event.key===\'Enter\')this.click()" onclick="corregirNombre(\''+jss(nom)+'\')">✏️ Corregir nombre</span>':'')+'</p>'+
     (m.consent?'<p class="mini">✍️ Consentimiento firmado</p>':'')+
     hMed+
     '<div class="kpis" style="margin:12px 0">'+
@@ -10930,6 +11083,9 @@ function pacientesRepetidos(){
     var l=porCel[c]; if(l.length<2)return;
     for(var i=0;i<l.length;i++)for(var j=i+1;j<l.length;j++)
       sumar(l[i],l[j],'mismo celular: '+c)});
+
+  /* 3. un nombre contiene al otro (se le agregó un apellido) */
+  try{paresContenidos(por,sumar)}catch(e){}
 
   pares.sort(function(x,y){return (y.pa.n+y.pb.n)-(x.pa.n+x.pb.n)});
   return pares}
@@ -13581,6 +13737,11 @@ function asisToc(){
       o.type='triangle'; o.frequency.setValueAtTime(190,t); o.frequency.exponentialRampToValueAtTime(90,t+0.09);
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.35,t+0.006); g.gain.exponentialRampToValueAtTime(0.0001,t+0.12);
       o.connect(g); g.connect(C.destination); o.start(t); o.stop(t+0.14)})}catch(e){}}
+try{
+  ASIS_NOVEDADES.push({id:'corregir-nombre', f:'2026-10-28', t:'Corregir el nombre en toda la historia',
+    x:'En la ficha del paciente, «✏️ Corregir nombre» cambia el nombre en todas sus visitas, citas, pagos, la ficha, los planes y las fotos de una vez. Si el nombre nuevo ya es de otro paciente, se unen las dos historias. Y si cambiás el nombre al editar una atención, te pregunta si corregirlo en toda la historia o si es otra persona.', ayuda:/corrijo el nombre/});
+  ASIS_AYUDA.push({q:'¿Cómo corrijo el nombre de un paciente (o le agrego un apellido)?', k:'nombre corregir cambiar apellido renombrar unir fusionar repetido mal escrito historia partida duplicado', v:'pacientes', f:'#pc-q',
+    p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Tocá «✏️ Corregir nombre» (arriba, junto a sus datos), escribí el nombre completo y tocá «Corregir nombre».','Se cambia en todas sus visitas, citas, pagos, la ficha, los planes y las fotos. No cambia ningún cobro.','Si ya existe otro paciente con ese nombre, te avisa: si es la misma persona, se unen las dos historias en una.','No cambies el nombre solo en una atención: si lo hacés, el panel te pregunta si querés corregirlo en toda la historia.']})}catch(e){}
 /* ===== fin de Sonri ===== */
 /* ===== MODERNO INI =====================================================
    LA CARA NUEVA DEL PANEL
