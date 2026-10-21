@@ -36,7 +36,7 @@ Estado al 19/10/2026 (último publicado: `0a3be26`). Este documento es para segu
   `git fetch origin claude/vibrant-gauss-rvd0wb` → rebase → `git checkout claude/vibrant-gauss-rvd0wb` → `git merge --ff-only <rama>` → `git push -u origin claude/vibrant-gauss-rvd0wb` → verificar el SHA remoto con `git ls-remote`.
 - Pages tarda 1–2 minutos; en las compus hay que recargar con Ctrl+F5.
 - **Apps Script**: el dueño lo pega a mano (Implementar → Administrar implementaciones → ✏️ → Nueva versión). La app de Claude no abre `.gs` en el chat: mandarle una copia `.txt` de cada uno. Cada `.gs` va en el proyecto de su clínica; no cruzarlos (se nota porque la cantidad de filas de `info` cambia).
-- Versión actual de ambos scripts: **`2026-10-26-revision`** (`VERSION_SCRIPT`, visible en `info`). Si cambiás un `.gs`, subí la versión.
+- Versión actual de ambos scripts: **`2026-10-27-cierre`** (`VERSION_SCRIPT`, visible en `info`). Si cambiás un `.gs`, subí la versión.
 - Si el cambio es solo del panel, **no hace falta pegar ningún Apps Script**: decírselo.
 
 ## 4. Datos y servidor (lo mínimo para no romper)

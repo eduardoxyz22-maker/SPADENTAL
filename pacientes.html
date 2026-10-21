@@ -2129,6 +2129,250 @@ body.md-noche .md-fe-pop{box-shadow:0 2px 4px rgba(0,0,0,.3),0 24px 44px -20px r
   .md-fe-docs::-webkit-scrollbar{display:none}
   .md-fe-doc{flex:0 0 auto}
   .md-fe-pop{left:0;right:0;width:auto;max-width:none}}
+/* ----- parte: 40-cierre.css ----- */
+/* 40 · Cierre de caja que queda en la hoja: estado en el título, aviso «ayer no se cerró», nota,
+   botón «Cerrar el día» y la tira de los últimos cierres. Todo con los tokens de cada clínica. */
+.md-ci-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.md-ci-est{font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;border-radius:999px;padding:4px 10px;line-height:1.2}
+.md-ci-est.ok{background:#E3F1EA;color:#1F5E43}.md-ci-est.no{background:var(--paper);color:var(--gray);border:1px solid var(--line)}
+.md-ci-est.pend{background:#FFF2D6;color:#7A5208}.md-ci-est.local{background:#F3F4F6;color:#4F5666}
+.md-ci-aviso{display:flex;align-items:center;gap:10px;margin:8px 0 2px;padding:10px 12px;border-radius:12px;background:#FFF2D6;color:#7A5208;font-size:13.5px;line-height:1.35}
+.md-ci-aviso svg{width:20px;height:20px;flex:none}
+.md-ci-aviso span{flex:1;min-width:0}
+.md-ci-aviso .btn{flex:none;white-space:nowrap}
+.md-ci-nota-f input{width:min(100%,260px);text-align:left;font-weight:500;font-size:13.5px}
+.md-ci-btns{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+.md-ci-btns .mini{color:var(--gray)}
+.md-ci-viejo{font-size:12.5px;font-weight:700;color:#8C3B1C;background:#FBE6DE;border-radius:10px;padding:6px 10px}
+.md-ci-tira-t{margin-top:14px;font-size:11.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.4px}
+.md-ci-tira{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.md-ci-chip{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:118px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel);font:inherit;color:var(--ink);cursor:pointer;text-align:left;border-left-width:4px}
+.md-ci-chip b{font-size:13px;line-height:1.2}
+.md-ci-chip span{font-size:11.5px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+.md-ci-chip em{font-style:normal;font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.md-ci-chip.ok{border-left-color:#3FBF83}.md-ci-chip.ok em{color:#1F5E43}
+.md-ci-chip.mal{border-left-color:#E0533A}.md-ci-chip.mal em{color:#8C3B1C}
+.md-ci-chip.on{background:var(--lime-sf);border-color:var(--lime-bd);border-left-color:currentColor}
+.md-ci-chip.pend{border-style:dashed}
+.md-ci-chip:hover{background:var(--lime-sf)}
+.md-ci-chip:focus-visible{outline:2px solid var(--lime-dk);outline-offset:2px}
+body.md-noche .md-ci-est.ok,body.md-noche .md-ci-chip.ok em{background:transparent;color:#7FD6A8}
+body.md-noche .md-ci-est.pend,body.md-noche .md-ci-aviso{background:#3A2E12;color:#F2C56A}
+body.md-noche .md-ci-viejo,body.md-noche .md-ci-chip.mal em{background:transparent;color:#F08A70}
+body.md-noche .md-ci-est.ok{background:#1F3D2E}body.md-noche .md-ci-viejo{background:#3D2118}
+@media (max-width:640px){
+  .md-ci-chip{min-width:104px}
+  .md-cierre-f.md-ci-nota-f{flex-direction:column;align-items:stretch;gap:4px}
+  .md-ci-nota-f input{width:100%}}
+/* ----- parte: 50-accesible.css ----- */
+/* ----- 50 · accesible y delicias ----- */
+/* A1 · letra: la base de html/body escala 1 / 1.12 / 1.25 y los tamaños fijos
+   del texto que se lee (tablas, botones, campos, etiquetas) la siguen.
+   El encabezado oscuro y la barra de abajo no cambian: no se rompen. */
+html{--md-esc:1}
+html.md-letra-g{font-size:112%}
+html.md-letra-xg{font-size:125%}
+body.md-letra{font-size:calc(clamp(15px,.62vw + 12.6px,16.5px)*var(--md-esc))}
+body.md-letra table{font-size:calc(clamp(13.5px,.42vw + 11.6px,15px)*var(--md-esc))}
+body.md-letra th{font-size:calc(11px*var(--md-esc))}
+body.md-letra input,body.md-letra select,body.md-letra textarea,body.md-letra .btn{font-size:calc(15px*var(--md-esc))}
+body.md-letra .btn.sm{font-size:calc(13px*var(--md-esc))}
+body.md-letra label,body.md-letra .hint,body.md-letra .mini,body.md-letra .rem .meta{font-size:calc(12.5px*var(--md-esc))}
+body.md-letra .pill{font-size:calc(11.5px*var(--md-esc))}
+body.md-letra .rem .who{font-size:calc(15px*var(--md-esc))}
+body.md-letra .empty,body.md-letra .ses,body.md-letra .modal .mrow{font-size:calc(14px*var(--md-esc))}
+body.md-letra .seg span{font-size:calc(13.5px*var(--md-esc))}
+body.md-letra .card h2{font-size:calc(clamp(16px,.5vw + 13.6px,19px)*var(--md-esc))}
+body.md-letra .md-aj-tx b{font-size:calc(14.5px*var(--md-esc))}
+body.md-letra .md-aj-tx small,body.md-letra .md-pc-tx small{font-size:calc(12px*var(--md-esc))}
+body.md-letra .md-linea{font-size:calc(13px*var(--md-esc))}
+body.md-letra .tw{overflow-x:auto}
+
+/* A3 · foco visible: el mismo anillo, del color de la clínica, en todo lo que se toca */
+.btn:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible,[tabindex]:focus-visible,
+.seg input:focus-visible + span,nav button:focus-visible{outline:3px solid var(--lime)!important;outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--lime)!important;outline-offset:1px}
+nav button:focus-visible,.md-hueco:focus-visible,#md-barra button:focus-visible{outline-offset:-3px}
+tr[tabindex]:focus-visible{outline-offset:-3px;border-radius:6px}
+.md-pc-clic:focus-visible,.pl-fila:focus-visible,.rem:focus-visible{border-radius:12px}
+body.md-noche .btn:focus-visible,body.md-noche [tabindex]:focus-visible{box-shadow:0 0 0 6px rgba(0,0,0,.35)}
+
+/* A4 · toques de 44 px en las listas y tablas viejas, solo donde se toca con el dedo
+   o en la pantalla angosta: la compu queda como está */
+@media (pointer:coarse),(max-width:720px){
+  tbody td{padding-top:12px;padding-bottom:12px}
+  tbody tr[onclick]>td,tbody tr[tabindex]>td{padding-top:13px;padding-bottom:13px}
+  .btn.sm,.md-aj-ib,.md-pc-ib,.md-mas-m button{min-height:44px}
+  .ses,.pl-fila,.md-aj-fila,.md-pc-fila{min-height:44px}
+  .ses{padding-top:9px;padding-bottom:9px}
+  .rem .acts .btn{min-height:44px}
+  .seg span{min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box}
+  .md-acc-cb{min-height:40px}
+}
+
+/* B2 · temporadas locales: el banderín verde y blanco del 24 de septiembre y las chispas de Año Nuevo */
+.md-acc-band{position:absolute;left:0;top:0;width:100%;height:18px;opacity:.85}
+body.md-tema-santacruz header .hd{background-image:linear-gradient(90deg,rgba(46,125,91,.42),rgba(46,125,91,0) 55%)}
+.md-acc-fuego{position:absolute;top:6px;width:90px;height:70px;opacity:.9}
+.md-anim .md-acc-fuego{animation:mdAccFuego 1.8s ease-in-out infinite alternate}
+@keyframes mdAccFuego{from{transform:scale(.92);opacity:.6}to{transform:scale(1.06);opacity:1}}
+body.md-tema-anionuevo header .hd{background-image:linear-gradient(90deg,rgba(244,211,94,.18),rgba(244,211,94,0) 60%)}
+
+/* B3 · el cumple en la fila de la doctora */
+.md-acc-cumple{margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.md-acc-cb{font:inherit;font-size:12px;font-weight:600;color:var(--gray);background:var(--paper);border:1px dashed var(--line);border-radius:999px;padding:3px 10px;cursor:pointer;line-height:1.3}
+.md-acc-cb:hover{color:var(--ink);border-color:var(--gray)}
+.md-acc-ct{font-size:12px;color:var(--gray)}
+.md-acc-ci{width:84px!important;padding:5px 8px;font-size:14px;border-radius:9px}
+body.md-noche .md-acc-cb{background:var(--panel)}
+
+/* B4 · el botón de la imagen */
+#md-acc-res-img,.md-acc-res-m{white-space:nowrap}
+/* ----- parte: 60-mensajes.css ----- */
+/* ============ 60 · Mensajes de WhatsApp editables y recetas frecuentes ============ */
+.md-msj-tipos{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
+.md-msj-tipos button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.md-msj-tipos button:hover{border-color:var(--lime-dk)}
+.md-msj-tipos button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.md-msj-tipos button i{width:8px;height:8px;border-radius:50%;background:var(--lime-dk);display:none;flex:0 0 8px}
+.md-msj-tipos button.ed i{display:inline-block}
+.md-msj-tipos button.on i{background:var(--lime)}
+.md-msj-lay{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr);gap:18px;align-items:start}
+@media(max-width:820px){.md-msj-lay{grid-template-columns:1fr}}
+.md-msj-cab{margin-bottom:8px}
+.md-msj-cab b{display:block;font-size:15px}
+.md-msj-cab b .pill{vertical-align:middle;margin-left:6px}
+.md-msj-cab small{display:block;color:var(--gray);font-size:12.5px;margin-top:2px}
+.md-msj-izq label{margin-top:8px}
+.md-msj-ta{min-height:128px;font-family:inherit;font-size:14px;line-height:1.5;resize:vertical}
+.md-msj-ta[rows="2"]{min-height:64px}
+.md-msj-ro .md-msj-ta{background:var(--paper);color:var(--gray)}
+.md-msj-vars{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:8px;font-size:12px;color:var(--gray)}
+.md-msj-var{border:1px dashed var(--lime-bd);background:var(--lime-sf);color:var(--lime-dk);border-radius:8px;padding:3px 8px;font-size:12px;font-weight:700;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;cursor:pointer;line-height:1.4}
+.md-msj-var:hover{background:var(--lime);color:var(--ink)}
+.md-msj-var[disabled]{opacity:.5;cursor:default}
+.md-msj-nota{margin:8px 0 0}
+.md-msj-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.md-msj-fijo{font-size:12px;color:var(--gray);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:10px 0 2px}
+.md-msj-der .md-wa-chat{margin:0;position:sticky;top:calc(var(--md-hd,70px) + 12px)}
+.md-msj-der .md-wa-c{max-height:none}
+.md-msj-der .md-wa-bur{animation:none}
+body.md-noche .md-msj-tipos button{background:#23271F;border-color:#3A3F34;color:#E6E8DF}
+body.md-noche .md-msj-tipos button.on{background:var(--lime);color:#1B1E18;border-color:var(--lime)}
+body.md-noche .md-msj-tipos button.on i{background:#1B1E18}
+/* recetas frecuentes */
+.md-rx-lista{margin-top:4px}
+.md-rx-fila{display:grid;grid-template-columns:230px minmax(0,1fr) 36px;gap:8px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.md-rx-fila:first-child{border-top:0}
+.md-rx-fila input,.md-rx-fila textarea{margin:0}
+.md-rx-fila textarea{min-height:78px;font-size:13.5px;line-height:1.45}
+.md-rx-del{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--gray);cursor:pointer;font-size:14px;font-weight:800;padding:0;margin:0;font-family:inherit}
+.md-rx-del:hover{color:var(--clay);border-color:var(--clay)}
+.md-rx-ro .md-rx-fila{grid-template-columns:230px minmax(0,1fr)}
+.md-rx-ro .md-rx-btns{display:none}
+.md-rx-btns{align-items:center;flex-wrap:wrap}
+.md-rx-btns .mini{color:var(--gray)}
+@media(max-width:640px){.md-rx-fila{grid-template-columns:minmax(0,1fr) 36px}.md-rx-fila textarea{grid-column:1/-1}.md-rx-ro .md-rx-fila{grid-template-columns:1fr}}
+/* en la ventana de la receta */
+.md-rx-chips{margin:6px 0 8px}
+.md-rx-chips small{display:block;color:var(--gray);font-size:12px;margin-bottom:6px;line-height:1.4}
+.md-rx-chips>div{display:flex;flex-wrap:wrap;gap:6px}
+.md-rx-chip{border:1px solid var(--lime-bd);background:var(--lime-sf);color:var(--lime-dk);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.3}
+.md-rx-chip:hover{background:var(--lime);color:var(--ink)}
+.md-rx-chip.on{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.md-rx-chip.md-rx-aj{background:var(--panel);border-color:var(--line);color:var(--gray)}
+.md-rx-chip.md-rx-aj:hover{color:var(--ink)}
+/* ----- parte: 70-presupuesto.css ----- */
+/* ---------- 70 · Presupuesto prolijo ---------- */
+#modal:has(#md-pr){max-width:860px;width:100%}
+.md-pr{margin-top:12px}
+.md-pr label{display:block;font-size:12px;font-weight:700;color:var(--gray);margin-bottom:4px}
+.md-pr input,.md-pr select,.md-pr textarea{width:100%;font:inherit;font-size:14.5px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+.md-pr input:disabled{background:var(--paper);color:var(--gray)}
+.md-pr-cab{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.md-pr-fijo{padding:9px 10px;border:1px dashed var(--line);border-radius:10px;font-weight:700;background:var(--paper)}
+.md-pr-items{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.md-pr-fila{display:grid;grid-template-columns:minmax(0,1fr) 64px 110px 108px 34px;gap:6px;align-items:center;padding:6px 8px;border-top:1px solid var(--line)}
+.md-pr-fila:first-child{border-top:0}
+.md-pr-h{background:var(--paper);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gray);padding:8px 10px}
+.md-pr-h span:nth-child(n+2){text-align:right}
+.md-pr-h span:nth-child(2){text-align:center}
+.md-pr-fila .md-pr-cant{text-align:center;padding-left:4px;padding-right:4px}
+.md-pr-fila .md-pr-precio{text-align:right}
+.md-pr-imp{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14.5px}
+.md-pr-del{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--clay);font:inherit;font-weight:800;cursor:pointer;padding:0;justify-self:end}
+.md-pr-del:hover{background:#FBE6DE;border-color:#EFCBBD}
+.md-pr-add{margin:8px 0 12px}
+.md-pr-abajo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(240px,1fr);gap:14px;align-items:start}
+.md-pr-opc{display:grid;gap:10px}
+.md-pr-cuotas{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:end}
+.md-pr-chk{display:inline-flex!important;align-items:center;gap:8px;font-size:14px!important;color:var(--ink)!important;margin:0 0 9px!important;cursor:pointer}
+.md-pr-chk input{width:20px;height:20px;padding:0;margin:0;accent-color:var(--lime-dk)}
+.md-pr-cn{display:flex;align-items:center;gap:8px}
+.md-pr-cn input{width:84px;text-align:center}
+.md-pr-cn span{font-size:13px;color:var(--gray);font-weight:700}
+.md-pr textarea{resize:vertical;min-height:56px}
+.md-pr-tot{background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px}
+.md-pr-l{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:4px 0;color:#D7DAD0}
+.md-pr-l b{color:#fff;font-variant-numeric:tabular-nums}
+.md-pr-l.desc b{color:#F2B39A}
+.md-pr-l small{font-weight:600;color:#B9BDB0;font-size:11.5px}
+.md-pr-total{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-top:1px solid rgba(255,255,255,.18);margin-top:6px;padding-top:10px}
+.md-pr-total span{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--lime)}
+.md-pr-total b{font-size:30px;font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.md-pr-l.cuotas{border-top:1px dashed rgba(255,255,255,.18);margin-top:6px;padding-top:8px}
+.md-pr-prev{display:flex;gap:14px;align-items:center;margin-top:14px;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+.md-pr-prev img{width:216px;height:270px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.18);background:#fff;object-fit:cover;flex:0 0 auto}
+.md-pr-acc .btn:first-child{background:#25D366;border-color:#25D366;color:#0B2E1A}
+/* la ficha: recomendaciones con la marca de presupuesto entregado */
+.md-pr-recs{margin-top:16px}
+.md-pr-recs h4,.md-pr-at h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px}
+.md-pr-rec{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #DCCFF3;background:#F9F6FE;border-radius:12px;padding:9px 12px;margin-top:6px}
+.md-pr-rec>div{min-width:0}
+.md-pr-rec-est{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.md-pr-rec .btn{flex:0 0 auto}
+.pill.md-pr-ent{background:#DDF3E7;color:#1F5E43;white-space:normal}
+.md-pr-at{margin-top:14px}
+.md-pr-at-acc{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.md-pr-plan-ent{margin:6px 0 0}
+body.md-noche .md-pr-rec{background:#231F2E;border-color:#3A3350}
+body.md-noche .md-pr-tot{background:#0E100C}
+@media(max-width:700px){
+  .md-pr-cab{grid-template-columns:1fr 1fr}
+  .md-pr-cab>div:first-child{grid-column:1/-1}
+  .md-pr-fila{grid-template-columns:minmax(0,1fr) 52px 86px 30px;grid-template-areas:"nom cant precio del" "imp imp imp imp"}
+  .md-pr-fila .md-pr-nom{grid-area:nom}.md-pr-fila .md-pr-cant{grid-area:cant}.md-pr-fila .md-pr-precio{grid-area:precio}.md-pr-fila .md-pr-del{grid-area:del}
+  .md-pr-fila .md-pr-imp{grid-area:imp;font-size:12.5px;color:var(--gray)}
+  .md-pr-h{display:none}
+  .md-pr-abajo{grid-template-columns:1fr}
+  .md-pr-prev{flex-direction:column}
+  .md-pr-rec{flex-direction:column;align-items:stretch}}
+/* la hoja para imprimir: solo existe al imprimir */
+#md-pr-print{display:none}
+@media print{
+  body.md-pr-imprimiendo>*:not(#md-pr-print){display:none!important}
+  body.md-pr-imprimiendo #md-pr-print{display:block!important;position:static;background:#fff;color:#111}
+  .md-prp{font-family:'Archivo','Helvetica Neue',Arial,sans-serif;max-width:720px;margin:0 auto;padding:10mm 0;color:#111}
+  .md-prp-cab{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:5px solid #B6C932;padding-bottom:10px;margin-bottom:18px}
+  .md-prp.cos .md-prp-cab{border-bottom-color:#C99214}
+  .md-prp h1{margin:0;font-size:26px;letter-spacing:-.01em}
+  .md-prp.cos h1{font-family:Georgia,'Times New Roman',serif;font-weight:400;color:#5A4208}
+  .md-prp-cab small{display:block;font-size:11px;letter-spacing:.2em;font-weight:700;color:#666;margin-top:4px}
+  .md-prp-nro{text-align:right;font-size:12px;color:#444;font-weight:700;line-height:1.5}
+  .md-prp-datos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .md-prp-datos div{border:1px solid #ddd;border-radius:8px;padding:8px 10px}
+  .md-prp-datos small{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#666;font-weight:700}
+  .md-prp-datos b{display:block;font-size:14px;margin-top:2px}
+  .md-prp table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .md-prp th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#555;padding:8px;background:#F3F5EA;border-bottom:1px solid #ccc}
+  .md-prp.cos th{background:#F5EDDA}
+  .md-prp td{padding:8px;border-bottom:1px solid #e4e4e4}
+  .md-prp .n{text-align:right;white-space:nowrap}
+  .md-prp tfoot td{border-bottom:0;font-weight:700}
+  .md-prp tr.tot td{font-size:18px;font-weight:900;border-top:2px solid #111;padding-top:10px}
+  .md-prp-cuotas{font-weight:700;margin:14px 0 0;font-size:14px}
+  .md-prp-nota{color:#444;font-size:12.5px;margin:10px 0 0}
+  .md-prp-pie{margin-top:24px;border-top:1px solid #ccc;padding-top:8px;font-size:11px;color:#555;line-height:1.6}}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -14105,7 +14349,7 @@ var MD_NAV_I={
   lista:MD_I.lista, panel:'M4 20V10M10 20V4M16 20v-7M22 20H2', caja:MD_I.caja, pacientes:MD_I.equipo,
   config:'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
   buscar:'M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-5-5',
-  duena:'M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z', doctora:'M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1', equipo:'M7 11V7a5 5 0 0110 0v4M5 11h14v10H5z'};
+  duena:'M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z', doctora:'M12 12a4 4 0 100-8 4 4 0 000 8zM5 21v-1a7 7 0 0114 0v1', equipo:'M7 11V7a5 5 0 0110 0v4M5 11h14v10H5z',pauta:'M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM15 9a3 3 0 010 6M18 6a7 7 0 010 12'};
 function mdIconosNav(){
   $$('header nav button').forEach(function(b){
     var k=b.dataset.v||(b.id==='nav-buscar'?'buscar':'');
@@ -14113,7 +14357,7 @@ function mdIconosNav(){
     for(var i=0;i<b.childNodes.length;i++){var n=b.childNodes[i];
       if(n.nodeType===3&&n.textContent.trim()){n.textContent=n.textContent.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ¿]+/,''); break}}
     if(k==='buscar'){b.innerHTML='<span class="md-sr">Buscar</span>'; b.setAttribute('aria-label','Buscar paciente')}
-    b.insertAdjacentHTML('afterbegin','<span class="md-nav-i">'+mdIco(MD_NAV_I[k],2.2)+'</span>');
+    b.insertAdjacentHTML('afterbegin','<span class="md-nav-i">'+mdIco(MD_NAV_I[k]||MD_I.puntos,2.2)+'</span>');
     b.classList.add('md-t-'+k);
     b.setAttribute('data-md-ico','1')});
   var nav=$('header nav');
@@ -16832,6 +17076,1229 @@ function mdFeArrancar(){
     mdFePintar();
     if(cambio&&!document.body.classList.contains('locked')){var v=mdFeVista(); if(v==='cita'&&$('#v-cita').classList.contains('on'))renderCitasProximas(); else if($('#v-midia').classList.contains('on'))renderMiDia()}
   }catch(e){if(window.console)console.error('moderno fecha',e)}})();
+/* ----- parte: 40-cierre.js ----- */
+/* ---------- 40 · El cierre de caja queda en la hoja ----------
+   Reemplaza el cierre con semáforo que guardaba «lo contado» solo en localStorage de esa compu
+   (mdCierre, en moderno.js): ahora «Cerrar el día» manda {fecha, contado, esperado, diferencia,
+   quien, nota} con la acción `cierre` (hoja «_Cierres») por la cola de siempre (enviar/queue):
+   sin conexión espera y sube al reconectar. `list` trae los cierres de los últimos 90 días y
+   se pintan en todos los aparatos: la dueña ve desde el celular si el día cerró y quién cerró.
+   Si el Apps Script publicado es viejo (accion_desconocida), avisa «Falta pegar el Apps Script
+   nuevo» y queda el cierre local de antes (mdPref CIERRE_<fecha>). No cambia ningún cobro.
+   Lo mismo que antes sigue haciendo las cuentas: mdEfectivoDia (efectivo que entró menos
+   egresos en efectivo), filasCajaDia y pagosDe. */
+var MD_CI={lista:[],srv:null,aviso:0};
+var MD_CI_DIAS=['dom','lun','mar','mié','jue','vie','sáb'];
+var MD_CI_I_AVISO='M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z';
+function mdCiLeer(){var a=mdPref('CIERRES'); return Array.isArray(a)?a:[]}
+function mdCiGuardar(){mdPref('CIERRES',MD_CI.lista.slice(0,120))}
+function mdCiOrdenar(){MD_CI.lista.sort(function(a,b){return a.fecha<b.fecha?1:(a.fecha>b.fecha?-1:0)})}
+function mdCiDe(fecha){for(var i=0;i<MD_CI.lista.length;i++)if(MD_CI.lista[i].fecha===fecha)return MD_CI.lista[i]; return null}
+function mdCiPoner(c){MD_CI.lista=MD_CI.lista.filter(function(x){return x.fecha!==c.fecha}).concat([c]); mdCiOrdenar(); mdCiGuardar()}
+/* lo que vino de la hoja más lo que todavía espera en la cola de este aparato */
+function mdCiFusionar(srv){
+  var L=(srv||[]).map(function(c){return {fecha:c.fecha,quien:c.quien,contado:num(c.contado),esperado:num(c.esperado),diferencia:num(c.diferencia),nota:c.nota||'',ts:c.ts||'',rol:c.rol||''}});
+  pend().forEach(function(it){if(!it||it.action!=='cierre'||!it.rec||!it.rec.fecha)return;
+    L=L.filter(function(x){return x.fecha!==it.rec.fecha}).concat([Object.assign({pendiente:true,ts:''},it.rec)])});
+  MD_CI.lista=L; mdCiOrdenar(); mdCiGuardar()}
+function mdCiPendiente(fecha){return pend().some(function(x){return x&&x.action==='cierre'&&x.rec&&x.rec.fecha===fecha})}
+function mdCiQuien(){try{if(typeof asisQuien==='function'){var q=asisQuien(); if(q)return q}}catch(e){} return esDoctora()?(PROF_ACTUAL||'Doctora'):(ROL==='admin'?'Dueña':'Recepción')}
+function mdCiDiaTxt(f){var d=parseISO(f); return MD_CI_DIAS[d.getDay()]+' '+fmtFcorta(f)}
+function mdCiHora(ts){var d=ts?new Date(ts):null; return d&&!isNaN(d)?mdHHMM(d.getHours()*60+d.getMinutes()):''}
+/* el día hábil anterior (lunes a sábado): el domingo no se cierra */
+function mdCiDiaHabilAnterior(f){var d=parseISO(f); do{d.setDate(d.getDate()-1)}while(d.getDay()===0); return iso(d)}
+function mdCiHuboMovimiento(dia){
+  if(filasCajaDia(dia).some(function(r){return pagosDe(r).length>0||num(r.acuenta)>0}))return true;
+  return (EGR||[]).some(function(x){return x.fecha===dia})}
+/* el cierre de una fecha: el de la hoja, o (con el script viejo) el que quedó en este aparato */
+function mdCiCerrado(dia){
+  var c=mdCiDe(dia); if(c)return c;
+  if(MD_CI.srv===false){var v=mdPref('CIERRE_'+dia); if(v!==null&&v!==''&&!isNaN(+v)){var e=mdEfectivoDia(dia); return {fecha:dia,contado:+v,esperado:e,diferencia:Math.round((+v-e)*100)/100,quien:'',local:true}}}
+  return null}
+function mdCiDif(d){d=Math.round(num(d)*100)/100; return Math.abs(d)<0.5?'cuadró':(d<0?'faltan '+bs(-d):'sobran '+bs(d))}
+function mdCiRepintar(){try{var v=$('#v-caja'); if(v&&v.classList.contains('on')&&$('#cj-kpis'))mdCierre()}catch(e){}}
+
+/* ===== la tarjeta «Cierre de caja» (reemplaza a la de moderno.js) ===== */
+function mdCierre(){
+  var kp=$('#cj-kpis'); if(!kp)return;
+  var c=$('#md-cierre');
+  /* una doctora no cierra la caja ni ve los cierres (tampoco recibe los egresos) */
+  if(!esAdmin()){if(c)c.parentNode.removeChild(c); return}
+  if(!c){c=document.createElement('div'); c.className='card md-ci'; c.id='md-cierre'; kp.parentNode.insertBefore(c,kp.nextSibling)}
+  var dia=mdCierreDia(), hoy=hoyISO(), esperado=mdEfectivoDia(dia), reg=mdCiCerrado(dia), sinSubir=pend().length;
+  var cont=reg?reg.contado:'', hay=reg!==null;
+  var dif=hay?Math.round((num(cont)-esperado)*100)/100:0;
+  var luz=!hay?'gris':(Math.abs(dif)<0.5?'verde':'rojo');
+  var msg=!hay?'Contá el efectivo de la caja y anotalo acá.':(luz==='verde'?'Cuadra. No falta ni sobra.':(dif<0?'Faltan '+bs(-dif)+' en la caja.':'Sobran '+bs(dif)+' en la caja.'));
+  if(hay&&reg.esperado!==undefined&&Math.abs(num(reg.esperado)-esperado)>=0.5)msg+=' Ojo: al cerrar el panel esperaba '+bs(reg.esperado)+'; ahora '+bs(esperado)+' (se cargó o cambió algo después).';
+  /* ayer no se cerró: solo días hábiles (lunes a sábado) con movimientos */
+  var ayer=mdCiDiaHabilAnterior(hoy), avisoAyer='';
+  if(!mdCiCerrado(ayer)&&mdCiHuboMovimiento(ayer))
+    avisoAyer='<div class="md-ci-aviso" role="status">'+mdIco(MD_CI_I_AVISO)+'<span><b>Ayer no se cerró la caja</b> ('+esc(mdCiDiaTxt(ayer))+'). Contá lo de ese día y cerralo para que quede en la hoja.</span>'+
+      (dia!==ayer?'<button type="button" class="btn sec sm" onclick="mdCiIrA(\''+ayer+'\')">Cerrar el '+esc(fmtFcorta(ayer))+'</button>':'')+'</div>';
+  var estado=hay?(reg.local?'<span class="md-ci-est local">Solo en este aparato</span>'
+      :(reg.pendiente?'<span class="md-ci-est pend">⏳ Cerró '+esc(reg.quien||'')+' · sube cuando haya conexión</span>'
+      :'<span class="md-ci-est ok">✓ Cerró '+esc(reg.quien||'')+(mdCiHora(reg.ts)?' a las '+mdCiHora(reg.ts):'')+'</span>'))
+    :'<span class="md-ci-est no">Sin cerrar</span>';
+  var tira=MD_CI.lista.slice(0,12).map(function(x){var ok=Math.abs(num(x.diferencia))<0.5;
+    return '<button type="button" class="md-ci-chip '+(ok?'ok':'mal')+(x.fecha===dia?' on':'')+(x.pendiente?' pend':'')+'" data-f="'+esc(x.fecha)+'" onclick="mdCiIrA(\''+esc(x.fecha)+'\')" title="'+esc('Contado '+bs(x.contado)+' · esperado '+bs(x.esperado)+(x.nota?' · '+x.nota:''))+'">'+
+      '<b>'+esc(mdCiDiaTxt(x.fecha))+'</b><span>'+esc(x.quien||'—')+'</span><em>'+esc(ok?'✓ cuadró':(num(x.diferencia)<0?'−'+bs(-num(x.diferencia)):'+'+bs(num(x.diferencia))))+'</em></button>'}).join('');
+  c.innerHTML='<h2 class="md-ci-h">Cierre de caja · '+(dia===hoy?'hoy':esc(fmtF(dia)))+' '+estado+'</h2>'+avisoAyer+
+    '<div class="md-cierre"><div class="md-semaforo" role="img" aria-label="'+esc('Semáforo: '+msg)+'"><i class="r'+(luz==='rojo'?' on':'')+'"></i>'+
+      '<i class="a'+(luz!=='rojo'&&sinSubir?' on':'')+'"></i><i class="v'+(luz==='verde'&&!sinSubir?' on':'')+'"></i></div>'+
+    '<div class="md-cierre-c"><div class="md-cierre-f"><span>Efectivo según el panel</span><b id="md-ci-esp" data-v="'+esperado+'">'+bs(esperado)+'</b></div>'+
+      '<div class="md-cierre-f"><label for="md-contado">Efectivo contado</label><input id="md-contado" inputmode="decimal" placeholder="0" value="'+(hay?esc(String(cont)):'')+'"></div>'+
+      '<div class="md-cierre-f md-ci-nota-f"><label for="md-ci-nota">Nota</label><input id="md-ci-nota" maxlength="2000" placeholder="Si faltó o sobró, por qué (opcional)" value="'+esc(hay&&reg.nota?reg.nota:'')+'"></div>'+
+      '<div class="md-cierre-m '+luz+'" id="md-ci-msg">'+esc(msg)+'</div>'+
+      '<div class="md-ci-btns"><button type="button" class="btn" id="md-ci-btn" onclick="mdCiCerrar()">'+(hay&&!reg.local?'Cerrar de nuevo':'Cerrar el día')+'</button>'+
+        (MD_CI.srv===false?'<span class="md-ci-viejo">⚠ Falta pegar el Apps Script nuevo: por ahora lo contado queda solo en este aparato.</span>'
+          :'<span class="mini">Queda en la hoja «_Cierres»: se ve desde cualquier aparato.</span>')+'</div>'+
+      (sinSubir?'<p class="hint" style="margin:8px 0 0">Hay '+sinSubir+' registro'+(sinSubir===1?'':'s')+' de este aparato sin subir a la nube: lo cargado en otros aparatos puede no estar sumado todavía.</p>':'')+
+      '<p class="hint" style="margin:8px 0 0">Es el efectivo que entró ese día menos el que salió por egresos. Cerrar no cambia ningún cobro: solo anota cuánto había y quién contó.</p></div></div>'+
+    '<div class="md-ci-tira-t">Últimos cierres</div><div class="md-ci-tira" id="md-ci-tira">'+(tira||'<span class="mini">Todavía no hay cierres guardados en la hoja.</span>')+'</div>';
+  var inp=$('#md-contado');
+  if(inp){inp.oninput=function(){mdCiVivo()}; inp.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault(); mdCiCerrar()}}}}
+/* el semáforo se mueve mientras se escribe, sin guardar nada todavía */
+function mdCiVivo(){
+  var inp=$('#md-contado'), m=$('#md-ci-msg'), s=$('#md-cierre .md-semaforo'); if(!inp||!m||!s)return;
+  var v=String(inp.value).replace(',','.').trim(), hay=v!==''&&!isNaN(+v), esperado=num(($('#md-ci-esp')||{}).getAttribute&&$('#md-ci-esp').getAttribute('data-v'));
+  var dif=hay?Math.round((+v-esperado)*100)/100:0, luz=!hay?'gris':(Math.abs(dif)<0.5?'verde':'rojo'), sinSubir=pend().length;
+  m.className='md-cierre-m '+luz; m.textContent=!hay?'Contá el efectivo de la caja y anotalo acá.':(luz==='verde'?'Cuadra. No falta ni sobra.':(dif<0?'Faltan '+bs(-dif)+' en la caja.':'Sobran '+bs(dif)+' en la caja.'));
+  s.querySelector('.r').classList.toggle('on',luz==='rojo'); s.querySelector('.a').classList.toggle('on',luz!=='rojo'&&!!sinSubir); s.querySelector('.v').classList.toggle('on',luz==='verde'&&!sinSubir)}
+function mdCiIrA(dia){
+  var rg=$('#c-rango'), cd=$('#c-dia'); if(!rg||!cd)return;
+  rg.value='dia'; rg.dispatchEvent(new Event('change',{bubbles:true})); cd.value=dia; cd.dispatchEvent(new Event('change',{bubbles:true}));
+  renderCaja(); try{var c=$('#md-cierre'); if(c&&c.scrollIntoView)c.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}}
+/* «Cerrar el día»: queda en este aparato al instante y va a la hoja por la cola */
+function mdCiCerrar(){
+  if(!esAdmin())return;
+  var dia=mdCierreDia(), inp=$('#md-contado'); if(!inp)return;
+  var v=String(inp.value).replace(',','.').trim();
+  if(v===''||isNaN(+v)){toast('Contá el efectivo y escribí cuánto hay',1); inp.focus(); return}
+  var esperado=mdEfectivoDia(dia), contado=Math.round(+v*100)/100, dif=Math.round((contado-esperado)*100)/100;
+  var nota=String(($('#md-ci-nota')||{}).value||'').trim().slice(0,2000);   /* la nota trae también lo anotado al borrar un cobro: no se recorta */
+  var rec={fecha:dia,contado:contado,esperado:esperado,diferencia:dif,quien:mdCiQuien(),nota:nota};
+  mdPref('CIERRE_'+dia,contado);   /* el cierre local de antes sigue, por si el script es viejo */
+  if(MD_CI.srv===false){mdCierre(); toast('Falta pegar el Apps Script nuevo: el cierre quedó solo en este aparato',1); return}
+  mdCiPoner(Object.assign({ts:new Date().toISOString(),rol:ROL,pendiente:true},rec));
+  enviar('cierre',rec);
+  mdCierre();
+  toast('Cierre del '+fmtF(dia)+' anotado: '+(Math.abs(dif)<0.5?'cuadró.':mdCiDif(dif)+'.')+(CONNECTED?' Subiendo a la hoja…':' Sube a la hoja cuando vuelva la conexión.'))}
+/* anota algo en la nota del cierre de ese día (se borró un cobro con el día cerrado) */
+function mdCiAnotar(dia,texto){
+  var c=mdCiDe(dia); if(!c||MD_CI.srv===false)return;
+  var rec={fecha:dia,contado:num(c.contado),esperado:num(c.esperado),diferencia:num(c.diferencia),quien:c.quien||mdCiQuien(),nota:((c.nota?c.nota+'\n':'')+texto).slice(0,2000)};
+  mdCiPoner(Object.assign({},c,rec,{pendiente:true})); enviar('cierre',rec); mdCiRepintar()}
+/* editar o borrar un cobro de un día ya cerrado pide el motivo (y queda anotado) */
+function mdCiMotivo(dia,que){
+  var c=mdCiCerrado(dia); if(!c)return '';
+  var m=prompt('El '+fmtF(dia)+' ya está cerrado'+(c.quien?' (cerró '+c.quien+')':'')+'. '+que+'\n\n¿Por qué se cambia? Escribí el motivo para que quede anotado:','');
+  if(m===null)return null;
+  m=String(m).trim(); if(!m){toast('Sin motivo no se cambia un día ya cerrado',1); return null}
+  return 'Cambio con el día cerrado ('+fmtF(dia)+'): '+m}
+function mdCiSacarDeCola(fecha){try{setPend(pend().filter(function(x){return !(x&&x.action==='cierre'&&x.rec&&x.rec.fecha===fecha)})); if(window.banner)banner()}catch(e){}}
+/* las respuestas del servidor: la lista con los cierres, el cierre confirmado o el script viejo */
+function mdCiRespuesta(action,payload,r){
+  if(!r||typeof r!=='object')return;
+  if(action==='list'&&r.ok){
+    if(Array.isArray(r.cierres)){MD_CI.srv=true; mdCiFusionar(r.cierres); mdCiRepintar()}
+    else if(Array.isArray(r.registros||r.pedidos)){if(MD_CI.srv!==false){MD_CI.srv=false; mdCiRepintar()}}
+    return}
+  if(action==='cfgGet'&&r.ok&&r.cfg&&r.cfg.cierres===true){MD_CI.srv=true; return}
+  if(action!=='cierre')return;
+  var fecha=payload&&payload.fecha;
+  if(r.ok&&r.cierre){MD_CI.srv=true;
+    /* un instante después: recién ahí la cola ya sacó este cierre (confirmado) y la tira lo muestra como guardado */
+    setTimeout(function(){
+      if(Array.isArray(r.cierres))mdCiFusionar(r.cierres); else mdCiPoner({fecha:r.cierre.fecha,quien:r.cierre.quien,contado:num(r.cierre.contado),esperado:num(r.cierre.esperado),diferencia:num(r.cierre.diferencia),nota:r.cierre.nota||'',ts:r.cierre.ts||'',rol:r.cierre.rol||''});
+      mdCiRepintar(); toast('Cierre del '+fmtF(r.cierre.fecha)+' guardado en la hoja ✅')},0);
+    return}
+  if(r.error==='accion_desconocida'){
+    MD_CI.srv=false; mdCiSacarDeCola(fecha);
+    MD_CI.lista=MD_CI.lista.filter(function(x){return !(x.pendiente&&x.fecha===fecha)}); mdCiGuardar();
+    if(Date.now()-MD_CI.aviso>4000){MD_CI.aviso=Date.now(); toast('Falta pegar el Apps Script nuevo: el cierre queda solo en este aparato por ahora',1)}
+    mdCiRepintar(); return}
+  if(r.error==='sin_permiso'||r.error==='fecha_invalida'||r.error==='monto_invalido'){
+    MD_CI.lista=MD_CI.lista.filter(function(x){return !(x.pendiente&&x.fecha===fecha)}); mdCiGuardar(); mdCiSacarDeCola(fecha); mdCiRepintar()}}
+
+/* ===== Sonri: la novedad y la ayuda (desde acá, sin tocar moderno.js) ===== */
+(function(){
+  if(typeof ASIS_NOVEDADES==='undefined'||typeof ASIS_AYUDA==='undefined')return;
+  ASIS_NOVEDADES.forEach(function(n){if(n&&n.id==='md-caja')n.x='En 💰 Caja contá el efectivo, anotalo y el semáforo te dice si cuadra. Con «Cerrar el día» queda guardado en la hoja, con quién cerró.'});
+  ASIS_NOVEDADES.push({id:'md-cierre-hoja', f:'2026-10-27', t:'El cierre de caja queda en la hoja',
+    x:'En 💰 Caja, «Cerrar el día» guarda lo contado, lo esperado, la diferencia y quién cerró en la hoja «_Cierres»: se ve desde cualquier aparato, también desde el celular. Abajo están los últimos cierres (verde cuadró, rojo no) y si ayer no se cerró, te avisa. Tocar un cobro de un día ya cerrado pide el motivo.',
+    ayuda:/cierro la caja del día/, si:function(){return esAdmin()}});
+  ASIS_AYUDA.forEach(function(a){if(a&&/semáforo/.test(a.q||'')&&a.p)a.p[a.p.length-1]='Tocá «Cerrar el día» para que quede guardado en la hoja, con quién cerró. No cambia ningún cobro.'});
+  ASIS_AYUDA.push({q:'¿Cómo cierro la caja del día?', k:'cerrar cierre caja dia contado efectivo hoja quien cerro ayer no se cerro diferencia falta sobra celular', v:'caja', f:'#md-cierre', solo:'adm',
+    p:['Entrá a 💰 Caja: arriba está «Cierre de caja» (hoy, o el día que elijas arriba).','Contá el efectivo que hay en la caja y anotalo en «Efectivo contado». Si faltó o sobró, poné una nota con el porqué.','Tocá «Cerrar el día»: queda en la hoja «_Cierres» con la fecha, quién cerró, lo contado, lo esperado y la diferencia. Se ve desde cualquier aparato.','Abajo están los últimos cierres: verde cuadró, rojo faltó o sobró. Si ayer no se cerró (lunes a sábado), aparece un aviso con un botón para cerrarlo.','Si después hay que editar o borrar un cobro de un día ya cerrado, el panel pide el motivo y lo deja anotado.']});
+})();
+
+/* ===== los enganches ===== */
+(function(){
+  MD_CI.lista=mdCiLeer();
+  try{if(CFG&&CFG.cierres===true)MD_CI.srv=true}catch(e){}
+  /* la cola: un solo cierre por fecha (lo nuevo reemplaza a lo que esperaba) */
+  var _cc=claveCola; claveCola=function(a,rec){if(a==='cierre')return 'ci:'+((rec&&rec.fecha)||''); return _cc.apply(this,arguments)};
+  var _api=api;
+  api=function(action,payload){
+    var pr=_api.apply(this,arguments);
+    if(!pr||!pr.then)return pr;
+    return pr.then(function(r){try{mdCiRespuesta(action,payload,r)}catch(e){} return r})};
+  /* editar una atención: si toca la plata de un día cerrado, motivo (va a «obs» de esa atención) */
+  var _ga=guardarAtencion;
+  guardarAtencion=function(){
+    var nota='', obs=$('#f-obs'), antes=obs?obs.value:'';
+    try{
+      var prev=EDIT_ID?DATA.filter(function(r){return r.id===EDIT_ID})[0]:null;
+      if(prev&&esAdmin()){
+        var f=$('#f-fecha').value, ac=num($('#f-acuenta').value), cambia=ac!==num(prev.acuenta)||num($('#f-total').value)!==num(prev.total)||f!==prev.fecha||
+          JSON.stringify(agruparPagos(leerPagos()))!==JSON.stringify(agruparPagos(pagosDe(prev)));
+        if(cambia){var dias=[prev.fecha]; if(f!==prev.fecha)dias.push(f); if(ac>num(prev.acuenta))dias.push(hoyISO());
+          for(var i=0;i<dias.length;i++){if(!mdCiCerrado(dias[i]))continue;
+            nota=mdCiMotivo(dias[i],'Este cambio toca lo cobrado de ese día.'); if(nota===null)return; if(nota)break}}}
+    }catch(e){nota=''}
+    if(nota&&obs)obs.value=(antes?antes+'\n':'')+nota;
+    var id=EDIT_ID, r=_ga.apply(this,arguments);
+    if(nota&&obs&&EDIT_ID===id)obs.value=antes;   /* no se guardó (faltaba algo): el campo vuelve a como estaba */
+    return r};
+  /* un pago registrado hoy, con hoy ya cerrado */
+  if(typeof aplicarPago==='function'){var _ap=aplicarPago;
+    aplicarPago=function(r,m,met){
+      var nota='', obsAntes=r?r.obs:'', acAntes=r?num(r.acuenta):0;
+      try{if(r&&esAdmin()&&mdCiCerrado(hoyISO())){nota=mdCiMotivo(hoyISO(),'Este pago entra en la caja de hoy, que ya está cerrada.'); if(nota===null)return}}catch(e){nota=''}
+      if(nota)r.obs=(r.obs?r.obs+'\n':'')+nota;
+      var x=_ap.apply(this,arguments);
+      if(nota&&num(r.acuenta)===acAntes)r.obs=obsAntes;
+      return x}}
+  /* borrar una atención con plata de un día cerrado: motivo, y queda en la nota del cierre (la atención ya no existe para anotarlo) */
+  var _bo=borrar;
+  borrar=function(id){
+    var r=DATA.filter(function(x){return x.id===id})[0], nota='', diaC='';
+    try{
+      if(r&&esAdmin()&&num(r.acuenta)>0.009){
+        var dias={}; dias[r.fecha]=1; (r.cobrosPosteriores||[]).forEach(function(p){if(p&&p.fecha)dias[p.fecha]=1});
+        for(var d in dias){if(!mdCiCerrado(d))continue; nota=mdCiMotivo(d,'Borrarla saca '+bs(r.acuenta)+' de la caja de ese día.'); if(nota===null)return; if(nota){diaC=d; break}}}
+    }catch(e){nota=''}
+    var x=_bo.apply(this,arguments);
+    if(nota&&!DATA.some(function(y){return y.id===id}))mdCiAnotar(diaC,'Se borró la atención de '+(r.paciente||'')+' del '+fmtF(r.fecha)+' ('+bs(r.acuenta)+' cobrados). '+nota);
+    return x};
+  /* si la Caja ya estaba a la vista cuando esto cargó, se repinta con la tarjeta nueva */
+  try{if(!document.body.classList.contains('locked')&&typeof asisVista==='function'&&asisVista()==='caja')renderCaja()}catch(e){}})();
+/* ----- parte: 50-accesible.js ----- */
+/* =====================================================================
+   50 · ACCESIBLE Y DELICIAS
+   A · Letra más grande (pref LETRA: n / g / xg), modo noche «como el
+       teléfono» (sigue prefers-color-scheme), foco visible y filas
+       clicables que se pueden usar con el teclado, toques de 44 px.
+   B · Vibración corta al guardar / cobrar / cerrar la caja; temporadas
+       locales (Carnaval, 24 de septiembre, Navidad 15 dic–6 ene, Año
+       Nuevo) con la misma regla que Halloween y la misma pref de
+       temporada; el cumpleaños de la doctora en el saludo (CFG.profCumple,
+       se carga en Ajustes › Profesionales); el resumen del día como imagen
+       para el grupo de WhatsApp.
+   SOLO PINTA. No toca cuentas: la imagen del resumen usa las mismas
+   funciones que el texto de WhatsApp (filasCajaDia, totalCobros, pagosDe).
+   ===================================================================== */
+
+/* ---------- A1 · letra ---------- */
+var MD_ACC_ESC={n:1,g:1.12,xg:1.25};
+function mdAccLetra(){var v=mdPref('LETRA'); return v==='g'||v==='xg'?v:'n'}
+function mdAccAplicarLetra(){
+  var v=mdAccLetra(), h=document.documentElement, b=document.body;
+  ['md-letra','md-letra-g','md-letra-xg'].forEach(function(c){h.classList.remove(c); b.classList.remove(c)});
+  if(v!=='n'){h.classList.add('md-letra','md-letra-'+v); b.classList.add('md-letra','md-letra-'+v)}
+  h.style.setProperty('--md-esc',String(MD_ACC_ESC[v]));
+  try{mdAltoHeader()}catch(e){}
+  try{if(typeof mdIndicador==='function')mdIndicador(true)}catch(e){}}
+
+/* ---------- A2 · modo noche como el teléfono ---------- */
+function mdAccNocheTel(){return mdPref('NOCHE')==='aparato'}
+function mdAccOscuroTel(){try{return !!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)}catch(e){return false}}
+(function(){
+  var _n=mdAplicarNoche;
+  mdAplicarNoche=function(){
+    var r=_n.apply(this,arguments);
+    try{if(mdAccNocheTel()){
+      var on=mdAccOscuroTel();
+      document.body.classList.toggle('md-noche',on);
+      var tc=document.querySelector('meta[name="theme-color"]'); if(tc)tc.setAttribute('content',on?'#0B0C09':(tc.getAttribute('data-dia')||tc.getAttribute('content')))}}catch(e){}
+    return r};
+  try{var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    if(mq){var f=function(){if(mdAccNocheTel())mdAplicarNoche()}; if(mq.addEventListener)mq.addEventListener('change',f); else if(mq.addListener)mq.addListener(f)}}catch(e){}})();
+
+/* ---------- A3 · la tarjeta Apariencia: letra y «como el teléfono» ---------- */
+function mdAccMontarApariencia(){
+  var on=$('#md-op-noche'); if(!on||$('#md-op-letra'))return;
+  var lab=on.previousElementSibling;
+  var h='<label style="margin-top:16px">Letra</label>'+
+    '<div class="seg lime" id="md-op-letra"><label><input type="radio" name="md-letra" value="n"><span>Normal</span></label>'+
+    '<label><input type="radio" name="md-letra" value="g"><span>Grande</span></label>'+
+    '<label><input type="radio" name="md-letra" value="xg"><span>Muy grande</span></label></div>'+
+    '<p class="hint" style="margin:6px 0 0">Agranda el texto de las listas, las tablas y los botones. Vale solo para este aparato.</p>';
+  if(lab&&lab.tagName==='LABEL')lab.insertAdjacentHTML('beforebegin',h); else on.insertAdjacentHTML('beforebegin',h);
+  on.insertAdjacentHTML('beforeend','<label><input type="radio" name="md-noche" value="aparato"><span>Como el teléfono</span></label>');
+  var ap=on.querySelector('input[value="aparato"]');
+  if(ap)ap.onchange=function(){mdPref('NOCHE','aparato'); mdAplicarNoche(); toast(mdAccOscuroTel()?'Modo noche como el teléfono: ahora está en oscuro':'Modo noche como el teléfono: se oscurece cuando el aparato lo haga')};
+  mdQ(document,'input[name="md-letra"]').forEach(function(r){r.onchange=function(){
+    mdPref('LETRA',r.value); mdAccAplicarLetra();
+    toast(r.value==='n'?'Letra normal':(r.value==='g'?'Letra grande en este aparato':'Letra muy grande en este aparato'))}});
+  mdAccSinc()}
+function mdAccSinc(){
+  var l=mdAccLetra(); mdQ(document,'input[name="md-letra"]').forEach(function(r){r.checked=r.value===l});
+  if(mdAccNocheTel())mdQ(document,'input[name="md-noche"]').forEach(function(r){r.checked=r.value==='aparato'})}
+(function(){var _s=mdSincAjustes; mdSincAjustes=function(){var r=_s.apply(this,arguments); try{mdAccSinc()}catch(e){} return r}})();
+
+/* ---------- A4 · filas clicables con el teclado ---------- */
+var MD_ACC_FILAS='tr[onclick], .md-pc-clic, .pl-fila[onclick], .rem[onclick], .md-tl-it[onclick], .md-prox[onclick]';
+function mdAccFilas(raiz){
+  mdQ(raiz||document,MD_ACC_FILAS).forEach(function(f){
+    if(f.hasAttribute('tabindex'))return;
+    f.setAttribute('tabindex','0'); if(f.tagName!=='TR'&&!f.hasAttribute('role'))f.setAttribute('role','button')})}
+
+/* ---------- B1 · vibración corta ---------- */
+function mdAccVibrar(){try{if(navigator.vibrate)navigator.vibrate(12)}catch(e){}}
+(function(){
+  /* atención guardada: el panel abre el modal «Atención guardada» */
+  if(typeof showWhatsappModal==='function'){var _wa=showWhatsappModal; showWhatsappModal=function(){var r=_wa.apply(this,arguments); try{mdAccVibrar()}catch(e){} return r}}
+  /* cobrar: aplicarPago cierra el modal cuando el pago quedó registrado */
+  if(typeof aplicarPago==='function'){var _ap=aplicarPago; aplicarPago=function(){var r=_ap.apply(this,arguments);
+    try{var ov=$('#ov'); if(!ov||!ov.classList.contains('on'))mdAccVibrar()}catch(e){} return r}}
+  /* cerrar la caja: «Cerrar el día» (parte 40) o, si no está, anotar el efectivo contado */
+  if(typeof mdCiCerrar==='function'){var _cc=mdCiCerrar; mdCiCerrar=function(){
+    var i=$('#md-contado'), v=i?String(i.value).replace(',','.').trim():'';
+    var r=_cc.apply(this,arguments); try{if(v!==''&&!isNaN(+v))mdAccVibrar()}catch(e){} return r}}
+  else if(typeof mdCierre==='function'){var _mc=mdCierre; mdCierre=function(){var r=_mc.apply(this,arguments);
+    try{var i=$('#md-contado'); if(i&&!i.getAttribute('data-md-acc')){i.setAttribute('data-md-acc','1'); i.addEventListener('change',function(){if(String(i.value).trim()!=='')mdAccVibrar()})}}catch(e){} return r}}})();
+
+/* ---------- B2 · temporadas locales ---------- */
+/* Devuelve el tema de esta parte, '' si en esa fecha no va ninguno, o null
+   si la decisión queda para mdTema de siempre (Carnaval, primavera, octubre). */
+function mdAccTema(){
+  if(!mdTemporadaSi())return '';
+  var hoy=parseISO(hoyISO()), m=hoy.getMonth(), d=hoy.getDate();
+  if((m===11&&d===31)||(m===0&&d===1))return 'anionuevo';
+  if((m===11&&d>=15)||(m===0&&d<=6))return 'navidad';
+  if(m===11)return '';                   /* del 1 al 14 de diciembre todavía no es Navidad */
+  if(m===8&&d===24)return 'santacruz';   /* aniversario de Santa Cruz: verde y blanco */
+  return null}
+var MD_ACC_TEMAS=['santacruz','anionuevo'];
+(function(){
+  var _t=mdTema; mdTema=function(){var x=mdAccTema(); return x===null?_t.apply(this,arguments):x};
+  var _a=mdAplicarTema; mdAplicarTema=function(){
+    var r=_a.apply(this,arguments);
+    try{var t=mdTema(), b=document.body;
+      MD_ACC_TEMAS.forEach(function(x){b.classList.toggle('md-tema-'+x,t===x)});
+      var hd=$('.hd'); if(!hd||MD_ACC_TEMAS.indexOf(t)<0||$('#md-decor'))return r;
+      var html='';
+      if(t==='santacruz'){
+        var tri='', n=26; for(var i=0;i<n;i++)tri+='<path d="M'+(i*40)+' 0h40l-20 26z" fill="'+(i%2?'#FFFFFF':'#2E7D5B')+'"/>';
+        html='<svg class="md-acc-band" viewBox="0 0 '+(n*40)+' 28" preserveAspectRatio="none" aria-hidden="true"><path d="M0 1H'+(n*40)+'" stroke="#fff" stroke-width="2"/>'+tri+'</svg>'}
+      else{
+        var cc=['#F4D35E','#FFFFFF','var(--lime)','#F4D35E','#7FB8E6'];
+        for(var j=0;j<22;j++)html+='<span class="md-papel" style="left:'+((j*31+7)%100)+'%;top:'+((j*43+13)%100)+'%;transform:rotate('+(j*41%180)+'deg);background:'+cc[j%cc.length]+'"></span>';
+        html+='<svg class="md-acc-fuego" style="left:min(46%,calc(100% - 300px))" viewBox="0 0 90 70" aria-hidden="true">'+[[22,30,'#F4D35E'],[60,22,'#FFFFFF'],[44,52,'var(--lime)']].map(function(p){
+          var o=''; for(var k=0;k<8;k++){var a=k*Math.PI/4; o+='<path d="M'+p[0]+' '+p[1]+'l'+(Math.cos(a)*14).toFixed(1)+' '+(Math.sin(a)*14).toFixed(1)+'" stroke="'+p[2]+'" stroke-width="2.4" stroke-linecap="round"/>'}
+          return o}).join('')+'</svg>'}
+      var d=document.createElement('div'); d.id='md-decor'; d.className='md-decor'; d.innerHTML=html; hd.insertBefore(d,hd.firstChild)}catch(e){}
+    return r}})();
+var MD_ACC_SALUDO={carnaval:'🎭 ¡Feliz Carnaval cruceño! Que la ch\'alla no manche las sonrisas',santacruz:'🟢⚪ ¡Feliz aniversario, Santa Cruz! 24 de septiembre',
+  navidad:'🎄 ¡Felices fiestas! Que no falte ninguna sonrisa',anionuevo:'🎆 ¡Feliz Año Nuevo! Un año más de sonrisas'};
+/* el saludo al entrar, una vez por sesión, como el de octubre; con la temporada apagada no hay tema y no saluda */
+function mdAccSaludo(){
+  var t=mdTema(), m=MD_ACC_SALUDO[t]; if(!m)return;
+  try{if(sessionStorage.getItem('MD_ACC_SALUDO_'+t))return; sessionStorage.setItem('MD_ACC_SALUDO_'+t,'1')}catch(e){}
+  setTimeout(function(){toast(m)},600)}
+(function(){var _s=saludoTemporada; saludoTemporada=function(){var r=_s.apply(this,arguments); try{mdAccSaludo()}catch(e){} try{mdAccSaludoCumple()}catch(e){} return r}})();
+
+/* ---------- B3 · el cumpleaños de la doctora ---------- */
+function mdAccDdmm(s){
+  var m=/^\s*(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*$/.exec(String(s||'')); if(!m)return '';
+  var d=+m[1], mo=+m[2]; if(d<1||d>31||mo<1||mo>12)return '';
+  return (d<10?'0':'')+d+'/'+(mo<10?'0':'')+mo}
+function mdAccCumples(){var pc=CFG&&CFG.profCumple; return pc&&typeof pc==='object'?pc:{}}
+function mdAccCumpleHoy(){
+  var pc=mdAccCumples(), h=hoyISO(), dm=h.slice(8,10)+'/'+h.slice(5,7);
+  return Object.keys(pc).filter(function(n){return mdAccDdmm(pc[n])===dm})}
+function mdAccEsElla(n,q){n=String(n||'').trim(); q=String(q||'').trim(); if(!n||!q)return false; return n===q||n.indexOf(q)===0||q.indexOf(n)===0}
+function mdAccCorto(n){return String(n||'').replace(/^Dra?\.?\s*/i,'').split(/\s+/)[0]||n}
+(function(){
+  var _e=mdEncabezado; mdEncabezado=function(){
+    var r=_e.apply(this,arguments);
+    try{var t=mdTema(), lin=$('#md-linea');
+      if(lin&&t==='santacruz')lin.textContent+=' · ¡Feliz aniversario, Santa Cruz!';
+      if(lin&&t==='anionuevo')lin.textContent+=' · ¡Feliz Año Nuevo!';
+      var cum=mdAccCumpleHoy(); if(!cum.length)return r;
+      var q=mdQuienSaludo(), mia=cum.filter(function(n){return mdAccEsElla(n,q)})[0], logo=$('.hd .logo');
+      if(mia&&logo)logo.textContent+=' · ¡Feliz cumpleaños! 🎂';
+      var otras=cum.filter(function(n){return n!==mia});
+      if(otras.length&&lin)lin.textContent+=' · 🎂 Hoy cumple '+otras.map(function(n){return 'la '+n}).join(' y ')}catch(e){}
+    return r}})();
+function mdAccSaludoCumple(){
+  var q=mdQuienSaludo(), mia=mdAccCumpleHoy().filter(function(n){return mdAccEsElla(n,q)})[0]; if(!mia)return;
+  try{if(sessionStorage.getItem('MD_ACC_CUMPLE'))return; sessionStorage.setItem('MD_ACC_CUMPLE','1')}catch(e){}
+  setTimeout(function(){toast('🎂 ¡Feliz cumpleaños, '+mia+'! Todo el equipo te saluda')},1400)}
+/* el campo «Cumple (dd/mm)» en cada fila de Ajustes › Profesionales (parte 10) */
+function mdAccGuardarCumple(n,v){
+  var dm=mdAccDdmm(v);
+  if(String(v||'').trim()&&!dm){toast('Escribí el cumpleaños como día/mes, por ejemplo 07/03',1); return false}
+  var pc=Object.assign({},mdAccCumples()); if(dm)pc[n]=dm; else delete pc[n];
+  CFG.profCumple=pc;
+  var ok=true;
+  if(typeof mdAjGuardar==='function')ok=mdAjGuardar('prof');
+  else{try{saveCfg(); mdAccPintarCumples()}catch(e){ok=false}}
+  if(ok)toast(dm?('Cumple de '+n+': '+dm+' 🎂'):('Cumple de '+n+' borrado'));
+  return ok}
+function mdAccPintarCumples(){
+  var box=$('#md-aj-prof'); if(!box)return;
+  var pc=mdAccCumples(), ro=typeof esDoctora==='function'&&esDoctora();
+  mdQ(box,'.md-aj-fila[data-k="prof"]').forEach(function(f){
+    if(f.querySelector('.md-acc-cumple'))return;
+    var n=f.getAttribute('data-n'), tx=f.querySelector('.md-aj-tx'); if(!tx)return;
+    var dm=mdAccDdmm(pc[n]);
+    var d=document.createElement('div'); d.className='md-acc-cumple';
+    d.innerHTML=ro?(dm?'<span class="md-acc-ct">🎂 cumple el '+esc(dm)+'</span>':''):
+      '<button type="button" class="md-acc-cb" title="Cumpleaños: el panel la saluda ese día">🎂 '+(dm?'cumple el '+esc(dm):'Cumple (dd/mm)')+'</button>';
+    tx.appendChild(d);
+    var b=d.querySelector('.md-acc-cb'); if(!b)return;
+    b.onclick=function(e){
+      e.stopPropagation();
+      d.innerHTML='<input class="md-acc-ci" placeholder="dd/mm" maxlength="5" inputmode="numeric" value="'+esc(dm)+'" aria-label="Cumpleaños de '+esc(n)+' (día/mes)">'+
+        '<button type="button" class="btn sm md-acc-ok">Guardar</button><button type="button" class="btn sec sm md-acc-no">Cancelar</button>';
+      var i=d.querySelector('.md-acc-ci');
+      d.querySelector('.md-acc-ok').onclick=function(e2){e2.stopPropagation(); if(!mdAccGuardarCumple(n,i.value))i.focus()};
+      d.querySelector('.md-acc-no').onclick=function(e2){e2.stopPropagation(); d.parentNode.removeChild(d); mdAccPintarCumples()};
+      i.addEventListener('keydown',function(e2){if(e2.key==='Enter'){e2.preventDefault(); if(!mdAccGuardarCumple(n,i.value))i.focus()} if(e2.key==='Escape')d.querySelector('.md-acc-no').click()});
+      i.addEventListener('click',function(e2){e2.stopPropagation()});
+      i.focus()}})}
+(function(){if(typeof mdAjRender==='function'){var _r=mdAjRender; mdAjRender=function(k){var r=_r.apply(this,arguments); try{if(k==='prof')mdAccPintarCumples()}catch(e){} return r}}})();
+
+/* ---------- B4 · el resumen del día como imagen ---------- */
+/* los mismos números que el texto de WhatsApp (txtResumenDia): nada se calcula distinto */
+function mdAccResumenDatos(fecha,prof){
+  var rows=DATA.filter(function(r){return r.fecha===fecha&&(!prof||r.profesional===prof)});
+  var at=rows.filter(function(r){return r.estado==='Atendido'});
+  var fact=at.reduce(function(a,r){return a+num(r.total)},0);
+  var caja=filasCajaDia(fecha,prof), cobr=totalCobros(caja), porM={};
+  caja.forEach(function(r){pagosDe(r).forEach(function(p){porM[p.metodo]=(porM[p.metodo]||0)+num(p.monto)})});
+  var deud=at.filter(function(r){return num(r.saldo)>0}), deuda=at.reduce(function(a,r){return a+num(r.saldo)},0);
+  var egs=prof?[]:(EGR||[]).filter(function(e){return e.fecha===fecha}), egr=egs.reduce(function(a,e){return a+num(e.monto)},0);
+  return {fecha:fecha,prof:prof||'',at:at.length,fact:fact,cobr:cobr,porM:porM,deuda:deuda,deudores:deud.map(function(r){return r.paciente}),
+    egr:egr,neto:cobr-egr,noV:rows.filter(function(r){return r.estado==='No asistió'}).length,canc:rows.filter(function(r){return r.estado==='Canceló'}).length,
+    pend:rows.filter(esCitaPendiente).length}}
+function mdAccEnvolver(g,t,max){
+  var pal=String(t||'').split(/\s+/), lin=[], cur='';
+  pal.forEach(function(p){var s=cur?cur+' '+p:p; if(g.measureText(s).width>max&&cur){lin.push(cur); cur=p} else cur=s});
+  if(cur)lin.push(cur); return lin}
+function mdAccResumenCanvas(fecha,prof){
+  var D=mdAccResumenDatos(fecha,prof), W=1080, H=1350, c=document.createElement('canvas'); c.width=W; c.height=H; var g=c.getContext('2d');
+  var acento=getComputedStyle(document.body).getPropertyValue('--lime').trim()||'#B6C932', ink='#20241C', gris='#727865', papel='#FAFBF6', linea='#E8EADF';
+  var F='system-ui,Archivo,"Helvetica Neue",Arial,sans-serif';
+  var caja=function(x,y,w,h,r,fill,stroke){g.beginPath(); if(g.roundRect)g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); if(fill){g.fillStyle=fill; g.fill()} if(stroke){g.strokeStyle=stroke; g.lineWidth=2; g.stroke()}};
+  var tx=function(t,x,y,font,col,al){g.font=font; g.fillStyle=col; g.textAlign=al||'left'; g.fillText(t,x,y); g.textAlign='left'};
+  g.fillStyle=papel; g.fillRect(0,0,W,H);
+  /* cabecera */
+  g.fillStyle=ink; g.fillRect(0,0,W,250); g.fillStyle=acento; g.fillRect(0,250,W,12);
+  tx('RESUMEN DEL DÍA',56,86,'800 26px '+F,acento);
+  g.font='900 56px '+F; var nom=mdAccEnvolver(g,clinica(),W-112); tx(nom[0]||'',56,150,'900 56px '+F,'#fff');
+  var dow=(typeof DOW!=='undefined'&&DOW[parseISO(fecha).getDay()])||'';
+  tx((dow?dow+' ':'')+fmtF(fecha)+(D.prof?' · '+D.prof:''),56,206,'600 30px '+F,'#D7DAD0');
+  /* dos cuadros grandes */
+  var y=300;
+  caja(56,y,468,200,24,'#fff',linea); caja(556,y,468,200,24,'#fff',linea);
+  tx('ATENDIDOS',88,y+54,'800 22px '+F,gris); tx(String(D.at),88,y+150,'900 92px '+F,ink);
+  tx('COBRADO',588,y+54,'800 22px '+F,gris); g.font='900 64px '+F; var cb=bs(D.cobr); if(g.measureText(cb).width>404)g.font='900 50px '+F; g.fillStyle=ink; g.fillText(cb,588,y+140);
+  tx('facturado '+bs(D.fact),588,y+180,'600 24px '+F,gris);
+  /* por forma de pago */
+  y=548; tx('POR FORMA DE PAGO',56,y,'800 22px '+F,gris); y+=20;
+  var mets=(typeof METODOS!=='undefined'?METODOS:['Efectivo','QR','Tarjeta','Transferencia']).concat(Object.keys(D.porM).filter(function(m){return (typeof METODOS==='undefined'||METODOS.indexOf(m)<0)}));
+  var cols={Efectivo:'#2E7D5B',QR:'#6B4FA0',Tarjeta:'#2F6FA8',Transferencia:'#16807A'}, hay=false;
+  mets.forEach(function(m){if(!D.porM[m])return; hay=true;
+    g.fillStyle=cols[m]||gris; g.beginPath(); g.arc(72,y+22,10,0,Math.PI*2); g.fill();
+    tx(m,96,y+32,'700 30px '+F,ink); tx(bs(D.porM[m]),W-56,y+32,'800 30px '+F,ink,'right');
+    g.fillStyle=linea; g.fillRect(56,y+54,W-112,2); y+=70});
+  if(!hay){tx('Sin cobros ese día',72,y+32,'600 28px '+F,gris); y+=70}
+  /* egresos y caja neta */
+  y+=22;
+  if(!D.prof){caja(56,y,W-112,110,20,'#fff',linea);
+    tx('Egresos',88,y+46,'700 28px '+F,gris); tx('− '+bs(D.egr),W-88,y+46,'800 28px '+F,'#B4552F','right');
+    tx('Caja neta',88,y+90,'800 30px '+F,ink); tx(bs(D.neto),W-88,y+90,'900 32px '+F,ink,'right'); y+=140}
+  /* por cobrar */
+  caja(56,y,W-112,D.deudores.length?150:96,20,D.deuda>0?'#FFF6E3':'#fff',D.deuda>0?'#EAD9A8':linea);
+  tx('Por cobrar',88,y+54,'800 30px '+F,D.deuda>0?'#A8730B':gris); tx(bs(D.deuda),W-88,y+54,'900 32px '+F,D.deuda>0?'#A8730B':gris,'right');
+  if(D.deudores.length){g.font='600 24px '+F; var ls=mdAccEnvolver(g,D.deudores.join(', '),W-176); tx(ls[0]+(ls.length>1?'…':''),88,y+100,'600 24px '+F,'#5F6553')}
+  y+=(D.deudores.length?150:96)+28;
+  /* lo que no vino */
+  var av=[]; if(D.noV)av.push(D.noV+' no vin'+(D.noV===1?'o':'ieron')); if(D.canc)av.push(D.canc+' cancel'+(D.canc===1?'ó':'aron')); if(D.pend)av.push(D.pend+' cita'+(D.pend===1?'':'s')+' sin marcar');
+  if(av.length)tx(av.join(' · '),56,y+30,'600 26px '+F,gris);
+  /* pie */
+  g.fillStyle=acento; g.fillRect(0,H-96,W,6);
+  var d=new Date(); tx('Armado desde el panel · '+(d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes(),56,H-40,'600 22px '+F,gris);
+  return new Promise(function(ok){c.toBlob(function(b){ok(b)},'image/jpeg',.9)})}
+function mdAccResumenImagen(fecha,prof){
+  fecha=fecha||hoyISO(); prof=prof||'';
+  toast('Armando la imagen…');
+  var p; try{p=mdAccResumenCanvas(fecha,prof)}catch(e){toast('No se pudo armar la imagen',1); return}
+  p.then(function(b){
+    if(!b){toast('No se pudo armar la imagen',1); return}
+    var nombre=(typeof mdNomArch==='function'?mdNomArch('Resumen del dia '+fecha+' '+clinica()):'Resumen del dia '+fecha)+'.jpg';
+    var file=null; try{file=new File([b],nombre,{type:'image/jpeg'})}catch(e){}
+    var bajar=function(){
+      var url=URL.createObjectURL(b), x=document.createElement('a'); x.href=url; x.download=nombre; document.body.appendChild(x); x.click();
+      setTimeout(function(){URL.revokeObjectURL(url); x.remove()},1500);
+      toast('La imagen se descargó: adjuntala en el grupo de WhatsApp')};
+    /* en el celular se comparte directo; si falla (el permiso del toque venció mientras se armaba), se baja igual; si lo canceló, nada */
+    if(file&&navigator.canShare&&navigator.canShare({files:[file]}))return navigator.share({files:[file],title:clinica(),text:'Resumen del día · '+fmtF(fecha)}).catch(function(e){if(!(e&&e.name==='AbortError'))bajar()});
+    bajar()},function(){toast('No se pudo armar la imagen',1)})}
+function mdAccMontarResumen(){
+  var b=$('#btn-resumen-dia'); if(!b||$('#md-acc-res-img'))return;
+  var n=document.createElement('button'); n.type='button'; n.className='btn sec sm'; n.id='md-acc-res-img'; n.textContent='🖼 Como imagen';
+  n.title='El mismo resumen, en una imagen para el grupo de WhatsApp';
+  n.onclick=function(){mdAccResumenImagen($('#c-rango').value==='dia'?($('#c-dia').value||hoyISO()):hoyISO(),'')};
+  b.insertAdjacentElement('afterend',n)}
+(function(){if(typeof abrirResumenDia==='function'){var _ar=abrirResumenDia; abrirResumenDia=function(fecha,prof){
+  var r=_ar.apply(this,arguments);
+  try{var rb=$('#modal .row-btn'); if(rb&&!rb.querySelector('.md-acc-res-m')){
+    var n=document.createElement('button'); n.type='button'; n.className='btn sec md-acc-res-m'; n.textContent='🖼 Como imagen';
+    n.onclick=function(){mdAccResumenImagen(fecha||hoyISO(),prof||'')};
+    rb.insertBefore(n,rb.firstChild.nextSibling)}}catch(e){}
+  return r}}})();
+
+/* ---------- los enganches de esta parte ---------- */
+(function(){
+  try{
+    mdAccAplicarLetra(); mdAplicarNoche(); mdAccMontarApariencia(); mdAccMontarResumen(); mdAccFilas(document);
+    try{mdAplicarTema(); mdEncabezado()}catch(e){}
+    try{mdAccPintarCumples()}catch(e){}
+    /* las filas que se vayan pintando también se pueden enfocar */
+    if(window.MutationObserver){var t=0, pend=[];
+      new MutationObserver(function(ms){ms.forEach(function(m){Array.prototype.forEach.call(m.addedNodes,function(n){if(n.nodeType===1)pend.push(n)})});
+        if(t)return; t=(window.requestAnimationFrame||setTimeout)(function(){t=0; var L=pend; pend=[];
+          L.forEach(function(n){if(!n.isConnected)return; if(n.matches&&n.matches(MD_ACC_FILAS)){mdAccFilas(n.parentNode||document)} else if(n.querySelector)mdAccFilas(n)})})}).observe(document.body,{childList:true,subtree:true})}
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      var el=e.target; if(!el||!el.matches||!el.matches(MD_ACC_FILAS))return;
+      if(el.tagName==='INPUT'||el.tagName==='BUTTON'||el.tagName==='A'||el.tagName==='TEXTAREA'||el.tagName==='SELECT')return;
+      e.preventDefault(); el.click()});
+  }catch(e){if(window.console)console.error('moderno/accesible',e)}})();
+/* ----- parte: 60-mensajes.js ----- */
+/* =====================================================================
+   60 · MENSAJES: plantillas de WhatsApp editables (#11) y recetas
+   frecuentes (#9).
+   Los textos de WhatsApp están fijos en el código base (txtCita, txtSaldo,
+   txtCuota, txtCumple, txtDormido, txtFrenado, txtControl, el resumen de la
+   visita de showWhatsappModal, el presupuesto y los de las fotos). Esta
+   parte NO los toca: envuelve cada función y, si en Ajustes hay una
+   plantilla guardada para ese tipo, la rinde con los datos del registro;
+   si no, deja pasar el texto original. Las plantillas van en
+   CFG.plantillasWa={cita:'…',…} (solo las editadas) y viajan con el
+   guardado de config de siempre (saveCfg → subirCfg → doGuardarCfg, que
+   copia todas las claves). Las recetas frecuentes van en
+   CFG.recetasFav=[{nom,txt}] (null = las de fábrica).
+   Variables: {nombre} {fecha} {hora} {doctora} {clinica} {saldo} {monto}
+   {servicio} (+ {cuotas} en las cuotas). Lo que va entre corchetes solo
+   sale si todas sus variables tienen dato: «[ a las {hora}]». Una línea
+   cuyas variables quedaron todas vacías no sale.
+   ===================================================================== */
+var MD_MSJ_VARS={nombre:'el nombre de pila del paciente',fecha:'la fecha (de la cita, de la última visita, de la cuota)',hora:'la hora de la cita',
+  doctora:'la doctora',clinica:'el nombre de la clínica (el de Ajustes)',saldo:'lo que debe, en Bs',monto:'el monto (de la cuota, del presupuesto)',
+  servicio:'el servicio o tratamiento',cuotas:'«1 cuota vencida» o «3 cuotas vencidas»'};
+var MD_MSJ_DEF={
+  cita:'Hola {nombre}! 👋 Le escribimos de *{clinica}*.\nLe recordamos su cita del *{fecha}*[ a las {hora}].[\nMotivo: {servicio}.][\nSaldo pendiente: {saldo}.]\n\n¿Nos confirma por favor? 🦷',
+  saldo:'Hola {nombre}! 👋 Le escribimos de *{clinica}*.\nLe recordamos que queda un saldo pendiente de *{saldo}* de su tratamiento.\n¿Coordinamos el pago o le agendamos su próxima sesión? 🦷',
+  cuota:'Hola {nombre}! 👋 Le escribimos de *{clinica}*.\nLe recordamos que tiene {cuotas} de su tratamiento *{servicio}*, por *{monto}*[. La primera venció el {fecha}].\n¿Coordinamos el pago? 🦷',
+  cumple:'¡Feliz cumpleaños {nombre}! 🎂🎉\nTodo el equipo de *{clinica}* le desea un lindo día.\n\nQue lo disfrute mucho 🦷✨',
+  dormido:'Hola {nombre}! 👋 Le escribimos de *{clinica}*.\nVimos que su última visita fue el {fecha}. ¿Le agendamos un control o una limpieza? 🦷\nTenemos horarios disponibles esta semana.',
+  frenado:'Hola {nombre}! 👋 Le escribimos de *{clinica}*.\nLe quedó pendiente su tratamiento *{servicio}*[ — la última sesión fue el {fecha}].\n¿Le agendamos para seguir? 🦷',
+  control:'Hola {nombre}! 👋 Le escribimos de *{clinica}*.\nSu última visita fue el {fecha}, así que ya toca {servicio}.\n¿Le agendamos esta semana? 🦷',
+  visita:'Hola {nombre}! 👋 Gracias por su visita a *{clinica}*.',
+  visitaFin:'Cualquier consulta estamos a la orden 🦷',
+  presupuesto:'Hola {nombre}! 👋 Le pasamos el presupuesto de su tratamiento en *{clinica}*.',
+  presupuestoFin:'Cualquier duda estamos a la orden 🦷',
+  foto:'Hola {nombre}! 👋 Le mandamos su foto de {clinica} 🦷',
+  antesdespues:'Hola {nombre}! 👋 Le mandamos su antes y después de {clinica} 🦷✨'};
+var MD_MSJ_TIPOS=[
+  {k:'cita',t:'Recordatorio de cita',d:'Recordatorios › Citas, la agenda y la ficha de una cita por venir',vars:'nombre fecha hora doctora clinica saldo servicio',
+   nota:'Si la cita ya pasó y nadie marcó qué pasó, el panel manda su propio texto («no llegamos a verla»).'},
+  {k:'saldo',t:'Saldo pendiente',d:'Recordatorios › Saldos, Caja y la ficha del paciente',vars:'nombre clinica saldo fecha doctora'},
+  {k:'cuota',t:'Cuota vencida',d:'Recordatorios › Cuotas vencidas',vars:'nombre clinica servicio monto fecha cuotas'},
+  {k:'cumple',t:'Cumpleaños',d:'Recordatorios › Cumpleaños',vars:'nombre clinica'},
+  {k:'dormido',t:'Sin volver',d:'Recordatorios › Sin volver y la ficha del paciente',vars:'nombre clinica fecha'},
+  {k:'frenado',t:'Plan a medio hacer',d:'Recordatorios › Planes frenados',vars:'nombre clinica servicio fecha doctora'},
+  {k:'control',t:'Control que toca',d:'Recordatorios › Controles',vars:'nombre clinica fecha servicio'},
+  {k:'visita',t:'Resumen de la visita',d:'al guardar una atención («Atención guardada»)',vars:'nombre clinica fecha hora doctora servicio monto saldo',
+   partes:[['visita','Saludo (la primera línea)'],['visitaFin','Cierre (la última línea)']],
+   fijo:'El detalle del medio (fecha, servicios, lo recibido, el saldo, lo reservado para el plan, la próxima cita) lo arma el panel según la atención: no se edita.'},
+  {k:'presupuesto',t:'Presupuesto de un plan',d:'«Enviar presupuesto» desde el plan del paciente',vars:'nombre clinica servicio monto saldo doctora',
+   partes:[['presupuesto','Saludo (la primera línea)'],['presupuestoFin','Cierre (la última línea)']],
+   fijo:'Las etapas, el total, lo pagado y el plan de pago los arma el panel según el plan: no se editan.'},
+  {k:'foto',t:'Foto del paciente',d:'al mandar una foto desde la ficha',vars:'nombre clinica'},
+  {k:'antesdespues',t:'Antes y después',d:'al mandar la comparación desde la ficha',vars:'nombre clinica'}];
+var MD_MSJ={k:'cita',ta:null};
+function mdMsjCfg(){var p=CFG&&CFG.plantillasWa; return (p&&typeof p==='object'&&!Array.isArray(p))?p:{}}
+/* '' = no hay plantilla propia: se usa el texto original del panel */
+function mdMsjPlantilla(k){var v=mdMsjCfg()[k]; return (typeof v==='string'&&v.trim())?v:''}
+function mdMsjNombre(n){return String(n||'').trim().split(/\s+/)[0]||''}
+function mdMsjDoc(p){p=String(p||'').trim(); return /por definir/i.test(p)?'':p}
+function mdMsjBase(nombre){return {nombre:mdMsjNombre(nombre),clinica:clinica(),fecha:'',hora:'',doctora:'',saldo:'',monto:'',servicio:''}}
+function mdMsjRender(tpl,vars){
+  var vale=function(k){return Object.prototype.hasOwnProperty.call(vars,k)}, dato=function(k){return String(vars[k]==null?'':vars[k]).trim()};
+  var s=String(tpl||'').replace(/\r/g,'');
+  /* [ … ] solo sale si todas sus variables tienen dato */
+  s=s.replace(/\[([^\[\]]*)\]/g,function(m,inner){var hay=false, vacio=false;
+    inner.replace(/\{(\w+)\}/g,function(_,k){if(vale(k)){hay=true; if(!dato(k))vacio=true}}); return hay&&vacio?'':inner});
+  /* una línea cuyas variables quedaron todas vacías no sale */
+  s=s.split('\n').filter(function(l){var hay=false, alguno=false;
+    l.replace(/\{(\w+)\}/g,function(_,k){if(vale(k)){hay=true; if(dato(k))alguno=true}}); return !hay||alguno}).join('\n');
+  s=s.replace(/\{(\w+)\}/g,function(m,k){return vale(k)?dato(k):m});
+  return s.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim()}
+
+/* ---------- cada mensaje, con los datos de su registro ---------- */
+function mdMsjCita(r){
+  var tpl=mdMsjPlantilla('cita'); if(!tpl||!r)return '';
+  var pend=esCitaPendiente(r), f=pend?r.fecha:(r.prox||r.fecha), hh=pend?r.hora:r.proxHora;
+  if(!f||diasEntre(hoyISO(),f)<0)return '';   /* una cita que ya pasó lleva su propio texto */
+  var v=mdMsjBase(r.paciente); v.fecha=fmtF(f); v.hora=hh||''; v.doctora=mdMsjDoc(r.profesional);
+  v.servicio=r.proxMotivo||((r.servicios||[]).length?srvText(r):'');
+  var deu=0; try{deu=deudaDe(r.paciente)}catch(e){} v.saldo=deu>0?bs(deu):'';
+  return mdMsjRender(tpl,v)}
+function mdMsjSaldo(p){
+  var tpl=mdMsjPlantilla('saldo'); if(!tpl||!p)return '';
+  var v=mdMsjBase(p.paciente); v.saldo=bs(p.saldo); var u=p.ultima||p.ult; v.fecha=u?fmtF(u):''; v.doctora=mdMsjDoc(p.profesional);
+  return mdMsjRender(tpl,v)}
+function mdMsjCuota(x){
+  var tpl=mdMsjPlantilla('cuota'); if(!tpl||!x)return '';
+  var cs=x.cuotas||[], v=mdMsjBase(x.paciente); v.servicio=(x.plan&&x.plan.nombre)||''; v.monto=bs(x.monto);
+  v.fecha=cs[0]&&cs[0].fecha?fmtF(cs[0].fecha):''; v.cuotas=cs.length===1?'1 cuota vencida':cs.length+' cuotas vencidas'; v.doctora=mdMsjDoc(x.plan&&x.plan.prof);
+  return mdMsjRender(tpl,v)}
+function mdMsjCumple(c){var tpl=mdMsjPlantilla('cumple'); if(!tpl||!c)return ''; return mdMsjRender(tpl,mdMsjBase(c.paciente))}
+function mdMsjDormido(p){var tpl=mdMsjPlantilla('dormido'); if(!tpl||!p)return ''; var v=mdMsjBase(p.paciente); v.fecha=p.ult?fmtF(p.ult):''; return mdMsjRender(tpl,v)}
+function mdMsjFrenado(f){
+  var tpl=mdMsjPlantilla('frenado'); if(!tpl||!f)return '';
+  var v=mdMsjBase(f.paciente); v.servicio=(f.plan&&f.plan.nombre)||''; v.fecha=f.ult?fmtF(f.ult):''; v.doctora=mdMsjDoc(f.plan&&f.plan.prof);
+  return mdMsjRender(tpl,v)}
+function mdMsjControl(c){
+  var tpl=mdMsjPlantilla('control'); if(!tpl||!c)return '';
+  var v=mdMsjBase(c.paciente); v.fecha=c.desde?fmtF(c.desde):''; v.servicio=(c.regla&&c.regla.motivo)||'';
+  return mdMsjRender(tpl,v)}
+/* saludo y cierre de un texto largo: la primera y la última línea, si son las originales */
+function mdMsjSaludoCierre(t,kS,kF,v,g0,c0){
+  t=String(t||''); var s=mdMsjPlantilla(kS), f=mdMsjPlantilla(kF);
+  if(s&&t.slice(0,g0.length)===g0)t=mdMsjRender(s,v)+t.slice(g0.length);
+  if(f&&t.slice(-c0.length)===c0)t=t.slice(0,-c0.length)+mdMsjRender(f,v);
+  return t}
+function mdMsjPresupuesto(t,nombre,plan){
+  if(!plan||!(mdMsjPlantilla('presupuesto')||mdMsjPlantilla('presupuestoFin')))return t;
+  var v=mdMsjBase(nombre); v.servicio=plan.nombre||''; v.monto=num(plan.total)>0?bs(plan.total):''; v.doctora=mdMsjDoc(plan.prof);
+  var sal=0; try{sal=saldoPlan(plan)}catch(e){} v.saldo=sal>0?bs(sal):'';
+  return mdMsjSaludoCierre(t,'presupuesto','presupuestoFin',v,
+    'Hola '+mdMsjNombre(nombre)+'! 👋 Le pasamos el presupuesto de su tratamiento en *'+clinica()+'*.','Cualquier duda estamos a la orden 🦷')}
+/* el resumen de la visita se arma adentro de showWhatsappModal y va directo a openModal:
+   se cambian el saludo y el cierre en el HTML que llega (el texto a la vista y el link de WhatsApp) */
+function mdMsjVisitaHtml(html,r){
+  if(!r||!(mdMsjPlantilla('visita')||mdMsjPlantilla('visitaFin')))return html;
+  var v=mdMsjBase(r.paciente); v.fecha=r.fecha?fmtF(r.fecha):''; v.hora=r.hora||''; v.doctora=mdMsjDoc(r.profesional);
+  v.servicio=(r.servicios||[]).length?srvText(r):''; v.monto=num(r.total)>0?bs(r.total):''; v.saldo=num(r.saldo)>0?bs(r.saldo):'';
+  var g0='Hola '+mdMsjNombre(r.paciente)+'! 👋 Gracias por su visita a *'+clinica()+'*.', c0='Cualquier consulta estamos a la orden 🦷';
+  var cambiar=function(h,de,a){if(de===a)return h; return h.split(esc(de)).join(esc(a)).split(encodeURIComponent(de)).join(encodeURIComponent(a))};
+  var s=mdMsjPlantilla('visita'), f=mdMsjPlantilla('visitaFin');
+  if(s)html=cambiar(html,g0,mdMsjRender(s,v));
+  if(f)html=cambiar(html,c0,mdMsjRender(f,v));
+  return html}
+function mdMsjFoto(txt){
+  var s=String(txt||''), m;
+  if((m=/^Hola (.+)! 👋 Le mandamos su foto de (.+) 🦷$/.exec(s))&&mdMsjPlantilla('foto')){var v=mdMsjBase(m[1]); v.clinica=m[2]; return mdMsjRender(mdMsjPlantilla('foto'),v)}
+  if((m=/^Hola (.+)! 👋 Le mandamos su antes y después de (.+) 🦷✨$/.exec(s))&&mdMsjPlantilla('antesdespues')){var w=mdMsjBase(m[1]); w.clinica=m[2]; return mdMsjRender(mdMsjPlantilla('antesdespues'),w)}
+  return txt}
+
+/* ---------- la tarjeta de Ajustes ---------- */
+function mdMsjTipo(k){return MD_MSJ_TIPOS.filter(function(t){return t.k===k})[0]||MD_MSJ_TIPOS[0]}
+function mdMsjPartes(t){return t.partes||[[t.k,'Texto del mensaje']]}
+function mdMsjEditado(t){var c=mdMsjCfg(); return mdMsjPartes(t).some(function(p){return typeof c[p[0]]==='string'&&c[p[0]].trim()})}
+function mdMsjEjemplo(){
+  var h=hoyISO(), d=parseISO(h); d.setDate(d.getDate()+2); var d2=parseISO(h); d2.setDate(d2.getDate()+14);
+  return {nombre:'María',fecha:fmtF(iso(d)),fecha2:fmtF(iso(d2)),hora:'10:30',doctora:(CFG&&CFG.prof&&CFG.prof[0])||'Dra. Mirna',clinica:clinica(),
+    saldo:'Bs 350',monto:'Bs 200',servicio:'Limpieza dental',cuotas:'2 cuotas vencidas'}}
+function mdMsjMedio(t,ej){
+  if(t.k==='visita')return '📅 '+fmtF(hoyISO())+' · 10:30\n🦷 Limpieza dental\n💵 Total: Bs 200\n✅ A cuenta: Bs 150\n⏳ Saldo: Bs 50\n\n📌 Próxima cita: *'+ej.fecha2+'* a las 10:30';
+  if(t.k==='presupuesto')return '🦷 *Blanqueamiento*\n1. Primera sesión — Bs 400\n2. Segunda sesión — Bs 400\n\n💵 Total: *Bs 800*\n⏳ Pendiente: *Bs 800*';
+  return ''}
+function mdMsjPrevTexto(t,valores){
+  var ej=mdMsjEjemplo(), ps=mdMsjPartes(t);
+  var tx=function(p){var v=valores&&valores[p[0]]!=null?valores[p[0]]:(mdMsjPlantilla(p[0])||MD_MSJ_DEF[p[0]]); return mdMsjRender(v,ej)};
+  if(!t.partes)return tx(ps[0]);
+  return tx(ps[0])+'\n\n'+mdMsjMedio(t,ej)+'\n\n'+tx(ps[1])}
+function mdMsjPintarPrev(){
+  var t=mdMsjTipo(MD_MSJ.k), prev=$('#md-msj-prev'); if(!prev)return;
+  var vals={}; mdQ(document,'#md-msj-ed .md-msj-ta').forEach(function(ta){vals[ta.getAttribute('data-k')]=ta.value});
+  var txt=mdMsjPrevTexto(t,vals);
+  prev.innerHTML=(txt?mdWaFormato(txt):'<i style="color:#6A7A6A">(vacío: se manda el texto original)</i>')+'<small>'+mdHHMM(new Date().getHours()*60+new Date().getMinutes())+' ✓✓</small>'}
+function mdMsjSucio(){return mdQ(document,'#md-msj-ed .md-msj-ta').some(function(ta){return ta.value!==ta.getAttribute('data-v0')})}
+function mdMsjPintar(fuerza){
+  var box=$('#md-msj-ed'), tipos=$('#md-msj-tipos'); if(!box||!tipos||!CFG)return;
+  if(!fuerza&&mdMsjSucio())return;   /* no se pisa lo que alguien está escribiendo (el refresco repinta Ajustes cada tanto) */
+  var ro=esDoctora(), card=$('#md-msj'); if(card)card.classList.toggle('md-msj-ro',ro);
+  tipos.innerHTML=MD_MSJ_TIPOS.map(function(t){return '<button type="button" data-k="'+t.k+'" class="'+(t.k===MD_MSJ.k?'on':'')+(mdMsjEditado(t)?' ed':'')+'" title="'+(mdMsjEditado(t)?'Tiene texto propio':'Texto original')+'"><i aria-hidden="true"></i>'+esc(t.t)+'</button>'}).join('');
+  var t=mdMsjTipo(MD_MSJ.k), ed=mdMsjEditado(t);
+  var h='<div class="md-msj-lay"><div class="md-msj-izq"><div class="md-msj-cab"><b>'+esc(t.t)+' '+(ed?'<span class="pill ok">texto propio</span>':'<span class="pill">texto original</span>')+'</b><small>Se manda desde '+esc(t.d)+'.</small></div>';
+  mdMsjPartes(t).forEach(function(p,i){
+    var v=mdMsjPlantilla(p[0])||MD_MSJ_DEF[p[0]];
+    if(i===1&&t.fijo)h+='<div class="md-msj-fijo">'+esc(t.fijo)+'</div>';
+    h+='<label>'+esc(p[1])+'</label><textarea class="md-msj-ta" data-k="'+p[0]+'" data-v0="'+esc(v)+'" rows="'+(t.partes?2:5)+'"'+(ro?' readonly':'')+' aria-label="'+esc(t.t+' · '+p[1])+'">'+esc(v)+'</textarea>'});
+  h+='<div class="md-msj-vars"><span>Tocá para insertar:</span>'+t.vars.split(' ').map(function(k){return '<button type="button" class="md-msj-var" data-v="'+k+'" title="'+esc(MD_MSJ_VARS[k]||'')+'"'+(ro?' disabled':'')+'>{'+k+'}</button>'}).join('')+'</div>';
+  if(t.nota)h+='<p class="hint md-msj-nota">'+esc(t.nota)+'</p>';
+  h+=ro?'<p class="hint md-msj-nota">Los mensajes los edita la dueña o recepción.</p>'
+    :'<div class="md-msj-btns"><button type="button" class="btn sm" id="md-msj-save">Guardar este mensaje</button><button type="button" class="btn sec sm" id="md-msj-reset"'+(ed?'':' disabled')+'>Restaurar el texto original</button><span class="md-aj-ok" id="md-msj-ok" hidden>✓ guardado</span></div>';
+  h+='</div><div class="md-msj-der"><div class="md-wa-chat"><div class="md-wa-h"><i>💬</i><div><b>Vista previa</b><small>Así va a llegar, con datos de ejemplo</small></div></div><div class="md-wa-c"><div class="md-wa-bur" id="md-msj-prev"></div></div></div></div></div>';
+  box.innerHTML=h; MD_MSJ.ta=box.querySelector('.md-msj-ta');
+  mdMsjPintarPrev();
+  try{mdBotones(box)}catch(e){}}
+function mdMsjElegir(k){
+  if(mdMsjSucio()&&!confirm('Tenés cambios sin guardar en este mensaje. ¿Los descartás?'))return;
+  MD_MSJ.k=k; mdMsjPintar(true)}
+function mdMsjInsertar(ta,txt){
+  if(!ta||ta.readOnly)return;
+  var s=ta.selectionStart||0, e=ta.selectionEnd||s;
+  ta.value=ta.value.slice(0,s)+txt+ta.value.slice(e); var p=s+txt.length;
+  ta.focus(); try{ta.setSelectionRange(p,p)}catch(x){}
+  ta.dispatchEvent(new Event('input',{bubbles:true}))}
+function mdMsjGuardar(){
+  if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return false}
+  var t=mdMsjTipo(MD_MSJ.k), c=Object.assign({},mdMsjCfg()), ok=true;
+  mdQ(document,'#md-msj-ed .md-msj-ta').forEach(function(ta){
+    var k=ta.getAttribute('data-k'), v=ta.value.replace(/\r/g,'').replace(/[ \t]+$/gm,'').replace(/\n+$/,'');
+    if(!v.trim()||v===MD_MSJ_DEF[k])delete c[k]; else c[k]=v;
+    if(/\{(\w+)\}/.test(v)){var raras=[]; v.replace(/\{(\w+)\}/g,function(_,x){if(!MD_MSJ_VARS[x]&&raras.indexOf(x)<0)raras.push(x)});
+      if(raras.length){toast('No conozco la variable {'+raras[0]+'}: las que hay están abajo del texto',1); ok=false}}});
+  if(!ok)return false;
+  CFG.plantillasWa=c; saveCfg();
+  mdMsjPintar(true); var tick=$('#md-msj-ok'); if(tick){tick.hidden=false; setTimeout(function(){tick.hidden=true},2400)}
+  toast(mdMsjEditado(t)?'Mensaje guardado: '+t.t:'«'+t.t+'» vuelve al texto original'); return true}
+function mdMsjRestaurar(){
+  if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return false}
+  var t=mdMsjTipo(MD_MSJ.k); if(!mdMsjEditado(t))return false;
+  if(!confirm('¿Volver al texto original de «'+t.t+'»? Se pierde lo que hayan editado.'))return false;
+  var c=Object.assign({},mdMsjCfg()); mdMsjPartes(t).forEach(function(p){delete c[p[0]]});
+  CFG.plantillasWa=c; saveCfg(); mdMsjPintar(true); toast('«'+t.t+'» vuelve al texto original'); return true}
+function mdMsjIr(id,k){
+  try{show('config')}catch(e){} try{mdAjGrupo('md-aj-msj')}catch(e){}
+  var c=$('#'+id); if(!c)return;
+  if(k)try{MD_MSJ.k=k; mdMsjPintar(true)}catch(e){}
+  c.scrollIntoView({behavior:'smooth',block:'start'}); c.classList.remove('md-flash'); void c.offsetWidth; c.classList.add('md-flash')}
+
+/* ---------- recetas frecuentes ---------- */
+var MD_RX_DEF=[
+  {nom:'Amoxicilina 500 mg',txt:'Rp.\n— Amoxicilina 500 mg: 1 cápsula cada 8 horas, por 7 días.'},
+  {nom:'Ibuprofeno 400 mg',txt:'Rp.\n— Ibuprofeno 400 mg: 1 comprimido cada 8 horas, por 3 días, después de las comidas.'},
+  {nom:'Paracetamol 500 mg',txt:'Rp.\n— Paracetamol 500 mg: 1 comprimido cada 6 a 8 horas si hay dolor. No pasar de 8 comprimidos al día.'},
+  {nom:'Enjuague con clorhexidina',txt:'— Clorhexidina 0,12 %: enjuague con 15 ml durante 30 segundos, 2 veces al día, por 7 días, sin tragar. Esperar 30 minutos después del cepillado.'},
+  {nom:'Post-extracción',txt:'Cuidados después de la extracción:\n— Morder la gasa 30 a 45 minutos.\n— No enjuagarse ni escupir durante 24 horas.\n— Dieta blanda y fría el primer día; nada caliente ni con bombilla.\n— No fumar ni tomar alcohol por 72 horas.\n— Frío sobre la mejilla, de a ratos, las primeras 24 horas.\n— Si sangra mucho o el dolor aumenta después del tercer día, volver al consultorio.'}];
+function mdRxLista(){
+  var a=CFG&&CFG.recetasFav;
+  if(a==null)return MD_RX_DEF.map(function(x){return {nom:x.nom,txt:x.txt}});
+  if(!Array.isArray(a))return [];
+  return a.filter(function(x){return x&&typeof x.nom==='string'&&typeof x.txt==='string'&&x.nom.trim()&&x.txt.trim()}).map(function(x){return {nom:x.nom.trim(),txt:x.txt}})}
+function mdRxFila(x,ro){
+  return '<div class="md-rx-fila"><input class="md-rx-nom" maxlength="40" placeholder="Nombre corto (lo que dice el botón)" value="'+esc(x.nom)+'"'+(ro?' readonly':'')+'>'+
+    '<textarea class="md-rx-tx" placeholder="Rp.&#10;— …"'+(ro?' readonly':'')+'>'+esc(x.txt)+'</textarea>'+
+    (ro?'':'<button type="button" class="md-rx-del" title="Quitar esta receta" aria-label="Quitar">✕</button>')+'</div>'}
+function mdRxLeer(){
+  return mdQ(document,'#md-rx-lista .md-rx-fila').map(function(f){return {nom:f.querySelector('.md-rx-nom').value.trim(),txt:f.querySelector('.md-rx-tx').value.replace(/\r/g,'').replace(/\s+$/,'')}})}
+function mdRxSucio(){var l=$('#md-rx-lista'); return !!l&&l.hasAttribute('data-v0')&&l.getAttribute('data-v0')!==JSON.stringify(mdRxLeer())}
+function mdRxPintar(fuerza){
+  var l=$('#md-rx-lista'); if(!l||!CFG)return;
+  if(!fuerza&&mdRxSucio())return;
+  var ro=esDoctora(), card=$('#md-rx'); if(card)card.classList.toggle('md-rx-ro',ro);
+  var L=mdRxLista();
+  l.innerHTML=L.length?L.map(function(x){return mdRxFila(x,ro)}).join(''):'<div class="empty">No hay recetas frecuentes. Agregá una con «＋ Agregar receta».</div>';
+  l.setAttribute('data-v0',JSON.stringify(mdRxLeer()));
+  var fab=$('#md-rx-fab'); if(fab)fab.hidden=CFG.recetasFav==null}
+function mdRxGuardar(){
+  if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return false}
+  var L=mdRxLeer(), malas=L.filter(function(x){return (x.nom&&!x.txt)||(!x.nom&&x.txt)});
+  if(malas.length){toast('Cada receta lleva nombre y texto: completá «'+(malas[0].nom||'sin nombre')+'»',1); return false}
+  L=L.filter(function(x){return x.nom&&x.txt});
+  var vistos={}; for(var i=0;i<L.length;i++){var k=keyPac(L[i].nom); if(vistos[k]){toast('Hay dos recetas que se llaman «'+L[i].nom+'»',1); return false} vistos[k]=1}
+  CFG.recetasFav=L; saveCfg(); mdRxPintar(true);
+  var tick=$('#md-rx-ok'); if(tick){tick.hidden=false; setTimeout(function(){tick.hidden=true},2400)}
+  toast(L.length?'Recetas guardadas: '+L.length:'Recetas guardadas: ninguna'); return true}
+function mdRxAgregar(){
+  if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return}
+  var l=$('#md-rx-lista'); if(!l)return;
+  var vac=l.querySelector('.empty'); if(vac)vac.remove();
+  l.insertAdjacentHTML('beforeend',mdRxFila({nom:'',txt:''},false));
+  var f=l.lastElementChild, i=f&&f.querySelector('.md-rx-nom'); if(i){i.focus(); f.scrollIntoView({block:'nearest'})}}
+function mdRxRestaurar(){
+  if(esDoctora()){toast('Eso es de la dueña o de recepción 🔐',1); return false}
+  if(!confirm('¿Volver a las recetas de fábrica? Se pierden las que hayan cargado.'))return false;
+  CFG.recetasFav=null; saveCfg(); mdRxPintar(true); toast('Recetas de fábrica restauradas'); return true}
+/* en la ventana de la receta: una fila de botones, tocar uno agrega su texto a lo escrito */
+function mdRxEnReceta(nombre){
+  var ta=$('#rc-tx'); if(!ta||$('#md-rx-chips'))return;
+  try{var f=pacDe(nombre), edad=f&&f.nac?edadDe(f.nac):'', mini=$('#modal p.mini');
+    if(edad!==''&&mini&&!/años/.test(mini.textContent))mini.textContent=String(nombre)+' · '+edad+' años · se imprime con el membrete del consultorio.'}catch(e){}
+  var L=mdRxLista(), box=document.createElement('div'); box.id='md-rx-chips'; box.className='md-rx-chips';
+  box.innerHTML=(L.length?'<small>Recetas frecuentes · tocá una y se agrega abajo, sin borrar lo escrito. <b>Revisá la dosis según el paciente.</b></small>':'<small>No hay recetas frecuentes cargadas. Se arman en Ajustes › Recetas frecuentes.</small>')+
+    '<div>'+L.map(function(x,i){return '<button type="button" class="md-rx-chip" data-i="'+i+'" title="'+esc(x.txt.slice(0,160))+'">💊 '+esc(x.nom)+'</button>'}).join('')+
+    (esDoctora()?'':'<button type="button" class="md-rx-chip md-rx-aj" title="Editar la lista en Ajustes">⚙ Editar la lista</button>')+'</div>';
+  ta.parentNode.insertBefore(box,ta);
+  box.addEventListener('click',function(e){
+    if(e.target.closest('.md-rx-aj')){closeModal(); mdMsjIr('md-rx'); return}
+    var b=e.target.closest('.md-rx-chip[data-i]'); if(!b)return; var x=L[+b.getAttribute('data-i')]; if(!x)return;
+    var cur=ta.value.replace(/\s+$/,''); ta.value=(cur?cur+'\n\n':'')+x.txt;
+    ta.focus(); try{ta.setSelectionRange(ta.value.length,ta.value.length); ta.scrollTop=ta.scrollHeight}catch(z){}
+    b.classList.add('on'); toast('Agregado: '+x.nom)})}
+
+/* ---------- montar las dos tarjetas en Ajustes › Pacientes y mensajes ---------- */
+function mdMsjMontar(){
+  var v=$('#v-config'); if(!v||$('#md-msj'))return;
+  var msj=document.createElement('div'); msj.className='card'; msj.id='md-msj';
+  msj.innerHTML='<h2 class="md-h md-h-verde"><span class="md-h-i" aria-hidden="true">'+mdIco(MD_I.mensaje,2.2)+'</span>Mensajes de WhatsApp</h2>'+
+    '<p class="hint">Lo que el panel escribe solo cuando tocás «WhatsApp». Cada tipo tiene su texto: cambialo a tu gusto. Las palabras entre llaves se reemplazan con el dato del paciente; '+
+    'lo que va entre corchetes solo sale si ese dato existe (por ejemplo <b>[ a las {hora}]</b> no sale si la cita no tiene hora). Los asteriscos ponen <b>negrita</b> en WhatsApp. Se comparte con todos los equipos.</p>'+
+    '<div class="md-msj-tipos" id="md-msj-tipos" role="tablist" aria-label="Tipo de mensaje"></div><div class="md-msj-ed" id="md-msj-ed"></div>';
+  var rx=document.createElement('div'); rx.className='card'; rx.id='md-rx';
+  rx.innerHTML='<h2 class="md-h md-h-lila"><span class="md-h-i" aria-hidden="true">'+mdIco('M9 3h6v4h4v14H5V7h4zM9 13h6M12 10v6',2.2)+'</span>Recetas frecuentes</h2>'+
+    '<p class="hint">Las recetas que más se repiten, listas para tocar un botón en 🖨 Receta: el texto se agrega a lo que ya está escrito, con el nombre y la edad del paciente arriba como siempre. '+
+    '<b>Revisá la dosis según el paciente</b> antes de imprimir. Se comparten con todos los equipos.</p>'+
+    '<div class="md-rx-lista" id="md-rx-lista"></div>'+
+    '<div class="row-btn md-rx-btns"><button type="button" class="btn dark sm" id="md-rx-add">＋ Agregar receta</button><button type="button" class="btn sm" id="md-rx-save">Guardar recetas</button>'+
+    '<button type="button" class="btn sec sm" id="md-rx-reset">Restaurar las de fábrica</button><span class="md-aj-ok" id="md-rx-ok" hidden>✓ guardado</span><span class="mini" id="md-rx-fab" hidden>Son las de fábrica.</span></div>';
+  var ind=$('#c-indicaciones'), card=ind&&ind.closest('.card'), sec=$('#md-aj-msj');
+  if(card){card.insertAdjacentElement('afterend',rx); card.insertAdjacentElement('afterend',msj)}
+  else if(sec){sec.appendChild(msj); sec.appendChild(rx)}
+  else{v.appendChild(msj); v.appendChild(rx)}
+  /* el índice de Ajustes: las dos entradas nuevas, debajo de «Indicaciones post-tratamiento» */
+  mdQ(document,'#md-aj-indice .md-aj-it').forEach(function(it){
+    var sp=it.querySelector('span'); if(!sp||sp.textContent.trim()!=='Indicaciones post-tratamiento')return;
+    [['md-rx','Recetas frecuentes'],['md-msj','Mensajes de WhatsApp']].forEach(function(x){
+      var nb=document.createElement('button'); nb.type='button'; nb.className='md-aj-it'; nb.innerHTML='<span>'+x[1]+'</span>';
+      nb.onclick=function(){mdMsjIr(x[0])}; it.parentNode.insertBefore(nb,it.nextSibling)})});
+  $('#md-msj-tipos').addEventListener('click',function(e){var b=e.target.closest('button[data-k]'); if(b)mdMsjElegir(b.getAttribute('data-k'))});
+  msj.addEventListener('click',function(e){
+    var vb=e.target.closest('.md-msj-var'); if(vb){mdMsjInsertar(MD_MSJ.ta||msj.querySelector('.md-msj-ta'),'{'+vb.getAttribute('data-v')+'}'); return}
+    if(e.target.closest('#md-msj-save')){mdMsjGuardar(); return}
+    if(e.target.closest('#md-msj-reset'))mdMsjRestaurar()});
+  msj.addEventListener('input',function(e){if(e.target.classList.contains('md-msj-ta'))mdMsjPintarPrev()});
+  msj.addEventListener('focusin',function(e){if(e.target.classList.contains('md-msj-ta'))MD_MSJ.ta=e.target});
+  $('#md-rx-add').onclick=mdRxAgregar; $('#md-rx-save').onclick=mdRxGuardar; $('#md-rx-reset').onclick=mdRxRestaurar;
+  $('#md-rx-lista').addEventListener('click',function(e){var b=e.target.closest('.md-rx-del'); if(!b||esDoctora())return; var f=b.closest('.md-rx-fila'); if(f)f.remove();
+    var l=$('#md-rx-lista'); if(l&&!l.querySelector('.md-rx-fila'))l.innerHTML='<div class="empty">No hay recetas frecuentes. Agregá una con «＋ Agregar receta».</div>'});
+  if(v.classList.contains('on')){mdMsjPintar(true); mdRxPintar(true)}}
+
+/* ---------- los enganches ---------- */
+(function(){
+  var envolver=function(n,fn){var f=window[n]; if(typeof f!=='function')return;
+    window[n]=function(){var t=''; try{t=fn.apply(this,arguments)}catch(e){t=''} return t||f.apply(this,arguments)}};
+  envolver('txtCita',mdMsjCita); envolver('txtSaldo',mdMsjSaldo); envolver('txtCuota',mdMsjCuota); envolver('txtCumple',mdMsjCumple);
+  envolver('txtDormido',mdMsjDormido); envolver('txtFrenado',mdMsjFrenado); envolver('txtControl',mdMsjControl);
+  if(typeof txtPresupuesto==='function'){var _tp=txtPresupuesto; txtPresupuesto=function(nombre,plan){var t=_tp.apply(this,arguments); try{t=mdMsjPresupuesto(t,nombre,plan)}catch(e){} return t}}
+  if(typeof showWhatsappModal==='function'){var _wa=showWhatsappModal; showWhatsappModal=function(r){
+    var _om=openModal, self=this, args=arguments;
+    openModal=function(html){try{html=mdMsjVisitaHtml(html,r)}catch(e){} return _om.apply(this,[html].concat([].slice.call(arguments,1)))};
+    try{return _wa.apply(self,args)}finally{openModal=_om}}}
+  if(typeof waLink==='function'){var _wl=waLink; waLink=function(cel,txt){try{txt=mdMsjFoto(txt)}catch(e){} return _wl.call(this,cel,txt)}}
+  if(typeof abrirReceta==='function'){var _ar=abrirReceta; abrirReceta=function(nombre){var r=_ar.apply(this,arguments); try{mdRxEnReceta(nombre)}catch(e){} return r}}
+  if(typeof renderConfig==='function'){var _rc=renderConfig; renderConfig=function(){var r=_rc.apply(this,arguments); try{mdMsjPintar(); mdRxPintar()}catch(e){} return r}}
+  var _show=show; show=function(v){var r=_show.apply(this,arguments); try{if(v==='config'){mdMsjPintar(); mdRxPintar()}}catch(e){} return r};
+  try{mdMsjMontar()}catch(e){if(window.console)console.error('moderno/mensajes',e)}})();
+/* ----- parte: 70-presupuesto.js ----- */
+/* ---------- 70 · Presupuesto prolijo ----------
+   «📄 Armar presupuesto» desde la ficha del paciente (junto a Planes), desde la
+   ventana de un plan (junto a «Enviar presupuesto por WhatsApp») y desde una
+   atención guardada que tiene recomendaciones. Abre una ventana para armarlo:
+   los ítems vienen precargados (las etapas del plan con su importe, o cada
+   servicio recomendado con su precio de la lista) y se pueden tocar; descuento,
+   cuotas, validez, nota y doctora. Sale como imagen JPEG 1080×1350 hecha en
+   canvas (se comparte por WhatsApp o se descarga y se abre el chat), como vista
+   de impresión limpia o como el texto de siempre.
+   Al generar, la recomendación queda marcada «presupuesto entregado» con la
+   fecha: campos nuevos en el registro de la atención (presuEntregado,
+   presuEntregadoPor, presuEntregadoTotal, presuEntregadoComo), que el servidor
+   guarda en _extra_json sin tocar el Apps Script. En un plan la marca va en el
+   plan mismo (dentro de _planes_json), solo si el plan es de quien lo arma.
+   No cobra, no acepta ni cambia ninguna cuenta. */
+var MD_PR=null, MD_PR_T=0;
+function mdPrEsCos(){return typeof CLINICA_ID!=='undefined'&&CLINICA_ID==='cosmetic'}
+/* los colores del membrete: Spa sobrio verde lima, Cosmetic dorado sobre negro */
+function mdPrPaleta(){
+  if(mdPrEsCos())return {cos:true,acento:'#C99214',acento2:'#E2BE55',ink:'#161616',banda:'#141414',paper:'#FBF8F1',panel:'#FFFFFF',suave:'#F5EDDA',linea:'#E6DCC6',gris:'#6E6A66',claro:'#EFE4C8',ok:'#2E7D5B',clay:'#B4552F',
+    fuente:"'Archivo',system-ui,'Helvetica Neue',Arial,sans-serif",serif:"Georgia,'Times New Roman',serif"};
+  return {cos:false,acento:'#B6C932',acento2:'#65760F',ink:'#20241C',banda:'#20241C',paper:'#FAFBF6',panel:'#FFFFFF',suave:'#F4F7E4',linea:'#E3E6D8',gris:'#6B7160',claro:'#DDE5B4',ok:'#2E7D5B',clay:'#B4552F',
+    fuente:"'Archivo',system-ui,'Helvetica Neue',Arial,sans-serif",serif:"'Archivo',system-ui,'Helvetica Neue',Arial,sans-serif"}}
+function mdPrCel(nombre){var i=idxPac()[keyPac(nombre)]||{}; return i.celular||''}
+function mdPrProfs(){return (CFG.prof||[]).filter(function(x){return x&&x!=='Por definir'})}
+function mdPrNro(){var d=new Date(); return 'P'+String(d.getFullYear()).slice(2)+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)+'-'+('0'+d.getHours()).slice(-2)+('0'+d.getMinutes()).slice(-2)}
+function mdPrItem(nom,cant,precio){return {nom:String(nom||'').trim(),cant:Math.max(1,Math.round(num(cant))||1),precio:Math.max(0,num(precio))}}
+function mdPrBase(nombre){
+  return {nombre:String(nombre||'').trim(),cel:mdPrCel(nombre),prof:esDoctora()?PROF_ACTUAL:'',items:[],desc:'',cuotasOn:false,cuotas:3,validez:15,nota:'',fecha:hoyISO(),nro:mdPrNro(),
+    planId:'',planNombre:'',recIds:[],origen:'',volver:null}}
+/* las cuentas: subtotal, descuento (en Bs o «10%»), total y las cuotas (misma regla que los planes: la última absorbe el redondeo) */
+function mdPrDescuento(P,sub){
+  var t=String(P.desc||'').replace(',','.').trim(); if(!t)return 0;
+  var m=/^\s*([\d.]+)\s*%\s*$/.exec(t), d=m?sub*num(m[1])/100:num(t);
+  return Math.max(0,Math.min(sub,Math.round(d*100)/100))}
+function mdPrCuentas(P){
+  var sub=0; P.items.forEach(function(it){if(it.nom)sub+=it.precio*it.cant});
+  sub=Math.round(sub*100)/100;
+  var desc=mdPrDescuento(P,sub), total=Math.round((sub-desc)*100)/100, n=P.cuotasOn?Math.max(0,Math.round(num(P.cuotas))):0, cuotas=[];
+  if(n>1&&total>0){
+    if(typeof armarCuotas==='function')cuotas=armarCuotas(total,n,P.fecha,30).map(function(c){return {n:c.n,monto:num(c.monto)}});
+    else{var base=Math.floor(total/n); for(var i=0;i<n;i++)cuotas.push({n:i+1,monto:i===n-1?total-base*(n-1):base})}}
+  var dias=Math.max(1,Math.round(num(P.validez))||15);
+  return {sub:sub,desc:desc,total:total,cuotas:cuotas,dias:dias,hasta:addDias(P.fecha,dias)}}
+function mdPrValida(){
+  var P=MD_PR; if(!P)return false;
+  if(!P.items.some(function(it){return it.nom}))
+    {toast('Agregá al menos un tratamiento al presupuesto',1); return false}
+  if(!mdPrCuentas(P).total&&!P.items.some(function(it){return it.nom&&it.precio>0}))
+    {toast('Poné el precio de los tratamientos',1); return false}
+  return true}
+
+/* ----- de dónde sale: plan, recomendación de una atención o la ficha ----- */
+function mdPrDesdePlan(nombre,planId){
+  if(bloqueaAjeno(nombre))return;
+  var p=planesDe(nombre).filter(function(x){return x.id===planId})[0]; if(!p){toast('Ese plan ya no está',1);return}
+  if(!planVisible(p)){noEsTuya();return}
+  var P=mdPrBase(nombre); P.origen='plan'; P.planId=p.id; P.planNombre=p.nombre;
+  if(!P.prof)P.prof=p.prof||(typeof duenaPlan==='function'?duenaPlan(p):'')||'';
+  (p.sesiones||[]).forEach(function(s){if(num(s.precio)>0)P.items.push(mdPrItem(s.desc||('Etapa '+s.n),1,s.precio))});
+  /* plan viejo sin importes por etapa: una sola línea con el precio acordado */
+  if(!P.items.length)P.items.push(mdPrItem(p.nombre,1,p.total));
+  if(p.cuotas&&p.cuotas.length>1){P.cuotasOn=true; P.cuotas=p.cuotas.length}
+  P.volver=function(){verPlan(nombre,planId)};
+  MD_PR=P; mdPrAbrir()}
+function mdPrDesdeAtencion(id){
+  var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
+  if(!esMia(r)){noEsTuya();return}
+  if(bloqueaAjeno(r.paciente))return;
+  var P=mdPrBase(r.paciente); P.origen='rec'; P.recIds=[r.id];
+  if(!P.prof)P.prof=r.profesional||'';
+  mdPrCargarPresu(P,r.presu||[]);
+  P.volver=function(){verFicha(id)};
+  MD_PR=P; mdPrAbrir()}
+function mdPrDesdeFicha(nombre){
+  if(bloqueaAjeno(nombre))return;
+  var P=mdPrBase(nombre); P.origen='ficha';
+  var rs=mdPrRecsDe(nombre), pend=rs.filter(function(x){return !x.p.estado});
+  var usar=pend.length?pend:[];
+  usar.forEach(function(x){if(P.recIds.indexOf(x.r.id)<0)P.recIds.push(x.r.id); if(!P.prof)P.prof=x.r.profesional||''});
+  mdPrCargarPresu(P,usar.map(function(x){return x.p}));
+  if(!P.items.length){
+    /* sin recomendaciones pendientes: el plan activo, si tiene uno */
+    var pl=planesVisibles(planesDe(nombre)).filter(function(x){return x.estado==='activo'})[0];
+    if(pl){closeModal(); mdPrDesdePlan(nombre,pl.id); return}
+    P.items.push(mdPrItem('',1,0))}
+  P.volver=function(){verPaciente(nombre)};
+  MD_PR=P; mdPrAbrir()}
+/* cada recomendación con su precio: el anotado o, si no hay, el de la lista de precios */
+function mdPrCargarPresu(P,lista){
+  (lista||[]).forEach(function(p){if(!p||!p.nom)return;
+    var precio=num(p.monto)>0?num(p.monto):(typeof mdPrecioDe==='function'?(mdPrecioDe(p.nom)||0):0);
+    P.items.push(mdPrItem(p.nom,1,precio))})}
+/* las recomendaciones de un paciente, de la más nueva a la más vieja, con su atención */
+function mdPrRecsDe(nombre){
+  var k=keyPac(nombre), out=[];
+  datosVisibles().filter(function(r){return keyPac(r.paciente)===k&&(r.presu||[]).length})
+    .sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'')})
+    .forEach(function(r){(r.presu||[]).forEach(function(p){if(p&&p.nom)out.push({r:r,p:p})})});
+  return out}
+
+/* ----- la ventana para armarlo ----- */
+function mdPrAbrir(){
+  var P=MD_PR; if(!P)return;
+  var profs=mdPrProfs(); if(P.prof&&profs.indexOf(P.prof)<0)profs.push(P.prof);
+  var origen=P.origen==='plan'?'plan «'+esc(P.planNombre)+'»':(P.origen==='rec'?'lo recomendado en la atención':'lo recomendado al paciente');
+  openModal('<h3>📄 Armar presupuesto</h3><p class="mini">'+esc(P.nombre)+' · '+origen+' · N° '+esc(P.nro)+'</p>'+
+    '<div class="md-pr" id="md-pr">'+
+    '<div class="md-pr-cab"><div><label for="md-pr-prof">Doctora</label>'+
+      (esDoctora()?'<input id="md-pr-prof" value="'+esc(P.prof)+'" disabled>':
+      '<select id="md-pr-prof"><option value="">Sin doctora</option>'+profs.map(function(p){return '<option value="'+esc(p)+'"'+(p===P.prof?' selected':'')+'>'+esc(p)+'</option>'}).join('')+'</select>')+'</div>'+
+      '<div><label for="md-pr-validez">Válido por (días)</label><input id="md-pr-validez" type="number" min="1" max="365" inputmode="numeric" value="'+esc(P.validez)+'"></div>'+
+      '<div><label>Fecha</label><div class="md-pr-fijo">'+fmtF(P.fecha)+'</div></div></div>'+
+    '<div class="md-pr-items" id="md-pr-items"></div>'+
+    '<datalist id="md-pr-lista">'+(CFG.precios||[]).map(function(x){return '<option value="'+esc(x.nom)+'">'}).join('')+'</datalist>'+
+    '<div class="md-pr-add"><button type="button" class="btn sec sm" id="md-pr-agregar">＋ Agregar tratamiento</button></div>'+
+    '<div class="md-pr-abajo">'+
+      '<div class="md-pr-opc"><div><label for="md-pr-desc">Descuento (Bs o %)</label><input id="md-pr-desc" inputmode="decimal" placeholder="Ej. 100 o 10%" value="'+esc(P.desc)+'"></div>'+
+        '<div class="md-pr-cuotas"><label class="md-pr-chk"><input type="checkbox" id="md-pr-cuotason"'+(P.cuotasOn?' checked':'')+'> <span>En cuotas</span></label>'+
+          '<div class="md-pr-cn"><input id="md-pr-cuotas" type="number" min="2" max="48" inputmode="numeric" value="'+esc(P.cuotas)+'"'+(P.cuotasOn?'':' disabled')+'><span>cuotas</span></div></div>'+
+        '<div><label for="md-pr-nota">Nota (opcional)</label><textarea id="md-pr-nota" rows="2" placeholder="Ej. incluye controles · se puede empezar con la mitad">'+esc(P.nota)+'</textarea></div></div>'+
+      '<div class="md-pr-tot" id="md-pr-tot"></div></div>'+
+    '<div class="md-pr-prev"><img id="md-pr-prev" alt="Vista previa del presupuesto" width="216" height="270"><div class="mini">Así va a salir la imagen (1080×1350).</div></div>'+
+    '</div>'+
+    '<div class="row-btn md-pr-acc">'+
+      '<button type="button" class="btn" onclick="mdPrMandar(1)">📤 Mandar por WhatsApp</button>'+
+      '<button type="button" class="btn sec" onclick="mdPrMandar(0)">⬇ Descargar imagen</button>'+
+      '<button type="button" class="btn sec" onclick="mdPrImprimir()">🖨 Imprimir</button>'+
+      '<button type="button" class="btn sec" onclick="mdPrTextoModal()">📲 Solo el texto</button>'+
+      '<button type="button" class="btn sec" onclick="mdPrVolver()">Volver</button></div>'+
+    '<p class="mini" style="margin-top:8px">Mandarlo, bajarlo o imprimirlo deja anotado «presupuesto entregado» con la fecha. No cobra ni acepta nada.</p>');
+  var box=$('#md-pr');
+  box.addEventListener('input',mdPrCambio); box.addEventListener('change',mdPrCambio);
+  box.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('button'); if(!b)return;
+    if(b.id==='md-pr-agregar'){mdPrLeer(); MD_PR.items.push(mdPrItem('',1,0)); mdPrPintarItems(); var ul=mdQ($('#md-pr-items'),'.md-pr-nom').pop(); if(ul)ul.focus(); mdPrPintar(); return}
+    if(b.classList.contains('md-pr-del')){mdPrLeer(); MD_PR.items.splice(+b.getAttribute('data-i'),1); if(!MD_PR.items.length)MD_PR.items.push(mdPrItem('',1,0)); mdPrPintarItems(); mdPrPintar()}});
+  mdPrPintarItems(); mdPrPintar()}
+function mdPrVolver(){var P=MD_PR; if(P&&P.volver)P.volver(); else closeModal()}
+function mdPrPintarItems(){
+  var P=MD_PR, el=$('#md-pr-items'); if(!P||!el)return;
+  el.innerHTML='<div class="md-pr-fila md-pr-h"><span>Tratamiento</span><span>Cant.</span><span>Precio Bs</span><span>Importe</span><span></span></div>'+
+    P.items.map(function(it,i){
+      return '<div class="md-pr-fila" data-i="'+i+'"><input class="md-pr-nom" list="md-pr-lista" value="'+esc(it.nom)+'" placeholder="Ej. Blanqueamiento" aria-label="Tratamiento">'+
+        '<input class="md-pr-cant" type="number" min="1" max="99" inputmode="numeric" value="'+esc(it.cant)+'" aria-label="Cantidad">'+
+        '<input class="md-pr-precio" inputmode="decimal" value="'+(it.precio?esc(it.precio):'')+'" placeholder="0" aria-label="Precio">'+
+        '<b class="md-pr-imp">'+esc(bs(it.precio*it.cant))+'</b>'+
+        '<button type="button" class="md-pr-del" data-i="'+i+'" title="Quitar" aria-label="Quitar">✕</button></div>'}).join('')}
+function mdPrLeer(){
+  var P=MD_PR; if(!P||!$('#md-pr'))return;
+  P.items=mdQ($('#md-pr-items'),'.md-pr-fila[data-i]').map(function(f){
+    return mdPrItem(f.querySelector('.md-pr-nom').value,f.querySelector('.md-pr-cant').value,String(f.querySelector('.md-pr-precio').value).replace(',','.'))});
+  var pr=$('#md-pr-prof'); if(pr&&!pr.disabled)P.prof=pr.value;
+  P.validez=num(($('#md-pr-validez')||{}).value)||15;
+  P.desc=String(($('#md-pr-desc')||{}).value||'');
+  P.cuotasOn=!!(($('#md-pr-cuotason')||{}).checked);
+  P.cuotas=num(($('#md-pr-cuotas')||{}).value)||2;
+  P.nota=String(($('#md-pr-nota')||{}).value||'').trim()}
+function mdPrCambio(e){
+  var t=e.target; if(!t)return;
+  mdPrLeer();
+  /* el precio de la lista cuando se elige un tratamiento sin precio */
+  if(t.classList.contains('md-pr-nom')&&e.type==='change'){var f=t.closest('.md-pr-fila'), pi=f.querySelector('.md-pr-precio');
+    if(!num(pi.value)){var pl=typeof mdPrecioDe==='function'?mdPrecioDe(t.value):null; if(pl){pi.value=pl; MD_PR.items[+f.getAttribute('data-i')].precio=pl}}}
+  if(t.id==='md-pr-cuotason'){var c=$('#md-pr-cuotas'); if(c)c.disabled=!t.checked}
+  mdQ($('#md-pr-items'),'.md-pr-fila[data-i]').forEach(function(f){var it=MD_PR.items[+f.getAttribute('data-i')]; if(it)f.querySelector('.md-pr-imp').textContent=bs(it.precio*it.cant)});
+  mdPrPintar()}
+function mdPrPintar(){
+  var P=MD_PR, el=$('#md-pr-tot'); if(!P||!el)return;
+  var c=mdPrCuentas(P);
+  el.innerHTML='<div class="md-pr-l"><span>Subtotal</span><b>'+esc(bs(c.sub))+'</b></div>'+
+    (c.desc>0?'<div class="md-pr-l desc"><span>Descuento</span><b>− '+esc(bs(c.desc))+'</b></div>':'')+
+    '<div class="md-pr-total"><span>Total</span><b>'+esc(bs(c.total))+'</b></div>'+
+    (c.cuotas.length?'<div class="md-pr-l cuotas"><span>'+c.cuotas.length+' cuotas de</span><b>'+esc(bs(c.cuotas[0].monto))+(c.cuotas[c.cuotas.length-1].monto!==c.cuotas[0].monto?' <small>(la última '+esc(bs(c.cuotas[c.cuotas.length-1].monto))+')</small>':'')+'</b></div>':'')+
+    '<div class="md-pr-l val"><span>Válido hasta</span><b>'+fmtF(c.hasta)+'</b></div>';
+  clearTimeout(MD_PR_T); MD_PR_T=setTimeout(mdPrPrevisualizar,350)}
+function mdPrPrevisualizar(){
+  var img=$('#md-pr-prev'); if(!img||!MD_PR)return;
+  try{var c=mdPrCanvas(MD_PR); img.src=c.toDataURL('image/jpeg',.6)}catch(e){}}
+
+/* ----- la imagen: canvas 1080×1350 ----- */
+function mdPrCorta(g,t,max){
+  t=String(t||''); if(g.measureText(t).width<=max)return t;
+  while(t.length>1&&g.measureText(t+'…').width>max)t=t.slice(0,-1);
+  return t+'…'}
+function mdPrLineas(g,t,max,maxL){
+  var out=[], pal=String(t||'').replace(/\s+/g,' ').trim().split(' '), l='';
+  pal.forEach(function(w){var p=l?l+' '+w:w; if(g.measureText(p).width<=max)l=p; else{if(l)out.push(l); l=w}});
+  if(l)out.push(l);
+  if(out.length>maxL){out=out.slice(0,maxL); out[maxL-1]=mdPrCorta(g,out[maxL-1]+'…',max)}
+  return out}
+function mdPrRect(g,x,y,w,h,r){g.beginPath(); if(g.roundRect)g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); g.closePath()}
+function mdPrCanvas(P){
+  var W=1080, H=1350, c=document.createElement('canvas'); c.width=W; c.height=H; var g=c.getContext('2d'), K=mdPrPaleta(), C=mdPrCuentas(P);
+  var M=64, der=W-M, F=K.fuente;
+  g.textBaseline='alphabetic';
+  g.fillStyle=K.paper; g.fillRect(0,0,W,H);
+  /* membrete */
+  var hb=200; g.fillStyle=K.banda; g.fillRect(0,0,W,hb);
+  g.fillStyle=K.acento; g.fillRect(0,0,W,K.cos?8:14);
+  if(K.cos){g.fillStyle=K.acento; g.fillRect(0,hb-3,W,3)}
+  g.fillStyle=K.cos?K.acento2:'#FFFFFF'; g.font=(K.cos?'400 50px ':'900 48px ')+K.serif;
+  g.fillText(mdPrCorta(g,clinica(),640),M,K.cos?104:102);
+  g.fillStyle=K.cos?'#EDE3C8':K.acento; g.font='700 19px '+F;
+  mdPrEspaciado(g,'PRESUPUESTO DE TRATAMIENTO',M,150,3);
+  g.textAlign='right'; g.fillStyle=K.cos?'#EDE3C8':'#D7DAD0'; g.font='700 20px '+F; g.fillText('N° '+P.nro,der,96);
+  g.font='600 20px '+F; g.fillText(fmtF(P.fecha),der,130); g.textAlign='left';
+  /* paciente · doctora · fecha */
+  var y=hb+34, cw=(W-M*2-24)/3, datos=[['PACIENTE',P.nombre],['DOCTORA',P.prof||'—'],['VÁLIDO HASTA',fmtF(C.hasta)]];
+  datos.forEach(function(d,i){var x=M+i*(cw+12);
+    g.fillStyle=K.panel; mdPrRect(g,x,y,cw,92,16); g.fill(); g.strokeStyle=K.linea; g.lineWidth=2; g.stroke();
+    g.fillStyle=K.gris; g.font='800 14px '+F; mdPrEspaciado(g,d[0],x+20,y+34,2);
+    g.fillStyle=K.ink; g.font='800 25px '+F; g.fillText(mdPrCorta(g,d[1],cw-40),x+20,y+70)});
+  /* la tabla */
+  y+=92+40;
+  var items=P.items.filter(function(it){return it.nom}), max=12, extra=0;
+  if(items.length>max){extra=items.length-(max-1); items=items.slice(0,max-1)}
+  var cols={nom:M+22,cant:M+615,precio:M+790,imp:der-22}, hh=48, nF=items.length+(extra?1:0);
+  var espacio=H-y-hh-(C.cuotas.length?400:340)-(P.nota?90:0), rh=Math.max(40,Math.min(nF<=5?70:60,Math.floor(espacio/Math.max(1,nF))));
+  g.fillStyle=K.suave; mdPrRect(g,M,y,W-M*2,hh,14); g.fill();
+  g.fillStyle=K.cos?'#5A4208':K.acento2; g.font='800 15px '+F;
+  mdPrEspaciado(g,'TRATAMIENTO',cols.nom,y+31,2); g.textAlign='center'; mdPrEspaciado(g,'CANT.',cols.cant,y+31,2,true); g.textAlign='right';
+  mdPrEspaciado(g,'PRECIO',cols.precio,y+31,2,true); mdPrEspaciado(g,'IMPORTE',cols.imp,y+31,2,true); g.textAlign='left';
+  y+=hh;
+  var fs=rh>=54?24:(rh>=46?21:18);
+  items.forEach(function(it,i){
+    if(i%2){g.fillStyle=K.panel; g.fillRect(M,y,W-M*2,rh)}
+    g.strokeStyle=K.linea; g.lineWidth=1; g.beginPath(); g.moveTo(M,y+rh-.5); g.lineTo(der,y+rh-.5); g.stroke();
+    var by=y+rh/2+fs*.36;
+    g.fillStyle=K.ink; g.font='600 '+fs+'px '+F; g.fillText(mdPrCorta(g,it.nom,cols.cant-cols.nom-60),cols.nom,by);
+    g.fillStyle=K.gris; g.textAlign='center'; g.fillText(String(it.cant),cols.cant,by); g.textAlign='right';
+    g.fillText(bs(it.precio),cols.precio,by);
+    g.fillStyle=K.ink; g.font='800 '+fs+'px '+F; g.fillText(bs(it.precio*it.cant),cols.imp,by); g.textAlign='left';
+    y+=rh});
+  if(extra){g.fillStyle=K.gris; g.font='600 italic '+fs+'px '+F; g.fillText('… y '+extra+' tratamiento'+(extra===1?'':'s')+' más (ver detalle)',cols.nom,y+rh/2+fs*.36); y+=rh}
+  if(!items.length){g.fillStyle=K.gris; g.font='600 italic 22px '+F; g.fillText('Sin tratamientos cargados',cols.nom,y+rh/2+8); y+=rh}
+  /* subtotal, descuento, total */
+  y+=28;
+  if(C.desc>0){
+    g.textAlign='right'; g.fillStyle=K.gris; g.font='600 22px '+F; g.fillText('Subtotal',der-260,y+22); g.fillStyle=K.ink; g.font='700 22px '+F; g.fillText(bs(C.sub),der-22,y+22);
+    g.fillStyle=K.clay; g.font='600 22px '+F; g.fillText('Descuento',der-260,y+58); g.font='700 22px '+F; g.fillText('− '+bs(C.desc),der-22,y+58); g.textAlign='left'; y+=86}
+  var ht=112; g.fillStyle=K.cos?K.banda:K.acento; mdPrRect(g,M,y,W-M*2,ht,18); g.fill();
+  if(K.cos){g.strokeStyle=K.acento; g.lineWidth=2; g.stroke()}
+  g.fillStyle=K.cos?K.acento2:K.ink; g.font='800 20px '+F; mdPrEspaciado(g,'TOTAL',M+30,y+48,3);
+  g.font='600 18px '+F; g.fillStyle=K.cos?'#CFC3A3':'rgba(32,36,28,.72)'; g.fillText('en bolivianos'+(C.desc>0?' · con descuento':''),M+30,y+80);
+  g.textAlign='right'; g.fillStyle=K.cos?'#FFFFFF':K.ink; g.font='900 58px '+F; g.fillText(bs(C.total),der-30,y+78); g.textAlign='left';
+  y+=ht+22;
+  /* cuotas */
+  if(C.cuotas.length){
+    var igual=C.cuotas.every(function(q){return q.monto===C.cuotas[0].monto});
+    g.fillStyle=K.panel; mdPrRect(g,M,y,W-M*2,74,16); g.fill(); g.strokeStyle=K.linea; g.lineWidth=2; g.stroke();
+    g.fillStyle=K.cos?K.acento:K.acento2; g.font='900 30px '+F; g.fillText('💳',M+24,y+48);
+    g.fillStyle=K.ink; g.font='800 26px '+F;
+    var tc='En '+C.cuotas.length+' cuotas de '+bs(C.cuotas[0].monto)+(igual?'':' (la última de '+bs(C.cuotas[C.cuotas.length-1].monto)+')');
+    g.fillText(mdPrCorta(g,tc,W-M*2-100),M+74,y+48); y+=74+18}
+  /* nota */
+  if(P.nota){g.fillStyle=K.gris; g.font='500 21px '+F; var ls=mdPrLineas(g,P.nota,W-M*2,3);
+    ls.forEach(function(l,i){g.fillText(l,M,y+26+i*30)}); y+=ls.length*30+14}
+  /* pie */
+  var yp=H-100; g.strokeStyle=K.cos?K.acento:K.linea; g.lineWidth=K.cos?2:2; g.beginPath(); g.moveTo(M,yp); g.lineTo(der,yp); g.stroke();
+  g.fillStyle=K.gris; g.font='600 21px '+F; g.fillText(mdPrCorta(g,'Precios en bolivianos · válido hasta '+fmtF(C.hasta)+' ('+C.dias+' días)',W-M*2),M,yp+42);
+  g.textAlign='right'; g.fillStyle=K.cos?K.acento2:K.ink; g.font='800 19px '+(K.cos?K.serif:F); var nc=mdPrCorta(g,clinica(),380), wc=g.measureText(nc).width; g.fillText(nc,der,yp+74); g.textAlign='left';
+  g.fillStyle=K.gris; g.font='500 17px '+F; g.fillText(mdPrCorta(g,(P.prof?'Presupuesto preparado por '+P.prof+'. ':'')+'No incluye tratamientos no detallados.',W-M*2-wc-24),M,yp+74);
+  return c}
+/* texto con espacio entre letras (canvas sin letterSpacing en todos los navegadores) */
+function mdPrEspaciado(g,t,x,y,sp,alineado){
+  if('letterSpacing' in g){var old=g.letterSpacing; g.letterSpacing=sp+'px'; g.fillText(t,x,y); g.letterSpacing=old||'0px'; return}
+  var al=g.textAlign, w=0, i; for(i=0;i<t.length;i++)w+=g.measureText(t[i]).width+sp;
+  var cx=al==='right'?x-w:(al==='center'?x-w/2:x); g.textAlign='left';
+  for(i=0;i<t.length;i++){g.fillText(t[i],cx,y); cx+=g.measureText(t[i]).width+sp}
+  g.textAlign=al}
+function mdPrBlob(P){return new Promise(function(ok){mdPrCanvas(P).toBlob(function(b){ok(b)},'image/jpeg',.9)})}
+function mdPrArchivo(P){return mdNomArch('Presupuesto '+P.nombre+' '+P.fecha)+'.jpg'}
+function mdPrSaludo(P){var C=mdPrCuentas(P); return 'Hola '+String(P.nombre).split(' ')[0]+'! 👋 Le mandamos su presupuesto de *'+clinica()+'*: total *'+bs(C.total)+'*, válido hasta el '+fmtF(C.hasta)+' 🦷'}
+/* mismo patrón que mandar el antes y después: compartir el archivo; si no se puede, bajarlo y abrir el chat */
+function mdPrMandar(compartir){
+  mdPrLeer(); if(!mdPrValida())return;
+  var P=MD_PR; toast('Armando el presupuesto…');
+  mdPrBlob(P).then(function(b){
+    var file=new File([b],mdPrArchivo(P),{type:'image/jpeg'});
+    var bajar=function(){
+      var url=URL.createObjectURL(b), x=document.createElement('a'); x.href=url; x.download=file.name; document.body.appendChild(x); x.click(); setTimeout(function(){URL.revokeObjectURL(url); x.remove()},1500);
+      if(compartir){if(P.cel)window.open(waLink(P.cel,mdPrSaludo(P)),'_blank','noopener');
+        toast('El presupuesto se descargó: adjuntalo en el chat de WhatsApp')}
+      else toast('Presupuesto descargado ✅');
+      mdPrRegistrar(compartir?'whatsapp':'descarga')};
+    if(compartir&&navigator.canShare&&navigator.canShare({files:[file]}))
+      return navigator.share({files:[file],title:clinica(),text:mdPrSaludo(P)}).then(function(){mdPrRegistrar('whatsapp')},function(e){if(!(e&&e.name==='AbortError'))bajar()});
+    bajar()},function(){toast('No se pudo armar la imagen',1)})}
+
+/* ----- imprimir: una hoja limpia sobre un contenedor que solo se ve al imprimir ----- */
+function mdPrPrintHtml(P){
+  var C=mdPrCuentas(P), K=mdPrPaleta(), items=P.items.filter(function(it){return it.nom});
+  return '<div class="md-prp'+(K.cos?' cos':'')+'"><div class="md-prp-cab"><div><h1>'+esc(clinica())+'</h1><small>PRESUPUESTO DE TRATAMIENTO</small></div><div class="md-prp-nro">N° '+esc(P.nro)+'<br>'+fmtF(P.fecha)+'</div></div>'+
+    '<div class="md-prp-datos"><div><small>Paciente</small><b>'+esc(P.nombre)+'</b></div><div><small>Doctora</small><b>'+esc(P.prof||'—')+'</b></div><div><small>Válido hasta</small><b>'+fmtF(C.hasta)+'</b></div></div>'+
+    '<table><thead><tr><th>Tratamiento</th><th class="n">Cant.</th><th class="n">Precio</th><th class="n">Importe</th></tr></thead><tbody>'+
+    items.map(function(it){return '<tr><td>'+esc(it.nom)+'</td><td class="n">'+it.cant+'</td><td class="n">'+esc(bs(it.precio))+'</td><td class="n">'+esc(bs(it.precio*it.cant))+'</td></tr>'}).join('')+'</tbody>'+
+    '<tfoot>'+(C.desc>0?'<tr><td colspan="3" class="n">Subtotal</td><td class="n">'+esc(bs(C.sub))+'</td></tr><tr><td colspan="3" class="n">Descuento</td><td class="n">− '+esc(bs(C.desc))+'</td></tr>':'')+
+    '<tr class="tot"><td colspan="3" class="n">TOTAL</td><td class="n">'+esc(bs(C.total))+'</td></tr></tfoot></table>'+
+    (C.cuotas.length?'<p class="md-prp-cuotas">💳 En '+C.cuotas.length+' cuotas de '+esc(bs(C.cuotas[0].monto))+(C.cuotas[C.cuotas.length-1].monto!==C.cuotas[0].monto?' (la última de '+esc(bs(C.cuotas[C.cuotas.length-1].monto))+')':'')+'</p>':'')+
+    (P.nota?'<p class="md-prp-nota">'+esc(P.nota)+'</p>':'')+
+    '<div class="md-prp-pie">Precios en bolivianos · válido hasta '+fmtF(C.hasta)+' ('+C.dias+' días)'+(P.prof?' · preparado por '+esc(P.prof):'')+'<br>No incluye tratamientos no detallados.</div></div>'}
+function mdPrImprimir(){
+  mdPrLeer(); if(!mdPrValida())return;
+  var P=MD_PR, box=$('#md-pr-print');
+  if(!box){box=document.createElement('div'); box.id='md-pr-print'; document.body.appendChild(box)}
+  box.innerHTML=mdPrPrintHtml(P);
+  document.body.classList.add('md-pr-imprimiendo');
+  var fin=function(){document.body.classList.remove('md-pr-imprimiendo'); window.removeEventListener('afterprint',fin)};
+  window.addEventListener('afterprint',fin); setTimeout(fin,4000);
+  try{window.print()}catch(e){}
+  mdPrRegistrar('impreso')}
+
+/* ----- el texto de siempre ----- */
+function mdPrTexto(P){
+  var C=mdPrCuentas(P), t='Hola '+String(P.nombre).split(' ')[0]+'! 👋 Le pasamos el presupuesto de su tratamiento en *'+clinica()+'*.\n\n';
+  P.items.forEach(function(it){if(!it.nom)return; t+='🦷 '+it.nom+(it.cant>1?' ×'+it.cant:'')+' — '+bs(it.precio*it.cant)+'\n'});
+  if(C.desc>0)t+='\nSubtotal: '+bs(C.sub)+'\n🎁 Descuento: −'+bs(C.desc)+'\n';
+  t+='\n💵 Total: *'+bs(C.total)+'*\n';
+  if(C.cuotas.length)t+='💳 En '+C.cuotas.length+' cuotas de '+bs(C.cuotas[0].monto)+(C.cuotas[C.cuotas.length-1].monto!==C.cuotas[0].monto?' (la última de '+bs(C.cuotas[C.cuotas.length-1].monto)+')':'')+'\n';
+  if(P.nota)t+='📝 '+P.nota+'\n';
+  t+='\n📅 Válido hasta el '+fmtF(C.hasta)+' · precios en bolivianos'+(P.prof?'\n👩‍⚕️ '+P.prof:'')+'\n\nCualquier duda estamos a la orden 🦷';
+  return t}
+function mdPrTextoModal(){
+  mdPrLeer(); if(!mdPrValida())return;
+  var P=MD_PR, t=mdPrTexto(P);
+  openModal('<h3>📲 Presupuesto por WhatsApp</h3><p class="mini">'+esc(P.nombre)+' · N° '+esc(P.nro)+'</p>'+
+    '<p class="hint">Mandar el mensaje no acepta ni cobra nada. Al abrir WhatsApp queda anotado «presupuesto entregado».</p>'+
+    '<div class="wa" id="wa-txt">'+esc(t)+'</div>'+
+    '<div class="row-btn">'+
+    (P.cel?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(P.cel,t)+'" onclick="mdPrRegistrar(\'texto\')">Abrir WhatsApp</a>':'<span class="mini">Sin celular anotado: copiá el texto</span>')+
+    '<button class="btn sec" onclick="copiarWa();mdPrRegistrar(\'texto\')">Copiar texto</button>'+
+    '<button class="btn sec" onclick="mdPrAbrir()">Volver al presupuesto</button></div>');
+  try{mdWaBurbuja()}catch(e){}}
+
+/* ----- queda anotado: «presupuesto entregado el …» ----- */
+function mdPrRegistrar(como){
+  var P=MD_PR; if(!P)return;
+  var hoy=hoyISO(), C=mdPrCuentas(P), n=0;
+  (P.recIds||[]).forEach(function(id){
+    var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||!esMia(r))return;
+    if(r.presuEntregado===hoy&&num(r.presuEntregadoTotal)===C.total&&r.presuEntregadoComo===como)return;
+    r.presuEntregado=hoy; r.presuEntregadoPor=P.prof||''; r.presuEntregadoTotal=C.total; r.presuEntregadoComo=como; r.presuEntregadoNro=P.nro;
+    persist(r); n++});
+  if(P.planId){var f=PAC[keyPac(P.nombre)], p=f&&(f.planes||[]).filter(function(x){return x.id===P.planId})[0];
+    if(p&&planEsMio(p)&&!(p.presuEntregado===hoy&&num(p.presuEntregadoTotal)===C.total)){p.presuEntregado=hoy; p.presuEntregadoTotal=C.total; p.presuEntregadoNro=P.nro; savePac(f); n++}}
+  if(n)setTimeout(function(){toast('Quedó anotado: presupuesto entregado el '+fmtF(hoy))},900)}
+function mdPrEntregadoHtml(r){
+  if(!r||!r.presuEntregado)return '';
+  return '<span class="pill ok md-pr-ent" title="'+esc((r.presuEntregadoComo==='impreso'?'Impreso':r.presuEntregadoComo==='texto'?'Por WhatsApp (texto)':'Imagen por WhatsApp o descargada')+(r.presuEntregadoPor?' · '+r.presuEntregadoPor:''))+'">📄 Presupuesto entregado el '+fmtF(r.presuEntregado)+(num(r.presuEntregadoTotal)>0?' · '+esc(bs(r.presuEntregadoTotal)):'')+'</span>'}
+
+/* ----- los botones y la sección en cada ventana ----- */
+function mdPrBotonJunto(sel,re,html){
+  var m=$('#modal'); if(!m||m.querySelector('.md-pr-bt'))return;
+  var b=mdQ(m,sel).filter(function(x){return re.test(x.textContent)})[0]; if(!b)return;
+  b.insertAdjacentHTML('afterend',html)}
+function mdPrEnFicha(nombre){
+  var m=$('#modal'); if(!m||m.querySelector('#md-pr-recs'))return;
+  var nj=jss(nombre);
+  mdPrBotonJunto('.row-btn button',/Planes/,'<button type="button" class="btn sec sm md-pr-bt" onclick="mdPrDesdeFicha(\''+nj+'\')">📄 Armar presupuesto</button>');
+  var recs=mdPrRecsDe(nombre); if(!recs.length)return;
+  var hV=mdQ(m,'h4').filter(function(h){return /^visitas$/i.test(h.textContent.trim())})[0]; if(!hV)return;
+  var est={'Aceptó':'ok','No quiso':'bad'}, box=document.createElement('div'); box.id='md-pr-recs'; box.className='md-pr-recs';
+  box.innerHTML='<h4>💬 Recomendado</h4>'+recs.slice(0,8).map(function(x){var p=x.p, r=x.r;
+    return '<div class="md-pr-rec"><div><b>'+esc(p.nom)+'</b>'+(num(p.monto)>0?' · '+esc(bs(p.monto)):'')+
+      '<div class="mini">el '+fmtF(r.fecha)+(r.profesional?' · '+esc(r.profesional):'')+(p.motivo?' · <i>'+esc(p.motivo)+'</i>':'')+'</div>'+
+      '<div class="md-pr-rec-est">'+(p.estado?'<span class="pill '+(est[p.estado]||'')+'">'+esc(p.estado)+'</span>':'<span class="pill warn">sin respuesta</span>')+' '+mdPrEntregadoHtml(r)+'</div></div>'+
+      (esMia(r)?'<button type="button" class="btn sec sm" onclick="mdPrDesdeAtencion(\''+r.id+'\')">📄 Armar presupuesto</button>':'')+'</div>'}).join('');
+  hV.parentNode.insertBefore(box,hV)}
+function mdPrEnPlan(nombre,id){
+  var m=$('#modal'); if(!m||m.querySelector('.md-pr-bt'))return;
+  var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
+  mdPrBotonJunto('.row-btn button',/Enviar presupuesto por WhatsApp/,'<button type="button" class="btn sec md-pr-bt" onclick="mdPrDesdePlan(\''+jss(nombre)+'\',\''+esc(id)+'\')">📄 Armar presupuesto</button>');
+  if(p.presuEntregado){var b=m.querySelector('.md-pr-bt'); if(b&&b.parentNode)b.parentNode.insertAdjacentHTML('afterend','<p class="mini md-pr-plan-ent">'+mdPrEntregadoHtml({presuEntregado:p.presuEntregado,presuEntregadoTotal:p.presuEntregadoTotal})+'</p>')}}
+function mdPrEnAtencion(id){
+  var r=DATA.filter(function(x){return x.id===id})[0], m=$('#modal'); if(!r||!m||m.querySelector('#md-pr-at'))return;
+  if(!(r.presu||[]).length)return;
+  var acc=mdQ(m,'.row-btn').pop(); if(!acc)return;
+  var box=document.createElement('div'); box.id='md-pr-at'; box.className='md-pr-at';
+  box.innerHTML='<h4>💬 Le recomendó</h4>'+(r.presu||[]).map(function(p){
+    return '<div class="mrow"><span>'+esc(p.nom)+(p.motivo?' <span class="mini">('+esc(p.motivo)+')</span>':'')+(p.estado?' <span class="pill '+(p.estado==='Aceptó'?'ok':'bad')+'">'+esc(p.estado)+'</span>':'')+'</span><b>'+(num(p.monto)>0?esc(bs(p.monto)):'—')+'</b></div>'}).join('')+
+    '<div class="md-pr-at-acc">'+mdPrEntregadoHtml(r)+(esMia(r)?'<button type="button" class="btn sec sm md-pr-bt" onclick="mdPrDesdeAtencion(\''+r.id+'\')">📄 Armar presupuesto</button>':'')+'</div>';
+  acc.parentNode.insertBefore(box,acc)}
+(function(){
+  var _vp=verPaciente; verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdPrEnFicha(nombre)}catch(e){if(window.console)console.error('presupuesto ficha',e)} return r};
+  var _vpl=verPlan; verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPrEnPlan(nombre,id)}catch(e){if(window.console)console.error('presupuesto plan',e)} return r};
+  if(typeof verFicha==='function'){var _vf=verFicha; verFicha=function(id){var r=_vf.apply(this,arguments); try{mdPrEnAtencion(id)}catch(e){if(window.console)console.error('presupuesto atención',e)} return r}}
+  /* planNormalize deja solo los campos que conoce: la marca del presupuesto del plan se conserva (el servidor la guarda en _planes_json tal cual) */
+  if(typeof planNormalize==='function'){var _pn=planNormalize; planNormalize=function(p){var o=_pn.apply(this,arguments);
+    if(p&&p.presuEntregado){o.presuEntregado=p.presuEntregado; if(p.presuEntregadoTotal!=null)o.presuEntregadoTotal=num(p.presuEntregadoTotal); if(p.presuEntregadoNro)o.presuEntregadoNro=p.presuEntregadoNro} return o}}
+  /* Sonri enseña lo nuevo */
+  if(typeof ASIS_NOVEDADES!=='undefined'&&typeof ASIS_AYUDA!=='undefined'){
+    ASIS_NOVEDADES.push({id:'md-presupuesto', f:'2026-10-21', t:'Presupuesto prolijo para mandar',
+      x:'En la ficha del paciente (junto a Planes), en la ventana de un plan y en una atención con recomendaciones está «📄 Armar presupuesto»: los tratamientos vienen cargados con su precio, podés cambiar precios, poner descuento, cuotas y validez, y sale como una imagen prolija con el membrete de la clínica para mandar por WhatsApp, imprimir o como texto. Queda anotado «presupuesto entregado» con la fecha.', ayuda:/presupuesto prolijo/});
+    ASIS_AYUDA.push({q:'¿Cómo le mando un presupuesto prolijo?', k:'presupuesto prolijo imagen cotizacion mandar whatsapp imprimir descuento cuotas validez armar', v:'pacientes', f:'#pc-q',
+      p:['Abrí la ficha del paciente (lupa o 👥 Pacientes) y tocá «📄 Armar presupuesto» (también está en la ventana del plan y en la atención donde anotaste lo recomendado).','Los tratamientos ya vienen con su precio: cambiá lo que haga falta, agregá o quitá líneas, y si corresponde poné descuento, cuotas y hasta cuándo vale (15 días si no tocás nada).','Tocá «📤 Mandar por WhatsApp»: en el celular se comparte la imagen; en la compu se descarga y se abre el chat para adjuntarla. «🖨 Imprimir» saca una hoja limpia y «📲 Solo el texto» manda el mensaje de siempre.','En la ficha, la recomendación queda con «📄 Presupuesto entregado el …». No cobra ni acepta nada: eso sigue como siempre.']})}
+})();
 /* ===== MODERNO FIN ===== */
 </script>
 </body>

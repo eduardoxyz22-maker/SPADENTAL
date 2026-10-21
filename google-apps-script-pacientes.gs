@@ -550,20 +550,22 @@ function doList(ses) {
   /* los egresos de la clínica son de la dueña y recepción: a una doctora no se le mandan */
   var pauta = !!(ses && ses.rol === 'pauta');
   var egr = (ses && (ses.rol === 'doctora' || pauta)) ? [] : doListEgr();
+  /* el cierre de caja del día es de la dueña y recepción, como los egresos */
+  var cie = (ses && (ses.rol === 'doctora' || pauta)) ? [] : doListCierres();
   /* la clave de pauta lee solo lo que necesita: sin metas ni comisiones, y sin fichas médicas */
   var cfg = pauta ? cfgSinSesion(leerCfg()) : cfgPublica(leerCfg());
   var pacs = doListPac();
   if (pauta) pacs = pacs.map(function (p) { return { nombre: p.nombre, nac: '', med: {}, planes: p.planes || [], ts: p.ts || '' }; });
   var sh = getSheet();
   var n = sh.getLastRow();
-  if (n < 2) return { ok: true, registros: [], cfg: cfg, pacientes: pacs, egresos: egr };
+  if (n < 2) return { ok: true, registros: [], cfg: cfg, pacientes: pacs, egresos: egr, cierres: cie };
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
     out.push(registroDeFila(filas[i]));
   }
-  return { ok: true, registros: out, cfg: cfg, pacientes: pacs, egresos: egr };
+  return { ok: true, registros: out, cfg: cfg, pacientes: pacs, egresos: egr, cierres: cie };
 }
 
 function doSave(r, base, ses) {
@@ -1203,7 +1205,7 @@ var ANTICIPO_DOCTORAS = true;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-26-revision';
+var VERSION_SCRIPT = '2026-10-27-cierre';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
@@ -1276,6 +1278,7 @@ function cfgPublica(cfg) {
   o.clavesProfHay = con;
   o.pagoPlanDoctoras = true;
   o.paquetes = true;
+  o.cierres = true;
   return o;
 }
 /* Una configuración que llega del panel no puede tocar las claves. */
@@ -1283,7 +1286,7 @@ function cfgSinClaves(cfg, guardada) {
   if (!cfg) return cfg;
   var o = {}, k;
   for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
-  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras; delete o.paquetes; delete o.parcial;
+  delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras; delete o.paquetes; delete o.cierres; delete o.parcial;
   delete o.adminHash; delete o.passHash; delete o.clavesProf;
   if (guardada !== undefined) {
     /* la config guardada lleva siempre las claves vigentes: si algún día se
@@ -1642,6 +1645,83 @@ function doPasarAlPlan(c, ses) {
     anticipos: nuevos.map(function (a) { return registroDeFila(filaDeRegistro(a)); }), movido: movido };
 }
 
+/* =====================================================================
+   CIERRE DE CAJA DEL DÍA (hoja «_Cierres»)
+   Solo registra: quién cerró, cuánto efectivo contó, cuánto esperaba el
+   panel (lo que entró en efectivo menos lo que salió por egresos) y la
+   diferencia. No toca ningún cobro ni egreso: es una hoja aparte, para que
+   la dueña vea desde cualquier aparato si el día cerró y cómo cuadró.
+   Una fila por fecha: cerrar de nuevo el mismo día la reemplaza. Cierran la
+   dueña y recepción; una doctora no (y tampoco recibe los cierres).
+   ===================================================================== */
+var HOJA_CIERRES = '_Cierres';
+var COLS_CIERRES = ['Fecha', 'Quién', 'Contado efectivo', 'Esperado efectivo', 'Diferencia', 'Nota', 'ts', 'Rol'];
+var CIERRES_DIAS = 90;   // el panel recibe los últimos 90 días
+function getSheetCierres() {
+  var ss = getSpreadsheet();
+  var sh = ss.getSheetByName(HOJA_CIERRES);
+  if (!sh) sh = ss.insertSheet(HOJA_CIERRES);
+  var cab = sh.getRange(1, 1, 1, Math.max(sh.getLastColumn(), 1)).getValues()[0];
+  if (cab.length < COLS_CIERRES.length || String(cab[0]).trim() !== COLS_CIERRES[0]) {
+    sh.getRange(1, 1, 1, COLS_CIERRES.length).setValues([COLS_CIERRES]);
+    sh.getRange(1, 1, 1, COLS_CIERRES.length)
+      .setFontWeight('bold').setBackground('#A8C21E').setFontColor('#262625');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+function filaDeCierre(c) {
+  return [c.fecha || '', c.quien || '', Number(c.contado) || 0, Number(c.esperado) || 0,
+    Number(c.diferencia) || 0, c.nota || '', c.ts || '', c.rol || ''];
+}
+function cierreDeFila(f) {
+  return { fecha: formatoFecha(f[0]), quien: String(f[1] || ''), contado: Number(f[2]) || 0,
+    esperado: Number(f[3]) || 0, diferencia: Number(f[4]) || 0, nota: String(f[5] || ''),
+    ts: String(f[6] || ''), rol: String(f[7] || '') };
+}
+/* los cierres de los últimos 90 días, del más nuevo al más viejo */
+function doListCierres() {
+  var sh = getSheetCierres();
+  var n = sh.getLastRow();
+  if (n < 2) return [];
+  var desde = new Date(); desde.setDate(desde.getDate() - CIERRES_DIAS);
+  var corte = Utilities.formatDate(desde, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var filas = sh.getRange(2, 1, n - 1, COLS_CIERRES.length).getValues();
+  var out = [];
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0]) continue;
+    var c = cierreDeFila(filas[i]);
+    if (c.fecha >= corte) out.push(c);
+  }
+  out.sort(function (a, b) { return a.fecha < b.fecha ? 1 : (a.fecha > b.fecha ? -1 : 0); });
+  return out;
+}
+function filaCierrePorFecha(sh, fecha) {
+  var n = sh.getLastRow();
+  if (n < 2) return 0;
+  var fs = sh.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = 0; i < fs.length; i++) if (formatoFecha(fs[i][0]) === fecha) return i + 2;
+  return 0;
+}
+/* guarda (o reemplaza) el cierre de una fecha. La diferencia la calcula el
+   servidor: contado menos esperado. Quién cerró lo manda el panel (la
+   persona que está usando ese aparato); si no viene, lo dice la sesión. */
+function doCierre(c, ses) {
+  if (!c || !/^\d{4}-\d{2}-\d{2}$/.test(String(c.fecha || ''))) return { ok: false, error: 'fecha_invalida' };
+  var contado = Number(c.contado), esperado = Number(c.esperado);
+  if (isNaN(contado) || isNaN(esperado)) return { ok: false, error: 'monto_invalido' };
+  var quien = String(c.quien || '').trim().slice(0, 60) || quienFoto(ses);
+  var reg = { fecha: String(c.fecha), quien: quien,
+    contado: Math.round(contado * 100) / 100, esperado: Math.round(esperado * 100) / 100,
+    diferencia: Math.round((contado - esperado) * 100) / 100,
+    nota: String(c.nota || '').slice(0, 2000), ts: new Date().toISOString(), rol: ses.rol || '' };
+  var sh = getSheetCierres();
+  var fila = filaCierrePorFecha(sh, reg.fecha), v = filaDeCierre(reg);
+  if (fila) sh.getRange(fila, 1, 1, COLS_CIERRES.length).setValues([v]);
+  else sh.getRange(sh.getLastRow() + 1, 1, 1, COLS_CIERRES.length).setValues([v]);
+  return { ok: true, cierre: cierreDeFila(v), cierres: doListCierres() };
+}
+
 /* ------------------------------------------------------------------ HTTP */
 function json(obj) {
   if (obj && typeof obj === 'object') { obj.v = FUSION_V; obj.auth = AUTH_V; }
@@ -1672,7 +1752,7 @@ function doPost(e) {
     /* base ausente = panel de una versión anterior: escribe como siempre.
        base null = alta nueva (o cola vieja): se junta igual con lo que haya. */
     var base = Object.prototype.hasOwnProperty.call(body, 'base') ? body.base : undefined;
-    if (['save', 'delete', 'pac', 'egreso', 'egresoDel'].indexOf(body.action) >= 0 && deOtraClinica(reg))
+    if (['save', 'delete', 'pac', 'egreso', 'egresoDel', 'cierre'].indexOf(body.action) >= 0 && deOtraClinica(reg))
       return json({ ok: false, error: 'otra_clinica' });
     if (body.action === 'bulk' && (body.registros || []).some(deOtraClinica)) return json({ ok: false, error: 'otra_clinica' });
     if (body.action === 'save') return json(doSave(reg, base, ses));
@@ -1687,6 +1767,9 @@ function doPost(e) {
     if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg, base));
+    /* el cierre de caja del día lo hacen la dueña y recepción; una doctora no */
+    if (body.action === 'cierre' && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
+    if (body.action === 'cierre') return json(doCierre(reg, ses));
     if (body.action === 'foto') return json(doFotoGuardar(body.foto, ses));
     if (body.action === 'fotos') return json(doFotos(body.consulta, ses));
     if (body.action === 'fotoVer') return json(doFotoVer(body.consulta, ses));

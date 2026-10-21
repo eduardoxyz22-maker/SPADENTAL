@@ -190,7 +190,8 @@ const num = s => +String(s || '').replace(/[^\d-]/g, '') || 0;
   const NC = await D.evaluate(() => [...document.querySelectorAll('#cj-nocuadra .md-pc-c')].map(r => [r.querySelector('b').textContent, r.querySelector('.pill').textContent, r.querySelector('button').textContent, r.querySelector('small').textContent]));
   OK('No cuadran: Tomás (pagó todo, dice 250 → Dejar en 0) y Elena (600 de 900, dice 900 → Dejar en 300)', NC.length === 2 && NC[0][0] === 'Tomás Rivero' && NC[0][1] === 'dice 250' && NC[0][2] === 'Dejar en 0' && /pagó todo/.test(NC[0][3]) && NC[1][0] === 'Elena Guzmán' && NC[1][2] === 'Dejar en 300' && /pagó 600 de 900/.test(NC[1][3]), NC);
   OK('el texto de la tarjeta sigue nombrando a los pacientes (como lee la prueba s11)', await D.evaluate(() => /Tomás Rivero/.test($('#cj-nocuadra').textContent) && /Elena Guzmán/.test($('#cj-nocuadra').textContent)));
-  await D.locator('#cj-nocuadra .md-pc-c', { hasText: 'Elena Guzmán' }).locator('button').click(); await D.waitForTimeout(800);
+  /* el KPI cuenta animado hasta 1,1 s: se espera a que termine antes de leer el número */
+  await D.locator('#cj-nocuadra .md-pc-c', { hasText: 'Elena Guzmán' }).locator('button').click(); await D.waitForTimeout(1800);
   const despues = await D.evaluate(() => ({ saldo: DATA.filter(r => r.paciente === 'Elena Guzmán' && r.total === 900)[0].saldo, filas: document.querySelectorAll('#cj-nocuadra .md-pc-c').length, kpi: document.querySelector('#md-pc-kpis .kpi[data-f="nocuadra"] .v').textContent, deuda: document.querySelector('#md-pc-kpis .kpi[data-f="deuda"] .v').textContent }));
   OK('«Dejar en 300» corrige el saldo con arreglarSaldo y la fila se va; los totales se actualizan', despues.saldo === 300 && despues.filas === 1 && despues.kpi === '1' && despues.deuda === 'Bs 3.100', despues);
   await D.locator('#cj-nocuadra .md-pc-c', { hasText: 'Tomás Rivero' }).locator('button').click(); await D.waitForTimeout(800);
