@@ -33,7 +33,7 @@ async function pedir(action, extra) {
   const L = await pedir('list', { token: lg.token });
   if (!L.ok) throw new Error('list: ' + L.error);
   const regs = L.registros || [], pacs = L.pacientes || [];
-  if (process.env.DUMP) fs.writeFileSync(path.join(__dirname, CL + '-crudo.json'), JSON.stringify({ registros: regs, pacientes: pacs }));
+  if (process.env.DUMP) fs.writeFileSync(path.join(process.env.SALIDA || __dirname, CL + '-crudo.json'), JSON.stringify({ registros: regs, pacientes: pacs }));
   const H = []; const add = (tipo, r, detalle, monto) => H.push({ tipo, paciente: r.paciente || r.nombre || '', fecha: r.fecha || '', id: r.id || '', detalle, monto: monto == null ? '' : R(monto) });
 
   const ids = new Set(regs.map(r => r.id));

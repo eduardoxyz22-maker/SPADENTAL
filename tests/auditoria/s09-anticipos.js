@@ -8,7 +8,9 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
 (async () => {
   console.log('PANEL', SPA ? 'Spa' : 'Cosmetic');
   const server = fakeServer();
-  const A = await abrir({ server }); await entrar(A, FAB.equipo); const w = A.w, hoy = w.hoyISO();
+  /* desde 2026-10-29-auditoria la clave de fábrica no borra: la dueña y recepción entran con claves propias (de prueba) */
+  { const v = server.ctx.leerVerif(); v.admin = sha('prueba-duena-1'); v.equipo = sha('prueba-equipo-1'); server.ctx.guardarVerif(v); }
+  const A = await abrir({ server }); await entrar(A, 'prueba-equipo-1'); const w = A.w, hoy = w.hoyISO();
   const cajaHoy = () => { const rows = w.filasCajaDia(hoy); return { cobr: w.totalCobros(rows), efe: rows.reduce((a, r) => a + w.pagosDe(r).filter(p => p.metodo === 'Efectivo').reduce((x, p) => x + p.monto, 0), 0), n: rows.filter(r => !r._soloCobro).length }; };
   const srvRow = pac => Object.values(server.registros).filter(r => r.paciente === pac);
 
@@ -86,12 +88,12 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
   OK('A8 al borrar la atención el saldo vuelve', w.creditoDe('Ana Anticipo') === 600, w.creditoDe('Ana Anticipo'));
 
   // A9 otro equipo ve lo mismo
-  const B = await abrir({ server }); await entrar(B, FAB.equipo); await B.w.pullServer(); await B.tick(50);
+  const B = await abrir({ server }); await entrar(B, 'prueba-equipo-1'); await B.w.pullServer(); await B.tick(50);
   OK('A9 otro equipo ve el mismo saldo a favor', B.w.creditoDe('Ana Anticipo') === 600, B.w.creditoDe('Ana Anticipo'));
   OK('A9 otro equipo ve la misma caja', B.w.totalCobros(B.w.filasCajaDia(hoy)) === w.totalCobros(w.filasCajaDia(hoy)), [B.w.totalCobros(B.w.filasCajaDia(hoy)), w.totalCobros(w.filasCajaDia(hoy))]);
 
   // A10 doctoras
-  const ADM = await abrir({ server }); await entrar(ADM, FAB.admin);
+  const ADM = await abrir({ server }); await entrar(ADM, 'prueba-duena-1');
   ADM.w.CFG.clavesProf = { 'Dra. Brenda': sha('brenda-ant') }; ADM.w.saveCfg(true); await ADM.tick(30);
   await nueva(ADM, { pac: 'Paciente Brenda', total: 200, acuenta: 0, prof: 'Dra. Brenda' });
   const D = await abrir({ server }); await entrar(D, 'brenda-ant'); await D.w.pullServer(); await D.tick(700);

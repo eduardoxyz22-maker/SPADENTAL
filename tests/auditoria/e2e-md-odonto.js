@@ -214,7 +214,7 @@ const PAC = 'Paciente Odonto Uno', AJENO = 'Paciente Odonto Ajeno', DRA = 'Dra. 
   /* ---------- la clave de pauta no recibe las fichas médicas ---------- */
   const lp = JSON.parse(JSON.stringify(server.ctx.doList({ rol: 'pauta', prof: '' })));
   const pp = (lp.pacientes || []).filter(p => p.nombre === PAC)[0];
-  OK('la lista para la clave de pauta trae la ficha sin med (sin marcas)', pp && JSON.stringify(pp.med) === '{}', pp && pp.med);
+  OK('la lista para la clave de pauta trae la ficha sin med (sin marcas)', pp && (pp.med === undefined || JSON.stringify(pp.med) === '{}'), pp && pp.med);
   OK('en la pauta el odontograma no se toca (odoPuedeVer es falso con ROL pauta)', await M.evaluate(() => { const r0 = ROL; ROL = 'pauta'; const r = odoPuedeVer(); ROL = r0; return r === false; }));
 
   /* ---------- Sonri lo enseña ---------- */

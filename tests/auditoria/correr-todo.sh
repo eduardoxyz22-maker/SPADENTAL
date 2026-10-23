@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 fallas=0
 for f in s08b-v6 s09-anticipos s10-corregir-cobro s11-no-cuadra s12-planes s13-pago-plan-doctora s14-editar-suma-pago \
          s15-auditoria-servidor s16-paquetes s17-script-viejo s18-paquete-desde-atencion s19-sin-visitas s20-borrar-pago \
-         s21-paquete-en-la-fila s22-caso-real s23-diagnostico s24-credito-por-plan; do
+         s21-paquete-en-la-fila s22-caso-real s23-diagnostico s24-credito-por-plan s25-auditoria-servidor; do
   for p in spa cos; do
     r=$(PANEL=$p node -r ./netguard.js $f.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     $f ($p)";; *) echo "FALLA  $f ($p): $r"; fallas=$((fallas+1));; esac
@@ -57,6 +57,12 @@ if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
     case "$r" in "TODO OK"*) echo "OK     e2e-md-odonto ($p)";; *) echo "FALLA  e2e-md-odonto ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-md-recordatorios.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-md-recordatorios ($p)";; *) echo "FALLA  e2e-md-recordatorios ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-md-auditoria-ui.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-md-auditoria-ui ($p)";; *) echo "FALLA  e2e-md-auditoria-ui ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-md-noche.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-md-noche ($p)";; *) echo "FALLA  e2e-md-noche ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-auditoria-panel.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-auditoria-panel ($p)";; *) echo "FALLA  e2e-auditoria-panel ($p): $r"; fallas=$((fallas+1));; esac
   done
 else echo "(sin Chromium: se saltea e2e-circuito)"; fi
 echo; [ $fallas -eq 0 ] && echo "TODO OK" || echo "FALLAS: $fallas"

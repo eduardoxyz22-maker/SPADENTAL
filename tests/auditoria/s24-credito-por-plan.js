@@ -84,7 +84,8 @@ console.log('PANEL', SPA ? 'Spa' : 'Cosmetic');
   const m = row('cita2', pac, 100, { profesional: 'Dra. Mirna', planId: 'plan-S', planEtapa: 2 }), sh = row('cita2', pac, 100, { profesional: 'Dra. Shirley', planId: 'plan-S', planEtapa: 1 });
   const first = save(s, m, cita, tok('Dra. Mirna')), second = save(s, sh, cita, tok('Dra. Shirley'));
   OK('B2b la 1ra doctora marca la sesión 2 (libre)', first.ok && !first.separada, first.error);
-  OK('B2b la 2da, separada, manda la sesión 1 que ya está hecha: rechazada', second.ok === false && second.error === 'sesion_repetida' && second.etapa === 1, second);
+  /* desde 2026-10-29-auditoria el paciente es de la Dra. Mirna (su plan): la Dra. Shirley ya no puede tomar esa cita (sin_permiso); antes caía en sesion_repetida. Cualquiera de los dos rechazos sirve: no se crea nada. */
+  OK('B2b la 2da (paciente de otra doctora) queda rechazada', second.ok === false && ((second.error === 'sesion_repetida' && second.etapa === 1) || second.error === 'sin_permiso'), second);
   OK('B2b no se creó la visita separada', list(s).length === 3, list(s).length);
 }
 /* la clave de pauta: solo lectura y sin metas, comisiones ni fichas médicas */

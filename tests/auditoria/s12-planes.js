@@ -8,7 +8,10 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
 (async () => {
   console.log('PANEL', SPA ? 'Spa' : 'Cosmetic');
   const server = fakeServer();
-  const A = await abrir({ server }); await entrar(A, FAB.admin); const w = A.w, hoy = w.hoyISO();
+  /* desde 2026-10-29-auditoria la clave de fábrica no borra: la dueña entra con su clave propia (de prueba) */
+  { const v = server.ctx.leerVerif(); v.admin = require('./lib.js').sha('prueba-duena-1'); server.ctx.guardarVerif(v); }
+  const DUENA = 'prueba-duena-1';
+  const A = await abrir({ server }); await entrar(A, DUENA); const w = A.w, hoy = w.hoyISO();
   const conf = (f) => { const c = w.confirm; w.confirm = () => true; try { return f(); } finally { w.confirm = c; } };
   const caja = () => w.totalCobros(w.filasCajaDia(hoy));
   const plan = (pac, id) => w.planesDe(pac).find(p => p.id === id);
@@ -127,7 +130,7 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
   conf(() => w.borrar(ats2[2].id)); await A.tick(60);
   OK('12 borrar la atención: etapa pendiente otra vez y el adelanto vuelve', !plan('Orto Adelantado', p2.id).sesiones[2].hecha && w.creditoPara('Orto Adelantado', p2.id) === credAntes + 1000 && w.cobradoPlan(plan('Orto Adelantado', p2.id)) === 3000);
   // ---- 13 otro equipo ve lo mismo
-  const B = await abrir({ server }); await entrar(B, FAB.admin); await B.w.pullServer(); await B.tick(400);
+  const B = await abrir({ server }); await entrar(B, DUENA); await B.w.pullServer(); await B.tick(400);
   const pB = B.w.planesDe('Orto Sinpago').find(p => p.id === p1.id);
   OK('13 otro equipo ve el plan, pagos y etapas iguales', pB && B.w.cobradoPlan(pB) === w.cobradoPlan(plan('Orto Sinpago', p1.id)) && B.w.avancePlan(pB).hechas === 4, pB && [B.w.cobradoPlan(pB), B.w.avancePlan(pB).hechas]);
   R('errores', [A.errors.slice(0, 3), B.errors.slice(0, 3)]);

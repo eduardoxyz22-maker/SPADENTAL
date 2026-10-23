@@ -2639,16 +2639,16 @@ body.md-noche .md-rf-op em{background:rgba(255,255,255,.1)}
 #conn-banner.md-pt-rutina{display:none !important}
 .md-pt-fila{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;margin-top:4px}
 .md-pt-fila .md-linea{margin-top:0}
-.md-pt{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#E9F2C6;border-radius:999px;
+#md-pt{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#E9F2C6;border-radius:999px;
   padding:3px 11px;font:inherit;font-size:12.5px;font-weight:700;line-height:1.35;cursor:pointer;white-space:nowrap;max-width:100%;-webkit-tap-highlight-color:transparent}
-.md-pt[hidden]{display:none}
-.md-pt span{overflow:hidden;text-overflow:ellipsis}
-.md-pt:hover{background:rgba(255,255,255,.17)}
-.md-pt:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
-.md-pt i,.md-pt-gt i{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#7BE0A6;box-shadow:0 0 0 3px rgba(123,224,166,.25)}
+#md-pt[hidden]{display:none}
+#md-pt span{overflow:hidden;text-overflow:ellipsis}
+#md-pt:hover{background:rgba(255,255,255,.17)}
+#md-pt:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+#md-pt i,.md-pt-gt i{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#7BE0A6;box-shadow:0 0 0 3px rgba(123,224,166,.25)}
 .md-pt-am i{background:#FFC34D;box-shadow:0 0 0 3px rgba(255,195,77,.25)}
 .md-pt-ro i{background:#FF7A5C;box-shadow:0 0 0 3px rgba(255,122,92,.25)}
-.md-pt.md-pt-ro{color:#FFD9CF}
+#md-pt.md-pt-ro{color:#FFD9CF}
 .md-anim .md-pt-am i{animation:mdPtLate 1.2s ease-in-out infinite}
 @keyframes mdPtLate{50%{box-shadow:0 0 0 5px rgba(255,195,77,.08)}}
 .md-pt-globo{position:fixed;z-index:70;width:310px;max-width:calc(100vw - 16px);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;
@@ -2666,13 +2666,133 @@ body.md-noche .md-rf-op em{background:rgba(255,255,255,.1)}
 body.md-noche .md-pt-sinc{color:#E8C27A}
 @media(max-width:760px){
   .md-pt-fila{margin-top:3px;gap:4px 8px}
-  .md-pt{font-size:11.5px;padding:2px 9px;gap:6px}
-  .md-pt i{width:7px;height:7px;flex-basis:7px}}
+  #md-pt{font-size:11.5px;padding:2px 9px;gap:6px}
+  #md-pt i{width:7px;height:7px;flex-basis:7px}}
 /* celular: las tarjetas de citas y recordatorios en dos filas (antes el texto quedaba en una columna de 0 px con los botones encima) */
 @media(max-width:640px){
   .rem.md-r{grid-template-columns:44px minmax(0,1fr)!important;row-gap:10px}
   .rem.md-r>.acts{grid-column:1/-1!important;grid-row:auto!important;flex-wrap:wrap!important;justify-content:flex-start!important;width:auto!important;position:static!important}
 }
+/* ----- parte: 95-auditoria-ui.css ----- */
+/* ---------- 95 · arreglos de la auditoría de pantalla ----------
+   (1) modo noche: lo que quedaba con fondo blanco o «tinta sobre tinta» (en la noche --ink es clara);
+   (2) el menú de arriba entra en 1366 (md-nav-c1 aprieta, md-nav-c2 acorta etiquetas; lo decide mdNavAjustar);
+   (3) la ficha en 390 px: el texto tiene lugar y WhatsApp baja de fila;
+   (4) la pastilla de la conexión (#md-pt) mide 32 px para el dedo sin agrandar el encabezado. */
+
+/* ----- 1 · modo noche ----- */
+/* de noche el verde/dorado «oscuro» (--lime-dk) se usa como letra sobre fondos oscuros (Cosmetic: #7A5A0C no se lee):
+   pasa a un tono claro del mismo color; donde era fondo con letra blanca, la letra va oscura (reglas de abajo) */
+body.md-noche{--md-lime-tx:color-mix(in srgb,var(--lime) 72%,#fff);--lime-dk:color-mix(in srgb,var(--lime) 72%,#fff)}
+/* fondos blancos fijos → el panel oscuro */
+body.md-noche .anu-btn,body.md-noche .md-prox,body.md-noche .md-seg,body.md-noche .md-paso,body.md-noche .md-docs button,
+body.md-noche .md-ctrl-t button,body.md-noche .md-pre-cats button,body.md-noche .md-pt-sel button,body.md-noche .md-mas-m,
+body.md-noche .md-ag-x,body.md-noche .md-horas-g button,body.md-noche .md-pasos-at button,body.md-noche .dia .resumen,
+body.md-noche .kpi.md-rk.md-rk-cero,body.md-noche .kpi.md-rk.md-rk-urg,body.md-noche .md-pre-top input{background-color:var(--panel);color:var(--ink)}
+body.md-noche .anu-btn{border-color:var(--line)}
+body.md-noche .anu-btn:hover{background:#22261D}
+body.md-noche .anu-btn.anu-on{background:#3A2219;border-color:#5A3A2A;color:#F4C3B0}
+body.md-noche .md-prox{box-shadow:0 0 0 6px color-mix(in srgb,var(--lime) 18%,#11130F)}
+body.md-noche .md-fc-av{background:color-mix(in srgb,var(--lime) 22%,#1B1E18)}
+body.md-noche .md-kc-chip{background:#22261D}
+body.md-noche .md-kc-chip.bien{background:#1E3128;color:#9BD8B6}body.md-noche .md-kc-chip.mal{background:#3A2219;color:#F4C3B0}
+body.md-noche .md-cobro-est.debe{background:#3A2F14;color:#F2C969}body.md-noche .md-cobro-est.ok{background:#1E3128;color:#9BD8B6}
+body.md-noche .md-chip.rojo{background:#3A2219;color:#F4C3B0}body.md-noche .md-chip.lila{background:#2A2238;color:#C7B2EC}
+body.md-noche .md-chip.lima{color:var(--md-lime-tx)}
+body.md-noche .md-horas-g button.oc{background:repeating-linear-gradient(45deg,#22261D 0 5px,#1B1E18 5px 10px);color:var(--gray)}
+body.md-noche .md-horas-g button:hover{background:#22261D}
+body.md-noche .kpi.md-rk.md-rk-urg{border-color:#7A3A2C;border-top-color:#E0533A}
+body.md-noche .kpi.md-rk.md-rk-urg .v{color:#FF9A7A}
+body.md-noche .kpi.md-rk .md-rk-i{background:color-mix(in srgb,var(--ic,var(--line)) 24%,#1B1E18)}
+body.md-noche .md-rk-n{background:rgba(255,255,255,.1)}
+/* «tinta» como fondo con letra blanca: en la noche la tinta es clara, la letra va oscura */
+body.md-noche .md-seg button.on,body.md-noche .md-pre-cats button.on,body.md-noche .md-pt-sel button.on,
+body.md-noche .md-fe-hoy.on,body.md-noche .md-horas-g button.on,body.md-noche .md-pasos-at button.on .md-pn,body.md-noche .card h2 .n,
+body.md-noche .md-pa-rec .btn,body.md-noche .md-pasos li.sig .md-nodo,body.md-noche .md-docs button.on,
+body.md-noche .seg.md-tiles input:checked + span .md-ti,body.md-noche .di.md-real .pt,body.md-noche .md-mc-hoy{color:#11130F}
+body.md-noche .md-pasos li.sig .md-nodo{background:var(--lime);border-color:#1B1E18}
+body.md-noche .md-pa-rec{background:#0A0B08;color:#ECEEE6}
+body.md-noche .md-pa-rec h3{color:#fff}body.md-noche .md-pa-rec small{color:var(--lime)}
+body.md-noche .md-pasos-at button.on{border-color:var(--ink)}
+body.md-noche .md-pasos-at .md-pn{background:#2D3128;color:#C9CCBF}
+body.md-noche .md-pasos-at button.on .md-pn{background:var(--lime)}
+body.md-noche .md-pasos-at button.listo .md-pn{background:var(--ok);color:#fff}
+/* los botones «elegidos» de cada botonera vuelven a su fondo (la regla de arriba les ponía el panel) */
+body.md-noche .md-seg button.on,body.md-noche .md-pre-cats button.on,body.md-noche .md-pt-sel button.on{background:var(--ink);border-color:var(--ink)}
+body.md-noche .md-ctrl-t button.on{background:#16807A;border-color:#16807A;color:#fff}
+body.md-noche .md-horas-g button.on{background:var(--lime);border-color:var(--lime)}
+/* las botoneras de la base (.seg): la opción marcada con tinta clara lleva letra oscura (las de tarjetas .md-tiles ya tienen lo suyo) */
+body.md-noche .seg:not(.md-tiles) input:checked + span{background:var(--ink);color:#11130F;border-color:var(--ink)}
+body.md-noche .seg.lime:not(.md-tiles) input:checked + span{background:var(--lime);color:#11130F;border-color:var(--lime)}
+/* un <label class="btn"> (📷 Sacar foto) no es una etiqueta gris: es un botón */
+body.md-noche label.btn{color:#1E2410}body.md-noche label.btn.sec{color:var(--ink)}
+/* cuentas del plan, pago rápido, mensaje de WhatsApp, resaltado de la búsqueda, filas al pasar el mouse */
+body.md-noche .md-cp,body.md-noche .md-rap button,body.md-noche .wa{background:var(--panel);color:var(--ink)}
+body.md-noche .md-cp-est.ok{background:#1E3128;color:#9BD8B6}body.md-noche .md-cp-est.falta{background:#3A2219;color:#F4C3B0}
+body.md-noche .md-cp-barra{background:#2D3128}
+body.md-noche .md-cp-k{color:#D9DCD0}
+body.md-noche .md-pt-ch.gris{background:#262922;color:#D9DCD0}
+body.md-noche .md-rap button:hover{background:#22261D}
+body.md-noche .md-rapido{background:#2A2238;border-color:#3F3356;color:#E6DDF5}body.md-noche .md-rapido i{background:#1B1E18;color:#C7B2EC}body.md-noche .md-rapido:hover{background:#352B48}
+body.md-noche mark.md-mark{background:#5A4A22;color:#fff}
+body.md-noche tbody tr:hover{background:#22261D}
+body.md-noche .md-docs button.on{background:var(--lime);border-color:var(--lime)}
+body.md-noche .md-mc-hoy.ya{color:var(--lime)}
+/* textos en verde oscuro (--lime-dk) sobre fondo oscuro → el mismo verde, más claro */
+body.md-noche .md-vid-link,body.md-noche .kpi.acc .v,body.md-noche .md-aj-ico,body.md-noche .md-aj-it em,body.md-noche .md-met-i,
+body.md-noche .md-av,body.md-noche .fig .n sup,body.md-noche .md-pt-t tr.md-pt-mes td,body.md-noche .md-pt-sel .md-pt-csv{color:var(--md-lime-tx)}
+body.md-noche .md-vid-link{background:color-mix(in srgb,var(--lime) 14%,#1B1E18);border-color:color-mix(in srgb,var(--lime) 40%,#1B1E18)}
+body.md-noche .md-pt-sel .md-pt-csv{background:color-mix(in srgb,var(--lime) 14%,#1B1E18)}
+body.md-noche .md-pt-t tr.md-pt-mes td{background:#0E100C}
+/* las píldoras de estado (en la noche .pill queda gris; sus fondos claros no sirven) */
+body.md-noche .pill.lime{background:#2A3312;border-color:#44521C;color:#D6E58A}
+body.md-noche .pill.ok{background:#1E3128;border-color:#2F5241;color:#9BD8B6}
+body.md-noche .pill.bad{background:#3A1E14;border-color:#5C3224;color:#F4A58E}
+body.md-noche .pill.info{background:#1D2A38;border-color:#2F4660;color:#9EC8EE}
+body.md-noche .pill.nota{background:#2A2238;border-color:#3F3356;color:#C7B2EC}
+body.md-noche .pill.md-pr-ent{background:#1E3128;color:#9BD8B6}
+body.md-noche header nav .nav-cnt,body.md-noche header nav button.on .nav-cnt{background:color-mix(in srgb,var(--c,#888) 24%,#151812);color:color-mix(in srgb,var(--c,#ccc) 55%,#fff)}
+body.md-noche header nav .pill.bad,body.md-noche header nav button.on .pill.bad{background:#E0533A;color:#fff;box-shadow:0 0 0 2px #151812}
+/* la franja de alergias/ficha médica (está en la base: su fondo rosado claro no se lee de noche) */
+body.md-noche .avisomed{background:#3A2219;border-color:#5A3A2A;border-left-color:#E0533A;color:#F4D9CF}
+body.md-noche .avisomed b{color:#fff}
+body.md-noche .avisomed.nota{background:var(--panel);border-color:var(--line);border-left-color:var(--gray);color:var(--gray)}
+body.md-noche .alerta-clinica{background:#3A2219;border-color:#5A3A2A;color:#F4D9CF}body.md-noche .alerta-clinica b{color:#fff}
+/* los cuadros de la Caja y de Recordatorios (90/92): la etiqueta y la nota en gris claro sobre su fondo oscuro ya alcanza;
+   la caja «queda» lleva fondo de tinta: de noche va casi negra (ya en 90) y sus textos claros */
+body.md-noche .md-mc-n.q small,body.md-noche .md-mc-n.q em{color:rgba(255,255,255,.72)}
+body.md-noche .md-rf-x,body.md-noche .md-rf-op.on{color:#11130F}
+body.md-noche .md-rf-docs .md-fe-doc.on{color:#11130F}
+body.md-noche .md-seg button{color:var(--gray)}
+body.md-noche .md-paso>button:hover{background:#22261D}
+body.md-noche .md-pre-top input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A6AB9A' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E")}
+body.md-noche .md-pre-ok{background:#1E3128;color:#9BD8B6}
+body.md-noche #c-precios mark{background:#5A4A22;color:#fff}
+body.md-noche .md-mas-m .btn:hover{background:#22261D!important}
+body.md-noche .md-ctrl-t button{border-color:var(--line)}
+body.md-noche .md-ctrl-bar{background:#1F3A37}
+body.md-noche .md-quisiste .btn{color:#11130F}
+
+/* ----- 2 · el menú entra en la pantalla (sin menú lateral) ----- */
+header nav .md-nav-t{white-space:nowrap}
+header nav.md-nav-c1{gap:1px}
+header nav.md-nav-c1 button{padding:4px 8px 4px 4px;font-size:12.5px;gap:5px;min-height:40px}
+header nav.md-nav-c1 button .md-nav-i{width:30px;height:30px;flex-basis:30px;border-radius:10px}
+header nav.md-nav-c1 button .md-nav-i svg{width:16px;height:16px}
+header nav.md-nav-c1 .pill{padding:1px 5px;font-size:10px;margin-left:2px}
+header nav.md-nav-c1 #nav-buscar,header nav.md-nav-c1 #nav-duena{padding:4px}
+header nav.md-nav-c2 button{padding:3px 6px 3px 3px;font-size:12px;gap:4px}
+header nav.md-nav-c2 .pill{padding:0 4px;font-size:9.5px;min-width:0}
+
+/* ----- 3 · la ficha en el celular ----- */
+@media(max-width:560px){
+  .md-ficha-cab{flex-wrap:wrap;gap:10px 12px}
+  .md-ficha-txt{flex:1 1 60%;min-width:60%}
+  .md-ficha-cab .md-wa{flex:0 0 auto;order:3;margin-left:62px}}
+
+/* ----- 4 · la pastilla de la conexión: 32 px para el dedo, misma altura del encabezado ----- */
+#md-pt{min-height:32px;padding:4px 11px;margin:-4px 0;box-sizing:border-box}
+@media(max-width:760px){#md-pt{min-height:32px;padding:3px 9px;margin:-4px 0}}
 /* ===== MODERNO FIN ===== */
 #nav-pauta{display:none}
 body.rol-pauta #nav-pauta{display:inline-flex}
@@ -3989,6 +4109,17 @@ function montoRaro(v){
 function bs(n){return 'Bs '+Math.round(num(n)).toLocaleString('es-BO')}
 function n0(n){return Math.round(num(n)).toLocaleString('es-BO')}
 function uid(){return 'a'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+/* Un id va pegado en onclick="…('id')" y en atributos: si no es un id normal
+   (solo letras, números, guion y guion bajo; hasta 60 caracteres) se reemplaza por uno seguro,
+   siempre el mismo para el mismo texto (así todas las pantallas coinciden y
+   los enlaces entre filas se mantienen), y ninguna fila de la hoja puede
+   meter código en el panel. El servidor nuevo rechaza esos ids (id_invalido). */
+var ID_OK=/^[A-Za-z0-9_-]{1,60}$/;
+function idSeguro(id){
+  if(id==null||id==='')return '';
+  id=String(id); if(ID_OK.test(id))return id;
+  var h=0; for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))|0;
+  return 'x'+(h>>>0).toString(36)+'-'+id.replace(/[^A-Za-z0-9_-]/g,'').slice(0,20)}
 function hoyISO(){var d=new Date();return iso(d)}
 function iso(d){var m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2);return d.getFullYear()+'-'+m+'-'+dd}
 function parseISO(s){var p=String(s||'').split('-');return new Date(+p[0],(+p[1]||1)-1,+p[2]||1)}
@@ -4276,6 +4407,15 @@ var ERR_CLAVE={clave_corta:'Mínimo 6 caracteres',clave_de_fabrica:'Esa es la cl
   clave_repetida:'Ya la usa otra persona: elegí otra',clave_incorrecta:'La clave actual no coincide',
   clave_no_permitida:'Esa clave no se puede usar: elegí otra',muchos_intentos:'Demasiados intentos: esperá unos minutos',
   sin_permiso:'Eso lo cambia la dueña',sin_sesion:'Volvé a escribir tu clave y probá de nuevo',sesion_repetida:'Esa sesión del paquete ya está marcada en otra visita'};
+/* Rechazos definitivos del servidor (2026-10-29-auditoria): la cola no reintenta. */
+var ERR_DEFINITIVO={
+  id_invalido:function(){return 'El servidor rechazó un registro con un identificador inválido: no se guardó. Se recargan los datos.'},
+  clave_de_fabrica:function(){return 'Con la clave de fábrica no se puede hacer eso (cambiar claves, corregir nombres, borrar ni cargar en bloque). La dueña tiene que poner su clave propia en Ajustes.'},
+  plan_con_pagos:function(r){return 'No se borró el plan: tiene '+(num(r.pagos)||'')+(num(r.pagos)===1?' pago':' pagos')+(num(r.monto)>0?' por '+bs(r.monto):'')+
+    '. Abrí el plan y usá 🗑 Borrar plan desde este panel: pregunta qué hacer con esos pagos. Se recargan los datos.'},
+  nombre_ocupado:function(){return 'Ya hay otro paciente con ese nombre: no se cambió. Para unir las dos historias usá ✏️ Corregir nombre.'},
+  cfg_no_guardada:function(r){var d=String(r.detalle||''); return 'La configuración no se guardó en la nube'+(/large/i.test(d)?': la configuración es demasiado grande (sacá de Ajustes lo que sobre, por ejemplo fotos o plantillas)':'')+
+    (d?' ('+d.slice(0,120)+')':'')+'. Lo demás sigue guardándose.'}};
 function cambiarClaveServidor(quien,prof,clave,vieja){
   return api('clave',null,undefined,undefined,{quien:quien,prof:prof||'',clave:clave,vieja:vieja||''})
     .then(function(r){
@@ -4593,7 +4733,13 @@ function fusionRegistro(b, m, t, conf) {
     /* una visita ya atendida en el servidor no vuelve atrás por un pendiente
        viejo; y la plata nunca baja sin aviso */
     if (t.estado === 'Atendido' && m.estado !== 'Atendido') dm = dtt;
-    else if (fNum(dtt.__cobro.monto) > fNum(dm.__cobro.monto)) dm.__cobro = dtt.__cobro;
+    else {
+      if (fNum(dtt.__cobro.monto) > fNum(dm.__cobro.monto)) dm.__cobro = dtt.__cobro;
+      /* el descuento y el perdón que ya tiene el servidor no se pierden por
+         un pendiente viejo: gana el servidor, salvo un descuento mayor */
+      if (dm.__desc !== undefined && dtt.__desc !== undefined) dm.__desc = Math.max(fNum(dm.__desc), fNum(dtt.__desc));
+      dm.__perdon = dtt.__perdon;
+    }
     dm.cobrosPosteriores = fUnirCobros(t, m);
     return fArmar(dm);
   }
@@ -4731,18 +4877,24 @@ function quienCola(){return (ROL||'')+':'+(esDoctora()?(PROF_ACTUAL||''):'')}
 function colaEsMia(it){return !it||!it.por||it.por===quienCola()||ROL==='admin'}
 function quienEs(por){var p=String(por||'').split(':');
   return p[0]==='doctora'?(p[1]||'una doctora'):(p[0]==='admin'?'la dueña':(p[0]==='equipo'?'recepción':'otra sesión'))}
-function queue(action,rec,base){
+/* extra: campos sueltos que viajan en el cuerpo del pedido (hoy solo
+   liberarPagos:true al borrar un plan con pagos). Se conservan si la ficha se
+   vuelve a cambiar mientras espera. */
+function queue(action,rec,base,extra){
   var q=pend(), k=claveCola(action,rec), copia=JSON.parse(JSON.stringify(rec==null?null:rec));
   for(var i=0;i<q.length;i++){
     if(claveCola(q[i].action,q[i].rec)!==k)continue;
-    if(q[i].action===action&&JSON.stringify(q[i].rec)===JSON.stringify(copia))return;
-    var prev=q[i], bAnt=('base' in prev)?prev.base:undefined;
+    if(q[i].action===action&&JSON.stringify(q[i].rec)===JSON.stringify(copia)){
+      if(extra){q[i].extra=Object.assign({},q[i].extra||{},extra); setPend(q)} return}
+    var prev=q[i], bAnt=('base' in prev)?prev.base:undefined, xAnt=prev.extra;
     q[i]={action:action,rec:copia,tab:PESTANA,por:quienCola()};
     if(bAnt!==undefined)q[i].base=bAnt;
+    if(xAnt||extra)q[i].extra=Object.assign({},xAnt||{},extra||{});
     setPend(q); if(window.banner)banner(); return}
   var it={action:action,rec:copia,tab:PESTANA,por:quienCola()}, b=base!==undefined?base:snapDe(action,rec);
   if(b===null)b=baseAlta(action,copia);
   if(action!=='cfg')it.base=b;
+  if(extra)it.extra=extra;
   q.push(it); setPend(q); if(window.banner)banner()}
 
 /* El único camino para mandar algo al servidor.
@@ -4750,8 +4902,8 @@ function queue(action,rec,base){
    tablet se bloquea mientras el pedido está en vuelo, el dato no se pierde.
    Un {ok:false} es un fracaso igual que un corte de internet: queda en la
    cola y se reintenta. */
-function enviar(action,rec,cfg,base){
-  queue(action,rec,base);
+function enviar(action,rec,cfg,base,extra){
+  queue(action,rec,base,extra);
   if(!CONNECTED)return Promise.resolve(null);
   return mandar(claveCola(action,rec))}
 function mandar(k){
@@ -4767,7 +4919,7 @@ function mandarYa(k){
   if(!colaEsMia(item))return Promise.resolve(null);   // lo sube quien lo cargó (o la dueña)
   var enviado=JSON.stringify(item.rec);
   var llamada=item.action==='cfg'?subirCfg()
-    :api(item.action,item.rec,undefined,('base' in item)?item.base:undefined);
+    :api(item.action,item.rec,undefined,('base' in item)?item.base:undefined,item.extra||undefined);
   return llamada.then(function(r){
     if(r&&r.v>=FUSION_V)SRV_FUSIONA=true;
     if(r&&r.ok){confirmado(k,item,enviado,r);return r}
@@ -4797,6 +4949,25 @@ function mandarYa(k){
         saveLocal()}
       toast('No se guardó: la sesión '+(r.etapa||'')+' del paquete ya está marcada en la visita del '+(r.fecha?fmtF(r.fecha):'otro día')+' (la marcó otra pantalla). Se recargan los datos.',1);
       pullServer().then(function(){refreshAll()}); return r}
+    if(r&&r.error==='cobro_cambio'){
+      /* el servidor no deja cambiar cómo se pagó (ej. QR → efectivo) con un guardado común */
+      setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
+      var rc=r.registro; if(rc&&rc.id){SNAP_R[rc.id]=JSON.stringify(rc); var ncb=normalize(JSON.parse(JSON.stringify(rc)));
+        DATA=DATA.filter(function(x){return x.id!==ncb.id}); DATA.push(ncb); saveLocal()}
+      toast('No se guardó: la forma de pago no se cambia desde acá. Para cambiar cómo se pagó usá ✏️ Corregir cobro.',1);
+      repintarSuave(); return r}
+    if(r&&r.error&&Object.prototype.hasOwnProperty.call(ERR_DEFINITIVO,r.error)){
+      /* rechazos definitivos: insistir no sirve; se avisa y se vuelve a lo que tiene el servidor */
+      setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
+      toast(ERR_DEFINITIVO[r.error](r,item),1);
+      if(r.error==='id_invalido'&&item.action!=='cfg'){
+        var ri=item.rec&&item.rec.id;
+        if(ri&&(item.action==='save'||item.action==='delete')){
+          if(SNAP_R[ri]){var vi=normalize(JSON.parse(SNAP_R[ri])); DATA=DATA.map(function(x){return x.id===ri?vi:x})}
+          else{DATA=DATA.filter(function(x){return x.id!==ri}); delete SNAP_R[ri]}
+          saveLocal()}}
+      if(item.action!=='cfg')pullServer().then(function(){refreshAll()}); else repintarSuave();
+      return r}
     if(r&&(r.error==='sin_permiso'||r.error==='otra_clinica'||r.error==='anticipo_usado')){
       setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
       toast(r.error==='anticipo_usado'?'No se borró: ese anticipo ya se usó en una atención (desde otro equipo). Se recargan los datos.'
@@ -5231,7 +5402,10 @@ function normalize(r){
   r.presu=r.presu.filter(function(p){return p&&p.nom}).map(preNormalize);
   r.total=num(r.total);r.acuenta=num(r.acuenta);r.saldo=num(r.saldo);
   r.contactado=!!r.contactado&&r.contactado!=='FALSE'&&r.contactado!=='NO';
-  if(!r.id)r.id=uid();
+  /* defensa del panel: un id raro (que podría llevar código) se cambia por uno seguro */
+  r.id=idSeguro(r.id)||uid();
+  if(r.citaDe)r.citaDe=idSeguro(r.citaDe);
+  r.planId=idSeguro(r.planId);
   return r}
 
 /* ---------- navegación ---------- */
@@ -5340,7 +5514,7 @@ function verDiente(nombre,c){
   openModal('<h3>Pieza '+c+'</h3><p class="mini">'+esc(nombre)+
     (esTemporal(c)?' · diente de leche':'')+'</p>'+
     (hist.length?'<div style="margin-top:12px">'+hist.map(function(x){
-      return '<div class="ses ok" onclick="verFicha(\''+x.id+'\')" style="cursor:pointer">'+
+      return '<div class="ses ok" onclick="verFicha(\''+jss(x.id)+'\')" style="cursor:pointer">'+
         '<div class="n">🦷</div><div class="d"><b>'+esc(x.servicio)+'</b>'+
         (x.det?' <span class="mini">('+esc(x.det)+')</span>':'')+
         '<div class="mini">'+fmtF(x.fecha)+(x.prof?' · '+esc(x.prof):'')+'</div></div></div>'}).join('')+'</div>'
@@ -5822,7 +5996,7 @@ function validar(){
   /* un saldo negativo escondía la deuda real de otra visita del paciente */
   var tt=num($('#f-total').value), ss=num($('#f-saldo').value);
   if(tt<0){bad.push('el total no puede ser negativo');$('#f-total').classList.add('bad')}
-  if(a>tt+0.01){if(!excesoAlPlanOk()){bad.push('lo cobrado ('+bs(a)+') es más que el total ('+bs(tt)+')');
+  if(a>tt+0.01){if(!excesoAlPlanOk()&&!paqueteEnFilas()){bad.push('lo cobrado ('+bs(a)+') es más que el total ('+bs(tt)+')');
     $('#f-total').classList.add('bad')}}
   else if(ss<-0.001||ss>tt-a+0.01){bad.push('el saldo tiene que estar entre 0 y '+bs(Math.max(0,tt-a)));
     $('#f-saldo').classList.add('bad')}
@@ -5930,6 +6104,13 @@ function guardarAtencion(){
     toast('Esta atención se pagó con el saldo a favor de '+prev.paciente+': no se le puede cambiar el paciente. Si fue un error de carga, borrala (el saldo vuelve) y cargala de nuevo.',1);return}
   if(prev&&prev.planId&&keyPac(prev.paciente)!==keyPac($('#f-paciente').value)){
     toast('Esta atención es una sesión del plan de '+prev.paciente+'. Para corregir el nombre, primero elegí "no, es una visita suelta" en el plan, guardá, y después cambiá el nombre.',1);return}
+  /* el saldo a favor usado salió del bolsillo de ese plan: moverla a otro plan
+     (o sacarla del plan) dejaba el adelanto «sin usar» y se ofrecía dos veces */
+  if(prev&&prev.planId&&usoSaldoDe(prev)>0.009){
+    var planNuevo=$('#wrap-plan').style.display==='none'?prev.planId:$('#f-plan').value;
+    if(planNuevo!==prev.planId){
+      var plAnt=planesDe(prev.paciente).filter(function(x){return x.id===prev.planId})[0];
+      toast('Esta visita se pagó con el adelanto del plan «'+((plAnt&&plAnt.nombre)||'anterior')+'»: para moverla, primero corregí el cobro (✏️ Corregir cobro, en la ficha de la atención).',1);return}}
   /* una visita que no sucedió no puede quedar con plata cobrada: la caja la
      sumaba y la liquidación no, y nunca cuadraban */
   if(getRadio('estado')!=='Atendido'&&num($('#f-acuenta').value)>0){
@@ -5990,7 +6171,7 @@ function guardarAtencion(){
     pagoNuevo.forEach(function(p){rec.cobrosPosteriores.push({id:uid(),fecha:hoyP,metodo:p.metodo,monto:p.monto})});
     rec.obs=(rec.obs?rec.obs+'\n':'')+pagoNuevo.map(function(p){return 'Pago de '+bs(p.monto)+' en '+p.metodo+' el '+fmtF(hoyP)}).join('\n')}
   var alPlanF=[];
-  if(!prev&&rec.planId&&rec.estado==='Atendido'&&num(rec.acuenta)>num(rec.total)+0.009&&excesoAlPlanOk()){
+  if((!prev||prev.estado==='Agendada')&&rec.planId&&rec.estado==='Atendido'&&num(rec.acuenta)>num(rec.total)+0.009&&excesoAlPlanOk()){
     var sx=separarExceso(rec.pagos,Math.round((num(rec.acuenta)-num(rec.total))*100)/100);
     if(sx.falta>0.009){toast('No cuadra lo cobrado con el total: revisá el monto',1);return}
     alPlanF=sx.alPlan; rec.pagos=sx.quedan; rec.acuenta=num(rec.total); rec.saldo=0;
@@ -6052,7 +6233,6 @@ function borrar(id){
       (efectivo>0.009?'\n\nTiene '+bs(efectivo)+
         ' COBRADOS: esa plata sale de la caja. Si fue un error de carga, está bien; si el paciente pagó, no la borres.':'')+
       (favor>0.009?'\n\n💜 '+bs(favor)+' se pagaron con saldo a favor: vuelven al saldo del paciente.':'')))return;
-  liberarSesionPlan(r);
   /* la próxima cita que había dejado esta atención ya no tiene sentido, ni
      las que salieron de reprogramarla */
   var cadena={}; cadena[id]=1;
@@ -6064,7 +6244,11 @@ function borrar(id){
     x.estado='Canceló'; x.resueltaTs=new Date().toISOString();
     x.obs=(x.obs?x.obs+'\n':'')+'Se borró la atención que la había creado'; persist(x)});
   DATA=DATA.filter(function(x){return x.id!==id}); saveLocal();
-  if(CONNECTED){enviar('delete',{id:id})}
+  /* la ficha (sesión liberada) sale DESPUÉS de que el servidor borró la
+     atención: si llegaba antes, el servidor la devolvía con la sesión marcada
+     (los dos pedidos salían juntos y Google no garantiza el orden) */
+  var ida=CONNECTED?enviar('delete',{id:id}):null;
+  liberarSesionPlan(r,ida||undefined);
   closeModal(); toast('Atención borrada'); refreshAll()}
 
 /* ============================ AGENDAR CITAS ============================
@@ -6379,8 +6563,8 @@ function citaResueltaCard(r){
     '<br>'+(r.agendaPor?(AGENDA_ICONO[r.agendaPor]||'')+' agendó por '+esc(r.agendaPor)+' · ':'')+
     '📱 '+esc(r.celular||'sin celular')+(r.profesional?' · '+esc(r.profesional):'')+
     avisoAntesDeEntrar(r.paciente);
-  var acts='<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver ficha</button>'+
-    '<button class="btn sec sm" onclick="reabrirCita(\''+r.id+'\')">↩ Corregir</button>'+
+  var acts='<button class="btn sec sm" onclick="verFicha(\''+jss(r.id)+'\')">Ver ficha</button>'+
+    '<button class="btn sec sm" onclick="reabrirCita(\''+jss(r.id)+'\')">↩ Corregir</button>'+
     botonNota(r.paciente);
   return remCard(cls,r.paciente,meta,acts)}
 
@@ -6454,12 +6638,12 @@ function citaCard(r,d){
      hacía creer que la cita YA estaba marcada como "Vino". El estado va
      escrito, no insinuado por un color. */
   var acts='<a class="btn sec sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r))+
-      '" onclick="marcarContactado(\''+r.id+'\')">WhatsApp</a>'+
+      '" onclick="marcarContactado(\''+jss(r.id)+'\')">WhatsApp</a>'+
     '<span class="rot-marcar">¿Qué pasó?</span>'+
-    '<button class="btn sec sm marcar" onclick="resolverCita(\''+r.id+'\',\'Atendido\')">✅ Vino</button>'+
-    '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✖ No vino</button>'+
-    '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'Canceló\')">🚫 Canceló</button>'+
-    '<button class="btn sec sm" onclick="reagendar(\''+r.id+'\')">🔁 Reprogramar</button>'+
+    '<button class="btn sec sm marcar" onclick="resolverCita(\''+jss(r.id)+'\',\'Atendido\')">✅ Vino</button>'+
+    '<button class="btn sec sm" onclick="resolverCita(\''+jss(r.id)+'\',\'No asistió\')">✖ No vino</button>'+
+    '<button class="btn sec sm" onclick="resolverCita(\''+jss(r.id)+'\',\'Canceló\')">🚫 Canceló</button>'+
+    '<button class="btn sec sm" onclick="reagendar(\''+jss(r.id)+'\')">🔁 Reprogramar</button>'+
     '<button class="btn sec sm" onclick="verPaciente(\''+jss(r.paciente)+'\')">👤 Ficha</button>'+
     botonNota(r.paciente);
   return remCard(cls,r.paciente,meta,acts)}
@@ -6647,14 +6831,14 @@ function pacVacia(p){
 /* Con tras (lo que se está subiendo antes), la ficha queda en la cola ya,
    pero sale recién cuando eso terminó: el servidor solo acepta la marca de
    una sesión de un paquete de la clínica si ya ve la atención que la hizo. */
-function savePac(p,tras){
+function savePac(p,tras,extra){
   if(identidadAmbigua(p.nombre)){toast(AVISO_IDENTIDAD,1);return}
   var k=keyPac(p.nombre); if(!k)return;
   if(pacVacia(p)&&!PAC[k])return;
   p.ts=new Date().toISOString();
   PAC[k]=p; savePacLocal();
-  if(!tras){enviar('pac',p);return}
-  queue('pac',p);
+  if(!tras){enviar('pac',p,undefined,undefined,extra);return}
+  queue('pac',p,undefined,extra);
   var kp=claveCola('pac',p), sigue=function(){if(CONNECTED)mandar(kp)};
   tras.then(sigue,sigue)}
 
@@ -6754,12 +6938,12 @@ function controles(){
    --------------------------------------------------------------------- */
 function planNormalize(p){
   p=p||{};
-  return Object.assign({id:p.id||uid(), nombre:p.nombre||'Plan de tratamiento',
+  return Object.assign({id:idSeguro(p.id)||uid(), nombre:p.nombre||'Plan de tratamiento',
     fecha:p.fecha||hoyISO(), estado:p.estado||'activo', total:num(p.total),
     sesiones:(Array.isArray(p.sesiones)?p.sesiones:[]).map(function(s,i){
       s=s||{};
       var o={n:i+1, desc:s.desc||'', hecha:!!s.hecha, fecha:s.fecha||'',
-              atencionId:s.atencionId||''};
+              atencionId:idSeguro(s.atencionId)};
       /* importe de la etapa (0 = incluida sin cargo aparte) y si se cobra aparte */
       if(s.precio!=null&&s.precio!=='')o.precio=num(s.precio);
       if(s.aparte)o.aparte=true;
@@ -6829,7 +7013,8 @@ function cuentasPlan(plan){
   /* sesiones hechas que no se cobraron en su atención: las paga el adelanto */
   var cub=Math.min(Math.max(0,adel-usado),cubiertoHechas(plan));
   if(cub>0.009){usado+=cub; nUsos+=(plan.sesiones||[]).filter(function(s){var a=s.hecha&&!s.aparte&&num(s.precio)>0&&atencionDeEtapa(s); return a&&!(num(a.saldo)>0.009)&&cobradoDeSesion(plan,a)<num(s.precio)-0.009}).length}
-  return {enAtenciones:R(enAt), adelantado:R(adel), usado:R(usado), nUsos:nUsos, queda:R(Math.max(0,adel-usado)), pagos:pagos}}
+  var queda=R(Math.max(0,adel-usado)), lib=(plan.estado==='terminado'||plan.estado==='cancelado')?queda:0;
+  return {enAtenciones:R(enAt), adelantado:R(adel), usado:R(usado), nUsos:nUsos, queda:R(queda-lib), liberado:lib, pagos:pagos}}
 /* En qué se usó el adelanto, dicho como es: un plan de una sola etapa es el
    tratamiento entero (ej. «sesiones blanqueamiento» por las 3 juntas). */
 function usadoEnTxt(plan,c){
@@ -6845,7 +7030,8 @@ function cuentasPlanHtml(plan){
     li('Pagado en las atenciones (sus sesiones)',bs(c.enAtenciones))+
     li('Pagado por adelantado',bs(c.adelantado))+
     (c.adelantado>0||c.usado>0?li('↳ ya usado en '+usadoEnTxt(plan,c),'−'+bs(c.usado)):'')+
-    (c.adelantado>0?li('↳ 💜 queda adelantado para las próximas',bs(c.queda),'color:var(--ok)'):'')+
+    (c.adelantado>0&&!(c.liberado>0.009)?li('↳ 💜 queda adelantado para las próximas',bs(c.queda),'color:var(--ok)'):'')+
+    (c.liberado>0.009?li('↳ 💜 pasó a saldo a favor libre del paciente (plan '+esc(plan.estado)+')',bs(c.liberado),'color:var(--ok)'):'')+
     li('Total pagado',bs(cob),'color:var(--ok)')+
     li('Falta pagar',bs(sal),sal>0?'color:var(--clay)':'color:var(--ok)')+
     '<div class="mini" style="margin-top:4px">Lo que se cobró en la misma atención por otra cosa (ej. la consulta) no cuenta para el plan.</div></div>'}
@@ -6957,14 +7143,14 @@ function cuotasHtml(plan){
 /* Si se borra la atención, la sesión que había consumido vuelve a quedar
    pendiente: el plan no puede seguir diciendo que se hizo algo que ya no
    existe. */
-function liberarSesionPlan(rec){
+function liberarSesionPlan(rec,tras){
   if(!rec||!rec.planId)return;
   var p=PAC[keyPac(rec.paciente)]; if(!p)return;
   var plan=p.planes.filter(function(x){return x.id===rec.planId})[0]; if(!plan)return;
   var ses=(plan.sesiones||[]).filter(function(x){return x.atencionId===rec.id})[0]; if(!ses)return;
   ses.hecha=false; ses.fecha=''; ses.atencionId='';
   if(plan.estado==='terminado')plan.estado='activo';
-  savePac(p)}
+  savePac(p,tras)}
 
 function marcarSesionPlan(rec){
   if(rec.estado!=='Atendido'||!rec.planId)return;
@@ -7266,7 +7452,7 @@ function reagendar(id){
       return '<label><input type="radio" name="rgag" value="'+esc(a)+'"'+
         (a===(r.agendaPor||'WhatsApp')?' checked':'')+'><span>'+AGENDA_ICONO[a]+' '+esc(a)+'</span></label>'}).join('')+
     '</div></div>'+
-    '<div class="row-btn"><button class="btn" onclick="guardarReagenda(\''+id+'\')">Guardar nueva cita</button>'+
+    '<div class="row-btn"><button class="btn" onclick="guardarReagenda(\''+jss(id)+'\')">Guardar nueva cita</button>'+
     '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
 
 function guardarReagenda(id){
@@ -7408,7 +7594,10 @@ function creditosEn(lista,nombre){
   var ps=planesDe(nombre);
   Object.keys(plan).forEach(function(id){
     var p=ps.filter(function(x){return x.id===id})[0];
-    var libre=!p?plan[id]:Math.max(0,Math.min(plan[id],R(cobradoPlan(p)-num(p.total))));
+    /* regla compartida con el servidor (creditosSrv): un plan terminado o
+       cancelado ya no tiene sesiones que pagar; lo que le quedó adelantado es
+       saldo a favor libre del paciente */
+    var libre=(!p||p.estado==='terminado'||p.estado==='cancelado')?plan[id]:Math.max(0,Math.min(plan[id],R(cobradoPlan(p)-num(p.total))));
     if(libre>0.009){plan[id]=R(plan[id]-libre); gen+=libre}});
   var tot=gen; Object.keys(plan).forEach(function(p){plan[p]=R(plan[p]); tot+=plan[p]});
   return {general:R(gen),planes:plan,total:R(tot)}}
@@ -7491,8 +7680,8 @@ function nuevoAnticipo(nombre,planId,etapa){
         return '<label><input type="radio" name="anmet" value="'+m+'"><span>'+m+'</span></label>'}).join('')+'</div></div>'+
     '<div style="margin-top:12px"><label>Nota</label>'+
       '<input id="an-nota" placeholder="Ej. a cuenta del tratamiento de ortodoncia"></div>'+
-    '<div class="row-btn"><button class="btn" onclick="guardarAnticipo(\''+jss(nombre)+'\''+(plan?',\''+plan.id+'\'':'')+')">'+(plan?'Guardar pago':'Guardar anticipo')+'</button>'+
-    '<button class="btn sec" onclick="'+(plan?'verPlan(\''+jss(nombre)+'\',\''+plan.id+'\')':'closeModal()')+'">Cancelar</button></div>')}
+    '<div class="row-btn"><button class="btn" onclick="guardarAnticipo(\''+jss(nombre)+'\''+(plan?',\''+jss(plan.id)+'\'':'')+')">'+(plan?'Guardar pago':'Guardar anticipo')+'</button>'+
+    '<button class="btn sec" onclick="'+(plan?'verPlan(\''+jss(nombre)+'\',\''+jss(plan.id)+'\')':'closeModal()')+'">Cancelar</button></div>')}
 
 function guardarAnticipo(nombre,planId){
   if(planId?!puedePagoPlan(nombre,planId):!puedeAnticipo()){toast('No tenés permiso para registrar anticipos 🔐',1);return}
@@ -7570,7 +7759,7 @@ function htmlSaldoFavor(nom){
       var puede=x.a&&(x.a.planId?puedePagoPlan(nom,x.a.planId):puedeAnticipo())&&(!esDoctora()||x.a.anticipoPor===PROF_ACTUAL)&&bolsilloDe(bols,x.a)-num(x.a.acuenta)>-0.009;
       return '<tr><td>'+fmtFcorta(x.fecha)+'</td><td>'+esc(x.txt)+'</td>'+
         '<td class="num" style="color:'+(x.monto<0?'var(--clay)':'var(--ok)')+'">'+(x.monto<0?'−':'+')+n0(Math.abs(x.monto))+'</td>'+
-        '<td>'+(puede?'<button class="btn danger sm" onclick="borrarAnticipo(\''+x.a.id+'\')">Borrar</button>':'')+'</td></tr>'}).join('')+
+        '<td>'+(puede?'<button class="btn danger sm" onclick="borrarAnticipo(\''+jss(x.a.id)+'\')">Borrar</button>':'')+'</td></tr>'}).join('')+
     '</tbody></table></div>'}
 
 /* Las atenciones importadas de los cuadernos no tienen forma de pago y nunca
@@ -7597,7 +7786,7 @@ function renderLista(){
     $('#k-l-tkt').innerHTML='<div class="k">Ticket promedio</div><div class="v" style="font-size:21px">'+bs(nAt?tot/nAt:0)+'</div><div class="d">por atención · '+n0(nAt)+' atenciones</div>'}
 
   $('#l-body').innerHTML=rows.length?rows.map(function(r){
-    return '<tr class="'+estadoCls(r.estado)+'" onclick="verFicha(\''+r.id+'\')">'+
+    return '<tr class="'+estadoCls(r.estado)+'" onclick="verFicha(\''+jss(r.id)+'\')">'+
       '<td>'+(r.nroDia?'#'+r.nroDia:'—')+'</td>'+
       '<td>'+fmtFcorta(r.fecha)+'<div class="mini">'+esc(r.hora||'')+'</div></td>'+
       '<td><b>'+esc(r.paciente||'—')+'</b><div class="mini">'+esc(r.celular||'')+(r.tipo==='Nuevo'?' · <span class="pill lime">nuevo</span>':'')+'</div></td>'+
@@ -8231,7 +8420,7 @@ var CAT_EGRESO_BASE=['Alquiler','Sueldos y comisiones','Laboratorio','Insumos y 
 
 function egrNormalize(e){
   e=e||{};
-  return {id:e.id||uid(), fecha:e.fecha||hoyISO(), categoria:e.categoria||'Otro',
+  return {id:idSeguro(e.id)||uid(), fecha:e.fecha||hoyISO(), categoria:e.categoria||'Otro',
     detalle:e.detalle||'', proveedor:e.proveedor||'', monto:num(e.monto),
     metodo:e.metodo||'Efectivo', prof:e.prof||'', ts:e.ts||new Date().toISOString()}}
 
@@ -8520,8 +8709,8 @@ function renderCaja(){
         egrs.map(function(x){
           return [fmtF(x.fecha),'<b>'+esc(x.categoria)+'</b>',esc(x.detalle||'—'),esc(x.proveedor||'—'),
             esc(x.metodo),n0(x.monto),
-            '<button class="btn sec sm" onclick="editarEgreso(\''+x.id+'\')">✏️</button> '+
-            '<button class="btn danger sm" onclick="borrarEgreso(\''+x.id+'\')">✕</button>']})
+            '<button class="btn sec sm" onclick="editarEgreso(\''+jss(x.id)+'\')">✏️</button> '+
+            '<button class="btn danger sm" onclick="borrarEgreso(\''+jss(x.id)+'\')">✕</button>']})
           .concat([['<b>TOTAL</b>','','','','','<b>'+n0(egr)+'</b>','']]),640)+
       '<p class="mini" style="margin-top:8px">💵 En efectivo salieron '+bs(egrMetodo['Efectivo']||0)+
       ' · el resto por QR, tarjeta o transferencia.</p>'
@@ -8589,16 +8778,19 @@ function renderCaja(){
   $('#cj-nocuadra').innerHTML=nc.length
     ? tabla([{t:'Fecha'},{t:'Paciente'},{t:'Total',num:1},{t:'Cobrado',num:1},{t:'Saldo anotado',num:1},{t:'Falta pagar',num:1},{t:''}],
         nc.slice(0,80).map(function(r){
-          return ['<a href="#" onclick="verFicha(\''+r.id+'\');return false">'+fmtFcorta(r.fecha)+'</a>',esc(r.paciente||'—'),
+          return ['<a href="#" onclick="verFicha(\''+jss(r.id)+'\');return false">'+fmtFcorta(r.fecha)+'</a>',esc(r.paciente||'—')+
+              (pagoDeMas(r)>0?' <span class="pill bad">pagó '+bs(pagoDeMas(r))+' de más</span>':''),
             n0(r.total),n0(r.acuenta),'<span style="color:var(--clay)">'+n0(r.saldo)+'</span>',n0(faltaPagar(r)),
-            '<button class="btn sec sm" onclick="arreglarSaldo(\''+r.id+'\')">Dejar en '+n0(faltaPagar(r))+'</button>']}),620)+
+            '<button class="btn sec sm" onclick="arreglarSaldo(\''+jss(r.id)+'\')">Dejar en '+n0(faltaPagar(r))+'</button>']}),620)+
       '<p class="mini" style="margin-top:8px">'+nc.length+(nc.length===1?' atención':' atenciones')+' · de más en "por cobrar": <b>'+
-        bs(nc.reduce(function(a,r){return a+num(r.saldo)-faltaPagar(r)},0))+'</b>. Si lo mal anotado era el total, abrila y corregila con ✏️ Editar.</p>'
+        bs(nc.reduce(function(a,r){return a+Math.max(0,num(r.saldo)-faltaPagar(r))},0))+'</b>'+
+        (function(){var dm=nc.reduce(function(a,r){return a+pagoDeMas(r)},0); return dm>0.009?' · pagado de más (saldo negativo): <b>'+bs(dm)+'</b>':''})()+
+        '. Si lo mal anotado era el total, abrila y corregila con ✏️ Editar.</p>'
     : '<div class="empty">Todos los saldos cuadran con el total y lo cobrado ✅</div>';
   $('#cj-sinmetodo').innerHTML=(faltaCargar.length
     ? tabla([{t:'Fecha'},{t:'Paciente'},{t:'Cobrado',num:1},{t:'Identificado',num:1},{t:'Sin explicar',num:1}],
         faltaCargar.slice(0,50).map(function(x){
-          return ['<a href="#" onclick="verFicha(\''+x.r.id+'\');return false">'+fmtFcorta(x.r.fecha)+'</a>',
+          return ['<a href="#" onclick="verFicha(\''+jss(x.r.id)+'\');return false">'+fmtFcorta(x.r.fecha)+'</a>',
             esc(x.r.paciente||'—'),n0(x.r.acuenta),n0(x.identificado),
             '<span style="color:var(--clay)">'+n0(num(x.r.acuenta)-x.identificado)+'</span>']}),480)+
       '<p class="mini" style="margin-top:10px">Tocá la fecha para abrir la ficha y completar cómo pagó.</p>'
@@ -8629,7 +8821,7 @@ function cajaTablaPintar(rows){
   else if(res)res.textContent='';
   $('#cj-body').innerHTML=rows.length?rows.slice().reverse().map(function(r){
     var m=metodoText(r);
-    return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
+    return '<tr onclick="verFicha(\''+jss(r.id)+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
       '<td><b>'+esc(r.paciente||'—')+'</b>'+(r._anticipo?' <span class="pill lime">💜 anticipo</span>':'')+
         ((r.correccionesCobro||[]).length&&!r._soloCobro?' <span class="pill">✏️ corregido</span>':'')+'</td>'+
       '<td>'+(r._anticipo?'':esc(r.profesional||'—'))+'</td>'+
@@ -8848,7 +9040,7 @@ function unirPacientes(queda,sale){
       'pasan a «'+queda+'».\n\nEsto no se deshace solo.'))return;
 
   /* con el Apps Script nuevo se une en el servidor, de una vez (también la ficha vieja y las fotos) */
-  if(srvRenombra()){renombrarPaciente(sale,queda).then(function(){renderRepetidos()}); return}
+  if(srvRenombra()){renombrarPaciente(sale,queda,true).then(function(){renderRepetidos()}); return}
   suyas.forEach(function(r){r.paciente=queda; r.ts=new Date().toISOString(); enviar('save',r)});
 
   /* la ficha clínica también se une: lo que tenga una y la otra no, se suma */
@@ -8915,7 +9107,8 @@ function historiaTexto(h){
   return p.length?p.length===1?p[0]:p.slice(0,-1).join(', ')+' y '+p[p.length-1]:'su ficha'}
 
 /* El cambio, en el servidor y después acá. Devuelve una promesa con true si quedó. */
-function renombrarPaciente(de,a){
+var RENOMBRE_OCUPADO='';
+function renombrarPaciente(de,a,unir){
   de=nombreLimpio(de); a=nombreLimpio(a);
   var kDe=keyPac(de), kA=keyPac(a);
   if(!kDe||a.length<3){toast('Escribí el nombre completo',1);return Promise.resolve(false)}
@@ -8926,10 +9119,15 @@ function renombrarPaciente(de,a){
   var antes=suyos().length?Promise.resolve(flushQueue()).catch(function(){}):Promise.resolve();
   return antes.then(function(){
     if(suyos().length){toast('Todavía se está subiendo algo de este paciente. Probá de nuevo en unos segundos.',1);return false}
-    return api('renombrar',null,null,undefined,{renombre:{de:de,a:a,idem:uid()}}).then(function(r){
+    /* unir:true solo cuando ya se mostró que existe otra persona con ese nombre
+       y quien corrige eligió unir; si no, el servidor nuevo responde nombre_ocupado */
+    return api('renombrar',null,null,undefined,{renombre:{de:de,a:a,idem:uid(),unir:!!unir}}).then(function(r){
       if(!r||r.ok===false){
         var e=r&&r.error;
+        if(e==='nombre_ocupado')RENOMBRE_OCUPADO=a;
         toast(e==='sin_permiso'?'Ese paciente es de otra doctora 🔐':
+          e==='nombre_ocupado'?'Ya hay otro paciente con ese nombre («'+a+'»). Si es la misma persona, elegí unir las historias; si no, usá otro nombre.':
+          e==='clave_de_fabrica'?'Con la clave de fábrica no se puede corregir nombres: la dueña tiene que poner su clave propia en Ajustes.':
           e==='no_existe'?'No encontré a «'+de+'» en la hoja. Si lo cargaste recién, esperá a que se suba.':
           e==='ocupado'?'Google está ocupado: probá de nuevo en un momento.':
           e==='accion_desconocida'?'Falta pegar el Apps Script nuevo (2026-10-28-nombre).':
@@ -8967,10 +9165,13 @@ function cnMayusculas(){var i=$('#cn-nom'); i.value=nombreConMayusculas(i.value)
 function cnVer(){
   var a=nombreLimpio($('#cn-nom').value), kDe=keyPac(CN.de), kA=keyPac(a), info=$('#cn-info'), ok=$('#cn-ok');
   var otro=kA&&kA!==kDe?historiaDe(a):null;
+  /* el servidor ya dijo que ese nombre es de otra persona (que este aparato no tiene cargada) */
+  var enHoja=!!(otro&&!otro.hay&&RENOMBRE_OCUPADO&&keyPac(RENOMBRE_OCUPADO)===kA);
   ok.disabled=!kA||a.length<3||a===CN.de;
-  if(otro&&otro.hay){
+  CN.unir=!!(otro&&(otro.hay||enHoja));
+  if(CN.unir){
     ok.textContent='🔗 Es la misma persona: unir y corregir';
-    info.innerHTML='<div class="cn-otro"><b>Ya hay un paciente «'+esc(otro.nombre||a)+'»</b> con '+esc(historiaTexto(otro))+(otro.cel?' · 📱 '+esc(otro.cel):'')+
+    info.innerHTML='<div class="cn-otro"><b>Ya hay un paciente «'+esc(otro.nombre||a)+'»</b>'+(otro.hay?' con '+esc(historiaTexto(otro))+(otro.cel?' · 📱 '+esc(otro.cel):''):' en la hoja (no está cargado en este aparato)')+
       '.<br>Si es la misma persona, se unen las dos historias en una sola (visitas, pagos, ficha, planes y fotos). Si es otra persona, cambiá el nombre.</div>'}
   else{
     ok.textContent='✏️ Corregir nombre';
@@ -8978,8 +9179,8 @@ function cnVer(){
 function cnOk(){
   var a=nombreLimpio($('#cn-nom').value), b=$('#cn-ok'); if(b.disabled)return;
   b.disabled=true; b.textContent='Corrigiendo…';
-  renombrarPaciente(CN.de,a).then(function(ok){
-    if(!ok){b.disabled=false; cnVer(); return}
+  renombrarPaciente(CN.de,a,CN.unir).then(function(ok){
+    if(!ok){b.disabled=false; cnVer(); return}   // vuelve a la ventana (si era nombre_ocupado, ahora ofrece unir)
     closeModal(); verPaciente(a)})}
 
 /* Al guardar una atención con otro nombre: ¿se corrige en toda la historia o es otra persona? */
@@ -9002,9 +9203,13 @@ function nombreAntesDeGuardar(){
       '<button type="button" class="btn sec" id="nm-solo">Es otra persona: solo esta visita</button>'+
       '<button type="button" class="btn sec" onclick="closeModal()">Cancelar</button></div>');
   $('#nm-solo').onclick=function(){NOMBRE_OK=id+'|'+kA; closeModal(); submitAtencion()};
+  var unir=!!otro.hay;
   $('#nm-todo').onclick=function(){var b=this; b.disabled=true; b.textContent='Corrigiendo…';
-    renombrarPaciente(de,a).then(function(ok){
-      if(!ok){b.disabled=false; b.textContent='Probar de nuevo'; return}
+    renombrarPaciente(de,a,unir).then(function(ok){
+      if(!ok){b.disabled=false;
+        if(RENOMBRE_OCUPADO&&keyPac(RENOMBRE_OCUPADO)===kA){unir=true; b.textContent='🔗 Es la misma persona: unir y corregir todo'}
+        else b.textContent='Probar de nuevo';
+        return}
       NOMBRE_OK=id+'|'+kA; closeModal(); if(EDIT_ID===id)submitAtencion()})};
   return true}
 
@@ -9178,12 +9383,12 @@ function verFicha(id){
     (r.obs?'<h4 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Observaciones</h4><p style="font-size:14px;margin:0">'+esc(r.obs)+'</p>':'')+
     '<div class="row-btn">'+
       (r.celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r.prox?r:{paciente:r.paciente,prox:hoyISO(),saldo:r.saldo}))+'">WhatsApp</a>':'')+
-      '<button class="btn sec sm" onclick="editarId(\''+r.id+'\')">✏️ Editar</button>'+
-      (num(r.saldo)>0?'<button class="btn sec sm" onclick="cobrarSaldo(\''+r.id+'\')">💰 Registrar pago</button>':'')+
-      (puedeCorregirCobro(r)?'<button class="btn sec sm" onclick="corregirCobro(\''+r.id+'\')">✏️ Corregir cobro</button>':'')+
-      (indicacionesDe(r).length?'<button class="btn sec sm" onclick="verIndicaciones(\''+r.id+'\')">📋 Indicaciones</button>':'')+
+      '<button class="btn sec sm" onclick="editarId(\''+jss(r.id)+'\')">✏️ Editar</button>'+
+      (num(r.saldo)>0?'<button class="btn sec sm" onclick="cobrarSaldo(\''+jss(r.id)+'\')">💰 Registrar pago</button>':'')+
+      (puedeCorregirCobro(r)?'<button class="btn sec sm" onclick="corregirCobro(\''+jss(r.id)+'\')">✏️ Corregir cobro</button>':'')+
+      (indicacionesDe(r).length?'<button class="btn sec sm" onclick="verIndicaciones(\''+jss(r.id)+'\')">📋 Indicaciones</button>':'')+
       '<button class="btn sec sm" onclick="verPaciente(\''+jss(r.paciente)+'\')">👤 Historial</button>'+
-      '<button class="btn danger sm" onclick="borrar(\''+r.id+'\')">Borrar</button>'+
+      '<button class="btn danger sm" onclick="borrar(\''+jss(r.id)+'\')">Borrar</button>'+
       '<button class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
 
 function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return; if(esAnticipo(r)){verPaciente(r.paciente);return} if(!esMia(r)){noEsTuya();return} loadForm(r)}
@@ -9203,7 +9408,7 @@ function cobrarSaldo(id,conFavor){
       return '<label><input type="radio" name="cpmet" value="'+m+'"'+(fav&&usar?' checked':'')+
         (fav?' onchange="if(this.checked)$(\'#cp-m\').value='+Math.min(num(r.saldo),cr)+'"':'')+
         '><span>'+(fav?'💜 ':'')+m+'</span></label>'}).join('')+'</div></div>'+
-    '<div class="row-btn"><button class="btn" onclick="guardarPago(\''+id+'\')">Guardar pago</button>'+
+    '<div class="row-btn"><button class="btn" onclick="guardarPago(\''+jss(id)+'\')">Guardar pago</button>'+
     '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
 
 function guardarPago(id){
@@ -9391,28 +9596,34 @@ function htmlCorrecciones(r){
    ===================================================================== */
 function faltaPagar(r){return Math.max(0,Math.round((num(r.total)-num(r.acuenta))*100)/100)}
 function saldoNoCuadra(r){
-  return !!r&&esAtencion(r)&&!esAnticipo(r)&&num(r.saldo)>faltaPagar(r)+0.009}
+  /* saldo mayor que lo que falta, o negativo (pagó de más: lo deja la fusión
+     descuento + cobro o una carga a mano) */
+  return !!r&&esAtencion(r)&&!esAnticipo(r)&&(num(r.saldo)>faltaPagar(r)+0.009||num(r.saldo)<-0.009)}
+/* cuánto pagó de más una atención con saldo negativo (0 si no) */
+function pagoDeMas(r){return num(r.saldo)<-0.009?Math.round(-num(r.saldo)*100)/100:0}
 function saldosNoCuadran(){return DATA.filter(saldoNoCuadra)
   .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')})}
 function htmlNoCuadra(r){
   if(!saldoNoCuadra(r))return '';
   return '<div class="avisomed" style="margin-top:8px">⚠️ <b>Este saldo no cuadra.</b> Total '+bs(r.total)+
     ' menos cobrado '+bs(r.acuenta)+' da '+bs(faltaPagar(r))+', pero figura un saldo de '+bs(r.saldo)+
+    (pagoDeMas(r)>0?' (pagó '+bs(pagoDeMas(r))+' de más)':'')+
     (esImportada(r)?' (vino así del Excel)':'')+'.'+
-    (esAdmin()?'<div class="row-btn" style="margin-top:8px"><button class="btn sm" onclick="arreglarSaldo(\''+r.id+'\')">Dejar saldo en '+bs(faltaPagar(r))+'</button></div>'+
+    (esAdmin()?'<div class="row-btn" style="margin-top:8px"><button class="btn sm" onclick="arreglarSaldo(\''+jss(r.id)+'\')">Dejar saldo en '+bs(faltaPagar(r))+'</button></div>'+
       '<div class="mini">Si en realidad el total era otro, corregilo con ✏️ Editar.</div>':'')+'</div>'}
 function arreglarSaldo(id){
   if(!esAdmin()){toast('Eso lo arregla recepción o la dueña 🔐',1);return}
   var r0=DATA.filter(function(x){return x.id===id})[0]; if(!r0||!saldoNoCuadra(r0))return;
   if(!confirm('¿Dejar el saldo de '+(r0.paciente||'')+' ('+fmtF(r0.fecha)+') en '+bs(faltaPagar(r0))+'?\n\n'+
-      'Figura '+bs(r0.saldo)+' pero el total ('+bs(r0.total)+') ya está cobrado'+(faltaPagar(r0)>0?' salvo '+bs(faltaPagar(r0)):'')+
+      (pagoDeMas(r0)>0?'Figura '+bs(r0.saldo)+': pagó '+bs(pagoDeMas(r0))+' de más (cobrado '+bs(r0.acuenta)+' sobre un total de '+bs(r0.total)+'). Si hay que devolverle o pasarle esa plata, anotalo aparte.'
+        :'Figura '+bs(r0.saldo)+' pero el total ('+bs(r0.total)+') ya está cobrado'+(faltaPagar(r0)>0?' salvo '+bs(faltaPagar(r0)):''))+
       '. No mueve plata de ninguna caja.'))return;
   conAtencionFresca(id,function(r){
     if(!r||!saldoNoCuadra(r)){closeModal(); toast('Ya estaba arreglado ✅'); refreshAll(); return}
-    var antes=num(r.saldo);
+    var antes=num(r.saldo), deMas=pagoDeMas(r);
     r.saldo=faltaPagar(r);
     r.obs=(r.obs?r.obs+'\n':'')+'Saldo ajustado de '+bs(antes)+' a '+bs(r.saldo)+' el '+fmtF(hoyISO())+
-      ' (no cuadraba con el total y lo cobrado)';
+      (deMas>0?' (pagó '+bs(deMas)+' de más: cobrado '+bs(r.acuenta)+' sobre un total de '+bs(r.total)+')':' (no cuadraba con el total y lo cobrado)');
     persist(r); closeModal(); toast('Saldo arreglado: '+bs(r.saldo)+' ✅'); refreshAll()})}
 
 /* La ficha del paciente: todo lo suyo en una sola pantalla — datos, aviso
@@ -9479,10 +9690,10 @@ function verPaciente(nombre){
           : '💳 próxima cuota '+bs(c.monto)+' el '+fmtF(c.fecha))+'</div>'})()+
       avisoSinMarcar(nom,p)+
       '<div class="row-btn" style="margin-top:8px">'+
-        '<button class="btn sm" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Abrir plan</button>'+
-        (s2&&p.estado==='activo'?'<button class="btn sec sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s2.n+')">✓ Marcar realizada · sesión '+s2.n+'</button>':'')+
-        (variasVisitasPosible(nom,p)?'<button class="btn sec sm" onclick="variasVisitas(\''+nj+'\',\''+p.id+'\')" title="Se hizo en varias citas: una sesión por visita">🧩 Se hizo en varias visitas</button>':'')+
-        (s2&&p.estado==='activo'&&visitasParaVincular(nom,p).length&&!variasVisitasPosible(nom,p)?'<button class="btn sec sm" onclick="vincularVisita(\''+nj+'\',\''+p.id+'\','+s2.n+')" title="La sesión se cargó como visita suelta: elegí esa visita">🔗 Ya se hizo en una visita</button>':'')+
+        '<button class="btn sm" onclick="verPlan(\''+nj+'\',\''+jss(p.id)+'\')">Abrir plan</button>'+
+        (s2&&p.estado==='activo'?'<button class="btn sec sm" onclick="atencionDePlan(\''+nj+'\',\''+jss(p.id)+'\','+s2.n+')">✓ Marcar realizada · sesión '+s2.n+'</button>':'')+
+        (variasVisitasPosible(nom,p)?'<button class="btn sec sm" onclick="variasVisitas(\''+nj+'\',\''+jss(p.id)+'\')" title="Se hizo en varias citas: una sesión por visita">🧩 Se hizo en varias visitas</button>':'')+
+        (s2&&p.estado==='activo'&&visitasParaVincular(nom,p).length&&!variasVisitasPosible(nom,p)?'<button class="btn sec sm" onclick="vincularVisita(\''+nj+'\',\''+jss(p.id)+'\','+s2.n+')" title="La sesión se cargó como visita suelta: elegí esa visita">🔗 Ya se hizo en una visita</button>':'')+
       '</div></div>'}).join(''):'';
 
   openModal('<h3>'+esc(nom)+'</h3>'+
@@ -9517,7 +9728,7 @@ function verPaciente(nombre){
     '<h4 style="margin:16px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Visitas</h4>'+
     (rs.length?'<div class="tw" style="margin:0"><table style="min-width:0"><thead><tr><th>Fecha</th><th>Doctora</th><th>Servicios</th>'+
       '<th class="num">Total</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody>'+
-      rs.map(function(r){return '<tr onclick="verFicha(\''+r.id+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
+      rs.map(function(r){return '<tr onclick="verFicha(\''+jss(r.id)+'\')"><td>'+fmtFcorta(r.fecha)+'</td>'+
         '<td>'+(r.profesional?esc(r.profesional.replace(/^Dra\.?\s*/i,'')):'—')+'</td>'+
         '<td style="max-width:190px">'+esc(srvText(r)||'—')+(sesionPillDe(r)?'<div style="margin-top:3px">'+sesionPillDe(r)+'</div>':'')+'</td><td class="num">'+n0(r.total)+'</td>'+
         '<td class="num">'+n0(r.saldo)+'</td><td>'+estadoPill(r.estado)+'</td></tr>'}).join('')+
@@ -9584,7 +9795,7 @@ function showWhatsappModal(r,cita,fav,alPlan,planIdPaq,sinRegistrar){
     (function(){var cr=!fav&&esAtencion(r)&&num(r.saldo)>0?creditoPara(r.paciente,r.planId):0;
       return cr>0.009?'<div class="rem soon" style="margin-top:12px"><div><div class="who">💜 Tiene '+bs(cr)+' de saldo a favor</div>'+
         '<div class="meta">Esta atención quedó debiendo '+bs(r.saldo)+'. Podés descontarlo del anticipo.</div></div>'+
-        '<div class="acts"><button class="btn sm" onclick="cobrarSaldo(\''+r.id+'\',true)">Usar saldo a favor</button></div></div>':''})()+
+        '<div class="acts"><button class="btn sm" onclick="cobrarSaldo(\''+jss(r.id)+'\',true)">Usar saldo a favor</button></div></div>':''})()+
     (ind?'<h4 style="margin:20px 0 4px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">📋 Indicaciones de cuidado</h4>'+
       '<p class="hint" style="margin:0 0 8px">Salen de los servicios que cargaste. Van aparte del resumen, para que le queden por escrito.</p>'+
       '<div class="wa" id="wa-ind">'+esc(ind)+'</div>'+
@@ -9822,8 +10033,8 @@ function planResumenHtml(nombre,p){
     '<div class="barra" style="margin:11px 0 5px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="mini">'+a.hechas+' de '+a.total+' etapas · presupuesto '+bs(p.total)+' · pagado '+bs(cob)+
       ' · <span style="color:'+(sal>0?'var(--clay)':'var(--ok)')+'">pendiente '+bs(sal)+'</span></div>'+
-    '<div class="row-btn"><button class="btn sm" onclick="verPlan(\''+jss(nombre)+'\',\''+p.id+'\')">Abrir plan</button>'+
-      (planEsMio(p)?'<button class="btn danger sm" onclick="borrarPlan(\''+jss(nombre)+'\',\''+p.id+'\')">🗑 Borrar plan</button>':'')+'</div></div>'}
+    '<div class="row-btn"><button class="btn sm" onclick="verPlan(\''+jss(nombre)+'\',\''+jss(p.id)+'\')">Abrir plan</button>'+
+      (planEsMio(p)?'<button class="btn danger sm" onclick="borrarPlan(\''+jss(nombre)+'\',\''+jss(p.id)+'\')">🗑 Borrar plan</button>':'')+'</div></div>'}
 
 /* ---------- lo que pasa con cada etapa ---------- */
 function atencionDeEtapa(s){
@@ -9886,19 +10097,19 @@ function verPlan(nombre,id){
     (favor>0.009?'<p class="mini" style="margin:-4px 0 10px">Además tiene '+bs(favor)+' de saldo a favor suelto (se usa en cualquier atención).</p>':'')+
     '<div class="barra" style="margin:0 0 10px"><span style="width:'+a.pct+'%"></span></div>'+
     '<div class="row-btn" style="margin-top:0">'+
-      (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+prox.n+')">✓ Marcar realizada · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
-      (puedePagoPlan(nombre,p.id)?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\')" title="Plata a cuenta del plan: se usa sola en las próximas sesiones">💰 Pago adelantado o cuota</button>':'')+
-      '<button class="btn sec" onclick="verPresupuesto(\''+nj+'\',\''+p.id+'\')">📲 Enviar presupuesto por WhatsApp</button></div>'+
+      (prox?'<button class="btn" onclick="atencionDePlan(\''+nj+'\',\''+jss(p.id)+'\','+prox.n+')">✓ Marcar realizada · '+esc(prox.desc||('etapa '+prox.n))+'</button>':'')+
+      (puedePagoPlan(nombre,p.id)?'<button class="btn sec" onclick="pagoAlPlan(\''+nj+'\',\''+jss(p.id)+'\')" title="Plata a cuenta del plan: se usa sola en las próximas sesiones">💰 Pago adelantado o cuota</button>':'')+
+      '<button class="btn sec" onclick="verPresupuesto(\''+nj+'\',\''+jss(p.id)+'\')">📲 Enviar presupuesto por WhatsApp</button></div>'+
     '<h4 style="margin:14px 0 6px;font-size:13px;text-transform:uppercase;color:var(--gray);letter-spacing:.5px">Etapas</h4>'+
     (filas.length?filas.map(function(f){
         var s=f.s, acc=[];
-        if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+p.id+'\','+s.n+')">✓ Marcar realizada</button>');
-        if(!s.hecha&&vinc)acc.push('<button class="btn sec sm" onclick="vincularVisita(\''+nj+'\',\''+p.id+'\','+s.n+')" title="La sesión se cargó como visita suelta: elegí esa visita">🔗 Ya se hizo en una visita</button>');
-        if(f.a&&puedePasarAlPaquete(f.a,p,s))acc.push('<button class="btn sm" onclick="pasarAlPaquete(\''+f.a.id+'\',\''+p.id+'\',0)">📦 Pasar al paquete</button>');
-        if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+f.a.id+'\')">💵 Cobrar lo que debe</button>');
-        else if(f.a&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">💵 Cobrar lo que debe</button>');
-        else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+p.id+'\','+s.n+')">💰 Adelantar esta sesión</button>');
-        if(f.a)acc.push('<button class="btn sec sm" onclick="verFicha(\''+f.a.id+'\')">Ver historial</button>');
+        if(!s.hecha)acc.push('<button class="btn sm" onclick="atencionDePlan(\''+nj+'\',\''+jss(p.id)+'\','+s.n+')">✓ Marcar realizada</button>');
+        if(!s.hecha&&vinc)acc.push('<button class="btn sec sm" onclick="vincularVisita(\''+nj+'\',\''+jss(p.id)+'\','+s.n+')" title="La sesión se cargó como visita suelta: elegí esa visita">🔗 Ya se hizo en una visita</button>');
+        if(f.a&&puedePasarAlPaquete(f.a,p,s))acc.push('<button class="btn sm" onclick="pasarAlPaquete(\''+jss(f.a.id)+'\',\''+jss(p.id)+'\',0)">📦 Pasar al paquete</button>');
+        if(f.a&&num(f.a.saldo)>0)acc.push('<button class="btn sec sm" onclick="cobrarSaldo(\''+jss(f.a.id)+'\')">💵 Cobrar lo que debe</button>');
+        else if(f.a&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+jss(p.id)+'\','+s.n+')">💵 Cobrar lo que debe</button>');
+        else if(!f.a&&!s.hecha&&f.saldo>0.009&&puedePagoPlan(nombre,p.id))acc.push('<button class="btn sec sm" onclick="pagoAlPlan(\''+nj+'\',\''+jss(p.id)+'\','+s.n+')">💰 Adelantar esta sesión</button>');
+        if(f.a)acc.push('<button class="btn sec sm" onclick="verFicha(\''+jss(f.a.id)+'\')">Ver historial</button>');
         var dato=function(k,v,st){return '<div><div class="mini">'+k+'</div><b'+(st?' style="'+st+'"':'')+'>'+v+'</b></div>'};
         return '<div class="pl-fila" style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px'+(s.hecha?';background:rgba(120,160,90,.06)':'')+'">'+
           '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
@@ -9924,12 +10135,12 @@ function verPlan(nombre,id){
     cuotasHtml(p)+
     (p.notas?'<p class="mini" style="margin-top:9px">'+esc(p.notas)+'</p>':'')+
     '<div class="row-btn">'+
-      (variasVisitasPosible(nombre,p)?'<button class="btn sec sm" onclick="variasVisitas(\''+nj+'\',\''+p.id+'\')" title="Se hizo en varias citas: una sesión por visita">🧩 Se hizo en varias visitas</button>':'')+
-      (mio?'<button class="btn sec sm" onclick="editarPlan(\''+nj+'\',\''+p.id+'\')">✏️ Editar plan</button>':'')+
-      (mio?'<button class="btn sec sm" onclick="agregarControl(\''+nj+'\',\''+p.id+'\')">＋ Agregar control</button>':'')+
-      (soloEquipoSilencioso()?'<button class="btn sec sm" onclick="guardarPlantilla(\''+nj+'\',\''+p.id+'\')">💾 Guardar como plantilla</button>':'')+
-      (mio&&p.estado==='activo'?'<button class="btn sec sm" onclick="cerrarPlan(\''+nj+'\',\''+p.id+'\')">✅ Dar por terminado</button>':'')+
-      (mio?'<button class="btn danger sm" onclick="borrarPlan(\''+nj+'\',\''+p.id+'\')">🗑 Borrar plan</button>':'')+
+      (variasVisitasPosible(nombre,p)?'<button class="btn sec sm" onclick="variasVisitas(\''+nj+'\',\''+jss(p.id)+'\')" title="Se hizo en varias citas: una sesión por visita">🧩 Se hizo en varias visitas</button>':'')+
+      (mio?'<button class="btn sec sm" onclick="editarPlan(\''+nj+'\',\''+jss(p.id)+'\')">✏️ Editar plan</button>':'')+
+      (mio?'<button class="btn sec sm" onclick="agregarControl(\''+nj+'\',\''+jss(p.id)+'\')">＋ Agregar control</button>':'')+
+      (soloEquipoSilencioso()?'<button class="btn sec sm" onclick="guardarPlantilla(\''+nj+'\',\''+jss(p.id)+'\')">💾 Guardar como plantilla</button>':'')+
+      (mio&&p.estado==='activo'?'<button class="btn sec sm" onclick="cerrarPlan(\''+nj+'\',\''+jss(p.id)+'\')">✅ Dar por terminado</button>':'')+
+      (mio?'<button class="btn danger sm" onclick="borrarPlan(\''+nj+'\',\''+jss(p.id)+'\')">🗑 Borrar plan</button>':'')+
       '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">Volver</button></div>'+
     (mio?'':'<p class="mini" style="margin-top:6px">✏️ Editar o 🗑 borrar este '+(p.deClinica?'paquete':'plan')+' lo hace '+(p.deClinica?'recepción o la dueña':'su doctora, recepción o la dueña')+'.</p>'))}
 function soloEquipoSilencioso(){return !esDoctora()}
@@ -9967,7 +10178,7 @@ function verPresupuesto(nombre,id){
     '<div class="row-btn">'+
     (i.celular?'<a class="btn" target="_blank" rel="noopener" href="'+waLink(i.celular,t)+'">Abrir WhatsApp</a>':'')+
     '<button class="btn sec" onclick="copiarWa()">Copiar texto</button>'+
-    '<button class="btn sec" onclick="verPlan(\''+jss(nombre)+'\',\''+plan.id+'\')">Volver al plan</button></div>')}
+    '<button class="btn sec" onclick="verPlan(\''+jss(nombre)+'\',\''+jss(plan.id)+'\')">Volver al plan</button></div>')}
 
 /* ---------- registrar el pago de un plan ----------
    Entra a la caja hoy y queda a favor del plan: se descuenta solo de las
@@ -10002,8 +10213,8 @@ function atencionDePlan(nombre,planId,n){
   if(!EDIT_ID&&!AT_PLAN_OTRA&&desdeLaAtencion(nombre)&&formEnUso()&&$('#f-plan').value!==planId){
     openModal('<h3>✓ '+esc(s.desc||('Etapa '+s.n))+'</h3><p class="mini">'+esc(nombre)+' · '+esc(p.nombre)+'</p>'+
       '<p style="margin:14px 0 4px;font-size:17px"><b>Estás cargando una atención de '+esc(nombre.split(' ')[0])+'. ¿La sesión es esa misma visita?</b></p>'+
-      '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="closeModal();elegirPlanEnForm(\''+planId+'\')">Sí, es esta atención</button>'+
-      '<button class="btn sec" onclick="AT_PLAN_OTRA=true;try{atencionDePlan(\''+jss(nombre)+'\',\''+planId+'\','+n+')}finally{AT_PLAN_OTRA=false}">No, es otra visita</button>'+
+      '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="closeModal();elegirPlanEnForm(\''+jss(planId)+'\')">Sí, es esta atención</button>'+
+      '<button class="btn sec" onclick="AT_PLAN_OTRA=true;try{atencionDePlan(\''+jss(nombre)+'\',\''+jss(planId)+'\','+n+')}finally{AT_PLAN_OTRA=false}">No, es otra visita</button>'+
       '<button class="btn ghost" onclick="closeModal()">Cancelar</button></div>'+
       '<p class="mini" style="margin-top:10px">«Sí»: la sesión entra en la atención que estás cargando y se guarda con ella. «No»: se registra como otra visita aparte.</p>');
     return}
@@ -10027,7 +10238,7 @@ function atencionDePlan(nombre,planId,n){
         return '<label><input type="radio" name="apmet" value="'+m+'"><span>'+m+'</span></label>'}).join('')+'</div></div></div>'+
     '<div id="ap-info" class="mini" style="margin-top:10px"></div>'+
     '<div class="row-btn"><button class="btn" id="ap-ok" onclick="guardarAtencionPlan()">✓ Guardar sesión realizada</button>'+
-    '<button class="btn sec" onclick="AT_PLAN=null;verPlan(\''+jss(nombre)+'\',\''+planId+'\')">Cancelar</button></div>');
+    '<button class="btn sec" onclick="AT_PLAN=null;verPlan(\''+jss(nombre)+'\',\''+jss(planId)+'\')">Cancelar</button></div>');
   var info=function(){
     var m=num($('#ap-monto').value), fav=Math.max(0,creditoPara(nombre,s.aparte?'':planId)), deuda=Math.max(0,precio-m);
     var usa=Math.min(deuda,fav);
@@ -10240,8 +10451,8 @@ function editorPlan(nombre,p,pre){
           esc(p&&p.cuotas.length>1?Math.max(1,diasEntre(p.cuotas[0].fecha,p.cuotas[1].fecha)):30)+'"></div>'+
       '</div></div>'+
     '<div style="margin-top:12px"><label>Notas</label><input id="pl-not" value="'+esc(p?p.notas:(pre.notas||''))+'"></div>'+
-    '<div class="row-btn"><button class="btn" onclick="guardarPlan(\''+jss(nombre)+'\','+(p?('\''+p.id+'\''):'null')+')">💾 Guardar plan</button>'+
-    '<button class="btn sec" onclick="'+(p?'verPlan(\''+jss(nombre)+'\',\''+p.id+'\')':'abrirPlanes(\''+jss(nombre)+'\')')+'">Cancelar</button></div>');
+    '<div class="row-btn"><button class="btn" onclick="guardarPlan(\''+jss(nombre)+'\','+(p?('\''+jss(p.id)+'\''):'null')+')">💾 Guardar plan</button>'+
+    '<button class="btn sec" onclick="'+(p?'verPlan(\''+jss(nombre)+'\',\''+jss(p.id)+'\')':'abrirPlanes(\''+jss(nombre)+'\')')+'">Cancelar</button></div>');
   $('#pl-tot').oninput=function(){this.dataset.touched=this.value.trim()?'1':''; if(!this.value.trim())delete this.dataset.touched};
   if(!PL_ETAPAS.length)PL_ETAPAS.push({desc:'',cant:1,precio:''});
   pintarEtapasEditor();
@@ -10327,9 +10538,9 @@ function vincularVisita(nombre,planId,n){
       var sv=(r.servicios||[]).map(function(x){return x.nom+(x.det?' ('+x.det+')':'')}).filter(Boolean).join(' · ')||'sin servicio';
       return '<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;display:flex;gap:10px;align-items:center;justify-content:space-between">'+
         '<div><b>'+fmtF(r.fecha)+'</b>'+(r.profesional?' · '+esc(r.profesional):'')+'<div class="mini">'+esc(sv)+' · '+bs(r.total)+'</div></div>'+
-        '<button class="btn sm" style="flex:none" onclick="vincularVisitaOk(\''+nj+'\',\''+p.id+'\','+s.n+',\''+r.id+'\')">Es esta</button></div>'}).join('')
+        '<button class="btn sm" style="flex:none" onclick="vincularVisitaOk(\''+nj+'\',\''+jss(p.id)+'\','+s.n+',\''+jss(r.id)+'\')">Es esta</button></div>'}).join('')
       :'<div class="empty">No hay visitas atendidas sin plan para elegir.</div>')+
-    '<div class="row-btn"><button class="btn sec" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Volver</button></div>')}
+    '<div class="row-btn"><button class="btn sec" onclick="verPlan(\''+nj+'\',\''+jss(p.id)+'\')">Volver</button></div>')}
 function vincularVisitaOk(nombre,planId,n,atId){
   if(bloqueaAjeno(nombre))return;
   var r=DATA.filter(function(x){return x.id===atId})[0];
@@ -10356,7 +10567,7 @@ function avisoSinMarcar(nombre,p){
   var vs=proxSesion(p)?visitasSinMarcar(nombre,p):[]; if(!vs.length)return '';
   return '<div class="avisomed nota" style="margin:8px 0">⚠ <b>'+vs.length+(vs.length===1?' visita cargada':' visitas cargadas')+' con este plan</b> ('+
     vs.map(function(r){return fmtFcorta(r.fecha)}).join(', ')+') sin su sesión marcada. '+
-    '<div class="row-btn" style="margin-top:6px"><button class="btn sm" onclick="marcarVisitasDelPlan(\''+jss(nombre)+'\',\''+p.id+'\')">✓ Marcar sus sesiones</button></div></div>'}
+    '<div class="row-btn" style="margin-top:6px"><button class="btn sm" onclick="marcarVisitasDelPlan(\''+jss(nombre)+'\',\''+jss(p.id)+'\')">✓ Marcar sus sesiones</button></div></div>'}
 function marcarVisitasDelPlan(nombre,id){
   if(bloqueaAjeno(nombre))return;
   var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
@@ -10393,8 +10604,8 @@ function variasVisitas(nombre,id){
       return '<label style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;cursor:pointer">'+
         '<input type="checkbox" class="vv-chk" value="'+esc(r.id)+'"'+(marcada?' checked':'')+' style="width:20px;height:20px;flex:none">'+
         '<div><b>'+fmtF(r.fecha)+'</b>'+(r.profesional?' · '+esc(r.profesional):'')+'<div class="mini">'+esc(sv)+' · '+bs(r.total)+'</div></div></label>'}).join('')+
-    '<div class="row-btn"><button class="btn" onclick="variasVisitasOk(\''+nj+'\',\''+p.id+'\')">Guardar las sesiones</button>'+
-    '<button class="btn sec" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Volver</button></div>')}
+    '<div class="row-btn"><button class="btn" onclick="variasVisitasOk(\''+nj+'\',\''+jss(p.id)+'\')">Guardar las sesiones</button>'+
+    '<button class="btn sec" onclick="verPlan(\''+nj+'\',\''+jss(p.id)+'\')">Volver</button></div>')}
 function variasVisitasOk(nombre,id){
   if(bloqueaAjeno(nombre))return;
   var f=pacDe(nombre), p=f.planes.filter(function(x){return x.id===id})[0];
@@ -10456,19 +10667,27 @@ function cerrarPlan(nombre,id){
   if(bloqueaAjeno(nombre))return;
   var p=pacDe(nombre), plan=p.planes.filter(function(x){return x.id===id})[0]; if(!plan)return;
   if(!planEsMio(plan)){noEsTuya();return}
-  plan.estado='terminado'; savePac(p); toast('Plan cerrado'); verPlan(nombre,id)}
+  /* lo adelantado que no se usó no se pierde ni queda escondido: pasa a saldo a favor libre */
+  var queda=num(creditosEn(DATA,nombre).planes[id]||0);
+  if(queda>0.009&&!confirm('Quedan '+bs(queda)+' adelantados: pasan a saldo a favor libre del paciente (se usan en cualquier atención).\n\n¿Dar por terminado «'+plan.nombre+'»?'))return;
+  plan.estado='terminado'; savePac(p);
+  toast('Plan cerrado'+(queda>0.009?' · '+bs(queda)+' quedan como saldo a favor libre 💜':'')); verPlan(nombre,id)}
 
 function borrarPlan(nombre,id){
   if(bloqueaAjeno(nombre))return;
   var pl0=planesDe(nombre).filter(function(x){return x.id===id})[0];
   if(pl0&&!planVisible(pl0)){noEsTuya();return}
   if(pl0&&!planEsMio(pl0)){toast('Ese plan no está a tu nombre: lo borra recepción o la dueña.',1);return}
-  var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===id});
+  var pagos=DATA.filter(function(r){return esAnticipo(r)&&r.planId===id}), monto=pagos.reduce(function(a,r){return a+num(r.acuenta)},0);
   if(!confirm('¿Borrar este plan? Las atenciones ya cargadas no se tocan.'+
-      (pagos.length?'\n\nLos pagos al plan ('+bs(pagos.reduce(function(a,r){return a+num(r.acuenta)},0))+') quedan como saldo a favor del paciente.':'')))return;
+      (pagos.length?'\n\nTiene '+pagos.length+(pagos.length===1?' pago al plan':' pagos al plan')+' por '+bs(monto)+
+        ': no se borran ni salen de la caja; quedan como saldo a favor libre del paciente.':'')))return;
   var p=pacDe(nombre);
   p.planes=p.planes.filter(function(x){return x.id!==id});
-  savePac(p); toast('Plan borrado'); abrirPlanes(nombre)}
+  /* el servidor nuevo no deja borrar un plan con pagos salvo que se le diga
+     a propósito qué hacer con ellos (liberarPagos: quedan sueltos) */
+  savePac(p,undefined,pagos.length?{liberarPagos:true}:undefined);
+  toast('Plan borrado'+(pagos.length?' · '+bs(monto)+' quedan como saldo a favor del paciente 💜':'')); abrirPlanes(nombre)}
 
 /* Un tratamiento recomendado (solo era un mensaje) se puede pasar a plan. */
 function planDesdeRecomendado(idAtencion,idPre){
@@ -10607,12 +10826,12 @@ function preguntaSesionHoy(nombre,plan){
   openModal('<h3>📦 '+esc(plan.nombre)+' quedó creado</h3>'+
     '<p class="mini">'+esc(nombre)+' · '+(plan.sesiones||[]).length+' sesiones · '+bs(plan.total)+'</p>'+
     '<p style="margin:14px 0 4px;font-size:17px"><b>¿Hoy se hizo la sesión 1?</b></p>'+
-    '<div class="row-btn" style="margin-top:6px"><button class="btn" onclick="sesionHoySi(\''+nj+'\',\''+plan.id+'\')">Sí, hoy se hizo la sesión 1</button>'+
-    '<button class="btn sec" onclick="sesionHoyNo(\''+nj+'\',\''+plan.id+'\')">No, hoy solo paga (o reserva)</button></div>'+
+    '<div class="row-btn" style="margin-top:6px"><button class="btn" onclick="sesionHoySi(\''+nj+'\',\''+jss(plan.id)+'\')">Sí, hoy se hizo la sesión 1</button>'+
+    '<button class="btn sec" onclick="sesionHoyNo(\''+nj+'\',\''+jss(plan.id)+'\')">No, hoy solo paga (o reserva)</button></div>'+
     '<div class="avisomed nota" style="margin-top:12px">'+
       '<div><b>Sí:</b> abajo queda cargada la sesión 1 ('+bs(s.precio)+'). Poné lo que pagó —si paga el paquete entero, '+bs(plan.total)+'— y guardá la atención. Lo que pase de la sesión queda pagando las próximas.</div>'+
       '<div style="margin-top:6px"><b>No:</b> registrás el pago del paquete y listo: <b>no hace falta guardar ninguna atención</b>. Cada vez que venga, «✓ Marcar realizada».</div></div>'+
-    '<div class="row-btn"><button class="btn sec sm" onclick="verPlan(\''+nj+'\',\''+plan.id+'\')">Ver el paquete</button></div>')}
+    '<div class="row-btn"><button class="btn sec sm" onclick="verPlan(\''+nj+'\',\''+jss(plan.id)+'\')">Ver el paquete</button></div>')}
 function sesionHoySi(nombre,id){
   closeModal();
   var p=planesDe(nombre).filter(function(x){return x.id===id})[0]; if(!p)return;
@@ -10636,10 +10855,24 @@ function despuesDePagoSolo(pac){
   if(!EDIT_ID&&keyPac($('#f-paciente').value)===keyPac(pac)&&!SRV.some(function(x){return x.nom})&&!num($('#f-acuenta').value)){clearForm();
     toast('Pago del paquete registrado ✅ No hace falta guardar una atención: cuando venga, «✓ Marcar realizada» en el paquete'); return}
   toast('Pago del paquete registrado ✅ En esta atención poné SOLO lo de hoy (ej. la consulta) y lo que cobraste por eso: el paquete ya está pagado aparte')}
+/* La cita del día que se está pasando a atención (EDIT_ID es la cita) todavía
+   no tiene nada cargado: para paquetes y pagos al plan vale como una atención
+   nueva. Antes, con la cita abierta, «vender paquete» no creaba el paquete. */
+function citaEnForm(){
+  if(!EDIT_ID)return false;
+  var r=DATA.filter(function(x){return x.id===EDIT_ID})[0];
+  return !!r&&r.estado==='Agendada'}
+function altaEfectiva(){return !EDIT_ID||citaEnForm()}
+/* una fila marcada como paquete: lo que pase del total de hoy es pago del
+   paquete (y lo que pase del paquete, saldo a favor), así que no es un error */
+function paqueteEnFilas(){
+  if(!altaEfectiva()||getRadio('estado')!=='Atendido')return false;
+  try{readSrv()}catch(e){}
+  return SRV.some(function(s){return s.nom&&s.ses>1&&montoLinea(s)>0})}
 /* Lo que pasa del total de la sesión, en una atención nueva de un plan, es
    pago al plan (ej. paga el paquete entero el día de la sesión 1). */
 function excesoAlPlanOk(){
-  if(EDIT_ID||getRadio('estado')!=='Atendido')return false;
+  if(!altaEfectiva()||getRadio('estado')!=='Atendido')return false;
   var id=$('#wrap-plan').style.display==='none'?'':$('#f-plan').value; if(!id)return false;
   var pac=$('#f-paciente').value.trim();
   return planesDe(pac).some(function(x){return x.id===id})&&puedePagoPlan(pac,id)}
@@ -10669,7 +10902,7 @@ function tipoPaqueteDe(nom){var t=null; paquetesTipo().forEach(function(x){if(!t
 function nombreBasePaquete(nom){return String(nom||'').replace(/\s*[·\-–(]?\s*\d+\s*sesi[oó]n(es)?\)?\s*$/i,'').trim()||String(nom||'')}
 function sesAuto(nom){var t=tipoPaqueteDe(nom); return t&&nSesionesTipo(t)>1?nSesionesTipo(t):sesionesDeNombre(nom)}
 function paqFilaHtml(i,s){
-  if(EDIT_ID||!s||!s.nom)return '';
+  if(!altaEfectiva()||!s||!s.nom)return '';
   if(!s.ses)return '<button type="button" class="btn sec sm s-paq" data-i="'+i+'">📦 Es de varias sesiones</button>';
   var amt=montoLinea(s), rep=repartirPrecio(amt,s.ses);
   return '<div class="avisomed nota" style="margin-top:8px">📦 <b>Paquete de '+s.ses+' sesiones</b>'+
@@ -10692,7 +10925,7 @@ function togglePaqFila(i){
     s.ses=n; s.solo=false; s.noPaq=false}
   renderSrv()}
 function paquetesDeFilas(){
-  if(EDIT_ID||getRadio('estado')!=='Atendido')return false;
+  if(!altaEfectiva()||getRadio('estado')!=='Atendido')return false;
   try{readSrv()}catch(e){}
   var i=-1; SRV.forEach(function(s,k){if(i<0&&s.nom&&s.ses>1&&montoLinea(s)>0)i=k}); if(i<0)return false;
   var nombre=$('#f-paciente').value.trim(); if(!nombre||pacAjeno(nombre)||identidadAmbigua(nombre))return false;
@@ -10713,15 +10946,24 @@ function paquetesDeFilas(){
     SRV[i]={nom:L.nom,det:(L.det?L.det+' · ':'')+'sesión 1 de '+L.ses+' del paquete',cant:1,precio:rep[0],lab:L.lab,piezas:L.piezas};
     renderSrv(); renderPlanSel(plan.id); $('#f-plan').value=plan.id; recalcTotal();
     submitAtencion(); return true}
-  /* hoy solo paga */
+  return paqueteSoloPaga(nombre,plan,i)}
+/* «Hoy solo paga»: el paquete queda creado, lo que pagó por él es pago al plan
+   y NINGUNA sesión se marca. Sin otra cosa cargada no hace falta guardar
+   atención; si lo que se está pasando es una cita, queda como la visita en
+   que vino a pagar (sin servicios con precio) para que no siga «pendiente». */
+function paqueteSoloPaga(nombre,plan,i){
+  var base=plan.nombre;
+  if($('#f-plan').value===plan.id){renderPlanSel(''); $('#f-plan').value=''; try{planHint()}catch(e){}}
   var pagos=leerPagos().filter(function(p){return p.metodo!==SALDO_FAVOR}), otras=SRV.filter(function(s,k){return k!==i&&s.nom});
-  if(!otras.length){
+  if(!otras.length&&!citaEnForm()){
     var fecha=$('#f-fecha').value||hoyISO(), tot=sumaPagos(pagos);
     pagos.forEach(function(p){registrarPagoPlan(nombre,plan.id,p.monto,p.metodo,fecha,'Pago del paquete')});
     clearForm(); refreshAll(); verPlan(nombre,plan.id);
     toast('📦 Paquete «'+base+'» creado'+(tot>0?' · pago de '+bs(tot)+' registrado':'')+'. No hace falta guardar atención: cada vez que venga, «✓ Marcar realizada»');
     return true}
-  SRV.splice(i,1); renderSrv(); recalcTotal();
+  if(!otras.length)SRV[i]={nom:'Pago del paquete '+base,det:'vino a pagar; la sesión 1 queda pendiente',cant:1,precio:0,lab:'',piezas:[]};
+  else SRV.splice(i,1);
+  renderSrv(); recalcTotal();
   var tt=num($('#f-total').value), a=num($('#f-acuenta').value);
   if(a>tt+0.009){
     var sx=separarExceso(pagos,Math.round((a-tt)*100)/100);
@@ -10758,12 +11000,12 @@ function sesionPaqueteForm(){
       (s?'<div class="mini" style="margin-top:4px">Hoy sería: <b>'+esc(s.desc||('sesión '+s.n))+'</b>'+(num(s.precio)>0?' · '+bs(s.precio):'')+(fav>0.009?' · 💜 ya tiene '+bs(fav)+' pagados':num(s.precio)>0?' · se cobra hoy o queda debiendo':'')+'</div>'
          :'<div class="mini" style="margin-top:4px">Todas sus sesiones ya están marcadas.</div>')+
       '<div class="row-btn" style="margin-top:8px">'+
-        (s&&sel!==p.id?'<button class="btn sm" onclick="closeModal();elegirPlanEnForm(\''+p.id+'\')">✓ Hoy es esta sesión</button>':'')+
-        '<button class="btn sec sm" onclick="verPlan(\''+nj+'\',\''+p.id+'\')">Ver el plan</button></div></div>'}).join('');
+        (s&&sel!==p.id?'<button class="btn sm" onclick="closeModal();elegirPlanEnForm(\''+jss(p.id)+'\')">✓ Hoy es esta sesión</button>':'')+
+        '<button class="btn sec sm" onclick="verPlan(\''+nj+'\',\''+jss(p.id)+'\')">Ver el plan</button></div></div>'}).join('');
   openModal('<h3 id="spf-h3">📦 Sesión de un paquete o plan</h3><p class="mini">'+esc(nombre)+'</p>'+
     (ps.length?'<label style="display:block;margin-top:10px">Ya tiene</label>'+lista:'<div class="empty" style="margin-top:10px">No tiene ningún paquete ni plan en curso.</div>')+
     (sel?'<div class="row-btn" style="margin-top:8px"><button class="btn sec sm" onclick="closeModal();elegirPlanEnForm(\'\')">Esta visita NO es una sesión (quitar)</button></div>':'')+
-    (EDIT_ID?'':(function(){var pq=paquetesTipo(); if(!pq.length)return ''; return '<label style="display:block;margin-top:14px">Venderle un paquete nuevo hoy</label><div class="row-btn" style="margin-top:4px">'+
+    (!altaEfectiva()?'':(function(){var pq=paquetesTipo(); if(!pq.length)return ''; return '<label style="display:block;margin-top:14px">Venderle un paquete nuevo hoy</label><div class="row-btn" style="margin-top:4px">'+
       pq.map(function(x){return '<button class="btn sec sm" onclick="venderPaqueteForm('+x.i+')">📦 '+esc(x.t.nombre)+' · '+nSesionesTipo(x.t)+' sesiones · '+bs(x.t.total)+'</button>'}).join('')+'</div>'})())+
     '<div class="row-btn" style="margin-top:10px"><button class="btn sec" onclick="closeModal()">Cerrar</button></div>')}
 /* ---------- vender un paquete, en una sola pantalla ----------
@@ -10902,6 +11144,12 @@ function paqueteAntesDeGuardar(){
     if(!o.tipo)return false;
     var et=[]; (o.tipo.t.etapas||[]).forEach(function(e){for(var k=0;k<Math.max(1,Math.round(num(e.cant)||1));k++)et.push(num(e.precio))});
     o.n=1; o.de=et.length; o.precio=et[0]; o.nombrePaq=o.tipo.t.nombre; o.total=num(o.tipo.t.total)}
+  var filaS=SRV[o.linea];
+  if(filaS&&filaS.solo&&filaS.ses>1){
+    /* la fila dice «hoy solo paga»: no se pregunta ni se marca la sesión 1;
+       lo pagado por el paquete es pago al plan */
+    var plS=o.plan||crearPaquete(nombre,o.tipo.i,true); if(!plS)return false;
+    PAQ_OK=firmaPaq(); return paqueteSoloPaga(nombre,plS,o.linea)}
   PAQ_Q=o; o.firma=firmaPaq();
   var tot=num($('#f-total').value), nuevoTot=Math.max(0,tot-(montoLinea(SRV[o.linea])-o.precio)),
       a=num($('#f-acuenta').value), pasa=Math.max(0,Math.round((a-nuevoTot)*100)/100), prof=$('#f-prof').value.trim();
@@ -11202,9 +11450,9 @@ function presuRemHtml(rprof){
       (x.p.motivo?'<br><i>'+esc(x.p.motivo)+'</i>':'')+
       '<br>📱 '+esc(x.celular||'sin celular');
     var acts=(x.celular?'<a class="btn sm" target="_blank" rel="noopener" href="'+waLink(x.celular,txtPresu(x))+'">WhatsApp</a>':'')+
-      '<button class="btn sec sm" onclick="marcarPresu(\''+x.r.id+'\',\''+x.p.id+'\',\'Aceptó\')">✅ Aceptó</button>'+
-      '<button class="btn sec sm" onclick="pedirMotivoPresu(\''+x.r.id+'\',\''+x.p.id+'\')">✖ No quiso</button>'+
-      '<button class="btn sec sm" onclick="planDesdeRecomendado(\''+x.r.id+'\',\''+x.p.id+'\')">🦷 Armar plan</button>';
+      '<button class="btn sec sm" onclick="marcarPresu(\''+jss(x.r.id)+'\',\''+jss(x.p.id)+'\',\'Aceptó\')">✅ Aceptó</button>'+
+      '<button class="btn sec sm" onclick="pedirMotivoPresu(\''+jss(x.r.id)+'\',\''+jss(x.p.id)+'\')">✖ No quiso</button>'+
+      '<button class="btn sec sm" onclick="planDesdeRecomendado(\''+jss(x.r.id)+'\',\''+jss(x.p.id)+'\')">🦷 Armar plan</button>';
     h+=remCard(x.dias>=30?'due':'money',x.paciente,meta,acts)});
 
   if(conCita.length){
@@ -11231,7 +11479,7 @@ function pedirMotivoPresu(idAtencion,idPre){
     '<label style="margin-top:12px">¿Por qué no lo hizo?</label>'+
     '<div class="seg" id="seg-nomotivo">'+ops.map(function(o,i){
       return '<label><input type="radio" name="nomotivo" value="'+esc(o)+'"'+(i===0?' checked':'')+'><span>'+esc(o)+'</span></label>'}).join('')+'</div>'+
-    '<div class="row-btn"><button class="btn" onclick="cerrarNoQuiso(\''+idAtencion+'\',\''+idPre+'\')">Guardar</button>'+
+    '<div class="row-btn"><button class="btn" onclick="cerrarNoQuiso(\''+jss(idAtencion)+'\',\''+jss(idPre)+'\')">Guardar</button>'+
     '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
 
 function cerrarNoQuiso(idAtencion,idPre){
@@ -11608,9 +11856,9 @@ function tarjetaDia(r){
       (num(r.total)>0?' · '+bs(r.total)+(num(r.saldo)>0?' · <b>queda debiendo '+bs(r.saldo)+'</b>':''):'')+'</div>'
     : '';
   var acts=(pend
-      ? '<button class="btn sm" onclick="atenderDeMiDia(\''+r.id+'\')">🦷 Atender</button>'+
-        '<button class="btn sec sm" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✖ No vino</button>'
-      : '<button class="btn sec sm" onclick="verFicha(\''+r.id+'\')">Ver atención</button>')+
+      ? '<button class="btn sm" onclick="atenderDeMiDia(\''+jss(r.id)+'\')">🦷 Atender</button>'+
+        '<button class="btn sec sm" onclick="resolverCita(\''+jss(r.id)+'\',\'No asistió\')">✖ No vino</button>'
+      : '<button class="btn sec sm" onclick="verFicha(\''+jss(r.id)+'\')">Ver atención</button>')+
     '<button class="btn sec sm" onclick="abrirFichaMed(\''+jss(r.paciente)+'\')">🩺 Ficha</button>'+
     botonNota(r.paciente)+
     (r.celular?'<a class="btn sec sm" target="_blank" rel="noopener" href="'+waLink(r.celular,txtCita(r))+'">WhatsApp</a>':'');
@@ -13156,7 +13404,7 @@ function bind(){
       /* el campo de laboratorio aparece o desaparece según el servicio */
       if(SRV[+box.dataset.i]){SRV[+box.dataset.i].lab=p?num(p.lab):0;
         /* "Blanqueamiento · 3 sesiones" (o un paquete de Ajustes) se reconoce solo */
-        SRV[+box.dataset.i].ses=EDIT_ID?0:sesAuto(e.target.value); SRV[+box.dataset.i].solo=false; SRV[+box.dataset.i].noPaq=false}
+        SRV[+box.dataset.i].ses=altaEfectiva()?sesAuto(e.target.value):0; SRV[+box.dataset.i].solo=false; SRV[+box.dataset.i].noPaq=false}
       soltarTotal(); renderSrv(); return}
     if(/\bs-(precio|cant)\b/.test(e.target.className))soltarTotal();
     readSrv(); recalcTotal()});
@@ -13681,7 +13929,7 @@ function asisAntesDeGuardar(){
         '<b>'+esc(p.nombre)+'</b> <span class="mini">· '+a.hechas+'/'+a.total+'</span>'+
         '<div class="mini">Sigue: <b>'+esc(s.desc||('etapa '+s.n))+'</b>'+(num(s.precio)>0?' · '+bs(s.precio):' · incluida')+'</div>'+
         (num(s.precio)>0&&Math.abs(num($('#f-total').value)-num(s.precio))>0.009?'<div class="mini" style="color:var(--clay)">Esta atención suma '+bs(num($('#f-total').value))+': si es esta etapa, después ajustás el precio.</div>':'')+
-        '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="asisRespuestaPlan(\''+p.id+'\')">Sí, es esa etapa</button></div></div>'}).join('')+
+        '<div class="row-btn" style="margin-top:8px"><button class="btn" onclick="asisRespuestaPlan(\''+jss(p.id)+'\')">Sí, es esa etapa</button></div></div>'}).join('')+
     '<div class="row-btn"><button class="btn sec" onclick="asisRespuestaPlan(\'\')">No, es una visita suelta</button></div>');
   return true}
 function asisRespuestaPlan(id){
@@ -14052,7 +14300,11 @@ function asisToc(){
       o.connect(g); g.connect(C.destination); o.start(t); o.stop(t+0.14)})}catch(e){}}
 try{
   ASIS_NOVEDADES.push({id:'corregir-nombre', f:'2026-10-28', t:'Corregir el nombre en toda la historia',
-    x:'En la ficha del paciente, «✏️ Corregir nombre» cambia el nombre en todas sus visitas, citas, pagos, la ficha, los planes y las fotos de una vez. Si el nombre nuevo ya es de otro paciente, se unen las dos historias. Y si cambiás el nombre al editar una atención, te pregunta si corregirlo en toda la historia o si es otra persona.', ayuda:/corrijo el nombre/});
+    x:'En la ficha del paciente, «✏️ Corregir nombre» cambia el nombre en todas sus visitas, citas, pagos, la ficha, los planes y las fotos de una vez. Si el nombre nuevo ya es de otro paciente, te pregunta antes de unir las dos historias. Y si cambiás el nombre al editar una atención, te pregunta si corregirlo en toda la historia o si es otra persona.', ayuda:/corrijo el nombre/});
+  ASIS_NOVEDADES.push({id:'revision-plata', f:'2026-10-29', t:'🔒 Revisión general: la plata más cuidada',
+    x:'Si cerrás o borrás un plan que ya tiene pagos, te avisa cuánto queda y esa plata pasa a saldo a favor del paciente. En Caja, «No cuadran» ahora también muestra quién pagó de más. Cambiar la forma de pago de una visita ya cobrada se hace con ✏️ Corregir cobro. Con la clave que vino de fábrica no se puede borrar ni corregir: cada una entra con su clave propia.', ayuda:/plan que ya tiene pagos/});
+  ASIS_AYUDA.push({q:'¿Qué pasa con la plata si cierro o borro un plan que ya tiene pagos?', k:'cerrar terminar borrar plan paquete pagos adelanto saldo a favor libre devolver plata', v:'pacientes', f:'#pc-q',
+    p:['Abrí la ficha del paciente y el plan.','Al tocar «Dar por terminado» o borrar el plan, te avisa cuánta plata adelantada queda sin usar.','Si confirmás, esa plata pasa a saldo a favor del paciente: la puede usar en cualquier otra visita.','Queda anotado en la planilla (hoja _Correcciones). Si fue un error, avisale a la dueña.']});
   ASIS_AYUDA.push({q:'¿Cómo corrijo el nombre de un paciente (o le agrego un apellido)?', k:'nombre corregir cambiar apellido renombrar unir fusionar repetido mal escrito historia partida duplicado', v:'pacientes', f:'#pc-q',
     p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Tocá «✏️ Corregir nombre» (arriba, junto a sus datos), escribí el nombre completo y tocá «Corregir nombre».','Se cambia en todas sus visitas, citas, pagos, la ficha, los planes y las fotos. No cambia ningún cobro.','Si ya existe otro paciente con ese nombre, te avisa: si es la misma persona, se unen las dos historias en una.','No cambies el nombre solo en una atención: si lo hacés, el panel te pregunta si querés corregirlo en toda la historia.']})}catch(e){}
 /* ===== fin de Sonri ===== */
@@ -14155,6 +14407,8 @@ function mdMontarEncabezado(){
 
 /* ---------- B · la barra de abajo en el celular ---------- */
 function mdBotonesBarra(){
+  /* la clave de pauta solo ve su pestaña: en el celular, Pauta y «Más» (ahí está la sesión) */
+  if(typeof ROL!=='undefined'&&ROL==='pauta')return [['pauta','Pauta',MD_NAV_I.pauta],['mas','Más',MD_I.puntos]];
   var cuarta=esAdmin()?['caja','Caja',MD_I.caja]:['lista','Atenciones',MD_I.lista];
   return [['midia','Mi día',MD_I.dia],['cita','Agenda',MD_I.agenda],['atencion','Atención',MD_I.mas],cuarta,['mas','Más',MD_I.puntos]]}
 function mdPintarBarra(){
@@ -14176,11 +14430,18 @@ function mdAbrirHoja(){
   $('#md-hoja').innerHTML='<div class="md-tirador"></div><h3>Todo el panel</h3><div class="md-hoja-g">'+
     bs_.map(function(b,i){
       if(b.style.display==='none'||getComputedStyle(b).display==='none')return '';
-      var t=(b.title&&!b.textContent.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ]/g,''))?b.textContent+' '+b.title:b.textContent;
+      var t=mdNavTexto(b);
+      if(b.title&&!t.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑ]/g,''))t=t+' '+b.title;
       return '<button type="button" data-i="'+i+'"'+(b.dataset.v&&b.dataset.v===vista?' class="on"':'')+'>'+esc(t.replace(/\s+/g,' ').trim())+'</button>'}).join('')+'</div>';
   $$('#md-hoja button[data-i]').forEach(function(x){x.onclick=function(){mdCerrarHoja(); bs_[+x.getAttribute('data-i')].click()}});
   ov.classList.add('on')}
 function mdCerrarHoja(){var ov=$('#md-hoja-ov'); if(ov)ov.classList.remove('on')}
+/* el texto de una pestaña sin el contador (.nav-cnt/.pill) y con la etiqueta larga aunque el menú esté apretado */
+function mdNavTexto(b){
+  var t=b.querySelector('.md-nav-t');
+  if(t)return t.getAttribute('data-largo')||t.textContent;
+  var c=b.cloneNode(true); mdQ(c,'.nav-cnt,.pill,.md-badge').forEach(function(x){x.parentNode.removeChild(x)});
+  return c.textContent}
 function mdMontarBarra(){
   if($('#md-barra'))return;
   var d=document.createElement('div'); d.id='md-barra'; d.setAttribute('role','navigation'); d.setAttribute('aria-label','Secciones');
@@ -14528,7 +14789,8 @@ function mdCuentasPlanHtml(plan){
         (c.adelantado>0.009||usado>0.009?'<ul>'+
           (usado>0.009?'<li><i class="us"></i><span>Ya usado en '+esc(usadoEnTxt(plan,c))+'</span><b>−'+bs(usado)+'</b></li>'
             :'<li><i class="us"></i><span>Todavía no se usó en ninguna sesión</span><b>Bs 0</b></li>')+
-          '<li class="md-cp-queda"><i class="qu"></i><span>💜 Queda adelantado para las próximas</span><b>'+bs(queda)+'</b></li></ul>'
+          (c.liberado>0.009?'<li class="md-cp-queda"><i class="qu"></i><span>💜 Pasó a saldo a favor libre del paciente (plan '+esc(plan.estado)+')</span><b>'+bs(c.liberado)+'</b></li></ul>'
+            :'<li class="md-cp-queda"><i class="qu"></i><span>💜 Queda adelantado para las próximas</span><b>'+bs(queda)+'</b></li></ul>')
           :'<small>Todavía no hay pagos adelantados.</small>')+'</div>'+
     '</div>'+
     '<p class="md-cp-nota">Lo que se cobró en la misma atención por otra cosa (ej. la consulta) no cuenta para el '+que+'.</p></section>'}
@@ -14829,28 +15091,51 @@ function mdIconosNav(){
     var k=b.dataset.v||(b.id==='nav-buscar'?'buscar':'');
     if(!k||b.getAttribute('data-md-ico'))return;
     for(var i=0;i<b.childNodes.length;i++){var n=b.childNodes[i];
-      if(n.nodeType===3&&n.textContent.trim()){n.textContent=n.textContent.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ¿]+/,''); break}}
+      if(n.nodeType===3&&n.textContent.trim()){
+        /* la etiqueta va en un span: si el menú no entra en la pantalla, «Nueva atención» pasa a «Atención» */
+        var largo=n.textContent.replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ¿]+/,'').replace(/\s+/g,' ').trim();
+        var sp=document.createElement('span'); sp.className='md-nav-t'; sp.textContent=largo; sp.setAttribute('data-largo',largo);
+        if(k==='atencion')sp.setAttribute('data-corto','Atención');
+        n.parentNode.replaceChild(sp,n); break}}
     if(k==='buscar'){b.innerHTML='<span class="md-sr">Buscar</span>'; b.setAttribute('aria-label','Buscar paciente')}
     b.insertAdjacentHTML('afterbegin','<span class="md-nav-i">'+mdIco(MD_NAV_I[k]||MD_I.puntos,2.2)+'</span>');
     b.classList.add('md-t-'+k);
     b.setAttribute('data-md-ico','1')});
   var nav=$('header nav');
   if(nav&&!$('#md-nav-ind')){var ind=document.createElement('span'); ind.id='md-nav-ind'; ind.setAttribute('aria-hidden','true'); nav.insertBefore(ind,nav.firstChild)}
-  mdIconoDuena(); mdIndicador(true)}
+  mdIconoDuena(); mdNavAjustar(); mdIndicador(true)}
+/* el menú tiene que entrar en la pantalla (la dueña no quiere menú lateral): si no entra,
+   primero se aprieta (md-nav-c1: menos aire y letra más chica) y si sigue sin entrar las
+   etiquetas largas se acortan (md-nav-c2: «Nueva atención» → «Atención») */
+function mdNavAjustar(){
+  var nav=$('header nav'); if(!nav)return;
+  var cs=getComputedStyle(nav); if(cs.display==='none'||!nav.clientWidth)return;
+  var entra=function(){return nav.scrollWidth<=nav.clientWidth};
+  var etiquetas=function(cortas){mdQ(nav,'.md-nav-t[data-corto]').forEach(function(t){t.textContent=t.getAttribute(cortas?'data-corto':'data-largo')})};
+  nav.classList.remove('md-nav-c1','md-nav-c2'); etiquetas(false);
+  if(entra())return;
+  nav.classList.add('md-nav-c1'); if(entra())return;
+  nav.classList.add('md-nav-c2'); etiquetas(true)}
 /* la píldora de la pestaña abierta se desliza hasta la nueva */
 function mdIndicador(sinAnim){
   var ind=$('#md-nav-ind'), b=$('header nav button.on'); if(!ind)return;
   if(!b||!b.offsetWidth){ind.style.opacity='0'; return}
   if(sinAnim)ind.style.transition='none';
   ind.style.opacity='1'; ind.style.width=b.offsetWidth+'px'; ind.style.transform='translateX('+b.offsetLeft+'px)';
+  /* la píldora mide lo que mide la pestaña (el menú apretado tiene pestañas más bajas) */
+  ind.style.top=b.offsetTop+'px'; ind.style.height=b.offsetHeight+'px';
   if(sinAnim){void ind.offsetWidth; ind.style.transition=''}
-  var nav=b.parentNode; if(nav&&nav.scrollWidth>nav.clientWidth){
-    var x=b.offsetLeft-(nav.clientWidth-b.offsetWidth)/2; try{nav.scrollTo({left:x,behavior:'smooth'})}catch(e){nav.scrollLeft=x}}}
+  /* se desliza el menú solo si no entra entero y la pestaña abierta quedó cortada; nunca más allá del principio o del fin */
+  var nav=b.parentNode; if(nav&&nav.scrollWidth>nav.clientWidth+1){
+    var izq=b.offsetLeft, der=izq+b.offsetWidth, s=nav.scrollLeft;
+    if(izq>=s&&der<=s+nav.clientWidth)return;
+    var x=Math.max(0,Math.min(nav.scrollWidth-nav.clientWidth,izq-(nav.clientWidth-b.offsetWidth)/2));
+    try{nav.scrollTo({left:x,behavior:sinAnim?'auto':'smooth'})}catch(e){nav.scrollLeft=x}}}
 function mdIconoDuena(){
   var b=$('#nav-duena'); if(!b)return;
-  var k=ROL==='admin'?'duena':(esDoctora()?'doctora':'equipo');
+  var k=ROL==='admin'?'duena':(esDoctora()?'doctora':(ROL==='pauta'?'pauta':'equipo'));
   b.className=b.className.replace(/\bmd-t-\w+/g,'')+' md-t-'+k;
-  b.innerHTML='<span class="md-nav-i">'+mdIco(MD_NAV_I[k],2.2)+'</span><span class="md-sr">'+(k==='duena'?'Dueña':(k==='doctora'?'Doctora':'Recepción'))+'</span>';
+  b.innerHTML='<span class="md-nav-i">'+mdIco(MD_NAV_I[k],2.2)+'</span><span class="md-sr">'+(k==='duena'?'Dueña':(k==='doctora'?'Doctora':(k==='pauta'?'Sesión':'Recepción')))+'</span>';
   b.setAttribute('aria-label',b.title||'Sesión')}
 
 /* ---------- nombres prolijos en pantalla (la hoja no se toca) ---------- */
@@ -15976,7 +16261,7 @@ function mdFichaCita(id){
   else est=['info','•',e||'—',cuando];
   var ini=String(r.paciente||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0)}).join('').toUpperCase();
   var cab=document.createElement('div'); cab.className='md-fc-cab';
-  cab.innerHTML='<span class="md-fc-av">'+esc(ini)+'</span><div><b>'+esc(r.paciente||'—')+'</b><small>'+esc(r.celular||'sin celular')+
+  cab.innerHTML='<span class="md-fc-av">'+esc(ini)+'</span><div><b>'+esc(mdLindo(r.paciente||'—'))+'</b><small>'+esc(r.celular||'sin celular')+
     ' · '+(r.tipo==='Nuevo'?'paciente nuevo':'ya era paciente')+(r.canal?' · llegó por '+esc(r.canal):'')+(r.nroDia?' · N° del día #'+r.nroDia:'')+'</small></div>';
   var card=document.createElement('div'); card.className='md-fc-est '+est[0];
   card.innerHTML='<i>'+est[1]+'</i><div><b>'+esc(est[2])+'</b><small>'+esc(est[3])+'</small></div>';
@@ -15996,14 +16281,14 @@ function mdFichaCita(id){
   var tl=m.querySelector('.md-fc-tl');
   if(r.celular&&e!=='Reprogramó')tl.insertAdjacentHTML('afterend','<div class="md-fc-wa"><div class="md-wa-bur">'+mdWaFormato(txt)+'</div></div>');
   var b=[];
-  if(e==='Reprogramó'&&nv)b.push('<button class="btn" onclick="verFicha(\''+nv.id+'\')">📅 Ver la nueva cita</button>');
-  else if(e!=='Reprogramó')b.push('<button class="btn" onclick="reagendar(\''+r.id+'\')">📅 Reagendar</button>');
+  if(e==='Reprogramó'&&nv)b.push('<button class="btn" onclick="verFicha(\''+jss(nv.id)+'\')">📅 Ver la nueva cita</button>');
+  else if(e!=='Reprogramó')b.push('<button class="btn" onclick="reagendar(\''+jss(r.id)+'\')">📅 Reagendar</button>');
   if(r.celular)b.push('<a class="btn md-fc-wab" target="_blank" rel="noopener" href="'+waLink(r.celular,txt)+'">Escribirle por WhatsApp</a>');
-  if(e!=='Reprogramó')b.push('<button class="btn sec" onclick="resolverCita(\''+r.id+'\',\'Atendido\')">✓ '+(e==='Agendada'&&r.fecha>=hoy?'Vino':'En realidad vino')+'</button>');
-  if(e==='Agendada')b.push('<button class="btn sec" onclick="resolverCita(\''+r.id+'\',\'No asistió\')">✕ No vino</button>');
-  b.push('<button class="btn sec" onclick="editarId(\''+r.id+'\')">✏️ Editar</button>');
+  if(e!=='Reprogramó')b.push('<button class="btn sec" onclick="resolverCita(\''+jss(r.id)+'\',\'Atendido\')">✓ '+(e==='Agendada'&&r.fecha>=hoy?'Vino':'En realidad vino')+'</button>');
+  if(e==='Agendada')b.push('<button class="btn sec" onclick="resolverCita(\''+jss(r.id)+'\',\'No asistió\')">✕ No vino</button>');
+  b.push('<button class="btn sec" onclick="editarId(\''+jss(r.id)+'\')">✏️ Editar</button>');
   b.push('<button class="btn sec" onclick="verPaciente(\''+nj+'\')">👤 Historial</button>');
-  b.push('<button class="btn danger sm md-fc-borrar" onclick="borrar(\''+r.id+'\')">Borrar</button>');
+  b.push('<button class="btn danger sm md-fc-borrar" onclick="borrar(\''+jss(r.id)+'\')">Borrar</button>');
   acc.innerHTML=b.join(''); acc.classList.add('md-fc-acc')}
 
 /* ---------- atender en tres toques: el próximo paciente de la doctora ----------
@@ -16036,15 +16321,15 @@ function mdProximo(){
   if(!box){box=document.createElement('div'); box.id='md-prox'; lista.parentNode.insertBefore(box,lista)}
   box.className='md-prox';
   box.innerHTML='<div class="md-px-k">TU PRÓXIMO PACIENTE'+(falta!==null?(falta>0?' · EN '+(falta>=60?Math.floor(falta/60)+' H '+(falta%60?falta%60+' MIN':''):falta+' MIN'):falta>=-30?' · YA ES LA HORA':''):'')+'</div>'+
-    '<div class="md-px-h"><span class="md-fc-av">'+esc(ini)+'</span><div><b>'+esc(r.paciente)+'</b><small>'+(D.f&&D.f.nac?esc(edadTexto(D.f.nac))+' · ':'')+(D.visitas?D.visitas+' visita'+(D.visitas===1?'':'s'):'paciente nuevo')+(r.canal?' · '+esc(r.canal):'')+(r.profesional?' · '+esc(r.profesional):'')+'</small></div>'+
+    '<div class="md-px-h"><span class="md-fc-av">'+esc(ini)+'</span><div><b>'+esc(mdLindo(r.paciente))+'</b><small>'+(D.f&&D.f.nac?esc(edadTexto(D.f.nac))+' · ':'')+(D.visitas?D.visitas+' visita'+(D.visitas===1?'':'s'):'paciente nuevo')+(r.canal?' · '+esc(r.canal):'')+(r.profesional?' · '+esc(r.profesional):'')+'</small></div>'+
       '<div class="md-px-hr">'+esc(r.hora||'—')+'<span>con cita</span></div></div>'+
     (ojo?'<div class="md-px-ojo">'+esc(ojo)+'</div>':'')+
     '<div class="md-px-gr"><div>Hoy le toca<b>'+esc(toca)+'</b></div>'+(verPlata?'<div>Pago<b>'+esc(pago)+'</b></div>':'')+'<div>La última vez<b>'+esc(ult)+'</b></div></div>'+
-    '<div class="row-btn md-px-acc"><button class="btn" onclick="mdAtenderListo(\''+r.id+'\',0)">▶ Atender: todo ya cargado</button>'+
-      (D.ult&&!D.ses?'<button class="btn sec" onclick="mdAtenderListo(\''+r.id+'\',1)">↻ Repetir lo de la última vez</button>':'')+
+    '<div class="row-btn md-px-acc"><button class="btn" onclick="mdAtenderListo(\''+jss(r.id)+'\',0)">▶ Atender: todo ya cargado</button>'+
+      (D.ult&&!D.ses?'<button class="btn sec" onclick="mdAtenderListo(\''+jss(r.id)+'\',1)">↻ Repetir lo de la última vez</button>':'')+
       '<button class="btn sec" onclick="verPaciente(\''+nj+'\')">📋 Ficha</button></div>'+
     (sig.length?'<div class="md-px-sig">'+sig.map(function(x){var d=mdProxDatos(x);
-      return '<div><b>'+esc(x.hora||'—')+'</b> '+esc(x.paciente)+'<small>'+esc(d.ses?(d.ses.desc||'etapa '+d.ses.n):(x.proxMotivo||'consulta'))+'</small></div>'}).join('')+'</div>':'')}
+      return '<div><b>'+esc(x.hora||'—')+'</b> '+esc(mdLindo(x.paciente))+'<small>'+esc(d.ses?(d.ses.desc||'etapa '+d.ses.n):(x.proxMotivo||'consulta'))+'</small></div>'}).join('')+'</div>':'')}
 function mdAtenderListo(id,repetir){
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   var D=mdProxDatos(r);
@@ -16433,7 +16718,7 @@ var MD_PAUTA=null;
 function mdSrvBase(nom){return String(nom||'').split(' · ')[0].split('(')[0].replace(/\s+/g,' ').trim()}
 function mdSrvClave(nom){var t=asisSinTildes(mdSrvBase(nom)).replace(/[^a-z0-9ñ ]/g,' ').trim().split(/\s+/); return t[0]||'otro'}
 function mdEsConsulta(nom){return /consulta|valoraci|control|diagnost/.test(asisSinTildes(nom))}
-function mdLindo(t){t=String(t||''); return t===t.toUpperCase()&&t.length>3?t.charAt(0)+t.slice(1).toLowerCase():t}
+/* (mdLindo es la de «nombres prolijos», más arriba: también sirve para los nombres de servicios en MAYÚSCULAS) */
 /* las redes en las que se puede poner plata (referidos, antiguos o el local no) */
 function mdPautable(red){return ['fb','ig','tt','go'].indexOf(mdCanalTipo(red||''))>=0}
 function mdPautaDatos(filas,origen){
@@ -16547,7 +16832,7 @@ function mdPautaVer(srv,canal){
     {id:'md-version', f:'2026-10-21', t:'Aviso de versión nueva',
      x:'Cuando haya mejoras nuevas del panel, arriba aparece «Hay una versión nueva». Tocá «Actualizar ahora» cuando no estés cargando nada.', ayuda:/versión nueva/},
     {id:'md-buscaserv', f:'2026-10-21', t:'Buscá el servicio escribiendo',
-     x:'En Nueva atención (y en Agendar) escribí unas letras del servicio, por ejemplo «limp», y aparece en la lista con su precio. Enter o un toque y listo. Sin escribir, se ve la lista completa.', ayuda:/buscar un servicio/},
+     x:'En Nueva atención (y en Agendar) escribí unas letras del servicio, por ejemplo «limp», y aparece en la lista con su precio. Enter o un toque y listo. Sin escribir, se ve la lista completa.', ayuda:/busco un servicio/},
     {id:'md-cobro2', f:'2026-10-21', t:'Cobro más claro',
      x:'En Cobro hay botones Todo, Mitad y Nada para «A cuenta hoy», y una barra que muestra cuánto pagó y si queda debiendo.'},
     {id:'md-rem2', f:'2026-10-21', t:'Recordatorios con color',
@@ -16588,7 +16873,7 @@ function mdPautaVer(srv,canal){
     {q:'¿Cómo uso los pasos de Nueva atención?', k:'pasos resumen nueva atencion guardar total costado verde completo', v:'atencion', f:'#md-pasos-at',
      p:['Arriba del formulario están los pasos: tocá uno para ir directo a esa parte.','Cuando un paso está completo, su número se pone verde.','El resumen (al costado en la compu, abajo en el celular) muestra el total, lo que cobra hoy y lo que queda debiendo.','Podés guardar desde el resumen: es el mismo «Guardar atención».']},
     {q:'¿Cómo agendo en un hueco de la semana?', k:'hueco semana calendario hora agendar libre vacio', v:'cita', f:'#sem-grid',
-     p:['Entrá a 📅 Agenda y bajá a «El calendario» (Semana).','Cada cita está en su hora; las rojas se pisan con otra.','Tocá un hueco vacío: la fecha y la hora quedan puestas abajo, en «Agendar una cita nueva».','Completá paciente y motivo y tocá «Agendar».']},
+     p:['Entrá a 📅 Agenda y bajá a «El calendario» (Semana).','Cada cita está en su hora; las rojas se pisan con otra.','Tocá un hueco vacío: se abre el panel lateral «Agendar» con esa fecha y esa hora ya puestas.','Completá paciente y motivo y tocá «Agendar»; el panel se cierra solo.']},
     {q:'¿Cómo cierro la caja con el semáforo?', k:'cierre caja semaforo efectivo contado cuadra falta sobra', v:'caja', f:'#md-cierre', solo:'adm',
      p:['Entrá a 💰 Caja: arriba está «Cierre de caja».','Contá el efectivo que hay en la caja y anotalo en «Efectivo contado».','Verde: cuadra. Rojo: falta o sobra plata (te dice cuánto). Amarillo: hay registros de este aparato sin subir.','Lo contado queda solo en este aparato: no cambia ningún cobro.']},
     {q:'¿Cómo instalo el panel como app?', k:'instalar app celular pantalla inicio icono aplicacion', v:'config', f:'#md-apariencia',
@@ -16634,6 +16919,14 @@ function mdRefrescar(){
   try{mdEncabezado()}catch(e){}
   try{mdPintarBarra()}catch(e){}
   try{mdCaraBase()}catch(e){}}
+/* Los envoltorios que retocan #modal después de llamar a la base tienen que saber si la base
+   de verdad abrió esa ventana: si avisó «no es tuya» y no abrió (o abrió otra), no se toca nada.
+   openModal lleva un contador; mdAbre llama a la base y corre «luego» solo si el contador cambió. */
+var MD_OM_N=0;
+function mdAbre(base,self,args,luego){
+  var n=MD_OM_N, r=base.apply(self,args);
+  if(MD_OM_N!==n&&document.querySelector('#ov.on')){try{luego()}catch(e){if(window.console)console.error('moderno ventana',e)}}
+  return r}
 (function(){
   /* los originales, para cambiar después los avisos que apuntaban a ellos (ver mdReenganchar) */
   ['renderMiDia','renderRem','renderLista','renderCaja','renderPanel','renderPacientes','renderSemana','renderCitasProximas','renderConfig'].forEach(function(n){MD_ORIG[n]=window[n]});
@@ -16657,12 +16950,12 @@ function mdRefrescar(){
   var _rem=renderRem; renderRem=function(){var r=_rem.apply(this,arguments); try{mdRecordatorios()}catch(e){} return r};
   var _can=renderCanales; renderCanales=function(){var r=_can.apply(this,arguments); try{mdTarjetasSeg()}catch(e){} return r};
   var _om=openModal;
-  openModal=function(){var m=$('#modal'); if(m)m.classList.remove('md-ficha'); return _om.apply(this,arguments)};
+  openModal=function(){MD_OM_N++; var m=$('#modal'); if(m)m.classList.remove('md-ficha'); return _om.apply(this,arguments)};
   var _vp=verPaciente;
-  verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdFicha(nombre)}catch(e){} try{mdFotosFicha(nombre)}catch(e){} return r};
+  verPaciente=function(nombre){var r=mdAbre(_vp,this,arguments,function(){try{mdFicha(nombre)}catch(e){} try{mdFotosFicha(nombre)}catch(e){}}); return r};
   if(typeof cuentasPlanHtml==='function')cuentasPlanHtml=function(plan){return mdCuentasPlanHtml(plan)};
   var _vpl=verPlan;
-  verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPlanEnModal(nombre,id)}catch(e){} return r};
+  verPlan=function(nombre,id){return mdAbre(_vpl,this,arguments,function(){try{mdPlanEnModal(nombre,id)}catch(e){}})};
   var _rc=renderCaja;
   renderCaja=function(){var r=_rc.apply(this,arguments); try{mdCaja()}catch(e){} return r};
   var _rs=renderSemana;
@@ -16677,7 +16970,7 @@ function mdRefrescar(){
   /* solo las listas de personas y movimientos: los resúmenes de muchas columnas siguen como tabla que se desliza */
   var _rl=renderLista; renderLista=function(){var r=_rl.apply(this,arguments); try{mdDecorarAtenciones()}catch(e){} return r};
   var _rpa=renderPacientes; renderPacientes=function(){var r=_rpa.apply(this,arguments); try{mdDecorarPacientes(); mdQuisiste(); mdCargaEnLista()}catch(e){} return r};
-  var _ar=aplicarRol; aplicarRol=function(){var r=_ar.apply(this,arguments); try{mdIconoDuena(); mdPintarBarra()}catch(e){} return r};
+  var _ar=aplicarRol; aplicarRol=function(){var r=_ar.apply(this,arguments); try{mdIconoDuena(); mdPintarBarra(); mdNavAjustar(); mdIndicador(true)}catch(e){} return r};
   [['renderLista','#v-lista'],['renderCaja','#cj-body'],['renderPacientes','#v-pacientes']].forEach(function(p){
     var f=window[p[0]]; if(typeof f!=='function')return;
     window[p[0]]=function(){var r=f.apply(this,arguments); try{var el=$(p[1]); mdEtiquetarTablas(el&&el.tagName==='TBODY'?el.closest('table').parentNode:el)}catch(e){} return r}});
@@ -16694,7 +16987,7 @@ function mdRefrescar(){
       if(pr&&pr.then)pr.then(fin,function(e){fin(); throw e}); else fin();
       return pr}}
   var _upd=updateNavRem;
-  updateNavRem=function(){var r=_upd.apply(this,arguments); try{mdPintarBarra()}catch(e){} return r};
+  updateNavRem=function(){var r=_upd.apply(this,arguments); try{mdPintarBarra(); mdNavAjustar()}catch(e){} return r};
   var _ref=refreshAll;
   refreshAll=function(){var r=_ref.apply(this,arguments); try{mdRefrescar(); mdMetaFestejo()}catch(e){} return r}})();
 /* los enganches de la ronda 3 (van por fuera de los de antes) */
@@ -16768,8 +17061,12 @@ function mdRefrescar(){
     try{mdUnSoloCerrar(); mdWaBurbuja()}catch(e){}
     try{var h=$('#modal h3'); if(h&&/^Cita agendada/.test(h.textContent))mdAgendarCerrar()}catch(e){}
     return r};
-  if(typeof verFicha==='function'){var _vf=verFicha; verFicha=function(id){var r=_vf.apply(this,arguments); try{mdRecibo(id); mdUnSoloCerrar()}catch(e){} try{mdFichaCita(id)}catch(e){} return r}}
-  if(typeof cobrarSaldo==='function'){var _cs=cobrarSaldo; cobrarSaldo=function(id){var r=_cs.apply(this,arguments); try{mdPagoRapido(id)}catch(e){} return r}}
+  /* la ventana de la atención se retoca solo si la base la abrió (no si avisó «no es tuya», ni si
+     era un anticipo y abrió la ficha del paciente) */
+  if(typeof verFicha==='function'){var _vf=verFicha; verFicha=function(id){return mdAbre(_vf,this,arguments,function(){
+    var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||(typeof esAnticipo==='function'&&esAnticipo(r)))return;
+    try{mdRecibo(id); mdUnSoloCerrar()}catch(e){} try{mdFichaCita(id)}catch(e){}})}}
+  if(typeof cobrarSaldo==='function'){var _cs=cobrarSaldo; cobrarSaldo=function(id){return mdAbre(_cs,this,arguments,function(){try{mdPagoRapido(id)}catch(e){}})}}
   if(typeof pintarBusqueda==='function'){var _pb=pintarBusqueda; pintarBusqueda=function(){var r=_pb.apply(this,arguments); try{mdBuscador()}catch(e){} return r}}
   var _cj=renderCaja; renderCaja=function(){var r=_cj.apply(this,arguments); try{mdCaja5()}catch(e){} return r}})();
 /* los enganches de los videos */
@@ -16778,10 +17075,10 @@ function mdRefrescar(){
     var h=_ah.apply(this,arguments), i=ASIS.abierta, a=ASIS_AYUDA[i], n=a?mdVideoDeAyuda(a.q):0;
     if(n&&idx.indexOf(i)>=0)h=h.replace(new RegExp('(<button[^>]*onclick="asisMostrar\\('+i+'\\)"[^>]*>[^<]*</button>)'),'$1<button type="button" class="asis-b md-vid-b" onclick="asisCerrar();mdVideo('+n+')">▶ Ver el video</button>');
     return h}}
-  if(typeof abrirPlanes==='function'){var _ap=abrirPlanes; abrirPlanes=function(){var r=_ap.apply(this,arguments);
-    try{var m=$('#modal'); if(m&&!m.querySelector('.md-vid-link'))(m.querySelector('h3')||m).insertAdjacentHTML('afterend','<div class="md-vid-fila"><button type="button" class="md-vid-link" onclick="mdVideo(2)">▶ Video: un paquete</button><button type="button" class="md-vid-link" onclick="mdVideo(4)">▶ Video: marcar sus sesiones</button><button type="button" class="md-vid-link" onclick="mdVideo(5)">▶ Video: corregir un plan</button><button type="button" class="md-vid-link" onclick="mdVideo(3)">▶ Video: un tratamiento por etapas</button></div>')}catch(e){}
-    return r}}
-  var _cm=closeModal; closeModal=function(){try{mdPausarVideos()}catch(e){} return _cm.apply(this,arguments)};
+  if(typeof abrirPlanes==='function'){var _ap=abrirPlanes; abrirPlanes=function(){return mdAbre(_ap,this,arguments,function(){
+    var m=$('#modal'); if(m&&!m.querySelector('.md-vid-link'))(m.querySelector('h3')||m).insertAdjacentHTML('afterend','<div class="md-vid-fila"><button type="button" class="md-vid-link" onclick="mdVideo(2)">▶ Video: un paquete</button><button type="button" class="md-vid-link" onclick="mdVideo(4)">▶ Video: marcar sus sesiones</button><button type="button" class="md-vid-link" onclick="mdVideo(5)">▶ Video: corregir un plan</button><button type="button" class="md-vid-link" onclick="mdVideo(3)">▶ Video: un tratamiento por etapas</button></div>')})}}
+  /* al cerrar, la ventana no se queda con la marca de la ficha (md-ficha) para la próxima que se abra */
+  var _cm=closeModal; closeModal=function(){try{mdPausarVideos()}catch(e){} var r=_cm.apply(this,arguments); try{var m=$('#modal'); if(m)m.classList.remove('md-ficha')}catch(e){} return r};
   var _om=openModal; openModal=function(){try{mdPausarVideos()}catch(e){} return _om.apply(this,arguments)}})();
 (function mdInit(){
   try{
@@ -16794,8 +17091,8 @@ function mdRefrescar(){
           L.forEach(function(n){if(!n.isConnected)return; if(n.classList&&n.classList.contains('btn'))mdBoton(n); else if(n.querySelector&&n.querySelector('.btn'))mdBotones(n)})})}).observe(document.body,{childList:true,subtree:true})}
     mdIconosNav(); mdMontarEncabezado(); mdMontarBarra(); mdMontarAjustes(); mdAplicarTema(); mdPasosAtencion(); mdApp(); mdPintarInstalar(); mdRefrescar();
     document.addEventListener('keydown',function(e){if(e.key==='Escape')mdCerrarHoja()});
-    window.addEventListener('resize',function(){try{mdAltoHeader(); mdIndicador(true)}catch(e){}});
-    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){try{mdIndicador(true)}catch(e){}});
+    window.addEventListener('resize',function(){try{mdNavAjustar(); mdAltoHeader(); mdIndicador(true)}catch(e){}});
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){try{mdNavAjustar(); mdIndicador(true)}catch(e){}});
     setInterval(function(){try{mdEncabezado(); mdCaraBase(); mdAplicarNoche()}catch(e){} try{mdAhoraMueve(); mdVerSiesta()}catch(e){}},60000);
     /* ronda 3: lo que escucha a la compu */
     MD_VISTA=(($$('nav button').filter(function(b){return b.classList.contains('on')})[0]||{}).dataset||{}).v||'';
@@ -16891,10 +17188,10 @@ function mdAjMenu(i,n,off){
 function mdAjFilaProf(p,i,n,off,ro,mes){
   var col=mdProfColor(p), ini=mdIniciales(p.replace(/^Dra?\.?\s*/i,'')), sub;
   if(off){var tot=ro?0:DATA.filter(function(r){return r.profesional===p}).length;
-    sub='<span class="pill warn">apagada</span> no aparece al cargar'+(tot?' · sus '+tot+' atencion'+(tot===1?'':'es')+' vieja'+(tot===1?'':'s')+' se conserva'+(tot===1?'':'n'):'')}
+    sub='<span class="pill warn">apagada</span> no aparece al cargar'+(tot?' · sus '+tot+' atenci'+(tot===1?'ón':'ones')+' vieja'+(tot===1?'':'s')+' se conserva'+(tot===1?'':'n'):'')}
   else{var hoy=ro?null:mdAjAtenciones(p,mes);
     sub=(mdAjTieneClave(p)?'<span class="pill ok">tiene clave</span>':'<span class="pill">sin clave</span>')+
-      (esAdmin()?' '+esc(mdAjComision(p)):'')+(hoy==null?'':' · '+hoy+' atencion'+(hoy===1?'':'es')+' este mes')}
+      (esAdmin()?' '+esc(mdAjComision(p)):'')+(hoy==null?'':' · '+hoy+' atenci'+(hoy===1?'ón':'ones')+' este mes')}
   return '<div class="md-aj-fila'+(off?' off':'')+'" data-n="'+esc(p)+'" data-k="prof" draggable="'+(ro||off?'false':'true')+'">'+
     '<span class="md-aj-grip" aria-hidden="true">⋮⋮</span>'+
     '<span class="md-aj-av" style="--pc:'+col+'" aria-hidden="true">'+esc(ini)+'</span>'+
@@ -17230,7 +17527,7 @@ function mdPcVerSeg(doc,srv){
   openModal('<h3>'+esc(srv||'Otros servicios')+' · '+esc(doc)+' <span class="pill">'+lineas.length+'</span></h3>'+
     '<p class="hint">'+esc(mdPcPeriodoPanel())+' · <b>'+esc(bs(tot))+'</b>. Tocá una fila para abrir la atención.</p>'+
     (lineas.length?'<div class="md-pc-lista">'+lineas.map(function(x){
-      return '<div class="md-pc-fila md-pc-c md-pc-clic" onclick="verFicha(\''+x.r.id+'\')">'+mdPcAv(x.r.paciente,null,'md-pc-av-s')+
+      return '<div class="md-pc-fila md-pc-c md-pc-clic" onclick="verFicha(\''+jss(x.r.id)+'\')">'+mdPcAv(x.r.paciente,null,'md-pc-av-s')+
         '<div class="md-pc-tx"><b>'+esc(x.r.paciente||'—')+'</b><small>'+fmtFcorta(x.r.fecha)+' · '+esc(x.s.nom)+((num(x.s.cant)||1)>1?' ×'+x.s.cant:'')+'</small></div>'+
         '<span class="md-pc-num">'+esc(bs(x.v))+'</span></div>'}).join('')+'</div>':'<div class="empty">Sin atenciones.</div>')+
     '<div class="row-btn"><button type="button" class="btn sec sm" onclick="closeModal()">Cerrar</button></div>')}
@@ -17305,7 +17602,9 @@ function mdPcCaja(){
   var sinMetodo=[]; rows.forEach(function(r){var suma=sumaPagos(pagosDe(r)); if(num(r.acuenta)>0&&Math.abs(suma-num(r.acuenta))>0.01)sinMetodo.push({r:r,identificado:suma})});
   var falta=sinMetodo.filter(function(x){return !esImportada(x.r)}), hist=sinMetodo.filter(function(x){return esImportada(x.r)});
   var sinExpl=function(L){return L.reduce(function(a,x){return a+num(x.r.acuenta)-x.identificado},0)}, bsFalta=sinExpl(falta), bsHist=sinExpl(hist);
-  var nc=saldosNoCuadran(), bsNc=nc.reduce(function(a,r){return a+num(r.saldo)-faltaPagar(r)},0);
+  var nc=saldosNoCuadran(), pdm=function(r){return typeof pagoDeMas==='function'?pagoDeMas(r):0};
+  /* «de más en por cobrar» solo con los saldos inflados; los pagados de más van aparte */
+  var bsNc=nc.reduce(function(a,r){return a+(pdm(r)>0?0:num(r.saldo)-faltaPagar(r))},0), bsMas=nc.reduce(function(a,r){return a+pdm(r)},0);
   var deudas=[]; DATA.forEach(function(r){if(num(r.saldo)<=0||!r.fecha)return; var d=diasEntre(r.fecha,hoy); if(d<0)return; deudas.push({r:r,dias:d})});
   var totDeuda=0, pacs={}, viejas=0; deudas.forEach(function(x){totDeuda+=num(x.r.saldo); pacs[keyPac(x.r.paciente)||'—']=1; if(x.dias>90)viejas++});
   var nPac=Object.keys(pacs).length;
@@ -17315,7 +17614,7 @@ function mdPcCaja(){
     mdPcKpi('egresos','coral',MD_PC_I.sale,'Egresos',bs(egr),n0(egrs.length)+' movimiento'+(egrs.length===1?'':'s')+' · '+esc(bs(egrEf))+' en efectivo')+
     mdPcKpi('deuda','ambar',MD_PC_I.reloj,'Por cobrar',bs(totDeuda),n0(nPac)+' paciente'+(nPac===1?'':'s')+(viejas?' · '+n0(viejas)+(viejas===1?' deuda vieja':' deudas viejas'):' · ninguna de más de 90 días'))+
     mdPcKpi('sinmetodo','rosa',MD_PC_I.aviso,'Sin forma de pago',n0(falta.length),falta.length?esc(bs(bsFalta))+' sin saber cómo entró':'todo conciliado ✅')+
-    mdPcKpi('nocuadra','gris',MD_PC_I.aviso,'No cuadran',n0(nc.length),nc.length?esc(bs(bsNc))+' de más en «por cobrar»':'todos los saldos cuadran ✅');
+    mdPcKpi('nocuadra','gris',MD_PC_I.aviso,'No cuadran',n0(nc.length),nc.length?[bsNc>0.009?esc(bs(bsNc))+' de más en «por cobrar»':'',bsMas>0.009?esc(bs(bsMas))+' pagado de más':''].filter(Boolean).join(' · '):'todos los saldos cuadran ✅');
   $('#md-pc-chips').innerHTML=[['todo','Todo',null],['deuda','Por cobrar',nPac],['egresos','Egresos',egrs.length],['sinmetodo','Sin forma de pago',falta.length],['nocuadra','No cuadran',nc.length]]
     .map(function(c){return '<button type="button" data-f="'+c[0]+'" onclick="mdPcFiltro(\''+c[0]+'\')">'+c[1]+(c[2]!=null?' <em>'+n0(c[2])+'</em>':'')+'</button>'}).join('');
   mdPcDeudaPintar();
@@ -17327,8 +17626,8 @@ function mdPcCaja(){
         return '<div class="md-pc-fila md-pc-e" data-id="'+esc(x.id)+'"><span class="md-pc-catb md-pc-k-'+c[2]+'" aria-hidden="true">'+mdIco(c[1])+'</span>'+
           '<div class="md-pc-tx"><b>'+esc(x.detalle||x.categoria)+'</b><small>'+fmtFcorta(x.fecha)+(x.proveedor?' · '+esc(x.proveedor):'')+(x.detalle?' · '+esc(x.categoria):'')+'</small></div>'+
           '<span class="pill'+(pm?' '+pm:'')+'">'+esc(x.metodo)+'</span><span class="md-pc-num md-pc-neg">− '+esc(bs(x.monto))+'</span>'+
-          '<div class="md-pc-acc"><button type="button" class="md-pc-ib" title="Editar" aria-label="Editar egreso" onclick="editarEgreso(\''+x.id+'\')">'+mdIco(MD_PC_I.lapiz)+'</button>'+
-          '<button type="button" class="md-pc-ib rojo" title="Borrar" aria-label="Borrar egreso" onclick="borrarEgreso(\''+x.id+'\')">'+mdIco(MD_PC_I.cruz)+'</button></div></div>'}).join('')+'</div>'+
+          '<div class="md-pc-acc"><button type="button" class="md-pc-ib" title="Editar" aria-label="Editar egreso" onclick="editarEgreso(\''+jss(x.id)+'\')">'+mdIco(MD_PC_I.lapiz)+'</button>'+
+          '<button type="button" class="md-pc-ib rojo" title="Borrar" aria-label="Borrar egreso" onclick="borrarEgreso(\''+jss(x.id)+'\')">'+mdIco(MD_PC_I.cruz)+'</button></div></div>'}).join('')+'</div>'+
       (cats.length>1?'<div class="md-pc-cats">'+cats.map(function(c){return '<span>'+esc(c)+' <b>'+esc(bs(egrCat[c]))+'</b></span>'}).join('')+'</div>':'')+
       '<p class="mini" style="margin-top:8px">💵 En efectivo salieron '+esc(bs(egrEf))+' · el resto por QR, tarjeta o transferencia.</p>'
     : '<div class="empty">No hay egresos cargados en este periodo.</div>';
@@ -17339,17 +17638,17 @@ function mdPcCaja(){
         return '<div class="md-pc-fila md-pc-c" data-id="'+esc(r.id)+'">'+mdPcAv(r.paciente,null,'md-pc-av-s')+
           '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+fmtFcorta(r.fecha)+' · '+esc(mdPcQue(r))+(x.identificado?' · '+n0(x.identificado)+' sí anotado':'')+'</small></div>'+
           '<span class="pill bad">'+esc(bs(num(r.acuenta)-x.identificado))+'</span>'+
-          '<button type="button" class="btn sec xs" onclick="verFicha(\''+r.id+'\')">Completar</button></div>'}).join('')+'</div>'
+          '<button type="button" class="btn sec xs" onclick="verFicha(\''+jss(r.id)+'\')">Completar</button></div>'}).join('')+'</div>'
     : '<div class="empty">Todas las atenciones cargadas en el panel tienen su forma de pago ✅</div>')+
     (hist.length?'<p class="mini md-pc-nota">📓 Aparte hay <b>'+n0(hist.length)+(hist.length===1?' atención</b> importada':' atenciones</b> importadas')+' de los cuadernos (<b>'+esc(bs(bsHist))+'</b>) que nunca van a tener forma de pago: el cuaderno no la anotaba. No hace falta hacer nada con ellas.</p>':'');
   /* saldos que no cuadran */
   $('#cj-nocuadra').innerHTML=nc.length
     ? '<div class="md-pc-lista">'+nc.slice(0,80).map(function(r){var fp=faltaPagar(r);
         return '<div class="md-pc-fila md-pc-c" data-id="'+esc(r.id)+'">'+mdPcAv(r.paciente,null,'md-pc-av-s')+
-          '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+fmtFcorta(r.fecha)+' · '+esc(mdPcQue(r))+' · '+(fp>0?'pagó '+n0(r.acuenta)+' de '+n0(r.total):'pagó todo')+'</small></div>'+
-          '<span class="pill warn">dice '+n0(r.saldo)+'</span>'+
-          '<button type="button" class="btn sec xs" onclick="arreglarSaldo(\''+r.id+'\')">Dejar en '+n0(fp)+'</button></div>'}).join('')+'</div>'+
-      '<p class="mini" style="margin-top:8px">'+n0(nc.length)+(nc.length===1?' atención':' atenciones')+' · de más en «por cobrar»: <b>'+esc(bs(bsNc))+'</b>. Si lo mal anotado era el total, abrila y corregila con ✏️ Editar.</p>'
+          '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+fmtFcorta(r.fecha)+' · '+esc(mdPcQue(r))+' · '+(pdm(r)>0?'pagó Bs '+n0(pdm(r))+' de más':(fp>0?'pagó '+n0(r.acuenta)+' de '+n0(r.total):'pagó todo'))+'</small></div>'+
+          '<span class="pill '+(pdm(r)>0?'bad':'warn')+'">dice '+n0(r.saldo)+'</span>'+
+          '<button type="button" class="btn sec xs" onclick="arreglarSaldo(\''+jss(r.id)+'\')">Dejar en '+n0(fp)+'</button></div>'}).join('')+'</div>'+
+      '<p class="mini" style="margin-top:8px">'+n0(nc.length)+(nc.length===1?' atención':' atenciones')+(bsNc>0.009?' · de más en «por cobrar»: <b>'+esc(bs(bsNc))+'</b>':'')+(bsMas>0.009?' · pagado de más: <b>'+esc(bs(bsMas))+'</b>':'')+'. Si lo mal anotado era el total, abrila y corregila con ✏️ Editar.</p>'
     : '<div class="empty">Todos los saldos cuadran con el total y lo cobrado ✅</div>';
   mdPcFiltrar()}
 /* cuentas por cobrar: una fila por saldo, ordenadas por antigüedad o por plata */
@@ -17367,7 +17666,7 @@ function mdPcDeudaPintar(){
         '<div class="md-pc-tx"><b>'+esc(r.paciente||'—')+'</b><small>'+esc(mdPcQue(r))+' · '+fmtFcorta(r.fecha)+(r.profesional?' · '+esc(r.profesional):'')+'</small></div>'+
         '<span class="pill '+cls+'">'+x.dias+' día'+(x.dias===1?'':'s')+'</span><span class="md-pc-num">'+esc(bs(r.saldo))+'</span><div class="md-pc-acc">'+
         (r.celular?'<a class="md-pc-ib wa" target="_blank" rel="noopener" title="Recordar por WhatsApp" href="'+waLink(r.celular,txtSaldo({paciente:r.paciente,saldo:total>0.009?total:num(r.saldo),ultima:r.fecha}))+'">'+mdIco(MD_I.mensaje)+'</a>':'')+
-        '<button type="button" class="btn sm" onclick="cobrarSaldo(\''+r.id+'\')">Cobrar</button></div></div>'}).join('')+'</div>'+
+        '<button type="button" class="btn sm" onclick="cobrarSaldo(\''+jss(r.id)+'\')">Cobrar</button></div></div>'}).join('')+'</div>'+
     (L.length>N?'<button type="button" class="md-pc-ver" onclick="MD_PC.todas=!MD_PC.todas;mdPcDeudaPintar()">'+(MD_PC.todas?'Ver menos ‹':'Ver los '+n0(L.length)+' saldos ›')+'</button>':'')+
     '<p class="mini" style="margin-top:8px">Total por cobrar <b>'+esc(bs(tot))+'</b> de '+n0(nPac)+' paciente'+(nPac===1?'':'s')+'. Mira <b>toda</b> la historia, no solo el periodo elegido: una deuda vieja sigue siendo deuda. '+
     'Si un paciente debe varias, el WhatsApp va con lo que debe en total.</p>'}
@@ -18743,7 +19042,7 @@ function mdPrEnFicha(nombre){
     return '<div class="md-pr-rec"><div><b>'+esc(p.nom)+'</b>'+(num(p.monto)>0?' · '+esc(bs(p.monto)):'')+
       '<div class="mini">el '+fmtF(r.fecha)+(r.profesional?' · '+esc(r.profesional):'')+(p.motivo?' · <i>'+esc(p.motivo)+'</i>':'')+'</div>'+
       '<div class="md-pr-rec-est">'+(p.estado?'<span class="pill '+(est[p.estado]||'')+'">'+esc(p.estado)+'</span>':'<span class="pill warn">sin respuesta</span>')+' '+mdPrEntregadoHtml(r)+'</div></div>'+
-      (esMia(r)?'<button type="button" class="btn sec sm" onclick="mdPrDesdeAtencion(\''+r.id+'\')">📄 Armar presupuesto</button>':'')+'</div>'}).join('');
+      (esMia(r)?'<button type="button" class="btn sec sm" onclick="mdPrDesdeAtencion(\''+jss(r.id)+'\')">📄 Armar presupuesto</button>':'')+'</div>'}).join('');
   hV.parentNode.insertBefore(box,hV)}
 function mdPrEnPlan(nombre,id){
   var m=$('#modal'); if(!m||m.querySelector('.md-pr-bt'))return;
@@ -18757,12 +19056,15 @@ function mdPrEnAtencion(id){
   var box=document.createElement('div'); box.id='md-pr-at'; box.className='md-pr-at';
   box.innerHTML='<h4>💬 Le recomendó</h4>'+(r.presu||[]).map(function(p){
     return '<div class="mrow"><span>'+esc(p.nom)+(p.motivo?' <span class="mini">('+esc(p.motivo)+')</span>':'')+(p.estado?' <span class="pill '+(p.estado==='Aceptó'?'ok':'bad')+'">'+esc(p.estado)+'</span>':'')+'</span><b>'+(num(p.monto)>0?esc(bs(p.monto)):'—')+'</b></div>'}).join('')+
-    '<div class="md-pr-at-acc">'+mdPrEntregadoHtml(r)+(esMia(r)?'<button type="button" class="btn sec sm md-pr-bt" onclick="mdPrDesdeAtencion(\''+r.id+'\')">📄 Armar presupuesto</button>':'')+'</div>';
+    '<div class="md-pr-at-acc">'+mdPrEntregadoHtml(r)+(esMia(r)?'<button type="button" class="btn sec sm md-pr-bt" onclick="mdPrDesdeAtencion(\''+jss(r.id)+'\')">📄 Armar presupuesto</button>':'')+'</div>';
   acc.parentNode.insertBefore(box,acc)}
 (function(){
-  var _vp=verPaciente; verPaciente=function(nombre){var r=_vp.apply(this,arguments); try{mdPrEnFicha(nombre)}catch(e){if(window.console)console.error('presupuesto ficha',e)} return r};
-  var _vpl=verPlan; verPlan=function(nombre,id){var r=_vpl.apply(this,arguments); try{mdPrEnPlan(nombre,id)}catch(e){if(window.console)console.error('presupuesto plan',e)} return r};
-  if(typeof verFicha==='function'){var _vf=verFicha; verFicha=function(id){var r=_vf.apply(this,arguments); try{mdPrEnAtencion(id)}catch(e){if(window.console)console.error('presupuesto atención',e)} return r}}
+  /* solo si la base abrió esa ventana (mdAbre: el contador de openModal cambió); si avisó «no es tuya», nada */
+  var _vp=verPaciente; verPaciente=function(nombre){return mdAbre(_vp,this,arguments,function(){try{mdPrEnFicha(nombre)}catch(e){if(window.console)console.error('presupuesto ficha',e)}})};
+  var _vpl=verPlan; verPlan=function(nombre,id){return mdAbre(_vpl,this,arguments,function(){try{mdPrEnPlan(nombre,id)}catch(e){if(window.console)console.error('presupuesto plan',e)}})};
+  if(typeof verFicha==='function'){var _vf=verFicha; verFicha=function(id){return mdAbre(_vf,this,arguments,function(){
+    var r=DATA.filter(function(x){return x.id===id})[0]; if(!r||(typeof esAnticipo==='function'&&esAnticipo(r)))return;
+    try{mdPrEnAtencion(id)}catch(e){if(window.console)console.error('presupuesto atención',e)}})}}
   /* planNormalize deja solo los campos que conoce: la marca del presupuesto del plan se conserva (el servidor la guarda en _planes_json tal cual) */
   if(typeof planNormalize==='function'){var _pn=planNormalize; planNormalize=function(p){var o=_pn.apply(this,arguments);
     if(p&&p.presuEntregado){o.presuEntregado=p.presuEntregado; if(p.presuEntregadoTotal!=null)o.presuEntregadoTotal=num(p.presuEntregadoTotal); if(p.presuEntregadoNro)o.presuEntregadoNro=p.presuEntregadoNro} return o}}
@@ -19030,9 +19332,10 @@ function anuncioBtnPintar(){
 
 try{
   ASIS_NOVEDADES.push({id:'anuncio', f:'2026-10-28', t:'📢 Anuncios para todo el equipo',
-    x:'La dueña o recepción tocan «📢 Decir anuncio» (arriba en Mi día, o en mi ventana) y escriben un aviso, por ejemplo «Hoy no hay rayos X». Yo lo grito una vez en todos los aparatos al entrar al panel y después lo recuerdo cada 3 minutos con mi globito, hasta que lo quiten.', ayuda:/anuncio a todo el equipo/,
+    x:'La dueña o recepción tocan «📢 Decir anuncio» (arriba en Mi día, o en mi ventana) y escriben un aviso, por ejemplo «Hoy no hay rayos X». Yo lo grito una vez en todos los aparatos al entrar al panel y después lo recuerdo cada 3 minutos con mi globito, hasta que lo quiten.', ayuda:/anuncio para todo el equipo/,
     si:function(){return anuncioPuedeEscribir()}});
-  ASIS_AYUDA.push({q:'¿Cómo pongo un anuncio para todo el equipo?', k:'anuncio avisar aviso equipo todos doctoras recepcion megafono gritar decir comunicar importante', v:'midia', f:'#anu-btn',
+  /* solo:'adm' → la dueña y recepción (las doctoras no tienen el botón) */
+  ASIS_AYUDA.push({q:'¿Cómo pongo un anuncio para todo el equipo?', k:'anuncio avisar aviso equipo todos doctoras recepcion megafono gritar decir comunicar importante', v:'midia', f:'#anu-btn', solo:'adm',
     p:['En Mi día, arriba a la derecha, tocá «📢 Decir anuncio» (también está en mi ventana, abajo).','Escribí el aviso, por ejemplo «Mañana cerramos a las 14:00», y tocá «Publicar anuncio».','Lo grito una vez en todos los aparatos al entrar al panel (pantalla entera, sirena y voz) y después lo recuerdo cada 3 minutos con mi globito.','Para cambiarlo o quitarlo, volvé a tocar el botón (dice «📢 Anuncio puesto») y elegí «🗑 Quitar anuncio».','Lo ponen la dueña o recepción. Si alguien tiene mi sonido apagado (🔇), lo ve igual pero sin sirena ni voz.']})}catch(e){}
 /* ----- parte: 90-mes-caja.js ----- */
 /* ---------- 90 · Panel y Caja: la barra de periodo («◀ Octubre 2026 ▶») y la franja «entró, salió, queda» ----------
@@ -19446,10 +19749,12 @@ function odoFicha(nombre){
   if(typeof verPaciente!=='function')return;
   var vp=verPaciente;
   verPaciente=function(nombre){
-    var prev=ODO_CTX;
+    var prev=ODO_CTX, n=MD_OM_N;
     ODO_CTX=odoPuedeVer()?{nombre:nombre, est:null}:null;
     try{return vp.apply(this,arguments)}
-    finally{ODO_CTX=prev; try{if(odoPuedeVer())odoFicha(nombre)}catch(e){if(window.console)console.error('odontograma ficha',e)}}}})();
+    finally{ODO_CTX=prev;
+      /* la leyenda va solo si la base abrió la ficha (si avisó «no es tuya», #modal es otra ventana) */
+      try{if(odoPuedeVer()&&MD_OM_N!==n&&document.querySelector('#ov.on'))odoFicha(nombre)}catch(e){if(window.console)console.error('odontograma ficha',e)}}}})();
 
 /* ---------- la ventana de la pieza ---------- */
 (function(){
@@ -19463,7 +19768,7 @@ function odoFicha(nombre){
     var fila=function(ico,izq,der,on){return '<div class="md-odo-fila"'+(on?' role="button" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="'+on+'"':'')+'><span>'+ico+' '+izq+'</span><small>'+der+'</small></div>'};
     var hHist=hist.length?hist.map(function(x){
         return fila('✓','<b>'+esc(x.servicio||'Tratamiento')+'</b>'+(x.det?' <em>('+esc(x.det)+')</em>':''),
-          esc(fmtFcorta(x.fecha))+(x.prof?' · '+esc(x.prof):''),x.id?'verFicha(\''+x.id+'\')':'')}).join('')
+          esc(fmtFcorta(x.fecha))+(x.prof?' · '+esc(x.prof):''),x.id?'verFicha(\''+jss(x.id)+'\')':'')}).join('')
       :'<p class="md-odo-vacio">Todavía no se le hizo nada en una visita atendida.</p>';
     var hPlan=plan.length?plan.map(function(x){
         if(x.rec)return fila('💬','Recomendado: <b>'+esc(x.desc)+'</b>',x.fecha?'el '+esc(fmtFcorta(x.fecha)):'');
@@ -19787,6 +20092,20 @@ function mdPtReintentar(){
     document.addEventListener('keydown',function(e){if(e.key==='Escape'&&MD_PT.abierto){mdPtAbrir(false); var p=$('#md-pt'); if(p)try{p.focus()}catch(x){}}});
     setInterval(rep,30000);
     rep();
+    /* La pastilla quedaba roja («Sin internet») después de volver a escribir la clave: el último pull había
+       fallado por falta de sesión y nada lo volvía a pedir. Cuando abrirSesion sale bien y el estado era
+       «sin», se marca neutro y se pide lo último a la hoja (el pull pone verde si llega). */
+    if(typeof abrirSesion==='function'){
+      var _as=abrirSesion;
+      abrirSesion=function(){
+        var pr=_as.apply(this,arguments);
+        if(pr&&pr.then)pr.then(function(r){
+          try{
+            if(!(r&&r.ok&&r.token)||!sesionViva()||MD_SINC.estado!=='sin')return;
+            mdSinc('trae'); rep();
+            setTimeout(function(){try{if(typeof pullServer==='function')pullServer()}catch(e){}},150);
+          }catch(e){}},function(){});
+        return pr}}
   }catch(e){if(window.console)console.error('moderno conexión',e)}})();
 
 /* Sonri lo enseña */
@@ -19799,6 +20118,35 @@ try{
     p:['Entrá a 🔔 Recordatorios.','Tocá una tarjeta, por ejemplo «Próximos 7 días» o «Saldos por cobrar»: queda remarcada y abajo dice «Mostrando …» con lo que estás viendo.','Para volver a ver todo, tocá la misma tarjeta otra vez o la ✕ de «Mostrando».','«Sin volver», «Cuotas vencidas» y «Ver todo» están al lado, en los botoncitos de «También».','Arriba, en «Ver de», tocá el chip de una doctora para ver solo sus pacientes, o «Todas».']});
   ASIS_AYUDA.push({q:'¿Qué significa el puntito de la conexión arriba?', k:'conexion internet conectado hoja google sincronizar al dia subiendo sin internet espera pendientes sin subir reintentar puntito pastilla verde ambar roja franja', v:'midia', f:'#md-pt',
     p:['Arriba, al lado de la fecha, hay una pastilla con un puntito.','🟢 Verde «Al día · 18:20»: está todo en la hoja de Google; la hora es el último refresco.','🟡 Ámbar «Subiendo 2…»: lo que cargaste está guardado acá y se está subiendo.','🔴 Roja «Sin internet · 3 en espera»: no hay conexión; lo cargado queda guardado en este aparato y sube solo cuando vuelve.','Tocala para ver el detalle y, si hay cosas sin subir, «↻ Reintentar». Si pasa algo fuera de lo común, el aviso grande sigue saliendo arriba de la pantalla.']})}catch(e){}
+/* ----- parte: 95-auditoria-ui.js ----- */
+/* ---------- 95 · arreglos de la auditoría de pantalla (Sonri) ----------
+   Entradas de ASIS_AYUDA que vienen de la base y quedaron viejas con la cara nueva: se buscan por su
+   pregunta (q) y se les cambian los pasos y lo que señalan (f), como hace 90-mes-caja con «la caja del día».
+   Si la base ya las cambió (no se encuentran con ese texto), no se toca nada. */
+(function(){
+  try{
+    if(typeof ASIS_AYUDA==='undefined')return;
+    var por=function(q){return ASIS_AYUDA.filter(function(a){return a&&a.q===q})[0]};
+    var a;
+    /* «＋ Agendar cita» abre el panel lateral */
+    a=por('¿Cómo agendo una cita?');
+    if(a){a.f=['#md-ag-arriba','#q-paciente'];
+      a.p=['Entrá a 📅 Agenda y tocá «＋ Agendar cita»: el formulario se abre al costado, en el panel «Agendar».',
+        'Elegí fecha y doctora, tocá un horario libre (los tachados ya están tomados) y escribí el paciente y el motivo.',
+        'Tocá «Agendar»: el panel se cierra solo y antes del día la cita aparece en Recordatorios para confirmarla por WhatsApp.']}
+    /* «Reprogramar» quedó dentro de «⋯ Más» */
+    a=por('No vino o hay que reprogramar la cita');
+    if(a){a.p=['En 📅 Agenda elegí el día de la cita.',
+        'Si no vino, tocá «✖ No vino». Para moverla, abrí «⋯ Más» en esa cita y tocá «🔁 Reprogramar»; elegí la fecha nueva.',
+        'Las citas que ya pasaron sin marcar te las aviso yo.']}
+    /* la franja real dice «Por seguridad, volvé a escribir tu clave para guardar en la nube»; en el celular
+       #nav-duena está oculto, así que se señala la franja si está, o la pastilla de la conexión (dice «Falta tu clave») */
+    a=por('Me pide la clave otra vez');
+    if(a){a.f=['#ses-pedir','#md-pt'];
+      a.p=['La sesión se cierra sola después de 30 minutos sin uso; la pastilla de arriba queda roja y dice «Falta tu clave».',
+        'Si arriba aparece «🔐 Por seguridad, volvé a escribir tu clave para guardar en la nube», escribila ahí y tocá «Seguir»: no se pierde nada de lo cargado.',
+        'La pastilla vuelve a verde sola cuando trae lo último de la hoja.']}
+  }catch(e){if(window.console)console.error('moderno ayuda',e)}})();
 /* ===== MODERNO FIN ===== */
 </script>
 </body>

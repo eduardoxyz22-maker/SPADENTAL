@@ -45,7 +45,7 @@ function gsServer(file) {
     put: (k, v, ttl) => { cacheMem[k] = { v: String(v), exp: ahora() + (ttl || 600) * 1000 }; }, remove: k => { delete cacheMem[k]; } };
   const ctx = {
     SpreadsheetApp: { getActiveSpreadsheet: () => ss, openById: () => ss, create: () => ss },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = String(v); } }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = String(v); }, deleteProperty: k => { delete props[k]; } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     ContentService: { createTextOutput: t => ({ t, setMimeType() { return this; } }), MimeType: { JSON: 'json' } },
     DriveApp: drive,

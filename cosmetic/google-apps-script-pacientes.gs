@@ -63,6 +63,23 @@ function extraDeRegistro(r) {
   return vacio ? '' : JSON.stringify(e);
 }
 
+/* Un id válido: letras, números, guion y guion bajo (los del panel son uid():
+   «a» + base36; los importados «xc…», «amv…-p19901015»). Cualquier otra cosa
+   (etiquetas, comillas) se rechaza con id_invalido antes de tocar la hoja. */
+var ID_RE = /^[A-Za-z0-9_-]{1,60}$/;
+function idOk(id) { return typeof id === 'string' && ID_RE.test(id); }
+function idsOk(lista) {
+  for (var i = 0; i < lista.length; i++) if (!idOk(lista[i])) return false;
+  return true;
+}
+
+/* Un texto que empieza con «=» lo ejecutaría la planilla como fórmula: se
+   guarda con un apóstrofo adelante y se saca al leer. Lo demás va tal cual. */
+function escFormula(v) { return (typeof v === 'string' && v.charAt(0) === '=') ? "'" + v : v; }
+function desFormula(v) { return (typeof v === 'string' && v.indexOf("'=") === 0) ? v.slice(1) : v; }
+function filaSegura(fila) { for (var i = 0; i < fila.length; i++) fila[i] = escFormula(fila[i]); return fila; }
+function filaLeida(f) { var o = []; for (var i = 0; i < f.length; i++) o.push(desFormula(f[i])); return o; }
+
 /* Ficha del paciente: lo que es suyo y no de una visita puntual. Va en su
    propia hoja porque hay una fila por paciente, no por atención. */
 var COLS_PAC = ['Nombre', 'Nacimiento', 'Alergias', 'Medicación', 'Antecedentes',
@@ -145,14 +162,15 @@ function filaDePaciente(p) {
     for (var i = 0; i < ses.length; i++) if (ses[i] && ses[i].hecha) hechas++;
     return (pl.nombre || 'Plan') + ' (' + hechas + '/' + ses.length + ', ' + (pl.estado || '') + ')';
   }).join(' | ');
-  return [
+  return filaSegura([
     p.nombre || '', p.nac || '', med.alergias || '', med.medicacion || '', ant,
     med.consent ? 'SÍ' : 'NO', resumen, p.ts || '',
     JSON.stringify(med), JSON.stringify(planes)
-  ];
+  ]);
 }
 
 function pacienteDeFila(f) {
+  f = filaLeida(f);
   var med = {}, planes = [];
   try { med = JSON.parse(f[8] || '{}'); } catch (e) { med = {}; }
   try { planes = JSON.parse(f[9] || '[]'); } catch (e) { planes = []; }
@@ -179,10 +197,19 @@ function doListPac() {
    tildes ni espacios dobles ("María Pérez" = "Maria Perez"). Si quedaron
    dos filas de la misma persona, se juntan y las dos quedan iguales. Con
    base, lo que mandó este equipo se junta con lo que ya había. */
-function doGuardarPac(p, base, ses) {
+function doGuardarPac(p, base, ses, liberarPagos) {
   if (!p || !p.nombre) return { ok: false, error: 'sin_nombre' };
+  /* los ids de los planes y de las atenciones de sus sesiones se escriben en la hoja y vuelven al panel: solo ids sanos */
+  var pls = fEsLista(p.planes) ? p.planes : [];
+  for (var q = 0; q < pls.length; q++) {
+    if (!pls[q]) continue;
+    if (!idOk(pls[q].id)) return { ok: false, error: 'id_invalido', planId: pls[q].id };
+    var sss = fEsLista(pls[q].sesiones) ? pls[q].sesiones : [];
+    for (var w = 0; w < sss.length; w++) if (sss[w] && sss[w].atencionId && !idOk(sss[w].atencionId)) return { ok: false, error: 'id_invalido', planId: pls[q].id };
+  }
   /* una pantalla que todavía tiene el nombre viejo guarda la ficha que conocía: va a la del nombre corregido */
-  if (base && typeof base === 'object') { var nv = nombreRenombrado(p.nombre); if (nv !== p.nombre) p.nombre = nv; }
+  /* (si después del cambio se creó otra ficha con el nombre viejo, es otra persona: se queda en la suya) */
+  if (base && typeof base === 'object') { var nv = nombreRenombrado(p.nombre); if (nv !== p.nombre && !fichaConClave(fClavePac(p.nombre))) p.nombre = nv; }
   var doctora = !!(ses && ses.rol === 'doctora');
   if (doctora && pacienteDeOtra(fClavePac(p.nombre), ses.prof)) return { ok: false, error: 'sin_permiso' };
   var sh = getSheetPac();
@@ -202,6 +229,21 @@ function doGuardarPac(p, base, ses) {
   if (actual && base !== undefined) final = fusion3(base || {}, p, actual, '', conf);
   if (doctora && actual) final.planes = planesSinTocarAjenos(actual.planes, final.planes, ses.prof, fClavePac(p.nombre));
   final.nombre = p.nombre;
+  /* Quitar un plan que tiene pagos (filas Anticipo con su planId) deja esa
+     plata como saldo a favor libre: lo decide la dueña (liberarPagos:true,
+     queda anotado en _Correcciones), nunca una doctora ni una pantalla sola. */
+  if (actual) {
+    var quedan = {}, fp = final.planes || [], ap = actual.planes || [], x;
+    for (x = 0; x < fp.length; x++) if (fp[x] && fp[x].id) quedan[fp[x].id] = 1;
+    for (x = 0; x < ap.length; x++) {
+      var pv = ap[x]; if (!pv || !pv.id || quedan[pv.id]) continue;
+      var pg = pagosDelPlanSrv(clave, pv.id); if (!pg.pagos) continue;
+      if (doctora) return { ok: false, error: 'sin_permiso', planId: pv.id };
+      if (liberarPagos !== true) return { ok: false, error: 'plan_con_pagos', planId: pv.id, pagos: pg.pagos, monto: pg.monto };
+      hojaCorr().appendRow([new Date().toISOString(), 'plan-' + pv.id + '-' + Date.now(), '', p.nombre, '', pg.monto, pg.monto, '', '',
+        'Plan borrado con pagos («' + String(pv.nombre || pv.id) + '»): Bs ' + pg.monto + ' quedan como saldo a favor libre', responsableDe(ses)]);
+    }
+  }
   var fila = filaDePaciente(final);
   if (destinos.length) {
     for (var d = 0; d < destinos.length; d++) sh.getRange(destinos[d], 1, 1, COLS_PAC.length).setValues([fila]);
@@ -219,11 +261,17 @@ function doGuardarPac(p, base, ses) {
    viejo y guarda la ficha que ya conocía (con base) va a la ficha nueva
    durante RENOMBRES_DIAS días, así no reaparece el paciente viejo.
    ===================================================================== */
-var RENOMBRES_DIAS = 30;
+var RENOMBRES_DIAS = 3;
 function leerRenombres() {
   try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('RENOMBRES') || '{}') || {}; } catch (e) { return {}; }
 }
 function guardarRenombres(m) { PropertiesService.getScriptProperties().setProperty('RENOMBRES', JSON.stringify(m)); }
+function fichaConClave(k) {
+  var sp = getSheetPac(), n = sp.getLastRow(); if (n < 2 || !k) return false;
+  var col = sp.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = 0; i < col.length; i++) if (col[i][0] && fClavePac(desFormula(col[i][0])) === k) return true;
+  return false;
+}
 function nombreRenombrado(nombre) {
   var m = leerRenombres(), k = fClavePac(nombre), lim = Date.now() - RENOMBRES_DIAS * 864e5, n = 0;
   while (m[k] && Number(m[k].t) > lim && n++ < 6) { nombre = m[k].a; k = fClavePac(nombre); }
@@ -237,34 +285,43 @@ function doRenombrar(q, ses) {
   if (de === a) return { ok: false, error: 'mismo_nombre' };
   if (ses.rol === 'doctora' && (pacienteDeOtra(kDe, ses.prof) || (kA !== kDe && pacienteDeOtra(kA, ses.prof)))) return { ok: false, error: 'sin_permiso' };
   if (idem && correccionYaHecha(idem)) return { ok: true, ya: true, de: de, a: a };
-  var ts = new Date().toISOString(), filas = 0, conA = 0;
-  /* visitas, citas, pagos y adelantos: solo la columna del nombre (y ts) */
-  var sh = getSheet(), n = sh.getLastRow();
-  if (n >= 2) {
-    var col = sh.getRange(2, 1, n - 1, 7).getValues();
-    for (var i = 0; i < col.length; i++) {
-      if (!col[i][0]) continue;
-      var k = fClavePac(col[i][6]);
-      if (k === kA && kA !== kDe) conA++;
-      if ((k === kDe || k === kA) && String(col[i][6]) !== a) {
-        sh.getRange(i + 2, 7, 1, 1).setValues([[a]]); sh.getRange(i + 2, 2, 1, 1).setValues([[ts]]);
-        if (k === kDe) filas++;
-      }
-    }
+  var ts = new Date().toISOString(), filas = 0, conA = 0, i, k;
+  /* primero se mira todo y recién después se escribe: si «de» no existe, o
+     «a» ya es otra persona y no se pidió unir, la planilla queda intacta */
+  var sh = getSheet(), n = sh.getLastRow(), col = n >= 2 ? sh.getRange(2, 1, n - 1, 7).getValues() : [], tocar = [];
+  for (i = 0; i < col.length; i++) {
+    if (!col[i][0]) continue;
+    k = fClavePac(desFormula(col[i][6]));
+    if (k === kA && kA !== kDe) conA++;
+    if ((k === kDe || k === kA) && String(desFormula(col[i][6])) !== a) { tocar.push(i + 2); if (k === kDe) filas++; }
   }
-  /* la ficha: se juntan la del nombre viejo y la del nuevo (si había) y queda una sola fila */
   var sp = getSheetPac(), np = sp.getLastRow(), ficha = null, fichaA = null, dest = [];
-  if (np >= 2) {
-    var fp = sp.getRange(2, 1, np - 1, COLS_PAC.length).getValues();
-    for (var j = 0; j < fp.length; j++) {
-      if (!fp[j][0]) continue;
-      var kp = fClavePac(fp[j][0]);
-      if (kp !== kDe && kp !== kA) continue;
-      var pf = pacienteDeFila(fp[j]);
-      if (kp === kA && kA !== kDe) fichaA = fusionarFichas(fichaA, pf); else ficha = fusionarFichas(ficha, pf);
-      dest.push(j + 2);
+  var fp = np >= 2 ? sp.getRange(2, 1, np - 1, COLS_PAC.length).getValues() : [];
+  for (var j = 0; j < fp.length; j++) {
+    if (!fp[j][0]) continue;
+    var kp = fClavePac(desFormula(fp[j][0]));
+    if (kp !== kDe && kp !== kA) continue;
+    var pf = pacienteDeFila(fp[j]);
+    if (kp === kA && kA !== kDe) fichaA = fusionarFichas(fichaA, pf); else ficha = fusionarFichas(ficha, pf);
+    dest.push(j + 2);
+  }
+  var fotos = 0, sf = getSpreadsheet().getSheetByName(HOJA_FOTOS), cf = [], tocarF = [];
+  if (sf && sf.getLastRow() >= 2) {
+    cf = sf.getRange(2, 1, sf.getLastRow() - 1, 2).getValues();
+    for (var f = 0; f < cf.length; f++) {
+      var kf = fClavePac(desFormula(cf[f][1]));
+      if ((kf === kDe || kf === kA) && String(desFormula(cf[f][1])) !== a) { tocarF.push(f + 2); if (kf === kDe) fotos++; }
     }
   }
+  if (!filas && !ficha && !fotos) return { ok: false, error: 'no_existe' };
+  /* «a» ya es otra persona: unir dos historias es una decisión de la dueña
+     (el panel manda unir:true cuando lo confirma); una doctora nunca une */
+  var unidos = kA !== kDe && (conA > 0 || !!fichaA);
+  if (unidos && ses.rol === 'doctora') return { ok: false, error: 'sin_permiso' };
+  if (unidos && q.unir !== true) return { ok: false, error: 'nombre_ocupado', nombre: a, filas: conA };
+  /* visitas, citas, pagos y adelantos: solo la columna del nombre (y ts) */
+  for (i = 0; i < tocar.length; i++) { sh.getRange(tocar[i], 7, 1, 1).setValues([[escFormula(a)]]); sh.getRange(tocar[i], 2, 1, 1).setValues([[ts]]); }
+  /* la ficha: se juntan la del nombre viejo y la del nuevo (si había) y queda una sola fila */
   var final = fichaA && ficha ? fusionarFichas(fichaA, ficha) : (fichaA || ficha), pacFinal = null;
   if (final) {
     final.nombre = a; final.ts = ts;
@@ -274,49 +331,51 @@ function doRenombrar(q, ses) {
     pacFinal = pacienteDeFila(fila);
   }
   /* las fotos (si la clínica ya tiene la hoja) */
-  var fotos = 0, sf = getSpreadsheet().getSheetByName(HOJA_FOTOS);
-  if (sf && sf.getLastRow() >= 2) {
-    var cf = sf.getRange(2, 1, sf.getLastRow() - 1, 2).getValues();
-    for (var f = 0; f < cf.length; f++) {
-      var kf = fClavePac(cf[f][1]);
-      if ((kf === kDe || kf === kA) && String(cf[f][1]) !== a) { sf.getRange(f + 2, 2, 1, 1).setValues([[a]]); if (kf === kDe) fotos++; }
-    }
-  }
-  if (!filas && !ficha && !fotos) return { ok: false, error: 'no_existe' };
+  for (i = 0; i < tocarF.length; i++) sf.getRange(tocarF[i], 2, 1, 1).setValues([[escFormula(a)]]);
   /* una pantalla con el nombre viejo no vuelve a crear su ficha */
   var m = leerRenombres(), lim = Date.now() - RENOMBRES_DIAS * 864e5, x;
   for (x in m) if (Object.prototype.hasOwnProperty.call(m, x) && !(Number(m[x].t) > lim)) delete m[x];
   if (kA !== kDe) { m[kDe] = { a: a, t: Date.now() }; delete m[kA]; }
   for (x in m) if (Object.prototype.hasOwnProperty.call(m, x) && fClavePac(m[x].a) === kDe && kA !== kDe) m[x].a = a;
   guardarRenombres(m);
-  var unidos = kA !== kDe && (conA > 0 || !!fichaA);
   hojaCorr().appendRow([ts, idem || ('nombre-' + ts), '', de + ' → ' + a, '', '', '', '', '',
     (unidos ? 'Historias unidas' : 'Nombre corregido') + ': ' + filas + ' fila(s) de la hoja' + (fotos ? ', ' + fotos + ' foto(s)' : '') + (ficha ? ' y la ficha' : '') + '. No cambia montos.',
     responsableDe(ses)]);
   return { ok: true, de: de, a: a, filas: filas, fotos: fotos, unidos: unidos, paciente: pacFinal };
 }
 
-/* Igual que el panel (pacAjeno): el paciente es de otra doctora si tiene
-   visitas con doctora asignada y ninguna es de esta. Un paciente nuevo, sin
-   visitas, no es de nadie todavía. */
+/* Los pagos hechos a un plan (filas Anticipo con ese planId): cuántos y cuánto. */
+function pagosDelPlanSrv(clave, planId) {
+  var sh = getSheet(), n = sh.getLastRow(), out = { pagos: 0, monto: 0 };
+  if (n < 2 || !clave || !planId) return out;
+  var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
+  for (var i = 0; i < filas.length; i++) {
+    if (!filas[i][0] || fClavePac(desFormula(filas[i][6])) !== clave) continue;
+    if (String(filas[i][18]) !== 'Anticipo' || String(filas[i][34] || '') !== String(planId)) continue;
+    out.pagos++; out.monto = fR(out.monto + fNum(filas[i][15]));
+  }
+  return out;
+}
 /* Las visitas de un paciente (id, doctora, estado), sin anticipos ni citas por definir. */
 function filasPacSrv(clave) {
   var sh = getSheet(), n = sh.getLastRow(), out = [];
   if (n < 2 || !clave) return out;
   var filas = sh.getRange(2, 1, n - 1, 19).getValues();
   for (var i = 0; i < filas.length; i++) {
-    var pr = String(filas[i][5] || ''), est = String(filas[i][18] || '');
+    var pr = String(desFormula(filas[i][5]) || ''), est = String(filas[i][18] || '');
     if (!pr || pr === 'Por definir' || est === 'Anticipo') continue;
-    if (fClavePac(filas[i][6]) !== clave) continue;
+    if (fClavePac(desFormula(filas[i][6])) !== clave) continue;
     out.push({ id: filas[i][0], prof: pr, estado: est });
   }
   return out;
 }
 /* Igual que el panel (pacAjeno): el paciente es de otra doctora si tiene
    visitas con doctora asignada y ninguna es de esta. Un paciente nuevo, sin
-   visitas, no es de nadie todavía. */
-function pacienteDeOtra(clave, prof) {
+   visitas, no es de nadie todavía. Con salvoId se deja afuera la fila que se
+   está editando (la misma cita que dos doctoras atendieron a la vez). */
+function pacienteDeOtra(clave, prof, salvoId) {
   var fs = filasPacSrv(clave);
+  if (salvoId) fs = fs.filter(function (f) { return String(f.id) !== String(salvoId); });
   return fs.length > 0 && !fs.some(function (f) { return f.prof === prof; }) && !paqueteClinicaActivo(clave);
 }
 /* Un paquete de la clínica (lo atiende cualquier doctora) todavía en curso:
@@ -327,23 +386,30 @@ function planesGuardados(clave) {
   if (n < 2 || !clave) return out;
   var filas = sh.getRange(2, 1, n - 1, COLS_PAC.length).getValues();
   for (var i = 0; i < filas.length; i++) {
-    if (!filas[i][0] || fClavePac(filas[i][0]) !== clave) continue;
+    if (!filas[i][0] || fClavePac(desFormula(filas[i][0])) !== clave) continue;
     out = out.concat(pacienteDeFila(filas[i]).planes || []);
   }
   return out;
 }
 /* La etapa que manda esta atención ya está hecha en OTRA visita que sigue
-   guardada: es la misma sesión marcada dos veces (típico de dos pantallas). */
+   guardada: es la misma sesión marcada dos veces (típico de dos pantallas).
+   Se mira la ficha y también las filas: si la ficha todavía no llegó, otra
+   visita Atendida del mismo paciente con el mismo plan y etapa ya la ocupa. */
 function sesionRepetidaSrv(r, sh) {
-  var planes = planesGuardados(fClavePac(r.paciente)), n = Number(r.planEtapa) || 0;
+  var clave = fClavePac(r.paciente), planes = planesGuardados(clave), n = Number(r.planEtapa) || 0, j;
+  var tot = sh.getLastRow(), filas = tot >= 2 ? sh.getRange(2, 1, tot - 1, COLS.length).getValues() : [];
   for (var i = 0; i < planes.length; i++) {
     var p = planes[i]; if (!p || p.id !== r.planId) continue;
     var ses = (p.sesiones || []).filter(function (x) { return x && Number(x.n) === n; })[0];
-    if (!ses || !ses.hecha || !ses.atencionId || ses.atencionId === r.id) return null;
-    var tot = sh.getLastRow(); if (tot < 2) return null;
-    var ids = sh.getRange(2, 1, tot - 1, 1).getValues();
-    for (var j = 0; j < ids.length; j++) if (String(ids[j][0]) === String(ses.atencionId)) return ses;
-    return null;
+    if (!ses || !ses.hecha || !ses.atencionId || ses.atencionId === r.id) break;
+    for (j = 0; j < filas.length; j++) if (String(filas[j][0]) === String(ses.atencionId)) return { fecha: ses.fecha || '', atencionId: ses.atencionId };
+    break;
+  }
+  for (j = 0; j < filas.length; j++) {
+    if (!filas[j][0] || String(filas[j][0]) === String(r.id) || String(filas[j][18]) !== 'Atendido') continue;
+    if (String(filas[j][34] || '') !== String(r.planId) || fClavePac(desFormula(filas[j][6])) !== clave) continue;
+    var otra = registroDeFila(filas[j]);
+    if (Number(otra.planEtapa) === n) return { fecha: otra.fecha || '', atencionId: otra.id };
   }
   return null;
 }
@@ -390,7 +456,8 @@ function planesSinTocarAjenos(viejos, nuevos, prof, clave) {
       q.sesiones = (v.sesiones || []).map(function (s) {
         var ns = (p.sesiones || []).filter(function (x) { return x && x.n === s.n; })[0], c = JSON.parse(JSON.stringify(s));
         var marca = ns && ns.hecha && ns.atencionId && idProf[ns.atencionId] === prof;
-        var desmarca = ns && !ns.hecha && s.atencionId && idProf[s.atencionId] === prof;
+        /* también se libera si la visita que la marcó ya no existe (se borró) */
+        var desmarca = ns && !ns.hecha && s.atencionId && (idProf[s.atencionId] === prof || !Object.prototype.hasOwnProperty.call(idProf, s.atencionId));
         if (marca || desmarca) { c.hecha = !!ns.hecha; c.fecha = ns.fecha || ''; c.atencionId = ns.atencionId || ''; }
         return c;
       });
@@ -429,11 +496,12 @@ function getSheetEgr() {
 }
 
 function filaDeEgreso(e) {
-  return [e.id || '', e.fecha || '', e.categoria || '', e.detalle || '',
-    e.proveedor || '', Number(e.monto) || 0, e.metodo || '', e.ts || ''];
+  return filaSegura([e.id || '', e.fecha || '', e.categoria || '', e.detalle || '',
+    e.proveedor || '', Number(e.monto) || 0, e.metodo || '', e.ts || '']);
 }
 
 function egresoDeFila(f) {
+  f = filaLeida(f);
   return {
     id: f[0], fecha: formatoFecha(f[1]), categoria: f[2], detalle: f[3],
     proveedor: f[4], monto: Number(f[5]) || 0, metodo: f[6], ts: f[7] || ''
@@ -533,7 +601,7 @@ function srvTexto(servicios) {
 }
 
 function filaDeRegistro(r) {
-  return [
+  return filaSegura([
     r.id || '', r.ts || '', r.fecha || '', r.hora || '', r.nroDia || '',
     r.profesional || '', r.paciente || '', r.celular || '', r.ci || '', r.edad || '',
     r.tipo || '', r.canal || '', r.canalDetalle || '', srvTexto(r.servicios),
@@ -544,7 +612,7 @@ function filaDeRegistro(r) {
     JSON.stringify(r.pagos || []),
     r.origen || '', r.agendaPor || '', r.citaDe || '', r.resueltaTs || '', r.planId || '',
     extraDeRegistro(r)
-  ];
+  ]);
 }
 
 /** Cuánto de esta atención se cobró con tal forma de pago. */
@@ -559,6 +627,7 @@ function montoDe(r, metodo) {
 }
 
 function registroDeFila(f) {
+  f = filaLeida(f);
   var servicios = [], pagos = [];
   try { servicios = JSON.parse(f[24] || '[]'); } catch (e) { servicios = []; }
   try { pagos = JSON.parse(f[29] || '[]'); } catch (e) { pagos = []; }
@@ -620,17 +689,42 @@ function doGuardarCfg(cfg, base) {
     if (actual) cfg = fusion3(base, cfg, actual, '', []);
     cfg = cfgSinClaves(cfg, guardada);
   }
-  var props = PropertiesService.getScriptProperties();
-  var texto = JSON.stringify(cfg);
-  if (texto.length > 450000) return { ok: false, error: 'cfg_muy_grande' };
-  props.setProperty(K_CFG, texto);
+  var falla = escribirCfg(cfg);
+  if (falla) return falla;
   return { ok: true, ts: cfg.ts || '', cfg: cfgPublica(cfg) };
+}
+
+/* Una propiedad del script aguanta 9 KB: la configuración (plantillas de
+   WhatsApp, precios, recetas) se guarda partida en trozos de CFG_TROZO
+   caracteres: K_CFG es el primero (un script viejo sigue leyendo algo),
+   K_CFG_n dice cuántos son y K_CFG_2, _3… el resto. Los trozos que sobran
+   de una escritura anterior más larga se borran. Si Google no deja escribir,
+   se contesta cfg_no_guardada con el detalle, no un error suelto. */
+var CFG_TROZO = 8000;
+var CFG_MAX = 200000;
+function escribirCfg(cfg) {
+  var texto = JSON.stringify(cfg);
+  if (texto.length > CFG_MAX) return { ok: false, error: 'cfg_muy_grande' };
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var antes = Number(props.getProperty(K_CFG + '_n')) || 1, trozos = [], i;
+    for (i = 0; i < texto.length; i += CFG_TROZO) trozos.push(texto.slice(i, i + CFG_TROZO));
+    if (!trozos.length) trozos.push('');
+    props.setProperty(K_CFG, trozos[0]);
+    for (i = 1; i < trozos.length; i++) props.setProperty(K_CFG + '_' + (i + 1), trozos[i]);
+    props.setProperty(K_CFG + '_n', String(trozos.length));
+    for (i = trozos.length + 1; i <= antes; i++) props.deleteProperty(K_CFG + '_' + i);
+  } catch (e) { return { ok: false, error: 'cfg_no_guardada', detalle: String(e) }; }
+  return null;
 }
 
 function leerCfg() {
   try {
-    var t = PropertiesService.getScriptProperties().getProperty(K_CFG);
-    return t ? JSON.parse(t) : null;
+    var props = PropertiesService.getScriptProperties();
+    var t = props.getProperty(K_CFG), n = Number(props.getProperty(K_CFG + '_n')) || 0;
+    if (!t) return null;
+    for (var i = 2; i <= n; i++) t += props.getProperty(K_CFG + '_' + i) || '';
+    return JSON.parse(t);
   } catch (e) { return null; }
 }
 
@@ -644,7 +738,7 @@ function doList(ses) {
   /* la clave de pauta lee solo lo que necesita: sin metas ni comisiones, y sin fichas médicas */
   var cfg = pauta ? cfgSinSesion(leerCfg()) : cfgPublica(leerCfg());
   var pacs = doListPac();
-  if (pauta) pacs = pacs.map(function (p) { return { nombre: p.nombre, nac: '', med: {}, planes: p.planes || [], ts: p.ts || '' }; });
+  if (pauta) pacs = pacs.map(pacientePauta);
   var sh = getSheet();
   var n = sh.getLastRow();
   if (n < 2) return { ok: true, registros: [], cfg: cfg, pacientes: pacs, egresos: egr, cierres: cie };
@@ -652,13 +746,29 @@ function doList(ses) {
   var out = [];
   for (var i = 0; i < filas.length; i++) {
     if (!filas[i][0]) continue;
-    out.push(registroDeFila(filas[i]));
+    out.push(pauta ? registroPauta(registroDeFila(filas[i])) : registroDeFila(filas[i]));
   }
   return { ok: true, registros: out, cfg: cfg, pacientes: pacs, egresos: egr, cierres: cie };
+}
+/* La pestaña «Pauta» mide por dónde llegan y qué dejan: no necesita notas
+   clínicas, teléfonos, carnets, presupuestos ni la historia de correcciones. */
+var PAUTA_SIN = ['obs', 'celular', 'ci', 'proxMotivo', 'presu', 'correccionesCobro'];
+function registroPauta(r) {
+  for (var i = 0; i < PAUTA_SIN.length; i++) if (r[PAUTA_SIN[i]] !== undefined) r[PAUTA_SIN[i]] = '';
+  return r;
+}
+function pacientePauta(p) {
+  var planes = (p.planes || []).map(function (pl) {
+    if (!pl) return null;
+    return { id: pl.id, nombre: pl.nombre || '', total: pl.total, estado: pl.estado || '',
+      sesiones: (pl.sesiones || []).map(function (s) { return s ? { n: s.n, hecha: !!s.hecha, fecha: s.fecha || '', precio: s.precio } : null; }) };
+  });
+  return { nombre: p.nombre, planes: planes, ts: p.ts || '' };
 }
 
 function doSave(r, base, ses) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
+  if (!idOk(r.id)) return { ok: false, error: 'id_invalido', id: r.id };
   var sh = getSheet();
   var n = sh.getLastRow();
   var conf = [];
@@ -692,6 +802,16 @@ function doSave(r, base, ses) {
   /* una doctora no agenda ni carga nada nuevo para un paciente de otra (igual que el panel) */
   if (ses && ses.rol === 'doctora' && !previa0 && pacienteDeOtra(fClavePac(r.paciente), ses.prof))
     return { ok: false, error: 'sin_permiso', id: r.id };
+  if (ses && ses.rol === 'doctora' && previa0) {
+    var kNuevo = fClavePac(r.paciente), kPrev = fClavePac(previa0.paciente);
+    /* tampoco edita una fila para pasársela a un paciente de otra */
+    if (kNuevo !== kPrev && pacienteDeOtra(kNuevo, ses.prof)) return { ok: false, error: 'sin_permiso', id: r.id };
+    /* ni toma una fila que no es suya («Por definir», sin doctora) de un
+       paciente que ya tiene doctora; si el paciente no es de nadie, cualquiera */
+    if (previa0.profesional !== ses.prof && pacienteDeOtra(kPrev, ses.prof, r.id)) return { ok: false, error: 'sin_permiso', id: r.id };
+    /* ni deja su propia fila sin doctora o a nombre de otra (el paciente dejaría de ser suyo) */
+    if (previa0.profesional === ses.prof && r.profesional !== ses.prof) return { ok: false, error: 'sin_permiso', id: r.id };
+  }
   if (ses && !doctoraPuedeGuardar(r, previa0, ses, !!(previa0 && base && fOtraDoctora(fSinAlta(base), r, previa0))))
     return { ok: false, error: 'sin_permiso', id: r.id };
   if (destino && base !== undefined) {
@@ -750,8 +870,10 @@ function doSave(r, base, ses) {
     r = fusionRegistro(b0, r, actual, conf);
   }
   /* Lo cobrado no se baja ni se borra con un guardado: para eso está
-     «Corregir cobro», que deja la historia en _Correcciones. */
+     «Corregir cobro», que deja la historia en _Correcciones. Tampoco se
+     cambia cómo se pagó ni una atención pasa a anticipo (cobro_cambio). */
   if (previa0 && cobroBaja(previa0, r)) return { ok: false, error: 'cobro_baja', registro: previa0 };
+  if (previa0 && cobroCambio(previa0, r)) return { ok: false, error: 'cobro_cambio', registro: previa0 };
   /* Una sesión del paquete se marca una sola vez: si una pantalla sin refrescar
      manda la misma etapa que ya tiene otra visita guardada, se rechaza. */
   if (r.estado === 'Atendido' && r.planId && r.planEtapa) {
@@ -763,7 +885,10 @@ function doSave(r, base, ses) {
      con saldo a favor se recorta a lo que queda y la diferencia queda debiendo. */
   var ajusteFavor = 0;
   if (r.estado !== 'Anticipo') {
-    var favN = favorDeSrv(r), favP = previa0 ? favorDeSrv(previa0) : 0;
+    /* si cambió de paciente, todo lo pagado con saldo a favor se controla
+       contra el paciente NUEVO (la fila guardada todavía cuenta para el viejo) */
+    var cambioPac = !!(previa0 && fClavePac(r.paciente) !== fClavePac(previa0.paciente));
+    var favN = favorDeSrv(r), favP = previa0 && !cambioPac ? favorDeSrv(previa0) : 0;
     if (favN > favP + 0.009) {
       var falta = fR((favN - favP) - Math.max(0, creditoPacienteSrv(fClavePac(r.paciente), r.planId)));
       if (falta > 0.009) { ajusteFavor = fR(Math.min(falta, favN - favP)); r = recortarFavor(r, ajusteFavor); }
@@ -826,7 +951,9 @@ function recortarFavor(r, quitar) {
  */
 function doBulk(lista, ses) {
   if (ses && ses.rol !== 'admin') return { ok: false, error: 'sin_permiso' };
+  if (ses && ses.fabrica) return { ok: false, error: 'clave_de_fabrica' };   // cargar en bloque espera a la clave propia
   if (!lista || !lista.length) return { ok: true, agregados: 0, actualizados: 0 };
+  for (var q = 0; q < lista.length; q++) if (lista[q] && lista[q].id && !idOk(lista[q].id)) return { ok: false, error: 'id_invalido', id: lista[q].id };
   var sh = getSheet();
   var n = sh.getLastRow();
 
@@ -862,6 +989,7 @@ function doBulk(lista, ses) {
 
 function doDelete(r, base, ses) {
   if (!r || !r.id) return { ok: false, error: 'sin_id' };
+  if (!idOk(r.id)) return { ok: false, error: 'id_invalido', id: r.id };
   var sh = getSheet();
   var n = sh.getLastRow();
   if (n < 2) return { ok: true };
@@ -873,6 +1001,10 @@ function doDelete(r, base, ses) {
       var actual = registroDeFila(sh.getRange(i + 2, 1, 1, COLS.length).getValues()[0]);
       if (ses && ses.rol === 'doctora' && (actual.estado === 'Anticipo'
           ? !anticipoDeDoctora(actual, ses) : profDeOtra(actual, ses)))
+        return { ok: false, error: 'sin_permiso', registro: actual };
+      /* una cita «Por definir» (o sin doctora) de un paciente de otra tampoco se borra */
+      if (ses && ses.rol === 'doctora' && actual.estado !== 'Anticipo' && actual.profesional !== ses.prof &&
+          pacienteDeOtra(fClavePac(actual.paciente), ses.prof, actual.id))
         return { ok: false, error: 'sin_permiso', registro: actual };
       /* con plata cobrada (no saldo a favor), la borra recepción o la dueña: igual que el panel */
       if (ses && ses.rol === 'doctora' && actual.estado !== 'Anticipo' && efectivoCobrado(actual) > 0.009)
@@ -1191,7 +1323,13 @@ function fusionRegistro(b, m, t, conf) {
     /* una visita ya atendida en el servidor no vuelve atrás por un pendiente
        viejo; y la plata nunca baja sin aviso */
     if (t.estado === 'Atendido' && m.estado !== 'Atendido') dm = dtt;
-    else if (fNum(dtt.__cobro.monto) > fNum(dm.__cobro.monto)) dm.__cobro = dtt.__cobro;
+    else {
+      if (fNum(dtt.__cobro.monto) > fNum(dm.__cobro.monto)) dm.__cobro = dtt.__cobro;
+      /* el descuento y el perdón que ya tiene el servidor no se pierden por
+         un pendiente viejo: gana el servidor, salvo un descuento mayor */
+      if (dm.__desc !== undefined && dtt.__desc !== undefined) dm.__desc = Math.max(fNum(dm.__desc), fNum(dtt.__desc));
+      dm.__perdon = dtt.__perdon;
+    }
     dm.cobrosPosteriores = fUnirCobros(t, m);
     return fArmar(dm);
   }
@@ -1294,7 +1432,7 @@ var ANTICIPO_DOCTORAS = false;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-28-nombre';
+var VERSION_SCRIPT = '2026-10-29-auditoria';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
@@ -1369,6 +1507,8 @@ function cfgPublica(cfg) {
   o.paquetes = true;
   o.cierres = true;
   o.renombrar = true;
+  /* este script ya trae los frenos de la auditoría (ids, cobro_cambio, plan_con_pagos, nombre_ocupado…) */
+  o.auditoria = true;
   return o;
 }
 /* Una configuración que llega del panel no puede tocar las claves. */
@@ -1377,6 +1517,7 @@ function cfgSinClaves(cfg, guardada) {
   var o = {}, k;
   for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) o[k] = cfg[k];
   delete o.credServidor; delete o.clavesProfHay; delete o.pagoPlanDoctoras; delete o.paquetes; delete o.cierres; delete o.parcial;
+  delete o.renombrar; delete o.auditoria;
   delete o.adminHash; delete o.passHash; delete o.clavesProf;
   if (guardada !== undefined) {
     /* la config guardada lleva siempre las claves vigentes: si algún día se
@@ -1407,11 +1548,17 @@ function sesionDe(tok) {
   return s;
 }
 
+/* Los intentos fallidos se cuentan por clave probada (un prefijo de su hash),
+   no en un contador único: una clave vieja guardada en un aparato que insiste
+   no deja afuera a los demás. Tope LOGIN_TOPE en 10 minutos por clave. */
+var LOGIN_TOPE = 15;
+function claveFallas(clave) { return 'LOGIN_FALLAS_' + shaHex(String(clave || '')).slice(0, 8); }
+function fallasDe(c, clave) { return Number(c.get(claveFallas(clave)) || 0); }
+function anotarFalla(c, clave) { c.put(claveFallas(clave), String(fallasDe(c, clave) + 1), 600); }
 function doLogin(body) {
-  var c = cache(), fallas = Number(c.get('LOGIN_FALLAS') || 0);
-  if (fallas >= 40) return { ok: false, error: 'muchos_intentos' };
-  var clave = String(body.clave || '');
+  var c = cache(), clave = String(body.clave || '');
   if (!clave) return { ok: false, error: 'clave_incorrecta' };
+  if (fallasDe(c, clave) >= LOGIN_TOPE) return { ok: false, error: 'muchos_intentos' };
   var h = shaHex(clave), v = leerVerif(), s = null;
   if (hashOk(VERIF_PAUTA) && h === VERIF_PAUTA) s = { rol: 'pauta', prof: '' };
   else if (h === v.admin) s = { rol: 'admin', prof: '' };
@@ -1419,22 +1566,22 @@ function doLogin(body) {
     for (var p in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, p) && v.prof[p] === h) { s = { rol: 'doctora', prof: p }; break; }
     if (!s && h === v.equipo) s = { rol: 'equipo', prof: '' };
   }
-  if (!s) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_incorrecta' }; }
+  if (!s) { anotarFalla(c, clave); return { ok: false, error: 'clave_incorrecta' }; }
   s.h = h; s.fabrica = esDeFabrica(h);
   var tok = nuevaSesion(s);
-  /* pagoPlan: este script acepta los pagos de plan que carga la doctora */
-  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true, fotos: true, renombrar: true };
+  /* pagoPlan: este script acepta los pagos de plan que carga la doctora; auditoria: trae los frenos nuevos */
+  return { ok: true, token: tok, ttl: SESION_SEG, rol: s.rol, prof: s.prof, fabrica: s.fabrica, pagoPlan: true, paquetes: true, fotos: true, renombrar: true, auditoria: true };
 }
 
 /* Cambiar una clave: la dueña cambia cualquiera; recepción, la suya
    (diciendo la actual). Nunca dos personas con la misma clave. */
 function doCambiarClave(body, ses) {
   var quien = body.quien, nueva = String(body.clave || ''), v = leerVerif();
-  var c = cache(), fallas = Number(c.get('LOGIN_FALLAS') || 0), propia = quien === 'equipo' && ses.rol === 'equipo';
+  var c = cache(), vieja = String(body.vieja || ''), propia = quien === 'equipo' && ses.rol === 'equipo';
   if (nueva.length < 6) return { ok: false, error: 'clave_corta' };
   if (propia) {
-    if (fallas >= 40) return { ok: false, error: 'muchos_intentos' };
-    if (shaHex(String(body.vieja || '')) !== v.equipo) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_incorrecta' }; }
+    if (fallasDe(c, vieja) >= LOGIN_TOPE) return { ok: false, error: 'muchos_intentos' };
+    if (shaHex(vieja) !== v.equipo) { anotarFalla(c, vieja); return { ok: false, error: 'clave_incorrecta' }; }
   } else if (ses.rol !== 'admin') return { ok: false, error: 'sin_permiso' };
   var h = shaHex(nueva);
   if (esDeFabrica(h)) return { ok: false, error: 'clave_de_fabrica' };
@@ -1446,18 +1593,26 @@ function doCambiarClave(body, ses) {
   if (usadas.indexOf(h) >= 0) {
     /* a recepción no se le dice de quién es: sería una forma de adivinar
        la clave de la dueña. Cuenta como intento fallido. */
-    if (propia) { c.put('LOGIN_FALLAS', String(fallas + 1), 600); return { ok: false, error: 'clave_no_permitida' }; }
+    if (propia) { anotarFalla(c, nueva); return { ok: false, error: 'clave_no_permitida' }; }
     return { ok: false, error: 'clave_repetida' };
   }
   var cfg = leerCfg() || {};
-  if (quien === 'admin') { v.admin = h; cfg.adminHash = h; }
-  else if (quien === 'equipo') { v.equipo = h; cfg.passHash = h; }
-  else if (quien === 'prof' && body.prof) {
-    v.prof[body.prof] = h; cfg.clavesProf = cfg.clavesProf || {}; cfg.clavesProf[body.prof] = h;
-  } else return { ok: false, error: 'pedido_invalido' };
+  if (quien === 'admin') v.admin = h;
+  else if (quien === 'equipo') v.equipo = h;
+  else if (quien === 'prof' && body.prof) v.prof[body.prof] = h;
+  else return { ok: false, error: 'pedido_invalido' };
+  /* la config guardada lleva el mismo hash, por si hay que volver a la versión
+     anterior. Se escribe ANTES del verificador: si no se puede guardar, la
+     clave no cambia y la pantalla recibe el error (nunca «cambiada a medias») */
+  if (cfg.precios && cfg.canales) {
+    var o = cfgSinClaves(cfg), cp = {}, k;
+    o.adminHash = v.admin; o.passHash = v.equipo;
+    for (k in v.prof) if (Object.prototype.hasOwnProperty.call(v.prof, k)) cp[k] = v.prof[k];
+    o.clavesProf = cp;
+    var falla = escribirCfg(o);
+    if (falla) return falla;
+  }
   guardarVerif(v);
-  /* la config vieja guarda el mismo hash, por si hay que volver a la versión anterior */
-  if (cfg.precios && cfg.canales) PropertiesService.getScriptProperties().setProperty(K_CFG, JSON.stringify(cfgSinClaves(cfg, cfg)));
   return { ok: true };
 }
 
@@ -1497,26 +1652,54 @@ function efectivoCobrado(r) {
 function creditosSrv(clave) {
   var sh = getSheet(), n = sh.getLastRow(), gen = 0, plan = {}, uso = {}, cobAt = {}, p;
   if (n < 2 || !clave) return { general: 0, planes: {} };
+  var guardados = planesGuardados(clave), porId = {};
+  for (var k = 0; k < guardados.length; k++) if (guardados[k] && guardados[k].id) porId[guardados[k].id] = guardados[k];
   var filas = sh.getRange(2, 1, n - 1, COLS.length).getValues();
   for (var i = 0; i < filas.length; i++) {
-    if (!filas[i][0] || fClavePac(filas[i][6]) !== clave) continue;
+    if (!filas[i][0] || fClavePac(desFormula(filas[i][6])) !== clave) continue;
     var r = registroDeFila(filas[i]);
     if (r.estado === 'Anticipo') {
       if (r.planId) plan[r.planId] = fR((plan[r.planId] || 0) + fNum(r.acuenta)); else gen = fR(gen + fNum(r.acuenta));
       continue;
     }
-    if (r.planId) cobAt[r.planId] = fR((cobAt[r.planId] || 0) + fNum(r.acuenta));
+    /* de una atención del plan cuenta para el plan solo lo de su sesión (la
+       consulta de la misma visita no); una etapa «aparte» no es del plan */
+    var pl = r.planId ? porId[r.planId] : null, aparte = !!(pl && sesionAparteSrv(pl, r));
+    if (r.planId && !aparte) cobAt[r.planId] = fR((cobAt[r.planId] || 0) + cobradoDeSesionSrv(pl, r));
     var f = favorDeSrv(r); if (!f) continue;
-    if (r.planId) uso[r.planId] = fR((uso[r.planId] || 0) + f); else gen = fR(gen - f);
+    if (r.planId && !aparte) { var pu = pl ? favorDeSesionSrv(pl, r) : f; uso[r.planId] = fR((uso[r.planId] || 0) + pu); gen = fR(gen - fR(f - pu)); }
+    else gen = fR(gen - f);
   }
   for (p in uso) { var q = fR((plan[p] || 0) - uso[p]); if (q < 0) { gen = fR(gen + q); q = 0; } plan[p] = q; }
-  var guardados = planesGuardados(clave), porId = {};
-  for (var k = 0; k < guardados.length; k++) if (guardados[k] && guardados[k].id) porId[guardados[k].id] = guardados[k];
+  /* lo de un plan que ya no está, o que terminó o se canceló, y lo que pasa
+     del presupuesto de un plan, queda libre (misma regla que el panel) */
   for (p in plan) {
-    var pl = porId[p], libre = !pl ? plan[p] : Math.max(0, Math.min(plan[p], fR((plan[p] + (cobAt[p] || 0)) - fNum(pl.total))));
+    var g = porId[p], cerrado = !g || g.estado === 'terminado' || g.estado === 'cancelado';
+    var libre = cerrado ? plan[p] : Math.max(0, Math.min(plan[p], fR((plan[p] + (cobAt[p] || 0)) - fNum(g.total))));
     if (libre > 0.009) { plan[p] = fR(plan[p] - libre); gen = fR(gen + libre); }
   }
   return { general: fR(gen), planes: plan };
+}
+/* La sesión del plan que corresponde a una atención: la que apunta a ella o,
+   si no, la de su etapa (igual que sesionDeAtencion en el panel). */
+function sesionDeAtencionSrv(plan, r) {
+  var ss = (plan && plan.sesiones) || [], i;
+  for (i = 0; i < ss.length; i++) if (ss[i] && ss[i].atencionId && String(ss[i].atencionId) === String(r.id)) return ss[i];
+  if (r.planEtapa) for (i = 0; i < ss.length; i++) if (ss[i] && Number(ss[i].n) === Number(r.planEtapa)) return ss[i];
+  return null;
+}
+function sesionAparteSrv(plan, r) { var s = sesionDeAtencionSrv(plan, r); return !!(s && s.aparte); }
+function precioSesionSrv(plan, r) { var s = plan && r ? sesionDeAtencionSrv(plan, r) : null; return s && !s.aparte ? fNum(s.precio) : 0; }
+/* Regla única, copiada del panel (favorDeSesion / cobradoDeSesion): el saldo
+   a favor de una atención paga primero su sesión; la plata en mano paga
+   primero lo otro de la visita (la consulta) y después la sesión. Una sesión
+   sin importe (planes viejos) cuenta todo lo cobrado. */
+function favorDeSesionSrv(plan, r) { var p = precioSesionSrv(plan, r), f = favorDeSrv(r); return p > 0 ? Math.min(f, p) : f; }
+function cobradoDeSesionSrv(plan, r) {
+  var p = precioSesionSrv(plan, r); if (!(p > 0)) return fNum(r.acuenta);
+  var fav = favorDeSrv(r), favS = Math.min(fav, p), cash = fR(fNum(r.acuenta) - fav);
+  var otros = Math.max(0, fR(fNum(r.total) - p - (fav - favS))), cashS = Math.max(0, Math.min(p - favS, fR(cash - Math.min(cash, otros))));
+  return fR(favS + cashS);
 }
 function creditoPacienteSrv(clave, planId) {
   var c = creditosSrv(clave);
@@ -1527,6 +1710,25 @@ function cobroBaja(prev, nuevo) {
   var ids = {}, cn = fCobrosPost(nuevo), cp = fCobrosPost(prev), i;
   for (i = 0; i < cn.length; i++) if (cn[i] && cn[i].id) ids[cn[i].id] = 1;
   for (i = 0; i < cp.length; i++) if (cp[i] && cp[i].id && !ids[cp[i].id]) return true;
+  return false;
+}
+/* Mover plata de una forma de pago a otra, o convertir una atención en
+   anticipo (o al revés), con un guardado común: no. Es «Corregir cobro».
+   Se compara el cobro del día (sin los cobros posteriores): ninguna forma de
+   pago puede quedar con menos de lo que tenía. Sumar un pago nuevo del día
+   (cobro posterior) no toca el cobro inicial y pasa. Completar una forma de
+   pago que estaba vacía (sin método ni desglose) también pasa. */
+function cobroCambio(prev, nuevo) {
+  var ep = fEstadoN(prev.estado), en = fEstadoN(nuevo.estado);
+  if ((ep === 'Atendido' && en === 'Anticipo') || (ep === 'Anticipo' && en === 'Atendido')) return true;
+  var cp = fDesarmar(prev).__cobro, cn = fDesarmar(nuevo).__cobro, antes = {}, despues = {}, k, suma = 0, i;
+  if (!cp.pagos.length && !cp.metodo) return false;
+  /* sin plata en el cobro del día, o con un desglose que no cuadra con lo
+     cobrado («Sin forma de pago» en Caja), no hay desglose que proteger */
+  for (i = 0; i < cp.pagos.length; i++) suma = fR(suma + fNum(cp.pagos[i].monto));
+  if (fNum(cp.monto) <= 0.004 || Math.abs(suma - fNum(cp.monto)) > 0.009) return false;
+  fPorMetodo(cp.pagos, 1, antes); fPorMetodo(cn.pagos, 1, despues);
+  for (k in antes) if (Object.prototype.hasOwnProperty.call(antes, k) && antes[k] > 0.004 && (despues[k] || 0) < antes[k] - 0.009) return true;
   return false;
 }
 function profDeOtra(r, ses) {
@@ -1586,6 +1788,7 @@ function doCorregirCobro(c, ses) {
   if (CORRIGEN.indexOf(ses.rol) < 0) return { ok: false, error: 'sin_permiso' };
   if (ses.fabrica) return { ok: false, error: 'clave_de_fabrica' };
   if (!c || !c.id || !c.idem) return { ok: false, error: 'pedido_invalido' };
+  if (!idOk(c.id) || !idOk(String(c.idem))) return { ok: false, error: 'id_invalido' };
   var motivo = String(c.motivo || '').trim();
   if (motivo.length < 5) return { ok: false, error: 'falta_motivo' };
   if (typeof c.monto !== 'number' || !isFinite(c.monto) || c.monto < 0) return { ok: false, error: 'monto_invalido' };
@@ -1649,8 +1852,11 @@ function doCorregirCobro(c, ses) {
    sola llamada (con el candado), y queda en _Correcciones.
    ===================================================================== */
 function doPasarAlPlan(c, ses) {
-  if (!c || !c.id || !c.idem || !c.planId || !fEsLista(c.servicios) || !c.servicios.length) return { ok: false, error: 'pedido_invalido' };
+  /* mueve plata: lo hacen los mismos que corrigen cobros (CORRIGEN) */
   if (ses.fabrica) return { ok: false, error: 'clave_de_fabrica' };
+  if (CORRIGEN.indexOf(ses.rol) < 0) return { ok: false, error: 'sin_permiso' };
+  if (!c || !c.id || !c.idem || !c.planId || !fEsLista(c.servicios) || !c.servicios.length) return { ok: false, error: 'pedido_invalido' };
+  if (!idOk(c.id) || !idOk(String(c.idem)) || !idOk(String(c.planId))) return { ok: false, error: 'id_invalido' };
   var sh = getSheet(), fila = filaPorId(sh, c.id);
   if (correccionYaHecha(c.idem)) {
     var ya = [], n0 = sh.getLastRow();
@@ -1761,10 +1967,11 @@ function getSheetCierres() {
   return sh;
 }
 function filaDeCierre(c) {
-  return [c.fecha || '', c.quien || '', Number(c.contado) || 0, Number(c.esperado) || 0,
-    Number(c.diferencia) || 0, c.nota || '', c.ts || '', c.rol || ''];
+  return filaSegura([c.fecha || '', c.quien || '', Number(c.contado) || 0, Number(c.esperado) || 0,
+    Number(c.diferencia) || 0, c.nota || '', c.ts || '', c.rol || '']);
 }
 function cierreDeFila(f) {
+  f = filaLeida(f);
   return { fecha: formatoFecha(f[0]), quien: String(f[1] || ''), contado: Number(f[2]) || 0,
     esperado: Number(f[3]) || 0, diferencia: Number(f[4]) || 0, nota: String(f[5] || ''),
     ts: String(f[6] || ''), rol: String(f[7] || '') };
@@ -1786,6 +1993,13 @@ function doListCierres() {
   out.sort(function (a, b) { return a.fecha < b.fecha ? 1 : (a.fecha > b.fecha ? -1 : 0); });
   return out;
 }
+/* una fecha del calendario de verdad: «2026-13-45» pasa la forma pero no existe */
+function fechaReal(f) {
+  f = String(f || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) return false;
+  var d = new Date(f + 'T12:00:00Z');
+  return !isNaN(d.getTime()) && d.toISOString().slice(0, 10) === f;
+}
 function filaCierrePorFecha(sh, fecha) {
   var n = sh.getLastRow();
   if (n < 2) return 0;
@@ -1797,7 +2011,7 @@ function filaCierrePorFecha(sh, fecha) {
    servidor: contado menos esperado. Quién cerró lo manda el panel (la
    persona que está usando ese aparato); si no viene, lo dice la sesión. */
 function doCierre(c, ses) {
-  if (!c || !/^\d{4}-\d{2}-\d{2}$/.test(String(c.fecha || ''))) return { ok: false, error: 'fecha_invalida' };
+  if (!c || !fechaReal(c.fecha)) return { ok: false, error: 'fecha_invalida' };
   var contado = Number(c.contado), esperado = Number(c.esperado);
   if (isNaN(contado) || isNaN(esperado)) return { ok: false, error: 'monto_invalido' };
   var quien = String(c.quien || '').trim().slice(0, 60) || quienFoto(ses);
@@ -1837,6 +2051,12 @@ function doPost(e) {
     if (!ses) return json({ ok: false, error: 'sin_sesion' });
     /* la clave de «Pauta» solo lee */
     if (ses.rol === 'pauta' && body.action !== 'list') return json({ ok: false, error: 'sin_permiso' });
+    /* con la clave de fábrica (la que trae el panel publicado, que cualquiera
+       puede leer) se atiende y se cobra, pero no se corrigen nombres ni se
+       borra o carga en lote: eso espera a la clave propia. Cambiar la clave
+       («clave») sí se permite: es la única forma de dejar la de fábrica. */
+    if (ses.fabrica && ['renombrar', 'delete', 'egresoDel'].indexOf(body.action) >= 0)
+      return json({ ok: false, error: 'clave_de_fabrica' });
     /* los pacientes tampoco se leen sin sesión */
     if (body.action === 'list') return json(doList(ses));
     /* base ausente = panel de una versión anterior: escribe como siempre.
@@ -1854,7 +2074,7 @@ function doPost(e) {
     if (body.action === 'corregirCobro') return json(doCorregirCobro(body.correccion, ses));
     if (body.action === 'pasarAlPlan') return json(doPasarAlPlan(body.pase, ses));
     if (body.action === 'renombrar') return json(doRenombrar(body.renombre, ses));
-    if (body.action === 'pac') return json(doGuardarPac(reg, base, ses));
+    if (body.action === 'pac') return json(doGuardarPac(reg, base, ses, body.liberarPagos === true));
     if ((body.action === 'egreso' || body.action === 'egresoDel') && ses.rol === 'doctora') return json({ ok: false, error: 'sin_permiso' });
     if (body.action === 'egreso') return json(doGuardarEgreso(reg, base));
     if (body.action === 'egresoDel') return json(doBorrarEgreso(reg, base));
@@ -1920,10 +2140,19 @@ function filasFotos() {
   return out;
 }
 function quienFoto(ses) { return ses.rol === 'doctora' ? ses.prof : (ses.rol === 'admin' ? 'Dueña' : 'Recepción'); }
-/* la doctora ve y carga fotos solo de sus pacientes (como la ficha) */
-function fotoPermitida(ses, nombre) { return !(ses && ses.rol === 'doctora' && pacienteDeOtra(fClavePac(nombre), ses.prof)); }
+/* la doctora ve y carga fotos solo de sus pacientes (como la ficha). Con
+   memo, se mira la hoja una vez por paciente y no una vez por foto. */
+function fotoPermitida(ses, nombre, memo) {
+  if (!(ses && ses.rol === 'doctora')) return true;
+  var k = fClavePac(nombre);
+  if (memo && Object.prototype.hasOwnProperty.call(memo, k)) return memo[k];
+  var ok = !pacienteDeOtra(k, ses.prof);
+  if (memo) memo[k] = ok;
+  return ok;
+}
 function doFotoGuardar(f, ses) {
   if (!f || !f.paciente || !f.datos) return { ok: false, error: 'faltan_datos' };
+  if ((f.id && !idOk(String(f.id))) || (f.atencionId && !idOk(String(f.atencionId)))) return { ok: false, error: 'id_invalido' };
   if (!fotoPermitida(ses, f.paciente)) return { ok: false, error: 'sin_permiso' };
   var datos = String(f.datos).replace(/^data:image\/\w+;base64,/, ''), mini = String(f.mini || '');
   if (datos.length > FOTO_MAX_B64) return { ok: false, error: 'foto_grande' };
@@ -1941,16 +2170,17 @@ function doFotoGuardar(f, ses) {
   return { ok: true, foto: fotoDeFila(fila) };
 }
 function doFotos(c, ses) {
-  var clave = c && c.paciente ? fClavePac(c.paciente) : '';
+  var clave = c && c.paciente ? fClavePac(c.paciente) : '', memo = {};
   var out = filasFotos().map(function (x) { return fotoDeFila(x.v); }).filter(function (f) {
-    return (!clave || fClavePac(f.paciente) === clave) && fotoPermitida(ses, f.paciente);
+    return (!clave || fClavePac(f.paciente) === clave) && fotoPermitida(ses, f.paciente, memo);
   });
   return { ok: true, fotos: out };
 }
 function fotoDe(id, ses) {
-  var x = filasFotos().filter(function (y) { return String(y.v[0]) === String(id || ''); })[0];
+  if (!idOk(String(id || ''))) return { error: 'id_invalido' };
+  var x = filasFotos().filter(function (y) { return String(y.v[0]) === String(id); })[0];
   if (!x) return { error: 'no_existe' };
-  if (!fotoPermitida(ses, x.v[1])) return { error: 'sin_permiso' };
+  if (!fotoPermitida(ses, x.v[1], {})) return { error: 'sin_permiso' };
   return { x: x };
 }
 function doFotoVer(c, ses) {

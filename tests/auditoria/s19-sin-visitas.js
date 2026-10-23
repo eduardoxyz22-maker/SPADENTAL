@@ -8,7 +8,9 @@ const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PASS ' : 'FAIL ') 
 (async () => {
   console.log('PANEL', SPA ? 'Spa' : 'Cosmetic');
   const server = fakeServer();
-  const A = await abrir({ server }); await entrar(A, FAB.admin); const w = A.w;
+  /* desde 2026-10-29-auditoria la clave de fábrica no borra: la dueña y recepción entran con claves propias (de prueba) */
+  { const v = server.ctx.leerVerif(); v.admin = sha('prueba-duena-1'); v.equipo = sha('prueba-equipo-1'); server.ctx.guardarVerif(v); }
+  const A = await abrir({ server }); await entrar(A, 'prueba-duena-1'); const w = A.w;
   w.confirm = () => true; A.w.window && (A.w.window.confirm = () => true);
   w.CFG.clavesProf = { 'Dra. Shirley': sha('shirley-sv') }; w.saveCfg(true); await A.tick(30);
   // con ficha médica
