@@ -749,6 +749,9 @@ function doSave(r, base, ses) {
     }
     r = fusionRegistro(b0, r, actual, conf);
   }
+  /* Dentro del candado de doPost: validar sólo abonos nuevos, sin migrar históricos. */
+  var errorAbono = validarAbonosNuevos(r, previa0, ses);
+  if (errorAbono) return { ok: false, error: errorAbono, registro: previa0 };
   /* Lo cobrado no se baja ni se borra con un guardado: para eso está
      «Corregir cobro», que deja la historia en _Correcciones. */
   if (previa0 && cobroBaja(previa0, r)) return { ok: false, error: 'cobro_baja', registro: previa0 };
@@ -1294,7 +1297,7 @@ var ANTICIPO_DOCTORAS = true;
    etiqueta se acepta como siempre. */
 /* Qué versión de este archivo está publicada: se ve en «info», sin clave,
    para confirmar que se pegó y se publicó como «Nueva versión». */
-var VERSION_SCRIPT = '2026-10-28-nombre';
+var VERSION_SCRIPT = '2026-10-23-abonos-fecha';
 /* La clave de la pestaña «Pauta» (reportes de publicidad): es de una sola
    persona, la misma en las dos clínicas. Acá está solo su verificador (no la
    clave). No se cambia desde el panel ni la ve la dueña: se cambia acá. Con
@@ -1521,6 +1524,44 @@ function creditosSrv(clave) {
 function creditoPacienteSrv(clave, planId) {
   var c = creditosSrv(clave);
   return fR(c.general + (planId ? (c.planes[planId] || 0) : 0));
+}
+function fechaAbonoValida(f) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(f || '') && !isNaN(Date.parse(f + 'T12:00:00Z')) &&
+    new Date(f + 'T12:00:00Z').toISOString().slice(0, 10) === f;
+}
+function validarAbonosNuevos(r, prev, ses) {
+  if (!prev) return ''; // altas y respaldos históricos conservan su formato
+  var viejos = {}, vistos = {}, nuevos = [], suma = 0, favor = 0;
+  fCobrosPost(prev).forEach(function (p) { if (p && p.id) viejos[p.id] = p; });
+  var cp = fCobrosPost(r), hoy = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  for (var i = 0; i < cp.length; i++) {
+    var p = cp[i];
+    if (p && p.id && viejos[p.id]) {
+      var antes = viejos[p.id];
+      if (p.fecha !== antes.fecha || p.metodo !== antes.metodo || fNum(p.monto) !== fNum(antes.monto)) return 'abono_inmutable';
+      cp[i] = JSON.parse(JSON.stringify(antes)); // conserva auditoría del servidor
+      continue;
+    }
+    if (p && !p.id && fCobrosPost(prev).some(function (v) { return fIgual(v, p); })) continue;
+    if (!p || !p.id || vistos[p.id]) return 'abono_id';
+    vistos[p.id] = true;
+    var m = Number(p.monto);
+    if (!isFinite(m) || m <= 0 || Math.abs(m * 100 - Math.round(m * 100)) > 0.00001) return 'abono_monto';
+    if (['Efectivo','QR','Tarjeta','Transferencia','Saldo a favor'].indexOf(p.metodo) < 0) return 'abono_metodo';
+    if (!fechaAbonoValida(p.fecha) || p.fecha > hoy || p.fecha < prev.fecha) return 'abono_fecha';
+    /* Una aplicación encolada puede llegar al servidor al día siguiente. */
+    if (p.metodo === 'Saldo a favor') favor += m;
+    suma += m; nuevos.push(p);
+  }
+  if (!nuevos.length) return '';
+  if (prev.estado !== 'Atendido' || r.fecha !== prev.fecha || r.paciente !== prev.paciente || (r.planId || '') !== (prev.planId || '')) return 'abono_atencion';
+  if (suma > fNum(prev.saldo) + 0.001 || fNum(r.saldo) < -0.001) return 'abono_exceso';
+  if (favor > 0 && favor > Math.max(0, creditoPacienteSrv(fClavePac(prev.paciente), prev.planId)) + 0.001) return 'abono_credito';
+  nuevos.forEach(function (p) {
+    p.registradoEn = new Date().toISOString();
+    p.registradoPor = ses ? (ses.rol === 'doctora' ? ses.prof : ses.rol) : 'servidor';
+  });
+  return '';
 }
 function cobroBaja(prev, nuevo) {
   if ((Number(nuevo.acuenta) || 0) < (Number(prev.acuenta) || 0) - 0.009) return true;
