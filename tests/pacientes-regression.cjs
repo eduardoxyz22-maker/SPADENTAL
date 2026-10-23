@@ -14,6 +14,8 @@ function boot(file,storage=new Map()){
  const messages=[];c.toast=t=>messages.push(t);
  for(const n of ['refreshAll','closeModal','fillDatalists','updateNavRem','clearForm','showWhatsappModal','refreshNro','mostrarWaCita','clearCita','renderPre'])c[n]=()=>{};
  c.getRadio=n=>radios[n]||'';c.esAdmin=()=>true;c.hoyISO=()=> '2026-10-02';
+ c.hoyPago=()=>c.hoyISO();
+ Object.defineProperty(el('#cp-fecha'),'value',{get:()=>c.hoyISO(),configurable:true});
  return {c,el,requests,db,storage,html,radios,messages,srv};
 }
 const row=(o={})=>Object.assign({id:'FICTICIO-1',paciente:'Paciente Ficticio',ci:'TEST-001',nac:'1990-01-01',fecha:'2026-09-01',estado:'Atendido',total:100,acuenta:20,saldo:80,metodo:'Efectivo',pagos:[{metodo:'Efectivo',monto:20}],servicios:[],profesional:'Doctora Ficticia',celular:'00000000'},o);
@@ -95,7 +97,7 @@ async function run(file){
  return b;
 }
 (async()=>{const a=await run('pacientes.html'),b=await run('cosmetic/pacientes.html');check('Clínicas: claves y endpoints separados',()=>{for(const k of ['K_DATA','K_CFG','K_PEND','K_PASS','K_UNLOCK','K_PAC','K_EGR','K_MIPROF'])assert.notEqual(a.c[k],b.c[k]);assert.notEqual(a.c.SHEETS_URL,b.c.SHEETS_URL);assert.notEqual(a.c.CLINICA_ID,b.c.CLINICA_ID)});check('Ambas clínicas rechazan respaldo de la otra',()=>{assert(a.c.validarRespaldoClinica(b.c.respaldoClinica()));assert(b.c.validarRespaldoClinica(a.c.respaldoClinica()))});
- check('Motor corregido idéntico en las dos clínicas',()=>{for(const f of ['guardarPago','submitAtencion','crearCitaDesde','marcarSesionPlan','validarIdentidadPaciente','validarRespaldoClinica','filasCaja','cajaRows','renderPanel','exportCaja'])assert.equal(a.c[f].toString(),b.c[f].toString().replaceAll('Cosmetic_informe_caja','Ezequiel_Spadental_informe_caja'))});
+ check('Motor compartido conserva equivalencia (abonos fechados exclusivos de Spa)',()=>{for(const f of ['submitAtencion','crearCitaDesde','marcarSesionPlan','validarIdentidadPaciente','validarRespaldoClinica','filasCaja','cajaRows','renderPanel','exportCaja'])assert.equal(a.c[f].toString().replace(/\r\n/g,'\n'),b.c[f].toString().replace(/\r\n/g,'\n').replaceAll('Cosmetic_informe_caja','Ezequiel_Spadental_informe_caja'))});
  const shared=new Map(),sa=boot('pacientes.html',shared),sb=boot('cosmetic/pacientes.html',shared);sa.c.DATA=[row()];sa.c.saveLocal();sb.c.DATA=[row({id:'SOLO-COSMETIC',paciente:'Otra ficticia'})];sb.c.saveLocal();check('Mismo origen: localStorage de pacientes no se mezcla',()=>{assert.equal(sa.c.loadLocal()[0].id,'FICTICIO-1');assert.equal(sb.c.loadLocal()[0].id,'SOLO-COSMETIC')});
  for(const file of ['google-apps-script-pacientes.gs','cosmetic/google-apps-script-pacientes.gs']){
    const ctx={};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),ctx);ctx.formatoFecha=x=>x;ctx.formatoHora=x=>x;
