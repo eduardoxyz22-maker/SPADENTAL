@@ -4930,6 +4930,12 @@ function mandarYa(k){
       if(window.banner)banner();
       toast('Hay un cambio cargado por '+quienEs(item.por)+' que esta sesión no puede subir. Queda guardado en este aparato: lo sube quien lo cargó o la dueña.',1);
       return r}
+    if(r&&/^abono_/.test(r.error)){
+      /* Rechazo definitivo: restaurar el registro confirmado, sin reintentar el abono. */
+      setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k}));
+      if(r.registro){SNAP_R[r.registro.id]=JSON.stringify(r.registro);reemplazarLocal(normalize(r.registro))}
+      toast('No se guardó el abono: revisá fecha, importe y crédito disponible ('+r.error+').',1);
+      refreshAll();return r}
     if(r&&r.error==='cobro_baja'){
       /* el servidor no deja bajar ni borrar lo cobrado con un guardado */
       setPend(pend().filter(function(x){return claveCola(x.action,x.rec)!==k})); if(window.banner)banner();
@@ -9393,13 +9399,23 @@ function verFicha(id){
 
 function editarId(id){var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return; if(esAnticipo(r)){verPaciente(r.paciente);return} if(!esMia(r)){noEsTuya();return} loadForm(r)}
 
+/* Un intento por formulario; los reintentos de la cola conservan el ID del abono. */
+var PAGO_EN_CURSO=false, PAGO_CANCELADO=false;
+function hoyPago(){return new Date(Date.now()-4*60*60*1000).toISOString().slice(0,10)}
+function fechaPagoValida(f){return /^\d{4}-\d{2}-\d{2}$/.test(f||'')&&
+  !isNaN(Date.parse(f+'T12:00:00Z'))&&new Date(f+'T12:00:00Z').toISOString().slice(0,10)===f}
 function cobrarSaldo(id,conFavor){
+  if(PAGO_EN_CURSO){toast('Esperá a que termine la verificación del pago.',1);return}
+  PAGO_CANCELADO=false;
   var r=DATA.filter(function(x){return x.id===id})[0]; if(!r)return;
   if(!esMia(r)){noEsTuya();return}
   var cr=creditoParaAtencion(r), usar=conFavor&&cr>0.009;
   var metsPago=cr>0.009?METODOS.concat([SALDO_FAVOR]):METODOS;
   openModal('<h3>Registrar pago</h3><p class="mini">'+esc(r.paciente)+' · saldo actual '+bs(r.saldo)+
       (cr>0.009?' · <b>💜 tiene '+bs(cr)+' a favor</b>':'')+'</p>'+
+    '<div style="margin-top:12px"><label for="cp-fecha">Fecha del pago</label>'+
+    '<input type="date" id="cp-fecha" min="'+esc(r.fecha)+'" max="'+hoyPago()+'" value="'+hoyPago()+'">'+
+    '<p class="hint">El ingreso va a Caja en esta fecha; la fecha de atención no cambia. Con Saldo a favor es la fecha de aplicación: el dinero conserva la fecha del anticipo original.</p></div>'+
     '<div style="margin-top:12px"><label>Monto que paga ahora</label>'+
     '<input id="cp-m" inputmode="decimal" value="'+(usar?Math.min(num(r.saldo),cr):num(r.saldo))+'"></div>'+
     '<div style="margin-top:12px"><label>¿Cómo paga? <span class="req">*</span></label>'+
@@ -9409,46 +9425,62 @@ function cobrarSaldo(id,conFavor){
         (fav?' onchange="if(this.checked)$(\'#cp-m\').value='+Math.min(num(r.saldo),cr)+'"':'')+
         '><span>'+(fav?'💜 ':'')+m+'</span></label>'}).join('')+'</div></div>'+
     '<div class="row-btn"><button class="btn" onclick="guardarPago(\''+jss(id)+'\')">Guardar pago</button>'+
-    '<button class="btn sec" onclick="closeModal()">Cancelar</button></div>')}
+    '<button class="btn sec" onclick="PAGO_CANCELADO=true;closeModal()">Cancelar</button></div>')}
 
 function guardarPago(id){
+  if(PAGO_EN_CURSO)return;
   var r0=DATA.filter(function(x){return x.id===id})[0]; if(!r0)return;
   if(!esMia(r0)){noEsTuya();return}
-  var m=num($('#cp-m').value), met=getRadio('cpmet');
-  if(montoRaro($('#cp-m').value)){toast('El monto tiene letras: escribilo solo con números',1);return}
-  if(m<=0){toast('Poné un monto',1);return}
-  if(!met){toast('Marcá cómo paga',1);
-    $('#cp-seg').style.outline='2px solid var(--clay)';
-    setTimeout(function(){var e=$('#cp-seg'); if(e)e.style.outline=''},2000); return}
-  /* el pago se aplica sobre la versión del servidor: si otro equipo ya
-     cobró algo, se suma a eso en lugar de pisarlo */
-  if(met===SALDO_FAVOR){
-    creditoFresco(r0.paciente,r0.planId).then(function(c){ c=Math.min(c,creditoParaAtencion(r0));
-      if(m>c+0.001){closeModal(); toast('No le alcanza el saldo a favor: tiene '+bs(Math.max(0,c))+' (puede que otro equipo ya lo haya usado).',1); refreshAll(); return}
-      conAtencionFresca(id,function(r){ if(r)aplicarPago(r,m,met)})});
-    return}
-  conAtencionFresca(id,function(r){ if(r)aplicarPago(r,m,met)})}
+  if(CONNECTED&&hayPendiente(id)){toast('Esta atención tiene cambios pendientes. Esperá a que termine de sincronizar antes de registrar otro pago.',1);return}
+  var m=num($('#cp-m').value), met=getRadio('cpmet'), campo=$('#cp-fecha');
+  var fecha=campo?campo.value:hoyPago();
+  if(montoRaro($('#cp-m').value)||!isFinite(m)||m<=0||Math.abs(m*100-Math.round(m*100))>0.00001){toast('Poné un monto positivo con hasta dos decimales',1);return}
+  if(METODOS.concat([SALDO_FAVOR]).indexOf(met)<0){toast('Marcá cómo paga',1);return}
+  if(!fechaPagoValida(fecha)||fecha>hoyPago()||fecha<r0.fecha){toast('La fecha debe ser válida, desde la atención hasta hoy (Bolivia).',1);return}
+  if(met===SALDO_FAVOR&&fecha!==hoyPago()){toast('El saldo a favor se aplica hoy. El ingreso conserva la fecha del anticipo original.',1);return}
+  if(m>num(r0.saldo)+0.001){toast('El pago supera el saldo pendiente',1);return}
+  if(fecha<hoyPago()&&!confirm('Este pago entrará a la caja del '+fmtF(fecha)+', no a la de hoy. La atención seguirá fechada el '+fmtF(r0.fecha)+'. ¿Confirmás que se cobró ese día?'))return;
+  PAGO_EN_CURSO=true;
+  var pago={id:uid(),fecha:fecha,registradoEn:new Date().toISOString()};
+  return (met===SALDO_FAVOR?creditoFresco(r0.paciente,r0.planId):Promise.resolve(null)).then(function(c){
+    if(c!==null&&m>Math.min(c,creditoParaAtencion(r0))+0.001){toast('No alcanza el saldo a favor disponible.',1);return}
+    return traerFresca(id).then(function(res){
+      if(res.borrada){avisoBorrada(id);return}
+      if(res.fresca)reemplazarLocal(res.fresca);
+      if(PAGO_CANCELADO)return;
+      var r=DATA.filter(function(x){return x.id===id})[0]; if(r)return aplicarPago(r,m,met,pago);
+    });
+  }).catch(function(){toast('No se pudo verificar el pago. Revisá la conexión y los pendientes antes de reintentar.',1)})
+    .then(function(){PAGO_EN_CURSO=false});
+}
 
-function aplicarPago(r,m,met){
+function aplicarPago(r,m,met,pago){
+  pago=pago||{id:uid(),fecha:hoyPago(),registradoEn:new Date().toISOString()};
+  if((r.cobrosPosteriores||[]).some(function(c){return c.id===pago.id}))return;
   if(!esAtencion(r)||identidadAmbigua(r.paciente)){toast('Revisá la atención y la identidad antes de cobrar',1);return}
   if(met===SALDO_FAVOR&&m>creditoParaAtencion(r)+0.001){closeModal();
     toast('No le alcanza el saldo a favor para esto: tiene '+bs(Math.max(0,creditoParaAtencion(r)))+(r.planId?' (lo adelantado a un plan paga solo sus sesiones)':'')+'.',1);refreshAll();return}
   if(m>num(r.saldo)+0.001){closeModal();
     toast('El pago supera el saldo pendiente ('+bs(r.saldo)+'). Puede que otro equipo ya haya cobrado parte.',1);refreshAll();return}
   r.cobrosPosteriores=(r.cobrosPosteriores||[]).slice();
-  r.cobrosPosteriores.push({id:uid(),fecha:hoyISO(),metodo:met,monto:m});
+  r.cobrosPosteriores.push({id:pago.id,fecha:pago.fecha,registradoEn:pago.registradoEn,metodo:met,monto:m});
   r.acuenta=Math.round((num(r.acuenta)+m)*100)/100; r.saldo=Math.max(0,Math.round((num(r.saldo)-m)*100)/100);
   // el pago nuevo se suma al desglose, no lo pisa
   r.pagos=(r.pagos||[]).slice();
   var ya=r.pagos.filter(function(p){return p.metodo===met})[0];
   if(ya)ya.monto=num(ya.monto)+m; else r.pagos.push({metodo:met,monto:m});
   r.metodo=r.pagos.length>1?'Mixto':met;
-  r.obs=(r.obs?r.obs+'\n':'')+'Pago de '+bs(m)+' en '+met+' el '+fmtF(hoyISO());
-  persist(r);
+  r.obs=(r.obs?r.obs+'\n':'')+'Pago de '+bs(m)+' en '+met+' el '+fmtF(pago.fecha);
+  saveLocal();
+  var envio=enviar('save',r);
   /* si con este pago el plan quedó pagado y sin sesiones pendientes, termina */
   if(r.planId){var fp=PAC[keyPac(r.paciente)], pl=fp&&(fp.planes||[]).filter(function(x){return x.id===r.planId})[0];
     if(pl&&pl.estado==='activo'&&!proxSesion(pl)&&saldoPlan(pl)<=0){pl.estado='terminado'; savePac(fp)}}
-  closeModal(); toast('Pago registrado · saldo '+bs(r.saldo)); refreshAll()}
+  closeModal(); refreshAll();
+  return envio.then(function(res){
+    if(res&&res.ok)toast('Pago registrado · saldo '+bs((res.registro||r).saldo));
+    else if(!res)toast('Pago guardado en este aparato, pendiente de confirmar en la hoja. No lo cargues de nuevo.',1);
+  })}
 
 /* =====================================================================
    CORREGIR COBRO

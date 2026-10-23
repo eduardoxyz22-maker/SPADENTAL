@@ -12,6 +12,10 @@ for f in s08b-v6 s09-anticipos s10-corregir-cobro s11-no-cuadra s12-planes s13-p
     case "$r" in "TODO OK"*) echo "OK     $f ($p)";; *) echo "FALLA  $f ($p): $r"; fallas=$((fallas+1));; esac
   done
 done
+# abonos con fecha (prueba de Codex, en memoria) en las dos clínicas
+for p in spa cos; do
+  if PANEL=$p node -r ./netguard.js ../abonos-fecha.cjs >/dev/null 2>&1; then echo "OK     abonos-fecha ($p)"; else echo "FALLA  abonos-fecha ($p)"; fallas=$((fallas+1)); fi
+done
 # recorrido completo en un Chromium real (si hay uno: variable CHROMIUM o /opt/pw-browsers/chromium)
 if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
   for p in spa cos; do
@@ -61,6 +65,8 @@ if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
     case "$r" in "TODO OK"*) echo "OK     e2e-md-auditoria-ui ($p)";; *) echo "FALLA  e2e-md-auditoria-ui ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-md-noche.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-md-noche ($p)";; *) echo "FALLA  e2e-md-noche ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-abono-fecha.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-abono-fecha ($p)";; *) echo "FALLA  e2e-abono-fecha ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-auditoria-panel.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-auditoria-panel ($p)";; *) echo "FALLA  e2e-auditoria-panel ($p): $r"; fallas=$((fallas+1));; esac
   done

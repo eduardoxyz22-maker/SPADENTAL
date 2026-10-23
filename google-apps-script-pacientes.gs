@@ -1737,9 +1737,14 @@ function validarAbonosNuevos(r, prev, ses) {
     suma += m; nuevos.push(p);
   }
   if (!nuevos.length) return '';
-  if (prev.estado !== 'Atendido' || r.fecha !== prev.fecha || r.paciente !== prev.paciente || (r.planId || '') !== (prev.planId || '')) return 'abono_atencion';
-  if (suma > fNum(prev.saldo) + 0.001 || fNum(r.saldo) < -0.001) return 'abono_exceso';
-  if (favor > 0 && favor > Math.max(0, creditoPacienteSrv(fClavePac(prev.paciente), prev.planId)) + 0.001) return 'abono_credito';
+  /* la misma atención (paciente y fecha). Puede pasar a un plan o paquete en la
+     misma edición (ej. se le suma la sesión 1 de un paquete y se paga ahí). */
+  if (prev.estado !== 'Atendido' || r.fecha !== prev.fecha || r.paciente !== prev.paciente) return 'abono_atencion';
+  /* lo nuevo cabe en lo que se debía más lo que se agregó en esta edición
+     (sumar un tratamiento y pagarlo en el mismo guardado es el flujo normal) */
+  var cabe = fNum(prev.saldo) + Math.max(0, fNum(r.total) - fNum(prev.total));
+  if (suma > cabe + 0.001 || fNum(r.saldo) < -0.001) return 'abono_exceso';
+  if (favor > 0 && favor > Math.max(0, creditoPacienteSrv(fClavePac(prev.paciente), r.planId || '')) + 0.001) return 'abono_credito';
   nuevos.forEach(function (p) {
     p.registradoEn = new Date().toISOString();
     p.registradoPor = ses ? (ses.rol === 'doctora' ? ses.prof : ses.rol) : 'servidor';

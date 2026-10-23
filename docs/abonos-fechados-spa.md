@@ -1,4 +1,4 @@
-# Abonos con fecha real — Spa Dental
+# Abonos con fecha real — Spa Dental y Cosmetic
 
 Alcance: solamente `pacientes.html` y `google-apps-script-pacientes.gs` de Spa. No se migran pagos ni se modifican datos de pacientes como parte del despliegue.
 
@@ -27,3 +27,11 @@ Los arneses no tienen transporte de red ni credenciales. Cubren atención 1000 d
 Publicar primero el Apps Script en la implementación existente de Spa, sin cambiar URL, roles ni permisos, y luego el frontend. No basta subir el `.gs` a GitHub: eso no actualiza Google Apps Script. Verificar la versión `2026-10-23-abonos-fecha` mediante `info` y comprobar el HTML servido antes de declarar publicado. No se realizan pagos de prueba en producción.
 
 Los cobros históricos que sólo tienen acumulado y carecen de fecha efectiva siguen en la fecha de atención con su aviso previo; este cambio no inventa ni redistribuye sus fechas. Una aplicación de crédito encolada puede llegar al servidor al día siguiente; conserva su fecha de aplicación y no crea una entrada de caja.
+
+## Cosmetic (versión `2026-10-29-auditoria`)
+
+Se adaptó a Cosmetic sin copiar archivos de Spa. Antes se comparó el código real: Cosmetic tenía `cobrarSaldo`, `guardarPago` y `aplicarPago` idénticos a los de Spa antes del cambio, y la caja (`filasCaja`, `filasCajaDia`, `totalCobros`), el crédito (`creditosEn`, `creditoFresco`), la cola (`enviar`, `flushQueue`, `traerFresca`) y la fusión eran iguales. Se portó solo la diferencia: el campo de fecha y la validación del panel, el manejo de `abono_*` en la cola, y `fechaAbonoValida` y `validarAbonosNuevos` en su Apps Script. Se mantienen sus propios `CLINICA_ID`, `CORRIGEN`, `ANTICIPO_DOCTORAS`, URL y planilla.
+
+Ajuste en las dos clínicas: el límite de lo que se abona es el saldo anterior más lo que subió el total en esa misma edición. Antes, editar una atención para sumarle un tratamiento (o la sesión de un paquete) y cobrarlo en el mismo guardado se rechazaba como `abono_exceso`. También se permite que la atención pase a un plan en esa edición; el crédito se mira con el plan nuevo.
+
+Pruebas: `PANEL=cos node tests/abonos-fecha.cjs` (29) y `PANEL=cos node tests/auditoria/e2e-abono-fecha.js` (Chromium real: campo de fecha, confirmar y cancelar, caja por día, saldo a favor sin doble caja, rechazos).

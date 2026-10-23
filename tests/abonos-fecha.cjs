@@ -1,4 +1,7 @@
-/* Sólo memoria: HTML y Apps Script reales, sin transporte ni pacientes reales. */
+/* Sólo memoria: HTML y Apps Script reales, sin transporte ni pacientes reales.
+   Spa por defecto; Cosmetic con PANEL=cos (su HTML, su Apps Script y su clinicaId). */
+const COS=process.env.PANEL==='cos';
+const HTML=COS?'cosmetic/pacientes.html':'pacientes.html',GSF=COS?'cosmetic/google-apps-script-pacientes.gs':'google-apps-script-pacientes.gs',CID=COS?'cosmetic':'spadental';
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 const {gsServer}=require('./apps-script-en-memoria.cjs');
 const harness=fs.readFileSync(__dirname+'/pacientes-regression.cjs','utf8');
@@ -9,16 +12,16 @@ const {boot,row}=mod.exports;
 const clone=x=>JSON.parse(JSON.stringify(x));
 let passed=0;const checks=[];
 function check(name,f){f();passed++;checks.push(name)}
-const srv=gsServer(__dirname+'/../google-apps-script-pacientes.gs');
+const srv=gsServer(__dirname+'/../'+GSF);
 const RealDate=Date;
 class Clock extends RealDate {constructor(...a){super(...(a.length?a:['2026-10-23T16:00:00Z']))}static now(){return new RealDate('2026-10-23T16:00:00Z').valueOf()}}
 srv.ctx.Date=Clock;
-function setup(storage){const b=boot('pacientes.html',storage);b.c.Date=Clock;b.c.hoyPago=()=> '2026-10-23';b.c.CONNECTED=true;
+function setup(storage){const b=boot(HTML,storage);b.c.Date=Clock;b.c.hoyPago=()=> '2026-10-23';b.c.CONNECTED=true;
  Object.defineProperty(b.el('#cp-fecha'),'value',{value:'2026-10-23',writable:true,configurable:true});
  b.c.api=async(action,registro,cfg,base)=>srv.handle({action,registro,cfg,base});
  b.c.refreshAll=()=>{};b.c.repintarSuave=()=>{};b.c.esMia=()=>true;
  return b;}
-function seed(b,id='TEST-PLACA'){const r=row({id,clinicaId:'spadental',fecha:'2026-10-15',total:1000,acuenta:250,saldo:750,
+function seed(b,id='TEST-PLACA'){const r=row({id,clinicaId:CID,fecha:'2026-10-15',total:1000,acuenta:250,saldo:750,
  pagos:[{metodo:'QR',monto:250}],metodo:'QR',cobroInicialFechado:true,cobrosPosteriores:[]});
  assert(srv.handle({action:'save',registro:r,base:null}).ok);b.c.DATA=[clone(srv.registros[id])];b.c.SNAP_R[id]=JSON.stringify(b.c.DATA[0]);return r;}
 async function pay(b,id,m,fecha,met='QR'){b.el('#cp-m').value=String(m);b.el('#cp-fecha').value=fecha;b.radios.cpmet=met;await b.c.guardarPago(id);await b.c.flushQueue();}
@@ -60,6 +63,6 @@ function cash(c,fecha){return c.totalCobros(c.filasCajaDia(fecha))}
  check('Otro equipo no puede sobrecobrar con versión vieja',()=>{assert.equal(srv.handle(request('TEST-VALIDAR',200,'2026-10-23','QR',race)).error,'abono_exceso');assert.equal(srv.registros['TEST-VALIDAR'].saldo,150)});
  const legacy=row({id:'TEST-LEGACY',fecha:'2020-01-01',acuenta:30,saldo:70,cobrosPosteriores:[{fecha:'2020-01-02',metodo:'QR',monto:10}]});srv.handle({action:'save',registro:legacy,base:null});const old=clone(srv.registros[legacy.id]),note=clone(old);note.obs='nota ficticia';
  check('Históricos sin ID ni auditoría siguen editables sin migración',()=>{assert(srv.handle({action:'save',registro:note,base:old}).ok);assert.deepEqual(srv.registros[legacy.id].cobrosPosteriores,old.cobrosPosteriores)});
- check('Fecha Bolivia en límite UTC',()=>{b.c.Date=class extends Clock {static now(){return new RealDate('2026-10-24T02:00:00Z').valueOf()}};vm.runInContext('hoyPago = '+fs.readFileSync(__dirname+'/../pacientes.html','utf8').match(/function hoyPago\(\)\{[^\n]+/)[0],b.c);assert.equal(b.c.hoyPago(),'2026-10-23')});
- console.log(JSON.stringify({passed,networkRequests:0,checks},null,2));
+ check('Fecha Bolivia en límite UTC',()=>{b.c.Date=class extends Clock {static now(){return new RealDate('2026-10-24T02:00:00Z').valueOf()}};vm.runInContext('hoyPago = '+fs.readFileSync(__dirname+'/../'+HTML,'utf8').match(/function hoyPago\(\)\{[^\n]+/)[0],b.c);assert.equal(b.c.hoyPago(),'2026-10-23')});
+ console.log(JSON.stringify({clinica:CID,passed,networkRequests:0,checks},null,2));
 })().catch(e=>{console.error(e);process.exitCode=1});
