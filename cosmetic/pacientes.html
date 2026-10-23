@@ -14301,6 +14301,13 @@ function asisToc(){
 try{
   ASIS_NOVEDADES.push({id:'corregir-nombre', f:'2026-10-28', t:'Corregir el nombre en toda la historia',
     x:'En la ficha del paciente, «✏️ Corregir nombre» cambia el nombre en todas sus visitas, citas, pagos, la ficha, los planes y las fotos de una vez. Si el nombre nuevo ya es de otro paciente, te pregunta antes de unir las dos historias. Y si cambiás el nombre al editar una atención, te pregunta si corregirlo en toda la historia o si es otra persona.', ayuda:/corrijo el nombre/});
+  /* la fecha del pago (Registrar pago) existe solo donde está hoyPago */
+  if(typeof hoyPago==='function'){
+    ASIS_NOVEDADES.push({id:'fecha-abono', f:'2026-10-23', t:'📅 Un pago que se cobró otro día',
+      x:'Al «Registrar pago» de lo que debe un paciente podés elegir la fecha en que se cobró: entra a la caja de ese día y la atención sigue con su fecha. Si es un día anterior, te pide confirmarlo.', ayuda:/cobró otro día/});
+    ASIS_AYUDA.push({q:'¿Cómo cargo un pago que se cobró otro día?', k:'fecha pago abono cobro ayer anterior otro dia caja registrar pago saldo', v:'lista',
+      p:['Abrí la atención que tiene saldo y tocá «Registrar pago».','En «Fecha del pago» elegí el día en que se cobró (desde el día de la atención hasta hoy).','Poné el monto y cómo pagó, y tocá «Guardar pago». Si la fecha es anterior, te pide confirmarlo.','Ese pago aparece en la caja de ese día. El saldo a favor se aplica siempre con la fecha de hoy.']});
+  }
   ASIS_NOVEDADES.push({id:'revision-plata', f:'2026-10-29', t:'🔒 Revisión general: la plata más cuidada',
     x:'Si cerrás o borrás un plan que ya tiene pagos, te avisa cuánto queda y esa plata pasa a saldo a favor del paciente. En Caja, «No cuadran» ahora también muestra quién pagó de más. Cambiar la forma de pago de una visita ya cobrada se hace con ✏️ Corregir cobro. Con la clave que vino de fábrica no se puede borrar ni corregir: cada una entra con su clave propia.', ayuda:/plan que ya tiene pagos/});
   ASIS_AYUDA.push({q:'¿Qué pasa con la plata si cierro o borro un plan que ya tiene pagos?', k:'cerrar terminar borrar plan paquete pagos adelanto saldo a favor libre devolver plata', v:'pacientes', f:'#pc-q',
@@ -18038,7 +18045,9 @@ function mdCiRespuesta(action,payload,r){
   if(typeof aplicarPago==='function'){var _ap=aplicarPago;
     aplicarPago=function(r,m,met){
       var nota='', obsAntes=r?r.obs:'', acAntes=r?num(r.acuenta):0;
-      try{if(r&&esAdmin()&&mdCiCerrado(hoyISO())){nota=mdCiMotivo(hoyISO(),'Este pago entra en la caja de hoy, que ya está cerrada.'); if(nota===null)return}}catch(e){nota=''}
+      /* el pago entra en la caja de su fecha (en Spa se puede elegir un día anterior) */
+      var dia=(arguments[3]&&arguments[3].fecha)||hoyISO(), deHoy=dia===hoyISO();
+      try{if(r&&esAdmin()&&mdCiCerrado(dia)){nota=mdCiMotivo(dia,deHoy?'Este pago entra en la caja de hoy, que ya está cerrada.':'Este pago entra en la caja del '+fmtF(dia)+', que ya está cerrada.'); if(nota===null)return}}catch(e){nota=''}
       if(nota)r.obs=(r.obs?r.obs+'\n':'')+nota;
       var x=_ap.apply(this,arguments);
       if(nota&&num(r.acuenta)===acAntes)r.obs=obsAntes;
