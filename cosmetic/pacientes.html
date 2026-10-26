@@ -1754,6 +1754,12 @@ body.md-ag-on{overflow:hidden}
 .md-pa-mx th i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
 .md-pa-mx td{border-top:1px solid var(--line);padding:6px;text-align:center}
 .md-pa-mx td:first-child{text-align:left;padding-left:14px;font-weight:800}
+.md-pa-mx .md-pa-th-tot,.md-pa-mx .md-pa-tc{background:var(--paper,#FAFBF6);border-left:1px solid var(--line)}
+.md-pa-tc b{display:block;font-size:15px;color:var(--ink)}.md-pa-tc span{display:block;font-size:11px;color:var(--gray)}
+.md-pa-mx tr.md-pa-otros td{color:var(--gray)}.md-pa-mx tr.md-pa-otros td:first-child{font-weight:700}
+.md-pa-mx tr.md-pa-tot td{border-top:2px solid var(--ink);background:var(--paper,#FAFBF6)}
+.md-pa-mx tr.md-pa-tot td:first-child{text-transform:uppercase;letter-spacing:.05em;font-size:12px}
+.md-pa-tc.fu b{font-size:17px}.md-pa-tc.fu span{font-weight:800;color:var(--ink)}
 .md-pa-c{display:inline-flex;flex-direction:column;align-items:center;min-width:76px;border-radius:10px;padding:5px 6px;line-height:1.2;border:0;font:inherit;cursor:pointer}
 .md-pa-c b{font-size:15px}.md-pa-c span{font-size:11px;opacity:.9}
 .md-pa-c.h3{background:#2E7D5B;color:#fff}.md-pa-c.h2{background:#9FCDB5;color:#123A28}.md-pa-c.h1{background:#E3F1EA;color:#1F5E43}
@@ -16713,10 +16719,21 @@ function mdPautaEn(box,filas,periodo){
   var lista=Object.keys(cel).map(function(k){return cel[k]}), max=0; lista.forEach(function(c){max=Math.max(max,c.bs)});
   var mejorFila={}; D.srvs.forEach(function(s){var m=null; D.canales.forEach(function(c){var x=cel[s+'|'+c]; if(x&&(!m||x.bs>m.bs))m=x}); if(m)mejorFila[s]=m.canal});
   box.innerHTML='<h2>🦷 Por servicio · pacientes nuevos de '+esc(periodo)+'</h2><p class="hint">Qué servicio trae cada red (servicio principal de la primera visita) y cuánto dejaron esos pacientes.</p><div class="md-pa-mx"><table><tr><th>Servicio</th>'+
-    D.canales.map(function(c){return '<th><i style="background:'+mdColRed(c)+'"></i>'+esc(c)+'</th>'}).join('')+'</tr>'+
+    D.canales.map(function(c){return '<th><i style="background:'+mdColRed(c)+'"></i>'+esc(c)+'</th>'}).join('')+'<th class="md-pa-th-tot">Total</th></tr>'+
     D.srvs.map(function(s){return '<tr><td>'+esc(nomS(s))+'</td>'+D.canales.map(function(c){var x=cel[s+'|'+c]; if(!x)return '<td><span class="md-pa-c h0">—</span></td>';
       var f=max?x.bs/max:0, h=f>=.6?'h3':f>=.25?'h2':'h1';
-      return '<td><button type="button" class="md-pa-c '+h+(mejorFila[s]===c&&D.canales.length>1?' top':'')+'" onclick="mdPautaVer(\''+jss(s)+'\',\''+jss(c)+'\')"><b>'+x.n+'</b><span>'+esc(bs(Math.round(x.bs)))+'</span></button></td>'}).join('')+'</tr>'}).join('')+'</table></div>'}
+      return '<td><button type="button" class="md-pa-c '+h+(mejorFila[s]===c&&D.canales.length>1?' top':'')+'" onclick="mdPautaVer(\''+jss(s)+'\',\''+jss(c)+'\')"><b>'+x.n+'</b><span>'+esc(bs(Math.round(x.bs)))+'</span></button></td>'}).join('')+
+      mdPaTotCel(D.pacs.filter(function(p){return p.srv===s}))+'</tr>'}).join('')+
+    mdPaFilasTot(D)+'</table></div>'}
+/* los totales de la tabla servicio × red: suman TODOS los pacientes nuevos del periodo
+   (los servicios que no entran en la tabla van en «Otros servicios», así las columnas cuadran) */
+function mdPaTotCel(ps,fuerte){var n=ps.length, v=ps.reduce(function(a,p){return a+p.dejo},0);
+  return '<td class="md-pa-tc'+(fuerte?' fu':'')+'">'+(n?'<b>'+n+'</b><span>'+esc(bs(Math.round(v)))+'</span>':'<span class="md-pa-c h0">—</span>')+'</td>'}
+function mdPaFilasTot(D){
+  var enTabla={}; D.srvs.forEach(function(s){enTabla[s]=1});
+  var otros=D.pacs.filter(function(p){return !enTabla[p.srv]}), out='';
+  if(otros.length)out+='<tr class="md-pa-otros"><td>Otros servicios</td>'+D.canales.map(function(c){return mdPaTotCel(otros.filter(function(p){return p.canal===c}))}).join('')+mdPaTotCel(otros)+'</tr>';
+  return out+'<tr class="md-pa-tot"><td>Total</td>'+D.canales.map(function(c){return mdPaTotCel(D.pacs.filter(function(p){return p.canal===c}))}).join('')+mdPaTotCel(D.pacs,1)+'</tr>'}
 function mdPautaCsv(){
   var C=mdPautaCohortes(MD_PT_N), q=function(v){v=String(v==null?'':v); return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   var L=[['Mes de llegada','Red','Nuevos','Su 1er mes','2º mes','3er mes','Total','Volvieron','Hicieron tratamiento','Días hasta el tratamiento (mediana)']];

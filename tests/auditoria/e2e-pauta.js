@@ -115,6 +115,15 @@ let fallas = 0; const OK = (t, c, x) => { if (!c) fallas++; console.log((c ? 'PA
   OK('si el rango pasa de lo cargado, avisa desde cuándo hay datos', await P.evaluate(() => { MD_PT_N = 12; renderPautaTab(); const t = $('#pauta-box').innerText; MD_PT_N = 3; renderPautaTab(); return /datos desde mayo/i.test(t) && !/LLEGARON EN ABRIL/.test(t); }));
   OK('los que más dejan con podio y red de llegada', await P.locator('#pauta-box .md-pt-pod .md-pt-pd').count() === 3 && /Los que más dejan/.test(txt));
   OK('y la tabla por servicio', await P.locator('#md-pauta-tab .md-pa-c').count() > 0);
+  /* la fila Total suma todos los nuevos del periodo, y cada columna = sus celdas + «Otros servicios» */
+  const tot = await P.evaluate(() => { const D = MD_PAUTA, t = document.querySelector('#md-pauta-tab tr.md-pa-tot'); if (!t) return null;
+    const celdas = [...t.querySelectorAll('td.md-pa-tc')].map(td => +((td.querySelector('b') || {}).textContent || 0));
+    const filas = [...document.querySelectorAll('#md-pauta-tab tr')].slice(1, -1);
+    const col = D.canales.map((c, i) => filas.reduce((a, tr) => { const td = tr.querySelectorAll('td')[i + 1]; const b = td && td.querySelector('b'); return a + (b ? +b.textContent : 0); }, 0));
+    const filasTot = filas.map(tr => { const tds = tr.querySelectorAll('td'); return +((tds[tds.length - 1].querySelector('b') || {}).textContent || 0); });
+    return { celdas, col, nuevos: D.pacs.length, sumaFilas: filasTot.reduce((a, x) => a + x, 0) }; });
+  OK('la fila Total: cada red suma su columna y el total general son todos los nuevos', tot && tot.celdas.length === tot.col.length + 1 && tot.col.every((v, i) => v === tot.celdas[i]) && tot.celdas[tot.celdas.length - 1] === tot.nuevos && tot.sumaFilas === tot.nuevos, tot);
+  if (process.env.SHOT_TOT) { await P.locator('#md-pauta-tab').scrollIntoViewIfNeeded(); await P.locator('#md-pauta-tab').screenshot({ path: process.env.SHOT_TOT }); }
   await P.locator('.md-pt-sel button', { hasText: 'Últimos 6 meses' }).click(); await P.waitForTimeout(300);
   OK('6 meses muestra también agosto', /LLEGARON EN AGOSTO/.test(await P.locator('#pauta-box').innerText()));
   const [dl] = await Promise.all([P.waitForEvent('download'), P.locator('.md-pt-csv').click()]);
