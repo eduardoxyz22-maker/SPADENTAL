@@ -9484,9 +9484,102 @@ function aplicarPago(r,m,met,pago){
     if(pl&&pl.estado==='activo'&&!proxSesion(pl)&&saldoPlan(pl)<=0){pl.estado='terminado'; savePac(fp)}}
   closeModal(); refreshAll();
   return envio.then(function(res){
+    if(PAGO_LOTE)return res;   // cobrar saldo del paciente: avisa una sola vez, al final
     if(res&&res.ok)toast('Pago registrado · saldo '+bs((res.registro||r).saldo));
     else if(!res)toast('Pago guardado en este aparato, pendiente de confirmar en la hoja. No lo cargues de nuevo.',1);
+    return res;
   })}
+
+/* =====================================================================
+   COBRAR EL SALDO DESDE LA FICHA DEL PACIENTE
+   El paciente paga lo que debe (o una parte) sin elegir visita: el pago se
+   reparte de la visita más vieja a la más nueva. Por dentro, cada parte es
+   un abono de esa visita (mismo camino que «Registrar pago»), así la caja,
+   el saldo de cada atención y el servidor siguen cuadrando.
+   ===================================================================== */
+var PAGO_LOTE=false;
+function deudasDe(nombre){
+  var k=keyPac(nombre);
+  return DATA.filter(function(r){return keyPac(r.paciente)===k&&esAtencion(r)&&num(r.saldo)>0.009&&esMia(r)})
+    .sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'')||(a.hora||'').localeCompare(b.hora||'')})}
+/* cómo se reparte un monto: solo visitas de esa fecha o anteriores (un pago no va a una visita posterior) */
+function repartoSaldo(ds,m,fecha){
+  var resto=Math.round(m*100)/100, out=[];
+  ds.forEach(function(r){if(resto<=0.009||(fecha&&r.fecha>fecha))return;
+    var p=Math.min(resto,num(r.saldo)); p=Math.round(p*100)/100; if(p<=0.009)return;
+    out.push({r:r,m:p}); resto=Math.round((resto-p)*100)/100});
+  return {partes:out,sobra:resto}}
+function cobrarSaldoPaciente(nombre){
+  if(PAGO_EN_CURSO){toast('Esperá a que termine la verificación del pago.',1);return}
+  var ds=deudasDe(nombre); if(!ds.length){toast('No tiene saldo pendiente',1);return}
+  PAGO_CANCELADO=false;
+  var tot=ds.reduce(function(a,r){return a+num(r.saldo)},0), nj=jss(nombre);
+  var fav=creditoLibre(ds[0].paciente);
+  openModal('<h3>Cobrar saldo</h3><p class="mini">'+esc(ds[0].paciente)+' · debe <b>'+bs(tot)+'</b></p>'+
+    '<div style="margin-top:12px"><label for="cps-m">¿Cuánto paga ahora?</label>'+
+    '<input id="cps-m" inputmode="decimal" value="'+Math.round(tot*100)/100+'" oninput="pintarRepartoSaldo(\''+nj+'\')">'+
+    '<p class="hint" style="margin:4px 0 0">Si paga una parte, escribí solo lo que paga.</p>'+
+    '<div id="cps-res" style="margin-top:8px;font-size:16px;font-weight:800"></div></div>'+
+    '<div style="margin-top:12px"><label>¿Cómo paga? <span class="req">*</span></label>'+
+    '<div class="seg lime" id="cps-seg">'+METODOS.map(function(m){return '<label><input type="radio" name="cpsmet" value="'+m+'"><span>'+m+'</span></label>'}).join('')+'</div></div>'+
+    '<div style="margin-top:12px"><label for="cps-fecha">Fecha del pago</label>'+
+    '<input type="date" id="cps-fecha" min="'+esc(ds[0].fecha)+'" max="'+hoyPago()+'" value="'+hoyPago()+'" oninput="pintarRepartoSaldo(\''+nj+'\')">'+
+    '<p class="hint" style="margin:4px 0 0">Dejala en hoy, salvo que haya pagado otro día.</p></div>'+
+    '<details style="margin-top:12px"><summary class="hint" style="cursor:pointer">Ver en qué visitas se reparte</summary><div id="cps-rep" style="margin-top:6px"></div></details>'+
+    (fav>0.009?'<p class="hint">Tiene '+bs(fav)+' a favor: para usarlo, cobrá la visita desde su ficha.</p>':'')+
+    (puedeAnticipo()?'<p class="hint">¿Trae plata para un tratamiento que todavía no se hizo? <a href="#" onclick="closeModal();nuevoAnticipo(\''+nj+'\');return false">Cargalo como anticipo</a>.</p>':'')+
+    '<div class="row-btn"><button class="btn" onclick="guardarSaldoPaciente(\''+nj+'\')">Guardar pago</button>'+
+    '<button class="btn sec" onclick="PAGO_CANCELADO=true;closeModal()">Cancelar</button></div>');
+  pintarRepartoSaldo(nombre)}
+function pintarRepartoSaldo(nombre){
+  var box=$('#cps-rep'); if(!box)return;
+  var ds=deudasDe(nombre), m=num(($('#cps-m')||{}).value), fecha=($('#cps-fecha')||{}).value||hoyPago();
+  var totD=ds.reduce(function(a,r){return a+num(r.saldo)},0), res=$('#cps-res');
+  if(res)res.innerHTML=!(m>0)?'<span style="color:var(--gray)">Escribí cuánto paga ahora</span>':
+    m>totD+0.009?'<span style="color:var(--clay)">Es más de lo que debe ('+bs(totD)+')</span>':
+    totD-m>0.009?'Paga '+bs(m)+' · <span style="color:var(--clay)">queda debiendo '+bs(Math.round((totD-m)*100)/100)+'</span>':
+    '<span style="color:var(--ok)">✓ Paga '+bs(m)+' y queda sin deuda</span>';
+  var R=repartoSaldo(ds,m>0?m:0,fecha), por={}; R.partes.forEach(function(x){por[x.r.id]=x.m});
+  box.innerHTML=ds.map(function(r){var p=por[r.id]||0, fuera=r.fecha>fecha, q=Math.round((num(r.saldo)-p)*100)/100;
+      return '<div style="display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)">'+
+        '<span style="flex:1;min-width:0">'+fmtFcorta(r.fecha)+' · '+esc(srvText(r)||'—')+' <small style="color:var(--gray)">(debe '+bs(r.saldo)+')</small></span>'+
+        '<b style="white-space:nowrap">'+(fuera||!p?'—':'paga '+bs(p))+'</b>'+
+        '<small style="white-space:nowrap;color:'+(q>0.009?'var(--clay)':'var(--ok)')+'">'+(q>0.009?'queda '+bs(q):'✓ al día')+'</small></div>'}).join('')+
+    (R.sobra>0.009?'<p class="hint" style="color:var(--clay)">Sobran '+bs(R.sobra)+': es más de lo que debe'+(ds.some(function(r){return r.fecha>fecha})?' hasta esa fecha':'')+'.</p>':'')}
+function guardarSaldoPaciente(nombre){
+  if(PAGO_EN_CURSO)return;
+  var ds=deudasDe(nombre); if(!ds.length){closeModal();toast('No tiene saldo pendiente',1);return}
+  var txt=($('#cps-m')||{}).value, m=num(txt), met=getRadio('cpsmet'), fecha=($('#cps-fecha')||{}).value||hoyPago();
+  if(montoRaro(txt)||!isFinite(m)||m<=0||Math.abs(m*100-Math.round(m*100))>0.00001){toast('Poné un monto positivo con hasta dos decimales',1);return}
+  if(METODOS.indexOf(met)<0){toast('Marcá cómo paga',1);return}
+  if(!fechaPagoValida(fecha)||fecha>hoyPago()||fecha<ds[0].fecha){toast('La fecha debe ser válida, desde la primera visita que debe hasta hoy (Bolivia).',1);return}
+  var R=repartoSaldo(ds,m,fecha);
+  if(R.sobra>0.009){toast('El pago supera lo que debe'+(ds.some(function(r){return r.fecha>fecha})?' hasta esa fecha':'')+' ('+bs(m-R.sobra)+').',1);return}
+  if(CONNECTED&&R.partes.some(function(x){return hayPendiente(x.r.id)})){toast('Una de esas visitas tiene cambios pendientes. Esperá a que termine de sincronizar antes de registrar el pago.',1);return}
+  if(fecha<hoyPago()&&!confirm('Este pago entrará a la caja del '+fmtF(fecha)+', no a la de hoy. Las visitas siguen con su fecha. ¿Confirmás que se cobró ese día?'))return;
+  PAGO_EN_CURSO=true;
+  var ids=R.partes.map(function(x){return x.r.id});
+  /* una sola lectura del servidor para todas: si otro equipo cobró algo, se reparte sobre lo que de verdad queda */
+  var fresco=(!CONNECTED)?Promise.resolve(null):api('list').then(function(rr){var l=rr&&rr.ok&&(rr.registros||rr.pedidos); return Array.isArray(l)?l:null}).catch(function(){return null});
+  return fresco.then(function(l){
+    if(PAGO_CANCELADO)return;
+    if(l)ids.forEach(function(id){var f=l.filter(function(x){return x&&x.id===id})[0];
+      if(f){SNAP_R[id]=JSON.stringify(f); reemplazarLocal(normalize(JSON.parse(JSON.stringify(f))))}
+      else{DATA=DATA.filter(function(x){return x.id!==id}); saveLocal()}});
+    var R2=repartoSaldo(deudasDe(nombre),m,fecha), envios=[], hechas=0, cobrado=0;
+    PAGO_LOTE=true;
+    R2.partes.forEach(function(x){var r=DATA.filter(function(y){return y.id===x.r.id})[0]; if(!r)return;
+      var e=aplicarPago(r,x.m,met,{id:uid(),fecha:fecha,registradoEn:new Date().toISOString()});
+      if(e){envios.push(e); hechas++; cobrado=Math.round((cobrado+x.m)*100)/100}});
+    var queda=deudasDe(nombre).reduce(function(a,r){return a+num(r.saldo)},0);
+    toast('Pago de '+bs(cobrado)+' repartido en '+hechas+' visita'+(hechas===1?'':'s')+' · queda debiendo '+bs(queda)+
+      (R2.sobra>0.009?' · '+bs(R2.sobra)+' no se cobraron: ya debía menos (otro equipo cobró antes)':''),R2.sobra>0.009?1:0);
+    try{verPaciente(nombre)}catch(e){}
+    return Promise.all(envios).then(function(rs){
+      if(rs.some(function(x){return !x}))toast('Pago guardado en este aparato, pendiente de confirmar en la hoja. No lo cargues de nuevo.',1)});
+  }).catch(function(){toast('No se pudo verificar el pago. Revisá la conexión y los pendientes antes de reintentar.',1)})
+    .then(function(){PAGO_EN_CURSO=false; PAGO_LOTE=false});
+}
 
 /* =====================================================================
    CORREGIR COBRO
@@ -9775,7 +9868,9 @@ function verPaciente(nombre){
       (cel?'<a class="btn sm" target="_blank" rel="noopener" href="'+
         waLink(cel,txtDormido({paciente:nom,ult:(rs[0]&&rs[0].fecha)||hoy}))+'">WhatsApp</a>':'')+
       '<button class="btn sec sm" onclick="nuevaParaPaciente(\''+nj+'\')">＋ Nueva atención</button>'+
-      (puedeAnticipo()?'<button class="btn sec sm" onclick="nuevoAnticipo(\''+nj+'\')">💜 Anticipo</button>':'')+
+      /* un solo botón de plata: si debe, «Cobrar saldo» (todo o una parte; desde ahí también se llega a Anticipo); si no, «Anticipo» */
+      (deudasDe(nom).length?'<button class="btn sm" onclick="cobrarSaldoPaciente(\''+nj+'\')">💵 Cobrar saldo</button>'
+        :puedeAnticipo()?'<button class="btn sec sm" onclick="nuevoAnticipo(\''+nj+'\')">💜 Anticipo</button>':'')+
       '<button class="btn sec sm" onclick="abrirFichaMed(\''+nj+'\')">🩺 Ficha médica</button>'+
       '<button class="btn sec sm" onclick="abrirPlanes(\''+nj+'\')">🦷 Planes</button>'+
       '<button class="btn sec sm" onclick="imprimirHistoria(\''+nj+'\')">🖨 Imprimir historia</button>'+
@@ -14346,6 +14441,10 @@ try{
     ASIS_AYUDA.push({q:'¿Cómo cargo un pago que se cobró otro día?', k:'fecha pago abono cobro ayer anterior otro dia caja registrar pago saldo', v:'lista',
       p:['Abrí la atención que tiene saldo y tocá «Registrar pago».','En «Fecha del pago» elegí el día en que se cobró (desde el día de la atención hasta hoy).','Poné el monto y cómo pagó, y tocá «Guardar pago». Si la fecha es anterior, te pide confirmarlo.','Ese pago aparece en la caja de ese día. El saldo a favor se aplica siempre con la fecha de hoy.']});
   }
+  ASIS_NOVEDADES.push({id:'cobrar-saldo', f:'2026-11-13', t:'💵 Cobrar saldo desde la ficha del paciente',
+    x:'Si el paciente debe y viene (o manda un QR) a pagar, abrí su ficha y tocá «💵 Cobrar saldo». Elegí «Paga todo» o «Paga una parte» y escribí cuánto: el panel lo reparte solo entre las visitas que debe, de la más vieja a la más nueva, y te muestra cuánto queda debiendo. No hace falta cargar una visita nueva.', ayuda:/paga lo que debe/});
+  ASIS_AYUDA.push({q:'¿Cómo cobro cuando un paciente paga lo que debe (todo o una parte)?', k:'cobrar saldo deuda debe pago parcial parte abono cancelar saldo pagar lo que debe sin visita qr', v:'pacientes', f:'#pc-q',
+    p:['Abrí la ficha del paciente (lupa o 👥 Pacientes).','Tocá «💵 Cobrar saldo». Solo aparece si debe algo.','Elegí «Paga todo» o «Paga una parte». Si paga una parte, escribí solo lo que paga ahora.','Marcá cómo pagó (efectivo, QR, tarjeta o transferencia) y, si pagó otro día, la fecha.','Tocá «Guardar pago». Abajo ves cómo se reparte entre sus visitas y cuánto queda debiendo.','No cargues una «Nueva atención» para anotar un pago: no fue una visita.']});
   ASIS_NOVEDADES.push({id:'revision-plata', f:'2026-10-29', t:'🔒 Revisión general: la plata más cuidada',
     x:'Si cerrás o borrás un plan que ya tiene pagos, te avisa cuánto queda y esa plata pasa a saldo a favor del paciente. En Caja, «No cuadran» ahora también muestra quién pagó de más. Cambiar la forma de pago de una visita ya cobrada se hace con ✏️ Corregir cobro. Con la clave que vino de fábrica no se puede borrar ni corregir: cada una entra con su clave propia.', ayuda:/plan que ya tiene pagos/});
   ASIS_AYUDA.push({q:'¿Qué pasa con la plata si cierro o borro un plan que ya tiene pagos?', k:'cerrar terminar borrar plan paquete pagos adelanto saldo a favor libre devolver plata', v:'pacientes', f:'#pc-q',

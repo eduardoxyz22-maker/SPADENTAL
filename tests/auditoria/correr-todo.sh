@@ -65,6 +65,8 @@ if [ -x "${CHROMIUM:-/opt/pw-browsers/chromium}" ]; then
     case "$r" in "TODO OK"*) echo "OK     e2e-md-auditoria-ui ($p)";; *) echo "FALLA  e2e-md-auditoria-ui ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-md-noche.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-md-noche ($p)";; *) echo "FALLA  e2e-md-noche ($p): $r"; fallas=$((fallas+1));; esac
+    r=$(PANEL=$p node -r ./netguard.js e2e-cobrar-saldo.js 2>&1 | tail -1)
+    case "$r" in "TODO OK"*) echo "OK     e2e-cobrar-saldo ($p)";; *) echo "FALLA  e2e-cobrar-saldo ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-abono-fecha.js 2>&1 | tail -1)
     case "$r" in "TODO OK"*) echo "OK     e2e-abono-fecha ($p)";; *) echo "FALLA  e2e-abono-fecha ($p): $r"; fallas=$((fallas+1));; esac
     r=$(PANEL=$p node -r ./netguard.js e2e-auditoria-panel.js 2>&1 | tail -1)
